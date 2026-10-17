@@ -1,0 +1,27 @@
+2026-10-17T05:43:11.2944137+00:00 +541.3ms visible=True focused=False opened os=Microsoft Windows 10.0.26340 framework=.NET 10.0.13 dpi=96 restoredNotes=1 processToOpened=976.0ms
+2026-10-17T05:43:11.2974671+00:00 +544.2ms visible=True focused=False hotkey-register result=False error=1409
+2026-10-17T05:43:11.2975108+00:00 +544.2ms visible=True focused=False hotkey-fallback chord=Ctrl+Alt+Shift+A result=True error=0
+2026-10-17T05:43:11.4831806+00:00 +729.9ms visible=True focused=True focus-check actual=True editorWithin=True processToFocus=1165.0ms
+2026-10-17T05:43:11.4839002+00:00 +730.6ms visible=True focused=True focus-check actual=True editorWithin=True processToFocus=1165.7ms
+2026-10-17T05:43:11.4840233+00:00 +730.7ms visible=True focused=True focus-check actual=True editorWithin=True processToFocus=1165.8ms
+2026-10-17T05:43:11.4840354+00:00 +730.7ms visible=True focused=True focus-check actual=True editorWithin=True processToFocus=1165.8ms
+2026-10-17T05:43:11.5053202+00:00 +752.0ms visible=True focused=True autosave notes=1 path=C:\Users\Neel\AppData\Local\Temp\aqp-ui-smoke-3fb9c49939614ccf9ab19f2a58a6f035.json
+2026-10-17T05:43:11.5053427+00:00 +752.0ms visible=True focused=True text-changed note=0 chars=380 focused=True
+2026-10-17T05:43:11.5096637+00:00 +756.3ms visible=True focused=True autosave notes=1 path=C:\Users\Neel\AppData\Local\Temp\aqp-ui-smoke-3fb9c49939614ccf9ab19f2a58a6f035.json
+2026-10-17T05:43:11.5096809+00:00 +756.4ms visible=True focused=True text-changed note=0 chars=353 focused=True
+2026-10-17T05:43:11.5097143+00:00 +756.4ms visible=True focused=True ui-smoke editableTemplate=True textViewMeasureValid=False focused=True programmaticInsert=True undoRestored=True equality=True
+2026-10-17T05:43:13.4385445+00:00 +2685.2ms visible=True focused=True ui-smoke settled material=AcrylicBlur actual=AcrylicBlur bounds=900x700 textViewBounds=0, 0, 700, 524 measureValid=True focus=True privateBytes=116535296 workingSetBytes=160378880 processToSettled=3120.3ms; physical typing not exercised
+2026-10-17T05:43:13.4789756+00:00 +2725.7ms visible=True focused=True render-preview=F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\spikes\A\logs\spike-20261017-014310-833.png; framework render only, excludes Windows compositor backdrop
+2026-10-17T05:43:13.6679333+00:00 +2914.6ms visible=True focused=True material requested=Mica actual=Mica
+2026-10-17T05:43:13.8637051+00:00 +3110.4ms visible=True focused=True ui-smoke material requested=Mica actual=Mica
+2026-10-17T05:43:13.8650717+00:00 +3111.7ms visible=True focused=True material requested=Transparent actual=Transparent
+2026-10-17T05:43:14.0669792+00:00 +3313.7ms visible=True focused=True ui-smoke material requested=Transparent actual=Transparent
+2026-10-17T05:43:14.0684016+00:00 +3315.1ms visible=True focused=True autosave notes=1 path=C:\Users\Neel\AppData\Local\Temp\aqp-ui-smoke-3fb9c49939614ccf9ab19f2a58a6f035.json
+2026-10-17T05:43:14.0726493+00:00 +3319.3ms visible=False focused=False window-hidden resident=true hideDispatch=4.22ms
+2026-10-17T05:43:14.2721282+00:00 +3518.8ms visible=True focused=False hotkey-show dispatchMs=2.270
+2026-10-17T05:43:14.2731025+00:00 +3519.8ms visible=True focused=True focus-check actual=True editorWithin=True processToFocus=3954.9ms
+2026-10-17T05:43:14.2736291+00:00 +3520.3ms visible=True focused=True focus-check actual=True editorWithin=True processToFocus=3955.4ms
+2026-10-17T05:43:14.4717274+00:00 +3718.4ms visible=True focused=True ui-smoke resident-toggle visible=True focused=True; method dispatch only, no physical hotkey event
+2026-10-17T05:43:14.4729889+00:00 +3719.7ms visible=True focused=True autosave notes=1 path=C:\Users\Neel\AppData\Local\Temp\aqp-ui-smoke-3fb9c49939614ccf9ab19f2a58a6f035.json
+2026-10-17T05:43:14.4764660+00:00 +3723.1ms visible=False focused=False autosave notes=1 path=C:\Users\Neel\AppData\Local\Temp\aqp-ui-smoke-3fb9c49939614ccf9ab19f2a58a6f035.json
+2026-10-17T05:43:14.4839620+00:00 +3730.6ms visible=False focused=False autosave notes=1 path=C:\Users\Neel\AppData\Local\Temp\aqp-ui-smoke-3fb9c49939614ccf9ab19f2a58a6f035.json

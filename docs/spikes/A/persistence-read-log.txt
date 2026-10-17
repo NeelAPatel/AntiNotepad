@@ -1,0 +1,5 @@
+2026-10-17T06:02:57.1031885+00:00 +536.4ms visible=True focused=False opened os=Microsoft Windows 10.0.26340 framework=.NET 10.0.13 dpi=96 restoredNotes=1 processToOpened=957.4ms
+2026-10-17T06:02:57.1055002+00:00 +538.5ms visible=True focused=False hotkey-register result=False error=1409
+2026-10-17T06:02:57.2750328+00:00 +708.1ms visible=True focused=True persistence-read PASS markerRestored=True notes=1 path=C:\Users\Neel\AppData\Local\Temp\aqp-feedback-757973e1503b44289ad7ee69655465d5.json; loaded by next process through SpikeWindow
+2026-10-17T06:02:57.2829774+00:00 +716.0ms visible=False focused=False autosave notes=1 path=C:\Users\Neel\AppData\Local\Temp\aqp-feedback-757973e1503b44289ad7ee69655465d5.json
+2026-10-17T06:02:57.2917858+00:00 +724.8ms visible=False focused=False autosave notes=1 path=C:\Users\Neel\AppData\Local\Temp\aqp-feedback-757973e1503b44289ad7ee69655465d5.json

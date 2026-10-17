@@ -1,0 +1,25 @@
+   Compiling antiquickpad-spike-b v0.1.0 (F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\spikes\B)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.32s
+     Running unittests src\main.rs (spikes\B\target\debug\deps\antiquickpad_spike_b-05b339e0bdead34a.exe)
+
+running 17 tests
+test model::tests::click_and_stale_velocity_do_not_switch ... ok
+test model::tests::drag_follows_pointer_then_commits_and_springs_from_new_index ... ok
+test model::tests::default_notebook_has_one_editable_note ... ok
+test model::tests::constructor_clamps_current_index ... ok
+test model::tests::drag_velocity_can_commit_short_distance ... ok
+test model::tests::newest_edge_drag_rubber_bands_then_creates_page ... ok
+test model::tests::prune_preserves_selected_blank_and_newest ... ok
+test model::tests::prune_remaps_index_after_removed_blank ... ok
+test model::tests::rejected_drag_springs_home ... ok
+test model::tests::spring_tick_moves_toward_target_and_settles ... ok
+test model::tests::wheel_idle_starts_new_burst ... ok
+test model::tests::wheel_past_newest_creates_only_one_note_per_burst ... ok
+test model::tests::wheel_subnotches_coalesce_to_one_page ... ok
+test shell::tests::reports_both_errors_when_no_chord_registers ... ok
+test shell::tests::primary_collision_selects_fallback ... ok
+test model::tests::restore_rejects_truncated_and_corrupt_data ... ok
+test model::tests::save_restore_round_trips_utf8_and_current ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

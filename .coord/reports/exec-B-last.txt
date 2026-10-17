@@ -1,0 +1,9 @@
+Blocked at milestone 1: Cargo cannot reach crates.io through the configured proxy. Later milestones remain untested.
+
+Written:
+
+- [Task report](.coord/reports/T-003.md)
+- [Spike B report](docs/spikes/B/REPORT.md)
+- [Checkpoint and exact unblock instructions](.coord/status-B.md)
+
+The build script passes syntax validation. Local commit failed because `.git` is read-only. Spike A was untouched.

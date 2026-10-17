@@ -1,0 +1,33 @@
+{
+  "decision": "PASS - manager accepted notched wheel and mouse drag",
+  "mouse": "Logitech MX Master 3S",
+  "driver": "unknown",
+  "native_wheel": 279,
+  "public_scroll": 279,
+  "drag_move": 433,
+  "press": 11,
+  "release": 10,
+  "f_key_markers": 0,
+  "horizontal_native": 120,
+  "vertical_native": 159,
+  "public_focus_true": 279,
+  "raw_deltas": [
+    {
+      "value": "-120",
+      "count": 135
+    },
+    {
+      "value": "-240",
+      "count": 7
+    },
+    {
+      "value": "120",
+      "count": 131
+    },
+    {
+      "value": "240",
+      "count": 6
+    }
+  ],
+  "touchpad": "optional - untested"
+}

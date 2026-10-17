@@ -11,7 +11,7 @@ Windows 11 hotkey-summoned, chrome-free translucent scratchpad, inspired by Anti
 - Update `.coord/STATUS.md` at every dispatch, milestone and completion. Never rely on chat memory.
 
 ## Roles (Codex usage first, Claude manages)
-- CEO / final reviewer: Claude Opus 5.5. Directors: Codex `gpt-6.1-sol` medium. Workers: Codex `gpt-6-luna` high (backup `gpt-5.6-luna` xhigh). Junior reviewer: Claude Sonnet 5.5 medium (visible session).
+- CEO / manager: whichever Claude session is driving (currently Sonnet 5.5 medium; Opus 5.5 is the intended final reviewer when available). Directors: Codex `gpt-6.1-sol` medium. Workers: Codex `gpt-6-luna` high (backup `gpt-5.6-luna` xhigh). Junior reviewer: Claude Sonnet 5.5 medium (visible session).
 
 ## Read when
 - Starting or resuming any work: `.coord/STATUS.md`, then `.coord/HANDOFF.md`.

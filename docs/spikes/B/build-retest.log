@@ -1,0 +1,7 @@
+   Compiling antiquickpad-spike-b v0.1.0 (F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\spikes\B)
+warning: due to multiple output types requested, the explicitly specified output file name will be adapted for each output type
+
+warning: ignoring --out-dir flag due to -o flag
+
+warning: `antiquickpad-spike-b` (bin "antiquickpad-spike-b") generated 2 warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.80s

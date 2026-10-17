@@ -1,0 +1,84 @@
+diff --git "a/F:\\LocalVSProj\\Visual Studio Apps\\AntiQuickPad\\spikes\\B\\.cargo-home\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\gpui-pre-windows-0.3.9\\src\\direct_manipulation.rs" "b/F:\\LocalVSProj\\Visual Studio Apps\\AntiQuickPad\\spikes\\B\\vendor\\gpui-pre-windows\\src\\direct_manipulation.rs"
+index 9adcbed..e179eca 100644
+--- "a/F:\\LocalVSProj\\Visual Studio Apps\\AntiQuickPad\\spikes\\B\\.cargo-home\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\gpui-pre-windows-0.3.9\\src\\direct_manipulation.rs"	
++++ "b/F:\\LocalVSProj\\Visual Studio Apps\\AntiQuickPad\\spikes\\B\\vendor\\gpui-pre-windows\\src\\direct_manipulation.rs"	
+@@ -214,6 +214,33 @@ impl IDirectManipulationViewportEventHandler_Impl for DirectManipulationEventHan
+             return Ok(());
+         }
+ 
++        // # spike: diagnostic adapter only; preserve GPUI's original phase/delta behavior.
++        // RUNNING -> INERTIA is a release candidate, NOT a proven physical lift event.
++        // READY can also result from reset/cancellation; keep raw states in the trace.
++        if let Some(path) = std::env::var_os("ANTIQUICKPAD_PROBE_LOG").or_else(|| Some(std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../docs/spikes/B/input-probe.tsv").into_os_string())) {
++            use std::io::Write as _;
++            let label = if previous == DIRECTMANIPULATION_RUNNING
++                && current == DIRECTMANIPULATION_INERTIA {
++                "RELEASE_CANDIDATE"
++            } else if previous == DIRECTMANIPULATION_RUNNING
++                && current == DIRECTMANIPULATION_READY {
++                "NO_INERTIA_END_CANDIDATE"
++            } else if current == DIRECTMANIPULATION_READY {
++                "FINISHED_OR_RESET"
++            } else if previous == DIRECTMANIPULATION_INERTIA
++                && current == DIRECTMANIPULATION_RUNNING {
++                "INERTIA_INTERRUPTED"
++            } else {
++                "STATUS"
++            };
++            let micros = std::time::SystemTime::now()
++                .duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_micros();
++            if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
++                let _ = writeln!(file, "{micros}\tNATIVE\t{label}\tprevious={}\tcurrent={}\tgesture={:?}\tx={}\ty={}",
++                    previous.0, current.0, self.gesture_kind.get(),
++                    self.last_x_offset.get(), self.last_y_offset.get());
++            }
++        }
+         // A new gesture interrupted inertia, so end the old sequence.
+         if current == DIRECTMANIPULATION_RUNNING && previous == DIRECTMANIPULATION_INERTIA {
+             self.end_gesture();
+@@ -357,3 +384,5 @@ fn float_equals(f1: f32, f2: f32) -> bool {
+     const EPSILON_SCALE: f32 = 0.00001;
+     (f1 - f2).abs() < EPSILON_SCALE * f1.abs().max(f2.abs()).max(EPSILON_SCALE)
+ }
++
++
+diff --git "a/F:\\LocalVSProj\\Visual Studio Apps\\AntiQuickPad\\spikes\\B\\.cargo-home\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\gpui-pre-windows-0.3.9\\src\\events.rs" "b/F:\\LocalVSProj\\Visual Studio Apps\\AntiQuickPad\\spikes\\B\\vendor\\gpui-pre-windows\\src\\events.rs"
+index c0e2cd4..b9b6173 100644
+--- "a/F:\\LocalVSProj\\Visual Studio Apps\\AntiQuickPad\\spikes\\B\\.cargo-home\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\gpui-pre-windows-0.3.9\\src\\events.rs"	
++++ "b/F:\\LocalVSProj\\Visual Studio Apps\\AntiQuickPad\\spikes\\B\\vendor\\gpui-pre-windows\\src\\events.rs"	
+@@ -20,6 +20,19 @@ use windows::{
+ use crate::*;
+ use gpui::*;
+ 
++// # spike: raw detent evidence alongside public, Windows-scaled line deltas.
++fn probe_wheel_trace(message: &str, raw_delta: i16) {
++    use std::io::Write as _;
++    let path = std::env::var_os("ANTIQUICKPAD_PROBE_LOG").map(std::path::PathBuf::from)
++        .unwrap_or_else(|| std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
++            .join("../../../../docs/spikes/B/input-probe.tsv"));
++    let micros = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
++        .unwrap_or_default().as_micros();
++    if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
++        let _ = writeln!(file, "{micros}\tNATIVE_WHEEL\tmessage={message}\traw_delta={raw_delta}\tnotch_delta={:.4}", raw_delta as f32 / WHEEL_DELTA as f32);
++    }
++}
++
+ pub(crate) const WM_GPUI_CURSOR_STYLE_CHANGED: u32 = WM_USER + 1;
+ pub(crate) const WM_GPUI_CLOSE_ONE_WINDOW: u32 = WM_USER + 2;
+ pub(crate) const WM_GPUI_TASK_DISPATCHED_ON_MAIN_THREAD: u32 = WM_USER + 3;
+@@ -546,6 +559,7 @@ impl WindowsWindowInner {
+         wparam: WPARAM,
+         lparam: LPARAM,
+     ) -> Option<isize> {
++        probe_wheel_trace("WM_MOUSEWHEEL", wparam.signed_hiword());
+         let modifiers = current_modifiers();
+ 
+         let Some(mut func) = self.state.callbacks.input.take() else {
+@@ -599,6 +613,7 @@ impl WindowsWindowInner {
+         wparam: WPARAM,
+         lparam: LPARAM,
+     ) -> Option<isize> {
++        probe_wheel_trace("WM_MOUSEHWHEEL", wparam.signed_hiword());
+         let Some(mut func) = self.state.callbacks.input.take() else {
+             return Some(1);
+         };

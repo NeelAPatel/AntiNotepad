@@ -1,0 +1,9 @@
+Blocked before Gate 1 runtime validation: NuGet access fails with `NU1301`. The input probe and 12 smoke checks are written, but compilation and touchpad behavior remain unverified.
+
+Reports written:
+
+- [T-002 result](.coord/reports/T-002.md)
+- [Spike A report](docs/spikes/A/REPORT.md)
+- [Checkpoint and exact unblock instructions](.coord/status-A.md)
+
+Local commit also failed because `.git` is read-only. B files and shared `STATUS.md` were untouched.

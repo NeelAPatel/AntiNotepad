@@ -1,0 +1,38 @@
+{
+    "pid":  38684,
+    "configuration":  "debug with diagnostic I/O",
+    "launch_to_frame_observed_ms":  1252.4322,
+    "frame_log":  {
+                      "value":  "1792216552273761\tFIRST_EDITABLE_FRAME\tmain_to_frame_ms=501.679\teditor_focus=true\tpid=38684",
+                      "PSPath":  "F:\\LocalVSProj\\Visual Studio Apps\\AntiQuickPad\\docs\\spikes\\B\\runtime.tsv",
+                      "PSParentPath":  "F:\\LocalVSProj\\Visual Studio Apps\\AntiQuickPad\\docs\\spikes\\B",
+                      "PSChildName":  "runtime.tsv",
+                      "PSDrive":  {
+                                      "CurrentLocation":  "LocalVSProj\\Visual Studio Apps\\AntiQuickPad",
+                                      "Name":  "F",
+                                      "Provider":  "Microsoft.PowerShell.Core\\FileSystem",
+                                      "Root":  "F:\\",
+                                      "Description":  "NuzzleWuzzle 2TB SSD",
+                                      "MaximumSize":  null,
+                                      "Credential":  "System.Management.Automation.PSCredential",
+                                      "DisplayRoot":  null
+                                  },
+                      "PSProvider":  {
+                                         "ImplementingType":  "Microsoft.PowerShell.Commands.FileSystemProvider",
+                                         "HelpFile":  "System.Management.Automation.dll-Help.xml",
+                                         "Name":  "FileSystem",
+                                         "PSSnapIn":  "Microsoft.PowerShell.Core",
+                                         "ModuleName":  "Microsoft.PowerShell.Core",
+                                         "Module":  null,
+                                         "Description":  "",
+                                         "Capabilities":  52,
+                                         "Home":  "C:\\Users\\Neel",
+                                         "Drives":  "C D E F W X Y Z"
+                                     },
+                      "ReadCount":  4
+                  },
+    "frame_timeout":  false,
+    "working_set_mib":  78.21,
+    "private_memory_mib":  81.25,
+    "sample":  "10 seconds after first frame; user should leave idle"
+}

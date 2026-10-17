@@ -1,0 +1,608 @@
+OpenAI Codex v0.162.0
+--------
+workdir: F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: medium
+reasoning summaries: none
+session id: 01a14851-bb52-7f90-98bf-36f7b9a3a5f9
+--------
+user
+You are spike-b-director. Read AGENTS.md, then .coord/tasks/T-003.md and do it. Rust is installed in %USERPROFILE%\.cargo\bin; add it to PATH in your shell if cargo is not found. Run ALL milestones in this single turn. Write checkpoints to .coord/status-B.md (NOT STATUS.md, another Director is running in parallel). End your turn only when .coord/reports/T-003.md and docs/spikes/B/REPORT.md are written, or you are blocked (write the block and exact user instructions in .coord/status-B.md). Do not edit spikes/A or docs/spikes/A.
+
+
+warning: Under-development features enabled: local_thread_store_compression. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in C:\Users\Neel\.codex\config.toml.
+codex
+I’ll read the task and handoff, then run Spike B through all milestones. I’ll keep checkpoints in `.coord/status-B.md` and leave Spike A untouched.
+
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Get-Content AGENTS.md; Get-Content .coord/STATUS.md; Get-Content .coord/HANDOFF.md; Get-Content .coord/tasks/T-003.md' in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 724ms:
+Unable to open session log file "C:\\Users\\Neel\\.cache\\starship\\session_W6zm2Yjt54r1EiAR.log": Os { code: 5, kind: PermissionDenied, message: "Access is denied." }!
+
+# AntiQuickPad
+
+Windows 11 hotkey-summoned, chrome-free translucent scratchpad, inspired by AntiNote (functionality, not a 1:1 copy). Speed of show/hide is the priority. Stack is undecided: spikes A (Avalonia + AvaloniaEdit) and B (GPUI + GPUI Kit) are being compared; C (Tauri + CodeMirror 6) is backup only.
+
+## Rules
+- Local git only. No GitHub. Commit per completed task.
+- One writer per folder: `spikes/A`, `spikes/B`, `docs/`, `.coord/`.
+- Keep this file minimal. Put detail in linked docs.
+- Tests are small smoke checks of capability, not app coverage. Disposable.
+- First-party libraries first; other stacks/libraries only on a concrete need, and only if maintained and documented.
+- Update `.coord/STATUS.md` at every dispatch, milestone and completion. Never rely on chat memory.
+
+## Roles (Codex usage first, Claude manages)
+- CEO / manager: whichever Claude session is driving (currently Sonnet 5.5 medium; Opus 5.5 is the intended final reviewer when available). Directors: Codex `gpt-6.1-sol` medium. Workers: Codex `gpt-6-luna` high (backup `gpt-5.6-luna` xhigh). Junior reviewer: Claude Sonnet 5.5 medium (visible session).
+
+## Read when
+- Starting or resuming any work: `.coord/STATUS.md`, then `.coord/HANDOFF.md`.
+- Launching or messaging agents: `docs/agents.md`.
+- Building or judging a spike: `docs/spike-spec.md`.
+- Why something was chosen: `docs/decisions-log.md`.
+- Your task: `.coord/tasks/<id>.md`; write your result to `.coord/reports/<id>.md`.
+# STATUS (update at every dispatch / milestone / completion)
+
+Phase: spikes (A and B briefs ready; waiting for Director app sessions)
+Updated: 2026-10-17
+
+## Running now
+| Agent | Task | Folder | Started | Next action |
+|---|---|---|---|---|
+| (none) | T-002 spike A | spikes/A | - | user creates Codex app session `spike-a-director`; manager queues brief |
+| (none) | T-003 spike B | spikes/B | - | user creates Codex app session `spike-b-director`; manager queues brief |
+
+## Last result
+- T-001 research complete and reviewed: GO A, conditional GO B, both gated on a precision-touchpad finger-lift probe. See .coord/reports/T-001.md (full milestone log is in git history).
+- Rust 1.99.1 + cargo installed via winget (user-approved) for spike B. New shells need `%USERPROFILE%\.cargo\bin` on PATH; Directors need a fresh app session to see it.
+- Comms: `codex exec` fails here; app sessions + `codex queue` work. Directors run all milestones in one turn.
+
+## Blockers / waiting on user
+- Create two Codex app sessions (gpt-6.1-sol medium, this project folder), named `spike-a-director` and `spike-b-director`.
+- Later: Directors will ask you to do a two-finger touchpad pan for the input probe.
+# HANDOFF
+
+Updated: 2026-10-17. T-001 research complete; manager review next.
+
+Read AGENTS.md and STATUS.md, then .coord/reports/T-001.md. Supporting evidence: docs/research/first-party.md and docs/research/third-party.md.
+
+Recommendation: GO A and conditional GO B as disposable spikes, both gated first on exact Windows precision-touchpad input/release semantics. No final stack selected. Stock Microsoft editors do not close the source-preserving Markdown/widget gap. Avalonia wheel phases are insufficient; inspected GPUI Ended can follow inertia. Exact pinned GPUI source and runtime behavior remain to verify.
+
+Three Luna high workers spawned successfully and finished read-only research. Director wrote all artifacts. No spike implementation or installation performed. .NET 10.0.402 and CMake 4.4.4 present; VS2026 C++ tools component detected; Rust not found in checked PATH/default location. Full B toolchain compatibility still unverified.
+
+Next task: manager reviews report and dispatches bounded capability spikes using docs/spike-spec.md. Existing headless sandbox failure was not retested; app-session tools worked. No active worker work remains. Preserve unrelated Atlas and task/agent instruction edits.
+# T-003 Spike B: GPUI + GPUI Kit (Rust)
+
+Status: queued (blocked on Rust install, manager handles)
+Owner: Codex Director `spike-b-director` (gpt-6.1-sol medium). Spawn Luna workers (`gpt-6-luna`, high) for implementation chunks; you integrate and verify.
+Writable: `spikes/B/`, `docs/spikes/B/`, `.coord/` (STATUS.md checkpoints, report). Nothing else.
+Report: `.coord/reports/T-003.md` plus `docs/spikes/B/REPORT.md`.
+Work all milestones in ONE turn; checkpoint STATUS.md as you go; end the turn only when the report is written or you are blocked.
+
+## Read first
+AGENTS.md, docs/spike-spec.md, `.coord/reports/T-001.md`, docs/research/third-party.md (GPUI section). Kit 0.7.3 pins GPUI snapshot 0.3.9; keep the lockfile and default backend. Prereqs per Kit install guide: Rust 1.92+, MSVC target, VS Build Tools with C++ and Windows SDK, CMake on PATH (CMake 4.4.4 and VS 2026 are present; the manager installs Rust before you start. Do not install system software yourself).
+
+## Order of work (stop early and report if a gate fails)
+1. Verify the toolchain builds a hello-window with the pinned versions. Record build time and any VS2026-vs-VS2022 issues.
+2. Gate 1, input probe: log pixel-pan/scroll events with phases while the editor is focused; check the restored Windows source (not upstream main) for the exact phases. Determine whether finger lift is distinguishable from inertia end. Ask the user to do the two-finger pan when ready (exact instructions in STATUS.md "Waiting on user"). If not, try ONE bounded native adapter and report its scope.
+3. Then the rest of docs/spike-spec.md: carousel (direct manipulation, release by distance+velocity, spring-back, rubber-band overscroll creating a new note, blank-note pruning), tray + global hotkey toggle of a resident frameless window, transparent/Mica/blur, decorated markdown with visible markers, clickable `- [ ]` in wrapped text (undo/caret stable), Tab/Shift+Tab indent, fenced python highlight, autosave/restore, folding + line numbers probes, measurements (cold launch to editable, hotkey to visible+focused, hide time, idle RAM; scripted where possible).
+4. About 10-15 smoke checks, disposable, header `# spike`.
+
+## Rules
+- Local git only; commit your work in `spikes/B` and `docs/spikes/B` when done. Do not touch spikes/A.
+- Missing tools are blockers: record, don't install.
+- REPORT.md: pass/fail per spec item, numbers, screenshots (docs/spikes/B/), effort estimate, blockers, and a plain-language verdict: would you build the real app on this?
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "rg -n \"AntiQuickPad|GPUI|spike-b\" C:\\Users\\Neel\\.codex\\memories\\MEMORY.md" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ exited 1 in 733ms:
+Unable to open session log file "C:\\Users\\Neel\\.cache\\starship\\session_7hH1apQy4RqDvBIs.log": Os { code: 5, kind: PermissionDenied, message: "Access is denied." }!
+
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command 'Get-Content docs/agents.md; Get-Content docs/spike-spec.md; Get-Content .coord/reports/T-001.md; Get-Content docs/research/third-party.md; Get-Content docs/decisions-log.md; git status --short; Get-ChildItem spikes/B -Force' in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ exited 1 in 326ms:
+# Launching and messaging agents
+
+| From -> To | How |
+|---|---|
+| Claude -> Claude | `start_session` (visible in Claude Desktop) / `SendMessage` to `local_...` id |
+| Codex -> Codex | `codex exec resume <id>`, `codex queue --thread <id|name> --message "..."`, `codex fork` |
+| Claude -> Codex | headless: `codex exec -m gpt-6.1-sol -c model_reasoning_effort=medium -C <dir> --sandbox workspace-write --output-last-message <report> - < task.md > .coord/logs/<task>.log`, run in background. Exit wakes the caller. |
+| Codex -> Claude | files only: `.coord/reports/`, `STATUS.md`, `HANDOFF.md`; then exit |
+
+Directors (Codex `gpt-6.1-sol` medium) spawn Luna (`gpt-6-luna` high) subagents. Sonnet 5.5 medium reviews as a visible session.
+
+Limits: write a checkpoint to STATUS.md after every milestone. On a limit stop write HANDOFF.md (task id, session id, earliest resume time). Failover: same agent after reset (`exec resume`) -> other Codex model -> Sonnet session -> CEO if small. Never poll for limits.
+
+**Second route (user-approved, per invocation only, never global):** add `-c 'windows.sandbox="unelevated"'` to `codex exec` (keep `--sandbox workspace-write`; never full access). Verified for file write + Luna subagent. Optional tool, app sessions stay primary.
+
+**Current working route (2026-10-17):** `codex exec` fails here (sandbox setup error). Use Codex **app sessions** instead: the user starts a session in this project (gpt-6.1-sol medium) and names it; the manager sends work with `codex queue --thread <name> --message "..."`. Delivery happens between turns (user clicks Steer for mid-turn). Directors run all milestones in ONE turn, writing STATUS.md checkpoints as they go, and end the turn only when the report is written or they are blocked. They never wait inside a turn and must not end a turn mid-task (the manager is not polling; an ended turn means idle until queued). Point them at a task file (`.coord/tasks/T-###.md`) instead of long messages.
+
+Verified recipes: see `docs/comms-tests.md`.
+# Spike spec (identical for A and B)
+
+Build a disposable prototype in `spikes/<A|B>/`. Report in `docs/spikes/<A|B>/REPORT.md`: pass/fail per item, numbers, screenshots, effort estimate, and what blocked you.
+
+1. Resident tray app. Global hotkey toggles a frameless window that stays initialized while hidden.
+2. Backgrounds: true transparent, Acrylic, Mica. Which work; is text crisp.
+3. Fixture note: heading colors by level; bold/italic/strike with visible markers; clickable `- [ ]` toggling the text; Tab/Shift+Tab indent on selection; fenced python block highlighted, rest stays markdown.
+4. Carousel (MUST): position bound to the gesture (direct manipulation).
+   - Content follows drag 1:1 (mouse drag, precision-touchpad two-finger horizontal pan, horizontal wheel delta).
+   - On release distance + velocity decide advance or spring back; momentum then snap.
+   - Rubber-band overscroll past newest note; release beyond threshold creates a new note; blank interior notes pruned.
+   - Word-wrapped notes; vertical scroll within a note still works; horizontal gesture does not fight text selection.
+5. Autosave to disk, restore on relaunch.
+6. Wishlist probes (not blockers): code folding, line numbers. yes/no/effort.
+7. Measurements (script where possible): cold launch to editable, hotkey to visible+focused, hide time, idle RAM, dev-loop friction.
+
+Testing: about 10-15 smoke checks, disposable, header `# spike`. No exhaustive suites.
+# T-001 — stack research recommendation
+
+Status: complete. Date: 2026-10-17. Owner: Codex Director `director-test`.
+
+**GO for A; conditional GO for B as disposable capability spikes. Neither is approved as the final stack. Start both with the mandatory precision-touchpad probe; stop a stack early if it needs a substantial input/editor rewrite.** A has the clearer editable inline-control extension seam and lower local setup friction. B has a concrete Windows Direct Manipulation pixel-input path, but its public end phase is not established as finger lift. No performance winner can be selected from documentation.
+
+Evidence: [Microsoft options](../../docs/research/first-party.md), [third-party/editor/carousel assessment](../../docs/research/third-party.md). Both contain dated primary-source links and explicit unknowns.
+
+## Decisions
+
+| Candidate | Recommendation | Reason / first gate |
+|---|---|---|
+| A: Avalonia + AvaloniaEdit | GO, input gate first | Documented materials/tray; editor source demonstrates inline controls and styling infrastructure. Windows PTP wheel events lack a proven release lifecycle; prove native lifecycle integration before expanding the spike. |
+| B: GPUI + GPUI Kit | Conditional GO, input and editor gates first | Maintained toolkit with editor features and a Windows pixel-pan implementation. Verify the exact pinned source, contact-to-inertia transition, wrapped clickable checkbox extension and native tray/hotkey integration. |
+| WinUI/WPF custom editor | NO-GO for another general editor spike | Stock rich-text controls do not remove the Markdown source/widget/lexer synchronization work. WinUI's materials and InteractionTracker remain useful targeted native components if the carousel requires them. |
+| WinUIEdit | NO-GO as a preferred replacement | Third-party Scintilla wrapper; explicit readiness warning, prerelease package, no demonstrated advantage for Markdown widgets. |
+| C / another stack | Keep C as backup; no additional spike recommended | This review found no established option that closes both editor and exact Windows PTP release requirements more convincingly. This is a scoped finding, not an exhaustive ecosystem survey. |
+
+These are research recommendations; the manager still owns the stack decision. The user's prior custom-editor cost concern is technically supported by the missing stock capabilities; no elapsed-effort estimate is claimed.
+
+## Build prerequisites and current machine
+
+- **A:** .NET SDK and compatible pinned Avalonia/editor packages. Candidate set: Avalonia 12.1.4 plus Avalonia.AvaloniaEdit/AvaloniaEdit.TextMate 12.0.0; package constraints permit Avalonia >=12.0.0, but restore/build was not run. SDK 10.0.402 is present locally. TextMate grammar dependencies are documented in the research.
+- **B:** [Kit installation guide](https://gpui-kit.com/docs/installation/) specifies Rust 1.92+, an MSVC Rust target, VS2022 Build Tools/Community with Desktop development with C++, MSVC and Windows SDK, plus CMake on PATH. Kit 0.7.3 pins GPUI snapshot 0.3.9; keep the lockfile and default backend.
+- **Observed locally, 2026-10-17:** CMake 4.4.4 is present. VS Community 2026 is installed; `vswhere -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64` matches it. Rust/cargo/rustup were absent from this session's PATH and `%USERPROFILE%\.cargo\bin\rustc.exe` did not exist. `cl` was not on this ordinary shell's PATH, which does not disprove installed MSVC. SDK completeness and compatibility of VS2026 with Kit's documented VS2022 recipe remain unverified. Do not assume the entire C++ workload is missing or reinstall it wholesale.
+- No tools installed, packages restored, builds launched, or spike files changed by T-001.
+
+## Small acceptance probes for the next task
+
+1. Restore pinned dependencies, record actual Windows build/device/DPI, and log input deltas/phases with the editor focused. Distinguish contact movement, paused fingers, lift, inertia and cancellation. In B, check the restored Windows source before relying on upstream behavior.
+2. Prove 1:1 content motion, release distance/velocity selection, spring-back and rubber band without double-counting OS inertia. A timeout-only approximation or B's post-inertia Ended does **not** pass the specified finger-release behavior. Try one bounded native input adapter if needed; report its scope explicitly.
+3. Prove wrapped Markdown styling with visible markers, a checkbox text edit with undo/caret stability, Python fence highlighting, and Tab/Shift+Tab selection indent. Preserve vertical scrolling/text selection during horizontal gestures.
+4. Complete the remaining shared spike spec: materials/text crispness, resident tray and global hotkey/show-focus/hide, autosave/restore, then cold/warm latency and idle-memory measurements. Folding/line numbers remain wishlist probes.
+
+## Execution and verification
+
+Three **gpt-6-luna high** read-only workers spawned successfully: first-party, Avalonia and GPUI. Director remained the only writer for both owned folders, collected results and reviewed primary sources. Review corrected an Avalonia quantization implication (division is floating point) and a GPUI release-phase overclaim (Ended can follow inertia). An exact historical GPUI snapshot source fetch failed; the report labels that limitation instead of treating upstream main as the pinned implementation.
+
+Validation: required questions mapped to the two evidence documents; relative report links and whitespace checked. This is documentation/source research, not proof of runtime input, materials, hotkey latency, package compatibility or hardware behavior. No app tests were appropriate. Local commit contains the T-001 research and coordination checkpoint only; existing task/agent instructions and Atlas changes are outside this task's edits.
+# Third-party stack and carousel assessment
+
+Checked 2026-10-17. Sources establish implementation candidates, not a working spike. Moving branch sources and web caches may differ from released packages; exact dependency source must be checked during restore.
+
+## A: Avalonia + AvaloniaEdit
+
+**Editor:** AvaloniaEdit supplies normal source editing, folding and line numbers. Its [demo](https://github.com/AvaloniaUI/AvaloniaEdit/blob/master/src/AvaloniaEdit.Demo/MainWindow.axaml.cs) installs TextMate, uses a `DocumentColorizingTransformer`, and demonstrates inline controls through `TextView.ElementGenerators`, `VisualLineElementGenerator` and `InlineObjectElement`. These are useful seams for styled Markdown and a clickable checkbox while keeping text canonical. A transformer styles text; it does not itself create interactive controls. A generic adorner overlay must also track wrapping, scrolling and hit testing. The demo is not a finished Markdown widget implementation.
+
+The documented TextMate setup selects a grammar for the editor. A Markdown grammar may embed supported languages, but arbitrary fenced-language coverage is not established merely by installing TextMate: smoke-test Python inside Markdown and verify grammar injections, or add a range-aware highlighter. Checkbox source-range tracking, marker visibility, selection indentation and undo are application integration. See [README/setup](https://github.com/AvaloniaUI/AvaloniaEdit/blob/master/README.md), [color transformer](https://github.com/AvaloniaUI/AvaloniaEdit/blob/master/src/AvaloniaEdit/Rendering/DocumentColorizingTransformer.cs) and [element generator](https://github.com/AvaloniaUI/AvaloniaEdit/blob/master/src/AvaloniaEdit/Rendering/VisualLineElementGenerator.cs).
+
+**Windows shell:** Official [Windows documentation](https://docs.avaloniaui.net/docs/platform-specific-guides/windows) covers `TransparencyLevelHint` values `Transparent`, `AcrylicBlur`, `Mica`, transparent Background, `ActualTransparencyLevel`, chrome removal with `WindowDecorations=None`, and native tray menus. Probe each material separately, including fallback/text clarity. Use `TrayIcon`; retain the initialized window while hidden. The same guide says the .NET SDK is sufficient for ordinary Windows development.
+
+**Global hotkey:** Focused `KeyBinding` is insufficient. Prefer a small Windows-native layer using [RegisterHotKey / WM_HOTKEY](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerhotkey), unregister on shutdown, and report registration collisions. Avalonia exposes [Win32Properties WndProc hooks](https://github.com/AvaloniaUI/Avalonia/blob/main/src/Avalonia.Controls/Platform/Win32Properties.cs). This avoids a new hotkey dependency; HWND lifecycle and focus activation still need a real smoke check.
+
+**Maintenance:** NuGet lists [Avalonia 12.1.4, updated 2026-10-09](https://www.nuget.org/packages/Avalonia), [Avalonia.AvaloniaEdit 12.0.0, 2026-04-08](https://www.nuget.org/packages/Avalonia.AvaloniaEdit), and [AvaloniaEdit.TextMate 12.0.0, 2026-04-08](https://www.nuget.org/packages/AvaloniaEdit.TextMate). Editor packages require Avalonia >=12.0.0; TextMate also brings TextMateSharp/Grammars >=2.0.3. These are candidates to pin together, not a verified restore/build. The [editor issue list](https://github.com/AvaloniaUI/AvaloniaEdit/issues) shows August 2026 reports and outstanding clipboard/undo/scroll issues. Core Avalonia has broad platform/API guides; editor documentation is more README/demo/source-driven. Adequate for a disposable spike, with editor integration risk.
+
+## B: GPUI + GPUI Kit
+
+**Identity/version:** GPUI is Zed's Rust UI framework; GPUI Kit is Longbridge's toolkit, whose styled layer is `gpui-component`. They are different projects. [Kit v0.7.3, released 2026-10-12](https://github.com/longbridge/gpui-kit/releases), pins the default GPUI snapshot to `gpui-pre` family **0.3.9**, Zed revision **93d7456**. The [tagged manifest](https://raw.githubusercontent.com/longbridge/gpui-kit/v0.7.3/Cargo.toml) and lockfile should govern the spike. Keep the optional GPUI Fast backend out of the initial comparison: it is another backend to validate.
+
+**Editor:** [Kit Editor docs](https://gpui-kit.com/component/editor/) describe Tree-sitter grammar features, `.language(...)`, line numbers, folding, and text decorations. They explicitly say geometric range decorations are paint-only: no reserved inline space, widgets, pointer interception or focus. Do not equate these with clickable editor checkboxes. Source-preserving checkbox hit testing/rendering and heading style integration remain an extension to prove. Single-editor language selection alone also does not prove Markdown fence injection. Treat mixed Markdown/Python highlighting and wrapped interactive decorations as B's editor gates; rendered TextView Markdown is not evidence of editable source behavior.
+
+**Windows/materials:** Upstream [platform types](https://github.com/zed-industries/zed/blob/main/crates/gpui/src/platform.rs) expose `WindowBackgroundAppearance::{Transparent,Blurred,MicaBackdrop,MicaAltBackdrop}` and titlebar/window options. The [Windows implementation](https://github.com/zed-industries/zed/blob/main/crates/gpui_windows/src/window.rs) maps Mica to DWM backdrop values and blurred mode to composition attributes. This is implementation evidence, not a supported Acrylic guarantee for Kit's exact pinned snapshot. Check chrome removal and each material on target hardware. Windows support is documented in Kit; GPUI remains [tied to Zed development](https://gpui.rs/), not an independent long-term compatibility promise.
+
+**Tray/hotkey:** A [maintainer answer dated 2025-07-22](https://github.com/longbridge/gpui-kit/discussions/1077?sort=new) says GPUI/Component lacked tray support and suggests native APIs. That answer is historical; no current built-in tray/global-hotkey solution was established by this review. Plan Windows `Shell_NotifyIcon` and `RegisterHotKey` integration with a correctly owned message loop/dispatcher. Do not select another crate until a concrete native integration problem appears.
+
+**Maintenance/docs:** Kit's [release notes](https://github.com/longbridge/gpui-kit/releases) include editor/input fixes and a yanked v0.7.2 replaced by v0.7.3. Its [issue list](https://github.com/longbridge/gpui-kit/issues) has new reports through 2026-10-16, including editor horizontal-scroll and Markdown selection conflicts. Active maintenance, but substantial API movement. Kit's installation/component guides are useful; upstream GPUI often requires source/examples. Good enough for a bounded spike, not evidence of scratchpad stability.
+
+## Mandatory carousel: exact APIs and limits
+
+| Input | A | B |
+|---|---|---|
+| Mouse drag | `PointerPressed/Moved/Released`, capture and capture-loss handling. Translate from initial pointer displacement; sample time/position for velocity. | Mouse-down/move/up handlers and drag state; translate from initial displacement; sample time/position for velocity. |
+| Horizontal wheel | `PointerWheelChanged`, `Delta.X`; normalized wheel units, not physical content pixels. | `on_scroll_wheel`, inspect `ScrollDelta::Lines` vs `Pixels`; ordinary wheel input is not proof of a gesture lifecycle. |
+| Windows Precision Touchpad | Reviewed Win32 path produces wheel deltas with no explicit contact/release phase. Public scroll recognizer is touch/pen, not the PTP wheel stream. | Reviewed upstream Windows Direct Manipulation path produces logical pixel deltas and `TouchPhase`; stronger basis for smooth direct motion, but `Ended` is not necessarily finger lift. |
+| Release distance + velocity | Mouse/touch can supply it. PTP requires native lifecycle integration or a documented relaxation; a wheel timeout is heuristic. | Public phase stream reviewed does not expose the transition into inertia; native lifecycle access or a backend extension is needed to decide at finger lift. |
+| Rubber band / create note | Application transform/spring/threshold logic; gate creation on an authenticated gesture end, once. | Same. Stock snapping Carousel is not proof of the requested release behavior. |
+
+**A evidence:** [ScrollGestureRecognizer source](https://github.com/AvaloniaUI/Avalonia/blob/main/src/Avalonia.Base/Input/GestureRecognizers/ScrollGestureRecognizer.cs) tracks only touch/pen in PointerPressed. It emits scroll deltas, `ScrollGestureInertiaStarting` with velocity and `ScrollGestureEnded`; Ended may follow inertia/capture loss. [Win32 wheel handling](https://github.com/AvaloniaUI/Avalonia/blob/main/src/Windows/Avalonia.Win32/WindowImpl.AppWndProc.cs) divides by **120.0**, preserving fractional wheel units; do not call it integer truncation. Neither establishes raw PTP contact phases or 1:1 physical translation. Timestamped wheel samples plus an idle timer cannot distinguish a paused finger from lift/inertia.
+
+**B evidence:** [Upstream Direct Manipulation source](https://github.com/zed-industries/zed/blob/main/crates/gpui_windows/src/direct_manipulation.rs) recognizes `PT_TOUCHPAD`, enables translation/inertia and emits `ScrollWheelEvent` pixel deltas with Started/Moved. It ends a sequence at READY, or when new RUNNING interrupts INERTIA; it does not emit finger-lift on RUNNING → INERTIA. Sampling until Ended therefore estimates post-inertia motion, not release velocity. The exact **93d7456** source fetch was unavailable to this review; verify the restored snapshot before assuming even this behavior. API names alone are insufficient.
+
+Kit's [Carousel docs](https://gpui-kit.com/component/carousel/) describe drag/trackpad snapping to the nearest point at gesture end and one item per wheel notch; edge gestures can bubble outward. They do not establish release-velocity selection, custom rubber band, or pull-to-create behavior. Reuse only after checking these semantics.
+
+**Shared fallback:** Microsoft [InteractionTracker](https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.composition.interactions.interactiontracker) exposes Interacting/Inertia states; native [touchpad-capable registration](https://learn.microsoft.com/en-us/windows/win32/input-precisiontouchpad/registertouchpadcapable) plus Interaction Context is another Windows route. These are targeted native input candidates, not drop-in managed/Rust integrations. Prove supported OS/API availability, cancellation, DPI, direction settings, and editor event arbitration before calling either spike a pass.
+# Decisions log (append-only)
+
+- 2026-10-17: Two spikes first, A = Avalonia + AvaloniaEdit, B = GPUI + GPUI Kit. C = Tauri + CodeMirror 6 only as backup if A/B fail badly.
+- 2026-10-17: Not a 1:1 AntiNote copy; take functionality, choose our own methods. Least-resistance library choices.
+- 2026-10-17: Code notes: fenced blocks first, then first-line `python:`; drop `code: py` unless trivial. Checkboxes via `- [ ]`. Folding and line numbers are wishlist, not blockers.
+- 2026-10-17: Carousel is a must: direct manipulation drag-to-snap, position bound to the gesture.
+- 2026-10-17: Codex first, Claude manages. Directors run headless (`codex exec`) with files for state; Claude helpers are visible desktop sessions.
+- 2026-10-17: Luna worker = `gpt-6-luna` high (no 6.1 Luna exists locally).
+- 2026-10-17: T-001 reviewed by manager: GO spike A, conditional GO spike B, both gated first on a precision-touchpad finger-lift probe (neither framework proven to expose release vs inertia). WinUI/WPF custom editor and WinUIEdit: NO-GO. C stays backup. Directors run all milestones in one turn (ending a turn leaves them idle).
+- 2026-10-17: Dispatch route = Codex app sessions + codex queue (codex exec sandbox fails here). One named app session per Director: spike-a-director, spike-b-director.
+ M .claude/atlas/0fc364ed-0bfc-4b86-b14a-cdf5aec44d80.json
+ M .coord/STATUS.md
+ M docs/agents.md
+ M docs/comms-tests.md
+?? .coord/logs/T-002.log
+?? .coord/logs/T-003.log
+?? .coord/logs/t2.log
+?? .coord/tasks/prompt-A.txt
+?? .coord/tasks/prompt-B.txt
+Get-ChildItem: 
+Line |
+   2 |  … s/decisions-log.md; git status --short; Get-ChildItem spikes/B -Force
+     |                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Cannot find path 'F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\spikes\B' because it does not exist.
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command '$env:PATH = "$env:USERPROFILE'"\\.cargo\\bin;"'$env:PATH"; rustc -Vv; cargo -V; cmake --version; Get-ChildItem "$env:USERPROFILE'"\\.cargo\\registry\\src\" -ErrorAction SilentlyContinue; & \""'${env:ProgramFiles(x86)}'"\\Microsoft Visual Studio\\Installer\\vswhere.exe\" -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 1257ms:
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: x86_64-pc-windows-msvc
+release: 1.99.1
+LLVM version: 23.1.1
+cargo 1.99.1 (5f94df478 2026-08-27)
+cmake version 4.4.4
+
+CMake suite maintained and supported by Kitware (kitware.com/cmake).
+C:\Program Files\Microsoft Visual Studio\18\Community
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command "New-Item -ItemType Directory -Force spikes/B/src, docs/spikes/B | Out-Null; @'
+# Spike B checkpoint — T-003
+
+Updated: 2026-10-17
+Owner: spike-b-director
+Phase: milestone 1, pinned hello-window build/toolchain gate.
+
+- Read AGENTS, shared status/handoff, task, agent rules, spike spec and T-001 evidence.
+- Rust/cargo 1.99.1 MSVC host, CMake 4.4.4 and VS2026 C++ installation found.
+- Director owns spikes/B and docs/spikes/B. A read-only Luna worker will inspect pinned dependency/API evidence; director integrates all writes.
+- Shared STATUS.md and Spike A are outside this session's writes.
+
+## Waiting on user
+None yet. Precision-touchpad instructions will be recorded after the hello window builds.
+'@ | Set-Content .coord/status-B.md" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 171ms:
+web search: 
+web search: https://raw.githubusercontent.com/longbridge/gpui-kit/v0.7.3/Cargo.toml
+codex
+Rust, CMake and the VS2026 C++ tools are present. I’m testing the pinned dependency build now; a read-only worker is checking the input API evidence in parallel.
+
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command "@'
+[package]
+name = \"antiquickpad-spike-b\"
+version = \"0.1.0\"
+edition = \"2024\"
+publish = false
+
+[dependencies]
+gpui = { package = \"gpui-pre\", version = \"=0.3.9\" }
+gpui_platform = { package = \"gpui-pre-platform\", version = \"=0.3.9\" }
+gpui-component = \"=0.7.3\"
+'@ | Set-Content spikes/B/Cargo.toml; @'
+use gpui::{prelude::*, *};
+
+struct Hello;
+impl Render for Hello {
+    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+        div().size_full().child(\"AntiQuickPad — Spike B toolchain probe\")
+    }
+}
+fn main() {
+    gpui_platform::application().run(|cx: &mut App| {
+        gpui_component::init(cx);
+        cx.open_window(WindowOptions::default(), |_, cx| cx.new(|_| Hello))
+            .expect(\"open hello window\");
+        cx.activate(true);
+    });
+}
+'@ | Set-Content spikes/B/src/main.rs; @'
+/target/
+/.cargo-home/
+'@ | Set-Content spikes/B/.gitignore; "'$env:PATH = "$env:USERPROFILE'"\\.cargo\\bin;"'$env:PATH"; $env:CARGO_HOME = Join-Path $PWD '"'spikes/B/.cargo-home'; "'$env:CARGO_TARGET_DIR = Join-Path $PWD '"'spikes/B/target'; "'$timer = [Diagnostics.Stopwatch]::StartNew(); cargo build --manifest-path spikes/B/Cargo.toml *> docs/spikes/B/build.log; $result = $LASTEXITCODE; $timer.Stop(); "exit=$result elapsed_seconds=$($timer.Elapsed.TotalSeconds)" | Set-Content docs/spikes/B/build-result.txt; Get-Content docs/spikes/B/build-result.txt; Get-Content docs/spikes/B/build.log -Tail 35; exit $result' in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ exited 101 in 356ms:
+exit=101 elapsed_seconds=0.226179
+error: no matching package named `gpui-pre` found
+location searched: crates.io index
+required by package `antiquickpad-spike-b v0.1.0 (F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\spikes\B)`
+note: offline mode (via `--offline`) can sometimes cause surprising resolution failures
+help: if this error is too confusing you may wish to retry without `--offline`
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command 'Get-ChildItem Env:CARGO_NET_OFFLINE; rg -n "offline|registry|replace-with" .cargo "$env:USERPROFILE'"\\.cargo\\config.toml\" \""'$env:USERPROFILE'"\\.cargo\\config\" -g '*' 2>"'$null; Get-Content spikes/B/.cargo-home/config.toml -ErrorAction SilentlyContinue' in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ exited 1 in 140ms:
+
+Name                           Value
+----                           -----
+CARGO_NET_OFFLINE              true
+
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command '$env:PATH = "$env:USERPROFILE'"\\.cargo\\bin;"'$env:PATH"; $env:CARGO_HOME = Join-Path $PWD '"'spikes/B/.cargo-home'; "'$env:CARGO_TARGET_DIR = Join-Path $PWD '"'spikes/B/target'; "'$env:CARGO_NET_OFFLINE = '"'false'; "'$env:CARGO_NET_RETRY = '"'0'; "'$env:CARGO_HTTP_TIMEOUT = '"'20'; "'$timer = [Diagnostics.Stopwatch]::StartNew(); cargo build --manifest-path spikes/B/Cargo.toml *> docs/spikes/B/build-online.log; $result = $LASTEXITCODE; $timer.Stop(); "exit=$result elapsed_seconds=$($timer.Elapsed.TotalSeconds)" | Set-Content docs/spikes/B/build-online-result.txt; Get-Content docs/spikes/B/build-online-result.txt; Get-Content docs/spikes/B/build-online.log -Tail 35; exit $result' in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ exited 101 in 6481ms:
+exit=101 elapsed_seconds=6.3128777
+    Updating crates.io index
+error: failed to get `gpui-pre` as a dependency of package `antiquickpad-spike-b v0.1.0 (F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\spikes\B)`
+
+Caused by:
+  failed to load source for dependency `gpui-pre`
+
+Caused by:
+  unable to update registry `crates-io`
+
+Caused by:
+  download of config.json failed
+
+Caused by:
+  [7] Could not connect to server (Failed to connect to index.crates.io:443 over proxy 127.0.0.1 after 2043 ms: Could not connect to server)
+
+codex
+The build is blocked before compilation. Cargo inherited offline mode; an online retry then failed because the configured proxy could not reach crates.io. The task requires stopping at a failed gate, so I’m writing both reports with the failure evidence and an exact retry command. Later milestones will be marked untested.
+
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command "@'
+# Pinned hello-window build. Does not install tools or alter user-level settings.
+"'$ErrorActionPreference = '"'Stop'
+"'$spikeRoot = $PSScriptRoot
+$repoRoot = Split-Path (Split-Path $spikeRoot -Parent) -Parent
+$env:PATH = "$env:USERPROFILE'"\\.cargo\\bin;"'$env:PATH"
+$env:CARGO_HOME = Join-Path $spikeRoot '"'.cargo-home'
+"'$env:CARGO_TARGET_DIR = Join-Path $spikeRoot '"'target'
+"'$env:CARGO_NET_OFFLINE = '"'false'
+"'$env:CARGO_NET_RETRY = '"'0'
+"'$env:CARGO_HTTP_TIMEOUT = '"'20'
+"'$logRoot = Join-Path $repoRoot '"'docs/spikes/B'
+"'$timer = [Diagnostics.Stopwatch]::StartNew()
+& cargo build --manifest-path (Join-Path $spikeRoot '"'Cargo.toml') *> (Join-Path "'$logRoot '"'build-online.log')
+"'$buildExit = $LASTEXITCODE
+$timer.Stop()
+"exit=$buildExit elapsed_seconds=$($timer.Elapsed.TotalSeconds)" | Set-Content (Join-Path $logRoot '"'build-online-result.txt')
+Get-Content (Join-Path "'$logRoot '"'build-online-result.txt')
+Get-Content (Join-Path "'$logRoot '"'build-online.log') -Tail 35
+exit "'$buildExit
+'"'@ | Set-Content spikes/B/build.ps1; @'
+# Spike B — GPUI + GPUI Kit
+
+Disposable T-003 hello-window scaffold. **Not compiled or runtime validated.**
+Exact requested dependency versions are in Cargo.toml; default backend only.
+A lockfile could not be generated because registry access is blocked.
+
+From the repository root, in a session with functioning crates.io access:
+
+"'```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .'"\\spikes\\B\\build.ps1
+"'```
+
+After a successful build, run `spikes'"\\B\\target\\debug\\antiquickpad-spike-b.exe"'`.
+This is a hello-window gate only; it is not the editor/input probe or the finished spike.
+Keep the generated Cargo.lock. See ../../docs/spikes/B/REPORT.md for the gate stop.
+'"'@ | Set-Content spikes/B/README.md; @'
+# Spike B checkpoint — T-003
+
+Updated: 2026-10-17
+Owner: spike-b-director
+Phase: BLOCKED at milestone 1 (dependency restore, before compilation).
+
+## Dispatch and milestones
+- Read AGENTS, shared STATUS/HANDOFF, task, agent rules, spike spec, decisions and T-001 evidence.
+- Read-only gpt-6-luna high source-review worker dispatched; director is sole writer of B artifacts.
+- Toolchain verified: Rust/cargo 1.99.1, x86_64-pc-windows-msvc, CMake 4.4.4, VS2026 Community C++ tools detected.
+- Created pinned default-backend hello-window scaffold and repeatable local build script.
+- Build 1: exit 101 after 0.226179 s. CARGO_NET_OFFLINE=true inherited; gpui-pre unavailable in empty local cache.
+- Build 2: process-local offline=false, retry=0, HTTP timeout=20. Exit 101 after 6.3128777 s; index.crates.io config.json fetch failed through proxy 127.0.0.1.
+- No compiler/linker or app launched. No Cargo.lock generated. VS2026 compatibility remains unverified.
+- Task requires stopping when a gate fails; milestones 2-4 deferred. No touchpad interaction requested without a working probe.
+- Reports written: .coord/reports/T-003.md and docs/spikes/B/REPORT.md.
+
+## Waiting on user — exact unblock instructions
+1. Open this project in a session whose Cargo process can reach https://index.crates.io and https://static.crates.io, or restore the managed proxy/network service. This session cannot request an approval or install system software. No global proxy/security configuration was changed.
+2. From the repository root run:
+   powershell -NoProfile -ExecutionPolicy Bypass -File .\\spikes\\B\\build.ps1
+3. Queue to spike-b-director: \"Resume T-003 at milestone 1 using .coord/status-B.md; finish the hello build, keep Cargo.lock, then run the input gate and remaining milestones only if it passes.\"
+
+Touchpad instructions will be supplied only when the focused editor probe is ready.
+'@ | Set-Content .coord/status-B.md" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 142ms:
+web search: 
+web search: https://raw.githubusercontent.com/longbridge/gpui-kit/v0.7.3/examples/hello_world/src/main.rs
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command "@'
+[package]
+name = \"antiquickpad-spike-b\"
+version = \"0.1.0\"
+edition = \"2024\"
+publish = false
+
+[dependencies]
+gpui-kit = \"=0.7.3\"
+gpui = { package = \"gpui-pre\", version = \"=0.3.9\" }
+'@ | Set-Content spikes/B/Cargo.toml; @'
+use gpui_kit::*;
+
+struct Hello;
+impl Render for Hello {
+    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+        div().child(\"AntiQuickPad — Spike B toolchain probe\")
+    }
+}
+fn main() {
+    gpui_kit::application().run(|cx| {
+        gpui_kit::init(cx);
+        gpui_kit::open_window(WindowOptions::default(), cx, |_, cx| cx.new(|_| Hello))
+            .expect(\"open hello window\");
+    });
+}
+'@ | Set-Content spikes/B/src/main.rs; @'
+# Spike B report — T-003
+
+Date: 2026-10-17. Owner: spike-b-director. Outcome: **BLOCKED before compilation at milestone 1**.
+
+Would I build the real app on this? **No commitment yet.** This run provides no executable evidence for GPUI/Kit suitability or performance. Registry connectivity must be restored before the mandatory input and editor gates can be judged. This is an environment block, not a framework rejection.
+
+## Build gate and artifacts
+
+- Rust 1.99.1, cargo 1.99.1, host x86_64-pc-windows-msvc; CMake 4.4.4; vswhere matched VS2026 Community with C++ tools at "'`C:'"\\Program Files\\Microsoft Visual Studio\\18\\Community"'`.
+- Initial scaffold requested gpui-component =0.7.3 and gpui-pre/platform =0.3.9. Cargo exited 101 in **0.226179 seconds** with inherited CARGO_NET_OFFLINE=true and an empty cache. [Log](build.log), [timing](build-result.txt).
+- One bounded online retry (process-local offline=false, retry=0, HTTP timeout=20) exited 101 in **6.3128777 seconds**. crates.io index config.json could not be fetched through the configured proxy at 127.0.0.1. [Log](build-online.log), [timing](build-online-result.txt).
+- No compilation or linker invocation occurred. VS2026-vs-VS2022 compatibility, Windows SDK completeness, and successful build time are **unknown**. No software installed or global network settings changed.
+- After source review, final unbuilt scaffold follows the release hello-window API: gpui-kit =0.7.3 plus an explicit gpui-pre =0.3.9 constraint; default backend, no Fast feature. This final manifest was not retried after the same registry-access failure. No Cargo.lock exists; generating and retaining it is a resume requirement.
+- `spikes/B/build.ps1` provides a repeatable build using workspace-local Cargo cache/target paths. `src/main.rs` is a hello-window scaffold only, with no editor or gesture instrumentation.
+
+## Acceptance matrix
+
+| Spec / milestone | Result | Evidence or next gate |
+|---|---|---|
+| Pinned hello-window build | BLOCKED | Registry fetch failed before compilation |
+| Exact restored Windows input source | BLOCKED | No restored dependencies; pinned source not inspected |
+| Editor-focused pixel-pan/phase log | NOT RUN | No executable |
+| Finger lift distinct from inertia end | UNVERIFIED | No hardware probe; do not infer from event names |
+| One bounded native adapter | NOT ATTEMPTED | Only required after input gate identifies a deficiency; cannot patch missing source |
+| Direct manipulation for mouse, PTP, horizontal wheel | NOT RUN | Milestone 1 gate stop |
+| Release distance/velocity, spring-back, momentum/snap | NOT RUN | Milestone 1 gate stop |
+| Rubber band/create note/blank interior pruning | NOT RUN | Milestone 1 gate stop |
+| Word wrap, vertical scrolling, selection arbitration | NOT RUN | Milestone 1 gate stop |
+| Resident tray/global hotkey/frameless retained window | NOT RUN | Milestone 1 gate stop |
+| Transparent/Acrylic/Mica and crisp text | NOT RUN | No displayed window or screenshot |
+| Heading colors/bold/italic/strike with visible markers | NOT RUN | No editor |
+| Wrapped clickable checkbox, stable undo/caret | NOT RUN | No editor |
+| Tab/Shift+Tab and fenced Python highlighting | NOT RUN | No editor |
+| Autosave/restore | NOT RUN | No notes implementation |
+| Folding/line numbers wishlist | NOT RUN | Documentation only, not demonstrated |
+| About 10–15 disposable smoke checks (`# spike`) | DEFERRED | No runnable capability; no synthetic passing suite created |
+
+## Source review and remaining risks
+
+Read-only Luna high worker reviewed primary release sources; director verified the release manifest and hello example. [v0.7.3 manifest](https://raw.githubusercontent.com/longbridge/gpui-kit/v0.7.3/Cargo.toml) pins GPUI snapshot 0.3.9 and leaves Fast optional. [Release hello source](https://raw.githubusercontent.com/longbridge/gpui-kit/v0.7.3/examples/hello_world/src/main.rs) supplies the final scaffold entry points. [Installation guide](https://gpui-kit.com/docs/installation/) documents VS2022, MSVC and CMake; VS2026 success is not established here.
+
+Worker review of the [release editor guide](https://raw.githubusercontent.com/longbridge/gpui-kit/v0.7.3/website/component/editor.md) found EditorState language/line-number/folding options, but paint-only range decorations do not establish interactive inline controls. These remain runtime editor gates.
+
+The existing T-001 report warns that GPUI Ended can follow inertia. This run cannot confirm that behavior against restored 0.3.9 source. If confirmed, the one bounded adapter candidate is to expose RUNNING→INERTIA as a separate release event in the existing Windows Direct Manipulation status callback and READY as completion, retaining native pixel deltas. That is a prospective backend seam, not an implemented or validated fix; zero-motion lift/cancellation paths, DPI and editor arbitration still need proving.
+
+## Measurements, screenshots and effort
+
+Cold launch to editable, hotkey to visible+focused, hide time and idle RAM: **not measured**. No window ran, so there are no screenshots. The only timings above are unsuccessful dependency resolution, not app/build performance.
+
+Dev-loop friction: first restore is blocked by managed proxy connectivity. Successful compile cost is unknown. Effort estimate after unblock (planning judgment, not measured): 0.5–1 day for build/input gate including one bounded adapter; if it passes, 2–4 days for remaining editor/shell/carousel probes. Stop and reassess if input or wrapped interactive editor behavior requires a substantial rewrite.
+
+## Exact unblock and resume
+
+Open the project in a session with working Cargo access to `https://index.crates.io` and `https://static.crates.io`, or restore the managed proxy/network service. From the repository root run:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .'"\\spikes\\B\\build.ps1
+"'```
+
+Then queue: “Resume T-003 at milestone 1 using .coord/status-B.md; finish the hello build, keep Cargo.lock, then run the input gate and remaining milestones only if it passes.”
+
+No touchpad interaction is requested until a focused-editor probe exists. Later probe instructions must cover slow horizontal pan, pause with fingers down, lift, fast flick/inertia and cancellation, with vertical scrolling and text selection checked separately.
+'"'@ | Set-Content docs/spikes/B/REPORT.md; @'
+# T-003 — Spike B result
+
+Status: BLOCKED at milestone 1, 2026-10-17. Owner: spike-b-director.
+
+[Full report](../../docs/spikes/B/REPORT.md). Checkpoint and exact user instructions: [.coord/status-B.md](../status-B.md).
+
+Rust/cargo 1.99.1 MSVC, CMake 4.4.4 and VS2026 C++ tools detected. Initial pinned dependency build failed in 0.226179 s because offline mode was inherited. One online retry failed in 6.3128777 s because the configured local proxy could not reach the crates.io index. No compilation, window, lockfile or input probe exists. Stop-early gate rule applied; later milestones are explicitly untested, not failed framework capabilities.
+
+Created a release-API hello scaffold, workspace-local build script, failure logs and acceptance matrix. A read-only gpt-6-luna high worker checked primary release APIs; director integrated the result. Final scaffold was aligned with the release gpui-kit facade after the failed restore and is unbuilt. No system software installed, GitHub connector/remote mutation performed, shared STATUS.md changed, or Spike A files edited.
+
+Resume in a session with working Cargo registry connectivity, run "'`powershell -NoProfile -ExecutionPolicy Bypass -File .'"\\spikes\\B\\build.ps1"'`, then continue the hello build and input gate. The mandatory finger-lift, carousel, editor, shell/material and performance claims remain unverified. No stack recommendation can be made from this run.
+'"'@ | Set-Content .coord/reports/T-003.md; git diff --check -- spikes/B docs/spikes/B .coord/status-B.md .coord/reports/T-003.md; git status --short -- spikes/B docs/spikes/B .coord/status-B.md .coord/reports/T-003.md" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 234ms:
+?? .coord/reports/T-003.md
+?? .coord/status-B.md
+?? docs/spikes/B/
+?? spikes/B/
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command 'git add -- spikes/B docs/spikes/B .coord/status-B.md .coord/reports/T-003.md; if ($LASTEXITCODE -eq 0) { git commit -m "Record Spike B toolchain gate and registry connectivity blocker" -- spikes/B docs/spikes/B .coord/status-B.md .coord/reports/T-003.md }' in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ exited 1 in 162ms:
+fatal: Unable to create 'F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/.git/index.lock': Permission denied
+
+codex
+Both reports are written. The local commit is also blocked: this session cannot create `.git/index.lock`. I’ll record that separately and check the build script’s syntax before handing back the blocked result.
+
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command "@'
+
+## Local commit blocker
+The scoped git add/commit attempt failed: "'`fatal: Unable to create .../.git/index.lock: Permission denied`. This session has read-only access to .git. Files remain uncommitted; no approval escalation is available.
+After reviewing the B files, run in a git-writable session:
+```powershell
+git add -- spikes/B docs/spikes/B .coord/status-B.md .coord/reports/T-003.md
+git commit -m "Record Spike B toolchain gate and registry connectivity blocker" -- spikes/B docs/spikes/B .coord/status-B.md .coord/reports/T-003.md
+```
+'"'@ | Add-Content .coord/status-B.md; @'
+
+Local commit also blocked: git could not create "'`.git/index.lock` (permission denied). The session'"'s .git access is read-only. Exact scoped commit commands are in "'`.coord/status-B.md`; artifacts remain uncommitted.
+'"'@ | Add-Content .coord/reports/T-003.md; @'
+
+Local commit attempted and blocked by read-only "'`.git` access (`index.lock: Permission denied`). Artifacts remain uncommitted; scoped user commit commands are in `.coord/status-B.md`.
+'"'@ | Add-Content docs/spikes/B/REPORT.md; "'$parseTokens = $null; $parseErrors = $null; [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD '"'spikes/B/build.ps1'), [ref]"'$parseTokens, [ref]$parseErrors) | Out-Null; if ($parseErrors.Count) { $parseErrors | Format-List; exit 1 }; '"'build.ps1 PowerShell syntax: PASS'; git diff --check -- spikes/B docs/spikes/B .coord/status-B.md .coord/reports/T-003.md; Get-Item .coord/reports/T-003.md, docs/spikes/B/REPORT.md | Select-Object FullName,Length; git status --short" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 225ms:
+build.ps1 PowerShell syntax: PASS
+
+ M .claude/atlas/0fc364ed-0bfc-4b86-b14a-cdf5aec44d80.json
+ M .coord/STATUS.md
+ M docs/agents.md
+ M docs/comms-tests.md
+?? .coord/logs/T-002.log
+?? .coord/logs/T-003.log
+?? .coord/logs/t2.log
+?? .coord/reports/T-003.md
+?? .coord/status-A.md
+?? .coord/status-B.md
+?? .coord/tasks/prompt-A.txt
+?? .coord/tasks/prompt-B.txt
+?? docs/spikes/
+?? spikes/
+FullName                                                               Length
+--------                                                               ------
+F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\.coord\reports\T-003.md   1641
+F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\spikes\B\REPORT.md   6516
+
+
+codex
+Blocked at milestone 1: Cargo cannot reach crates.io through the configured proxy. Later milestones remain untested.
+
+Written:
+
+- [Task report](.coord/reports/T-003.md)
+- [Spike B report](docs/spikes/B/REPORT.md)
+- [Checkpoint and exact unblock instructions](.coord/status-B.md)
+
+The build script passes syntax validation. Local commit failed because `.git` is read-only. Spike A was untouched.
+tokens used
+63,903
+Blocked at milestone 1: Cargo cannot reach crates.io through the configured proxy. Later milestones remain untested.
+
+Written:
+
+- [Task report](.coord/reports/T-003.md)
+- [Spike B report](docs/spikes/B/REPORT.md)
+- [Checkpoint and exact unblock instructions](.coord/status-B.md)
+
+The build script passes syntax validation. Local commit failed because `.git` is read-only. Spike A was untouched.

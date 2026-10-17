@@ -1,0 +1,13 @@
+[package]
+name = "antiquickpad-spike-b"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+gpui-kit = "=0.7.3"
+gpui = { package = "gpui-pre", version = "=0.3.9" }
+
+# One bounded diagnostic adapter in the exact restored Windows backend.
+[patch.crates-io]
+gpui-pre-windows = { path = "vendor/gpui-pre-windows" }

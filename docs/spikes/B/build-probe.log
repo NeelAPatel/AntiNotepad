@@ -1,0 +1,8 @@
+   Compiling gpui-pre-windows v0.3.9 (F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\spikes\B\vendor\gpui-pre-windows)
+   Compiling gpui-pre-platform v0.3.9
+   Compiling gpui-kit v0.7.3
+   Compiling antiquickpad-spike-b v0.1.0 (F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\spikes\B)
+error: failed to remove file `F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\spikes\B\target\debug\antiquickpad-spike-b.exe`
+
+Caused by:
+  Access is denied. (os error 5)

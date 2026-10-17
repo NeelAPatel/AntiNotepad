@@ -1,0 +1,1016 @@
+1792215470615674	SESSION	probe_start	gpui=0.3.9	kit=0.7.3	native_status_adapter=true	gate=wheel_and_mouse_drag
+1792215470868088	SESSION	application_callback
+1792215470876775	SESSION	kit_initialized
+1792215471077172	SESSION	editor_created_focus_requested
+1792215652638950	MOUSE_PRESS	button=Left	x=419px	y=235px	editor_focus=true
+1792215652645124	MOUSE_DRAG_MOVE	button=Some(Left)	x=419px	y=235px	editor_focus=true
+1792215652776013	MOUSE_RELEASE	button=Left	x=419px	y=235px	editor_focus=true
+1792215659953814	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215659954106	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215659954378	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215659954520	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215659990319	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215659990554	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215660025389	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=240	notch_delta=2.0000
+1792215660025618	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-6.0000	dy=0.0000	notch_steps_x=-2.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215660035305	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215660035502	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215660845325	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215660845606	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215660883294	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215660883440	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215660920278	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215660920440	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215660928316	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215660928463	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215660943314	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-240	notch_delta=-2.0000
+1792215660943465	PUBLIC_SCROLL	phase=Moved	units=lines	dx=6.0000	dy=0.0000	notch_steps_x=2.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215660958327	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215660958496	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215661003322	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215661003506	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215661888438	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215661888643	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215662803486	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215662803695	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215662968370	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215662968593	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215663050403	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215663050611	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215663110392	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215663110545	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215663155439	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215663155609	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215663200701	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215663200986	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215663260436	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215663260627	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215663320364	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215663320591	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215663388348	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215663388522	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215664348317	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215664348505	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215664430483	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215664430670	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215664543454	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215664543673	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215664625488	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215664625730	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215664693350	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215664693534	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215664760335	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215664760501	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215664865353	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215664865536	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215665000333	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215665000544	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215665120372	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215665120569	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215665218333	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215665218502	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215665323451	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215665323685	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=403px	y=213px
+1792215667124078	MOUSE_PRESS	button=Left	x=426px	y=-18px	editor_focus=true
+1792215669013568	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215669013781	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215669200800	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215669201025	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215669380394	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215669380581	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215669508478	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215669508672	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215669628457	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215669628673	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215669748498	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215669748696	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215669905456	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215669905648	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215669973462	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215669973678	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215670093477	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215670093739	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215670250392	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215670250578	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215671383467	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215671383648	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215671458391	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215671458556	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215671518369	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215671518557	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215671578367	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215671578516	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215671690496	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215671690685	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215671758746	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215671759056	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215671818524	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215671818820	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215671968505	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215671968723	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215672125481	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215672125682	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215672215475	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215672215699	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215672290430	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215672290625	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215672375085	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215672375252	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215672410409	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215672410567	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215672500493	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215672500653	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=417px	y=252px
+1792215674990379	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215674990584	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=420px	y=257px
+1792215675035397	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215675035593	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=422px	y=260px
+1792215675050419	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215675050566	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=424px	y=261px
+1792215675065451	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215675065602	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=426px	y=261px
+1792215675080906	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215675081072	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=427px	y=261px
+1792215675095426	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215675095572	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=427px	y=261px
+1792215675110423	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215675110575	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=427px	y=261px
+1792215675140390	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215675140531	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=427px	y=261px
+1792215675155647	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215675155806	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=427px	y=261px
+1792215675170435	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215675170622	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=427px	y=261px
+1792215675200406	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215675200575	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=427px	y=261px
+1792215676183501	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215676183735	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=427px	y=262px
+1792215676220404	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215676220553	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=266px
+1792215676235717	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-240	notch_delta=-2.0000
+1792215676235851	PUBLIC_SCROLL	phase=Moved	units=lines	dx=6.0000	dy=0.0000	notch_steps_x=2.0000	notch_steps_y=0.0000	editor_focus=true	x=430px	y=272px
+1792215676250442	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215676250580	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=433px	y=281px
+1792215676265470	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215676265646	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=435px	y=283px
+1792215676280655	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215676280811	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=436px	y=283px
+1792215676288505	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215676288632	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=436px	y=283px
+1792215676310520	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215676310682	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=436px	y=283px
+1792215676340430	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215676340591	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=436px	y=283px
+1792215676355590	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215676355740	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=436px	y=283px
+1792215676408445	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215676408633	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=436px	y=283px
+1792215677480513	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215677480719	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=436px	y=283px
+1792215677503444	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215677503599	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=436px	y=283px
+1792215677518438	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215677518593	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=436px	y=283px
+1792215677533423	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=240	notch_delta=2.0000
+1792215677533572	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-6.0000	dy=0.0000	notch_steps_x=-2.0000	notch_steps_y=0.0000	editor_focus=true	x=436px	y=283px
+1792215677548465	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=240	notch_delta=2.0000
+1792215677548650	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-6.0000	dy=0.0000	notch_steps_x=-2.0000	notch_steps_y=0.0000	editor_focus=true	x=436px	y=283px
+1792215677563435	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215677563584	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=436px	y=283px
+1792215677585456	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215677585659	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=436px	y=283px
+1792215677593782	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=240	notch_delta=2.0000
+1792215677593907	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-6.0000	dy=0.0000	notch_steps_x=-2.0000	notch_steps_y=0.0000	editor_focus=true	x=436px	y=283px
+1792215677608435	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215677608602	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=436px	y=283px
+1792215677630439	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215677630610	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=436px	y=283px
+1792215679043797	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215679043983	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=434px	y=286px
+1792215679055839	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215679056015	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=434px	y=286px
+1792215679078487	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-240	notch_delta=-2.0000
+1792215679078655	PUBLIC_SCROLL	phase=Moved	units=lines	dx=6.0000	dy=0.0000	notch_steps_x=2.0000	notch_steps_y=0.0000	editor_focus=true	x=432px	y=288px
+1792215679093506	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-240	notch_delta=-2.0000
+1792215679093630	PUBLIC_SCROLL	phase=Moved	units=lines	dx=6.0000	dy=0.0000	notch_steps_x=2.0000	notch_steps_y=0.0000	editor_focus=true	x=430px	y=292px
+1792215679108513	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-240	notch_delta=-2.0000
+1792215679108670	PUBLIC_SCROLL	phase=Moved	units=lines	dx=6.0000	dy=0.0000	notch_steps_x=2.0000	notch_steps_y=0.0000	editor_focus=true	x=430px	y=298px
+1792215679123457	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215679123587	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=430px	y=299px
+1792215679130583	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215679130698	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=430px	y=299px
+1792215679145450	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215679145601	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=430px	y=300px
+1792215681898853	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215681899144	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=301px
+1792215681965765	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215681965922	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=301px
+1792215682070628	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215682070816	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=301px
+1792215682160483	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215682160670	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=301px
+1792215682220464	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215682220649	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=301px
+1792215682288613	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215682288796	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=301px
+1792215682460667	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215682460843	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=301px
+1792215682580489	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215682580668	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=301px
+1792215682715609	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215682715814	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=301px
+1792215682873668	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=120	notch_delta=1.0000
+1792215682873914	PUBLIC_SCROLL	phase=Moved	units=lines	dx=-3.0000	dy=0.0000	notch_steps_x=-1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=305px
+1792215683833587	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215683833774	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=305px
+1792215683893460	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215683893672	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=305px
+1792215683953567	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215683953751	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=305px
+1792215683998753	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215683998932	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=305px
+1792215684065745	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215684065976	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=305px
+1792215684125505	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215684125701	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=308px
+1792215684185684	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215684185846	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=309px
+1792215684245561	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215684245723	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=309px
+1792215684298823	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215684299024	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=309px
+1792215684343464	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215684343622	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=309px
+1792215684381509	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215684381709	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=309px
+1792215684441752	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215684441948	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=309px
+1792215684516563	NATIVE_WHEEL	message=WM_MOUSEHWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215684516747	PUBLIC_SCROLL	phase=Moved	units=lines	dx=3.0000	dy=0.0000	notch_steps_x=1.0000	notch_steps_y=0.0000	editor_focus=true	x=429px	y=309px
+1792215697941715	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215697941970	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215697950856	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215697951042	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215698076968	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215698077170	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215698181665	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215698181852	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215698263594	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215698263784	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215698368725	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215698368935	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215698458653	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215698458854	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215698586636	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215698586831	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215698767170	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215698767445	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215700281781	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215700282035	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215700464052	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215700464234	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215700611637	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215700611812	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215700731660	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215700731864	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215700798854	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215700799081	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215700888697	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215700888876	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215701008641	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215701008832	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215701091667	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215701091899	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215701173635	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215701173804	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215702591748	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215702591946	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215702598641	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215702598762	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215702607614	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215702607775	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215702621700	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215702621855	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215702628604	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215702628727	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215702643708	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215702643884	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215702673697	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215702673927	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215702726657	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215702726831	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215703693946	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215703694226	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215703716750	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215703716882	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215703738665	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215703738788	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215703761625	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215703761778	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215703768824	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215703769003	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215703783659	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215703783814	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215703798710	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215703798871	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215703829030	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215703829214	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215703851683	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215703851830	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215704901719	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215704901931	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215704961747	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215704961928	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215705081720	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215705081919	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215705163709	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215705163874	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215705262025	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215705262174	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215705403782	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215705404007	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215705538719	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215705538894	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215705666737	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215705666909	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215705958706	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215705958884	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215707091678	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215707091855	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215707218894	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215707219302	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215707308735	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215707308933	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215707368714	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215707368865	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215707406790	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215707406988	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215707473816	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215707474011	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215707563739	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215707563936	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215707653702	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215707653890	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215707728676	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215707728835	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215707856949	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215707857268	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215710231945	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215710232150	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215710252014	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215710252176	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215710257871	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215710257983	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215710268270	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215710268431	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215710273975	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215710274137	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215710279618	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215710279731	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215710294946	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215710295078	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215711231739	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711231912	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711246700	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711246830	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711253636	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711253755	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711261675	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711261816	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711270318	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711270447	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711276905	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-240	notch_delta=-2.0000
+1792215711277079	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-6.0000	notch_steps_x=0.0000	notch_steps_y=-2.0000	editor_focus=true	x=429px	y=309px
+1792215711283637	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711283758	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711291739	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711291873	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711299802	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711299929	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711306699	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711306862	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711315619	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711315736	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711322147	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711322350	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711329044	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711329198	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711336707	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711337048	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711345083	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-240	notch_delta=-2.0000
+1792215711345215	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-6.0000	notch_steps_x=0.0000	notch_steps_y=-2.0000	editor_focus=true	x=429px	y=309px
+1792215711351786	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711351924	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711358678	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711358801	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711366643	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711366767	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711373899	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711374016	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711381662	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711381804	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711390591	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711390724	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711396659	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711396789	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711403675	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711403794	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711411718	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711411858	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711422491	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711422628	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711428050	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711428162	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711441666	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711441787	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711449281	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711449401	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711456694	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711456816	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711467515	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711467720	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711473156	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711473309	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711480184	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711480331	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711486698	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711486843	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711496209	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711496337	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711501978	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711502104	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711508719	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711509136	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711516687	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711516823	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711531706	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711531870	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711539561	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711539688	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711546656	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711546793	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711561692	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711561838	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711568627	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711568752	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711583661	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711583778	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711591699	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711591848	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711606709	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711606849	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711621660	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711621827	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711628701	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711628848	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711643749	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711643896	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711658710	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711658861	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215711673715	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=-120	notch_delta=-1.0000
+1792215711673868	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=-3.0000	notch_steps_x=0.0000	notch_steps_y=-1.0000	editor_focus=true	x=429px	y=309px
+1792215714373774	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714374127	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714397045	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714397173	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714406597	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714406713	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714412042	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714412154	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714422507	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714422622	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714428009	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714428124	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714438193	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714438312	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714443739	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714443852	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714448884	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=240	notch_delta=2.0000
+1792215714448995	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=6.0000	notch_steps_x=0.0000	notch_steps_y=2.0000	editor_focus=true	x=429px	y=309px
+1792215714460466	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714460586	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714466134	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714466249	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714471720	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714471841	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714481842	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714481958	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714497908	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714498025	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714503987	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714504116	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714509754	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=240	notch_delta=2.0000
+1792215714509866	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=6.0000	notch_steps_x=0.0000	notch_steps_y=2.0000	editor_focus=true	x=429px	y=309px
+1792215714520701	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714520819	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714527330	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714527441	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714533172	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714533284	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714538744	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714538865	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714549749	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714549868	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714555461	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714555598	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714561769	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714561917	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714572125	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714572239	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714577457	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714577621	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714587963	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714588104	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714593574	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714593699	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714609443	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714609563	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714615197	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714615312	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714626786	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714626951	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714632712	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714632826	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714638949	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714639072	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714655497	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714655614	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714660608	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714660718	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714671293	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714671483	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714677167	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714677280	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714688762	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714688903	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714696740	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714696884	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714711715	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714711865	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714720429	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714720795	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714733861	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714734004	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714742083	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714742212	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714756717	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714756852	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714771812	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714771977	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714786721	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714786882	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714793747	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714793887	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714808931	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714809093	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215714831773	NATIVE_WHEEL	message=WM_MOUSEWHEEL	raw_delta=120	notch_delta=1.0000
+1792215714831927	PUBLIC_SCROLL	phase=Moved	units=lines	dx=0.0000	dy=3.0000	notch_steps_x=0.0000	notch_steps_y=1.0000	editor_focus=true	x=429px	y=309px
+1792215717997544	MOUSE_PRESS	button=Left	x=131px	y=260px	editor_focus=true
+1792215718056830	MOUSE_DRAG_MOVE	button=Some(Left)	x=132px	y=260px	editor_focus=true
+1792215718064733	MOUSE_DRAG_MOVE	button=Some(Left)	x=133px	y=260px	editor_focus=true
+1792215718071842	MOUSE_DRAG_MOVE	button=Some(Left)	x=135px	y=259px	editor_focus=true
+1792215718079749	MOUSE_DRAG_MOVE	button=Some(Left)	x=138px	y=259px	editor_focus=true
+1792215718089031	MOUSE_DRAG_MOVE	button=Some(Left)	x=141px	y=259px	editor_focus=true
+1792215718094869	MOUSE_DRAG_MOVE	button=Some(Left)	x=144px	y=258px	editor_focus=true
+1792215718101750	MOUSE_DRAG_MOVE	button=Some(Left)	x=146px	y=258px	editor_focus=true
+1792215718109793	MOUSE_DRAG_MOVE	button=Some(Left)	x=149px	y=258px	editor_focus=true
+1792215718116765	MOUSE_DRAG_MOVE	button=Some(Left)	x=152px	y=257px	editor_focus=true
+1792215718124799	MOUSE_DRAG_MOVE	button=Some(Left)	x=154px	y=257px	editor_focus=true
+1792215718133358	MOUSE_DRAG_MOVE	button=Some(Left)	x=157px	y=257px	editor_focus=true
+1792215718139724	MOUSE_DRAG_MOVE	button=Some(Left)	x=159px	y=257px	editor_focus=true
+1792215718146759	MOUSE_DRAG_MOVE	button=Some(Left)	x=161px	y=257px	editor_focus=true
+1792215718154806	MOUSE_DRAG_MOVE	button=Some(Left)	x=163px	y=256px	editor_focus=true
+1792215718161731	MOUSE_DRAG_MOVE	button=Some(Left)	x=164px	y=256px	editor_focus=true
+1792215718169831	MOUSE_DRAG_MOVE	button=Some(Left)	x=165px	y=256px	editor_focus=true
+1792215718176761	MOUSE_DRAG_MOVE	button=Some(Left)	x=167px	y=256px	editor_focus=true
+1792215718186513	MOUSE_DRAG_MOVE	button=Some(Left)	x=168px	y=256px	editor_focus=true
+1792215718191825	MOUSE_DRAG_MOVE	button=Some(Left)	x=169px	y=256px	editor_focus=true
+1792215718206782	MOUSE_DRAG_MOVE	button=Some(Left)	x=169px	y=255px	editor_focus=true
+1792215718214738	MOUSE_DRAG_MOVE	button=Some(Left)	x=170px	y=255px	editor_focus=true
+1792215718245002	MOUSE_DRAG_MOVE	button=Some(Left)	x=171px	y=255px	editor_focus=true
+1792215718266817	MOUSE_DRAG_MOVE	button=Some(Left)	x=172px	y=255px	editor_focus=true
+1792215718276291	MOUSE_DRAG_MOVE	button=Some(Left)	x=173px	y=255px	editor_focus=true
+1792215718296759	MOUSE_DRAG_MOVE	button=Some(Left)	x=174px	y=255px	editor_focus=true
+1792215718304839	MOUSE_DRAG_MOVE	button=Some(Left)	x=175px	y=255px	editor_focus=true
+1792215718312621	MOUSE_DRAG_MOVE	button=Some(Left)	x=176px	y=255px	editor_focus=true
+1792215718319903	MOUSE_DRAG_MOVE	button=Some(Left)	x=177px	y=255px	editor_focus=true
+1792215718341774	MOUSE_DRAG_MOVE	button=Some(Left)	x=178px	y=255px	editor_focus=true
+1792215718364779	MOUSE_DRAG_MOVE	button=Some(Left)	x=179px	y=255px	editor_focus=true
+1792215718371752	MOUSE_DRAG_MOVE	button=Some(Left)	x=180px	y=255px	editor_focus=true
+1792215718379821	MOUSE_DRAG_MOVE	button=Some(Left)	x=181px	y=255px	editor_focus=true
+1792215718387666	MOUSE_DRAG_MOVE	button=Some(Left)	x=182px	y=255px	editor_focus=true
+1792215718401813	MOUSE_DRAG_MOVE	button=Some(Left)	x=183px	y=255px	editor_focus=true
+1792215718416786	MOUSE_DRAG_MOVE	button=Some(Left)	x=184px	y=255px	editor_focus=true
+1792215718431728	MOUSE_DRAG_MOVE	button=Some(Left)	x=185px	y=255px	editor_focus=true
+1792215718461770	MOUSE_DRAG_MOVE	button=Some(Left)	x=186px	y=255px	editor_focus=true
+1792215718716885	MOUSE_DRAG_MOVE	button=Some(Left)	x=187px	y=255px	editor_focus=true
+1792215718726691	MOUSE_DRAG_MOVE	button=Some(Left)	x=188px	y=255px	editor_focus=true
+1792215718731825	MOUSE_DRAG_MOVE	button=Some(Left)	x=189px	y=255px	editor_focus=true
+1792215718746809	MOUSE_DRAG_MOVE	button=Some(Left)	x=189px	y=254px	editor_focus=true
+1792215718754778	MOUSE_DRAG_MOVE	button=Some(Left)	x=190px	y=254px	editor_focus=true
+1792215718791861	MOUSE_DRAG_MOVE	button=Some(Left)	x=191px	y=254px	editor_focus=true
+1792215718825060	MOUSE_DRAG_MOVE	button=Some(Left)	x=192px	y=254px	editor_focus=true
+1792215718829939	MOUSE_DRAG_MOVE	button=Some(Left)	x=193px	y=254px	editor_focus=true
+1792215718836745	MOUSE_DRAG_MOVE	button=Some(Left)	x=194px	y=254px	editor_focus=true
+1792215718851742	MOUSE_DRAG_MOVE	button=Some(Left)	x=195px	y=254px	editor_focus=true
+1792215718882006	MOUSE_DRAG_MOVE	button=Some(Left)	x=196px	y=254px	editor_focus=true
+1792215719302652	MOUSE_RELEASE	button=Left	x=196px	y=254px	editor_focus=true
+1792215731685776	MOUSE_PRESS	button=Left	x=334px	y=324px	editor_focus=true
+1792215731767519	MOUSE_RELEASE	button=Left	x=334px	y=324px	editor_focus=true
+1792215735067515	MOUSE_PRESS	button=Left	x=133px	y=335px	editor_focus=true
+1792215735186933	MOUSE_DRAG_MOVE	button=Some(Left)	x=134px	y=335px	editor_focus=true
+1792215735195574	MOUSE_DRAG_MOVE	button=Some(Left)	x=135px	y=335px	editor_focus=true
+1792215735201927	MOUSE_DRAG_MOVE	button=Some(Left)	x=136px	y=335px	editor_focus=true
+1792215735216978	MOUSE_DRAG_MOVE	button=Some(Left)	x=138px	y=335px	editor_focus=true
+1792215735224883	MOUSE_DRAG_MOVE	button=Some(Left)	x=139px	y=335px	editor_focus=true
+1792215735246930	MOUSE_DRAG_MOVE	button=Some(Left)	x=141px	y=335px	editor_focus=true
+1792215735254849	MOUSE_DRAG_MOVE	button=Some(Left)	x=143px	y=335px	editor_focus=true
+1792215735261905	MOUSE_DRAG_MOVE	button=Some(Left)	x=145px	y=335px	editor_focus=true
+1792215735270206	MOUSE_DRAG_MOVE	button=Some(Left)	x=147px	y=335px	editor_focus=true
+1792215735276895	MOUSE_DRAG_MOVE	button=Some(Left)	x=149px	y=335px	editor_focus=true
+1792215735291923	MOUSE_DRAG_MOVE	button=Some(Left)	x=152px	y=335px	editor_focus=true
+1792215735299883	MOUSE_DRAG_MOVE	button=Some(Left)	x=154px	y=335px	editor_focus=true
+1792215735314932	MOUSE_DRAG_MOVE	button=Some(Left)	x=156px	y=336px	editor_focus=true
+1792215735321873	MOUSE_DRAG_MOVE	button=Some(Left)	x=158px	y=336px	editor_focus=true
+1792215735336870	MOUSE_DRAG_MOVE	button=Some(Left)	x=160px	y=336px	editor_focus=true
+1792215735344861	MOUSE_DRAG_MOVE	button=Some(Left)	x=161px	y=336px	editor_focus=true
+1792215735359923	MOUSE_DRAG_MOVE	button=Some(Left)	x=162px	y=336px	editor_focus=true
+1792215735366882	MOUSE_DRAG_MOVE	button=Some(Left)	x=163px	y=336px	editor_focus=true
+1792215735404956	MOUSE_DRAG_MOVE	button=Some(Left)	x=164px	y=336px	editor_focus=true
+1792215735411987	MOUSE_DRAG_MOVE	button=Some(Left)	x=165px	y=336px	editor_focus=true
+1792215735419873	MOUSE_DRAG_MOVE	button=Some(Left)	x=166px	y=336px	editor_focus=true
+1792215735427785	MOUSE_DRAG_MOVE	button=Some(Left)	x=167px	y=336px	editor_focus=true
+1792215735434877	MOUSE_DRAG_MOVE	button=Some(Left)	x=168px	y=336px	editor_focus=true
+1792215735449916	MOUSE_DRAG_MOVE	button=Some(Left)	x=169px	y=336px	editor_focus=true
+1792215735456878	MOUSE_DRAG_MOVE	button=Some(Left)	x=170px	y=336px	editor_focus=true
+1792215735465178	MOUSE_DRAG_MOVE	button=Some(Left)	x=171px	y=336px	editor_focus=true
+1792215735494937	MOUSE_DRAG_MOVE	button=Some(Left)	x=172px	y=336px	editor_focus=true
+1792215735503237	MOUSE_DRAG_MOVE	button=Some(Left)	x=173px	y=336px	editor_focus=true
+1792215735509842	MOUSE_DRAG_MOVE	button=Some(Left)	x=174px	y=336px	editor_focus=true
+1792215735531891	MOUSE_DRAG_MOVE	button=Some(Left)	x=175px	y=336px	editor_focus=true
+1792215735539879	MOUSE_DRAG_MOVE	button=Some(Left)	x=176px	y=336px	editor_focus=true
+1792215735547110	MOUSE_DRAG_MOVE	button=Some(Left)	x=177px	y=336px	editor_focus=true
+1792215735569924	MOUSE_DRAG_MOVE	button=Some(Left)	x=178px	y=336px	editor_focus=true
+1792215735577664	MOUSE_DRAG_MOVE	button=Some(Left)	x=179px	y=336px	editor_focus=true
+1792215735614973	MOUSE_DRAG_MOVE	button=Some(Left)	x=180px	y=336px	editor_focus=true
+1792215735623512	MOUSE_DRAG_MOVE	button=Some(Left)	x=181px	y=336px	editor_focus=true
+1792215735644962	MOUSE_DRAG_MOVE	button=Some(Left)	x=182px	y=336px	editor_focus=true
+1792215735666886	MOUSE_DRAG_MOVE	button=Some(Left)	x=183px	y=336px	editor_focus=true
+1792215735689916	MOUSE_DRAG_MOVE	button=Some(Left)	x=183px	y=337px	editor_focus=true
+1792215735698469	MOUSE_DRAG_MOVE	button=Some(Left)	x=184px	y=337px	editor_focus=true
+1792215735726992	MOUSE_DRAG_MOVE	button=Some(Left)	x=185px	y=337px	editor_focus=true
+1792215735734905	MOUSE_DRAG_MOVE	button=Some(Left)	x=186px	y=337px	editor_focus=true
+1792215735741881	MOUSE_DRAG_MOVE	button=Some(Left)	x=187px	y=337px	editor_focus=true
+1792215735756891	MOUSE_DRAG_MOVE	button=Some(Left)	x=188px	y=337px	editor_focus=true
+1792215735764958	MOUSE_DRAG_MOVE	button=Some(Left)	x=189px	y=337px	editor_focus=true
+1792215735786977	MOUSE_DRAG_MOVE	button=Some(Left)	x=190px	y=337px	editor_focus=true
+1792215735824947	MOUSE_DRAG_MOVE	button=Some(Left)	x=191px	y=337px	editor_focus=true
+1792215735982955	MOUSE_RELEASE	button=Left	x=191px	y=337px	editor_focus=true
+1792215752034116	MOUSE_PRESS	button=Left	x=625px	y=323px	editor_focus=true
+1792215752100049	MOUSE_DRAG_MOVE	button=Some(Left)	x=624px	y=323px	editor_focus=true
+1792215752108200	MOUSE_DRAG_MOVE	button=Some(Left)	x=623px	y=323px	editor_focus=true
+1792215752115873	MOUSE_DRAG_MOVE	button=Some(Left)	x=621px	y=322px	editor_focus=true
+1792215752122986	MOUSE_DRAG_MOVE	button=Some(Left)	x=615px	y=322px	editor_focus=true
+1792215752131222	MOUSE_DRAG_MOVE	button=Some(Left)	x=611px	y=321px	editor_focus=true
+1792215752138079	MOUSE_DRAG_MOVE	button=Some(Left)	x=607px	y=321px	editor_focus=true
+1792215752146770	MOUSE_DRAG_MOVE	button=Some(Left)	x=600px	y=320px	editor_focus=true
+1792215752153296	MOUSE_DRAG_MOVE	button=Some(Left)	x=592px	y=319px	editor_focus=true
+1792215752160014	MOUSE_DRAG_MOVE	button=Some(Left)	x=583px	y=318px	editor_focus=true
+1792215752168158	MOUSE_DRAG_MOVE	button=Some(Left)	x=573px	y=317px	editor_focus=true
+1792215752175010	MOUSE_DRAG_MOVE	button=Some(Left)	x=563px	y=316px	editor_focus=true
+1792215752183083	MOUSE_DRAG_MOVE	button=Some(Left)	x=551px	y=315px	editor_focus=true
+1792215752190010	MOUSE_DRAG_MOVE	button=Some(Left)	x=545px	y=315px	editor_focus=true
+1792215752198005	MOUSE_DRAG_MOVE	button=Some(Left)	x=532px	y=314px	editor_focus=true
+1792215752205162	MOUSE_DRAG_MOVE	button=Some(Left)	x=520px	y=314px	editor_focus=true
+1792215752213024	MOUSE_DRAG_MOVE	button=Some(Left)	x=507px	y=314px	editor_focus=true
+1792215752220005	MOUSE_DRAG_MOVE	button=Some(Left)	x=494px	y=314px	editor_focus=true
+1792215752228008	MOUSE_DRAG_MOVE	button=Some(Left)	x=488px	y=314px	editor_focus=true
+1792215752235009	MOUSE_DRAG_MOVE	button=Some(Left)	x=475px	y=314px	editor_focus=true
+1792215752243306	MOUSE_DRAG_MOVE	button=Some(Left)	x=463px	y=314px	editor_focus=true
+1792215752249999	MOUSE_DRAG_MOVE	button=Some(Left)	x=457px	y=314px	editor_focus=true
+1792215752258157	MOUSE_DRAG_MOVE	button=Some(Left)	x=445px	y=314px	editor_focus=true
+1792215752265089	MOUSE_DRAG_MOVE	button=Some(Left)	x=439px	y=314px	editor_focus=true
+1792215752273058	MOUSE_DRAG_MOVE	button=Some(Left)	x=427px	y=314px	editor_focus=true
+1792215752281129	MOUSE_DRAG_MOVE	button=Some(Left)	x=421px	y=314px	editor_focus=true
+1792215752288078	MOUSE_DRAG_MOVE	button=Some(Left)	x=410px	y=314px	editor_focus=true
+1792215752298157	MOUSE_DRAG_MOVE	button=Some(Left)	x=399px	y=314px	editor_focus=true
+1792215752303543	MOUSE_DRAG_MOVE	button=Some(Left)	x=393px	y=314px	editor_focus=true
+1792215752310155	MOUSE_DRAG_MOVE	button=Some(Left)	x=388px	y=314px	editor_focus=true
+1792215752318303	MOUSE_DRAG_MOVE	button=Some(Left)	x=376px	y=314px	editor_focus=true
+1792215752325152	MOUSE_DRAG_MOVE	button=Some(Left)	x=371px	y=314px	editor_focus=true
+1792215752333054	MOUSE_DRAG_MOVE	button=Some(Left)	x=359px	y=314px	editor_focus=true
+1792215752344565	MOUSE_DRAG_MOVE	button=Some(Left)	x=354px	y=314px	editor_focus=true
+1792215752349483	MOUSE_DRAG_MOVE	button=Some(Left)	x=342px	y=314px	editor_focus=true
+1792215752355039	MOUSE_DRAG_MOVE	button=Some(Left)	x=336px	y=314px	editor_focus=true
+1792215752364021	MOUSE_DRAG_MOVE	button=Some(Left)	x=329px	y=314px	editor_focus=true
+1792215752369992	MOUSE_DRAG_MOVE	button=Some(Left)	x=316px	y=314px	editor_focus=true
+1792215752378005	MOUSE_DRAG_MOVE	button=Some(Left)	x=309px	y=314px	editor_focus=true
+1792215752384997	MOUSE_DRAG_MOVE	button=Some(Left)	x=302px	y=314px	editor_focus=true
+1792215752394534	MOUSE_DRAG_MOVE	button=Some(Left)	x=288px	y=314px	editor_focus=true
+1792215752401468	MOUSE_DRAG_MOVE	button=Some(Left)	x=280px	y=314px	editor_focus=true
+1792215752408205	MOUSE_DRAG_MOVE	button=Some(Left)	x=272px	y=314px	editor_focus=true
+1792215752415039	MOUSE_DRAG_MOVE	button=Some(Left)	x=255px	y=314px	editor_focus=true
+1792215752423046	MOUSE_DRAG_MOVE	button=Some(Left)	x=247px	y=314px	editor_focus=true
+1792215752431667	MOUSE_DRAG_MOVE	button=Some(Left)	x=239px	y=314px	editor_focus=true
+1792215752438062	MOUSE_DRAG_MOVE	button=Some(Left)	x=230px	y=314px	editor_focus=true
+1792215752445224	MOUSE_DRAG_MOVE	button=Some(Left)	x=214px	y=315px	editor_focus=true
+1792215752453012	MOUSE_DRAG_MOVE	button=Some(Left)	x=206px	y=315px	editor_focus=true
+1792215752460016	MOUSE_DRAG_MOVE	button=Some(Left)	x=197px	y=315px	editor_focus=true
+1792215752468081	MOUSE_DRAG_MOVE	button=Some(Left)	x=189px	y=315px	editor_focus=true
+1792215752475016	MOUSE_DRAG_MOVE	button=Some(Left)	x=172px	y=315px	editor_focus=true
+1792215752483029	MOUSE_DRAG_MOVE	button=Some(Left)	x=164px	y=316px	editor_focus=true
+1792215752490690	MOUSE_DRAG_MOVE	button=Some(Left)	x=156px	y=316px	editor_focus=true
+1792215752498486	MOUSE_DRAG_MOVE	button=Some(Left)	x=149px	y=316px	editor_focus=true
+1792215752505067	MOUSE_DRAG_MOVE	button=Some(Left)	x=142px	y=317px	editor_focus=true
+1792215752514395	MOUSE_DRAG_MOVE	button=Some(Left)	x=127px	y=317px	editor_focus=true
+1792215752520002	MOUSE_DRAG_MOVE	button=Some(Left)	x=120px	y=318px	editor_focus=true
+1792215752528056	MOUSE_DRAG_MOVE	button=Some(Left)	x=113px	y=318px	editor_focus=true
+1792215752535017	MOUSE_DRAG_MOVE	button=Some(Left)	x=106px	y=318px	editor_focus=true
+1792215752543214	MOUSE_DRAG_MOVE	button=Some(Left)	x=99px	y=319px	editor_focus=true
+1792215752552266	MOUSE_DRAG_MOVE	button=Some(Left)	x=93px	y=319px	editor_focus=true
+1792215752558839	MOUSE_DRAG_MOVE	button=Some(Left)	x=87px	y=319px	editor_focus=true
+1792215752565005	MOUSE_DRAG_MOVE	button=Some(Left)	x=75px	y=320px	editor_focus=true
+1792215752573048	MOUSE_DRAG_MOVE	button=Some(Left)	x=69px	y=320px	editor_focus=true
+1792215752580265	MOUSE_DRAG_MOVE	button=Some(Left)	x=63px	y=320px	editor_focus=true
+1792215752588070	MOUSE_DRAG_MOVE	button=Some(Left)	x=58px	y=321px	editor_focus=true
+1792215752595059	MOUSE_DRAG_MOVE	button=Some(Left)	x=53px	y=321px	editor_focus=true
+1792215752603420	MOUSE_DRAG_MOVE	button=Some(Left)	x=49px	y=321px	editor_focus=true
+1792215752610727	MOUSE_DRAG_MOVE	button=Some(Left)	x=45px	y=322px	editor_focus=true
+1792215752618088	MOUSE_DRAG_MOVE	button=Some(Left)	x=42px	y=322px	editor_focus=true
+1792215752625038	MOUSE_DRAG_MOVE	button=Some(Left)	x=40px	y=322px	editor_focus=true
+1792215752633059	MOUSE_DRAG_MOVE	button=Some(Left)	x=37px	y=322px	editor_focus=true
+1792215752640049	MOUSE_DRAG_MOVE	button=Some(Left)	x=35px	y=322px	editor_focus=true
+1792215752648053	MOUSE_DRAG_MOVE	button=Some(Left)	x=35px	y=323px	editor_focus=true
+1792215752776020	MOUSE_RELEASE	button=Left	x=35px	y=323px	editor_focus=true
+1792215753571299	MOUSE_PRESS	button=Left	x=37px	y=310px	editor_focus=true
+1792215753623082	MOUSE_DRAG_MOVE	button=Some(Left)	x=38px	y=310px	editor_focus=true
+1792215753630712	MOUSE_DRAG_MOVE	button=Some(Left)	x=39px	y=310px	editor_focus=true
+1792215753638336	MOUSE_DRAG_MOVE	button=Some(Left)	x=40px	y=309px	editor_focus=true
+1792215753645139	MOUSE_DRAG_MOVE	button=Some(Left)	x=41px	y=309px	editor_focus=true
+1792215753650965	MOUSE_DRAG_MOVE	button=Some(Left)	x=41px	y=309px	editor_focus=true
+1792215753656988	MOUSE_DRAG_MOVE	button=Some(Left)	x=45px	y=309px	editor_focus=true
+1792215753663792	MOUSE_DRAG_MOVE	button=Some(Left)	x=48px	y=309px	editor_focus=true
+1792215753668914	MOUSE_DRAG_MOVE	button=Some(Left)	x=52px	y=309px	editor_focus=true
+1792215753675066	MOUSE_DRAG_MOVE	button=Some(Left)	x=59px	y=309px	editor_focus=true
+1792215753683912	MOUSE_DRAG_MOVE	button=Some(Left)	x=61px	y=309px	editor_focus=true
+1792215753690139	MOUSE_DRAG_MOVE	button=Some(Left)	x=66px	y=309px	editor_focus=true
+1792215753698062	MOUSE_DRAG_MOVE	button=Some(Left)	x=72px	y=309px	editor_focus=true
+1792215753705114	MOUSE_DRAG_MOVE	button=Some(Left)	x=79px	y=309px	editor_focus=true
+1792215753713025	MOUSE_DRAG_MOVE	button=Some(Left)	x=86px	y=309px	editor_focus=true
+1792215753721843	MOUSE_DRAG_MOVE	button=Some(Left)	x=94px	y=309px	editor_focus=true
+1792215753728804	MOUSE_DRAG_MOVE	button=Some(Left)	x=104px	y=310px	editor_focus=true
+1792215753735124	MOUSE_DRAG_MOVE	button=Some(Left)	x=113px	y=310px	editor_focus=true
+1792215753743017	MOUSE_DRAG_MOVE	button=Some(Left)	x=124px	y=310px	editor_focus=true
+1792215753750682	MOUSE_DRAG_MOVE	button=Some(Left)	x=129px	y=311px	editor_focus=true
+1792215753758030	MOUSE_DRAG_MOVE	button=Some(Left)	x=140px	y=311px	editor_focus=true
+1792215753765007	MOUSE_DRAG_MOVE	button=Some(Left)	x=152px	y=311px	editor_focus=true
+1792215753773003	MOUSE_DRAG_MOVE	button=Some(Left)	x=158px	y=312px	editor_focus=true
+1792215753780591	MOUSE_DRAG_MOVE	button=Some(Left)	x=169px	y=312px	editor_focus=true
+1792215753788017	MOUSE_DRAG_MOVE	button=Some(Left)	x=181px	y=312px	editor_focus=true
+1792215753797055	MOUSE_DRAG_MOVE	button=Some(Left)	x=188px	y=312px	editor_focus=true
+1792215753804175	MOUSE_DRAG_MOVE	button=Some(Left)	x=200px	y=312px	editor_focus=true
+1792215753810031	MOUSE_DRAG_MOVE	button=Some(Left)	x=207px	y=312px	editor_focus=true
+1792215753818094	MOUSE_DRAG_MOVE	button=Some(Left)	x=220px	y=313px	editor_focus=true
+1792215753825706	MOUSE_DRAG_MOVE	button=Some(Left)	x=226px	y=313px	editor_focus=true
+1792215753833053	MOUSE_DRAG_MOVE	button=Some(Left)	x=239px	y=313px	editor_focus=true
+1792215753840008	MOUSE_DRAG_MOVE	button=Some(Left)	x=245px	y=313px	editor_focus=true
+1792215753848252	MOUSE_DRAG_MOVE	button=Some(Left)	x=258px	y=313px	editor_focus=true
+1792215753849424	MOUSE_DRAG_MOVE	button=Some(Left)	x=258px	y=313px	editor_focus=true
+1792215753855096	MOUSE_DRAG_MOVE	button=Some(Left)	x=265px	y=313px	editor_focus=true
+1792215753863133	MOUSE_DRAG_MOVE	button=Some(Left)	x=277px	y=313px	editor_focus=true
+1792215753872636	MOUSE_DRAG_MOVE	button=Some(Left)	x=283px	y=313px	editor_focus=true
+1792215753878120	MOUSE_DRAG_MOVE	button=Some(Left)	x=296px	y=313px	editor_focus=true
+1792215753885024	MOUSE_DRAG_MOVE	button=Some(Left)	x=302px	y=313px	editor_focus=true
+1792215753893155	MOUSE_DRAG_MOVE	button=Some(Left)	x=308px	y=313px	editor_focus=true
+1792215753901459	MOUSE_DRAG_MOVE	button=Some(Left)	x=320px	y=313px	editor_focus=true
+1792215753908043	MOUSE_DRAG_MOVE	button=Some(Left)	x=327px	y=313px	editor_focus=true
+1792215753915022	MOUSE_DRAG_MOVE	button=Some(Left)	x=333px	y=313px	editor_focus=true
+1792215753923059	MOUSE_DRAG_MOVE	button=Some(Left)	x=345px	y=312px	editor_focus=true
+1792215753930146	MOUSE_DRAG_MOVE	button=Some(Left)	x=351px	y=312px	editor_focus=true
+1792215753938094	MOUSE_DRAG_MOVE	button=Some(Left)	x=358px	y=312px	editor_focus=true
+1792215753946916	MOUSE_DRAG_MOVE	button=Some(Left)	x=372px	y=312px	editor_focus=true
+1792215753953030	MOUSE_DRAG_MOVE	button=Some(Left)	x=379px	y=312px	editor_focus=true
+1792215753960726	MOUSE_DRAG_MOVE	button=Some(Left)	x=387px	y=311px	editor_focus=true
+1792215753968020	MOUSE_DRAG_MOVE	button=Some(Left)	x=403px	y=311px	editor_focus=true
+1792215753976528	MOUSE_DRAG_MOVE	button=Some(Left)	x=412px	y=311px	editor_focus=true
+1792215753983053	MOUSE_DRAG_MOVE	button=Some(Left)	x=420px	y=311px	editor_focus=true
+1792215753990086	MOUSE_DRAG_MOVE	button=Some(Left)	x=428px	y=310px	editor_focus=true
+1792215753999583	MOUSE_DRAG_MOVE	button=Some(Left)	x=446px	y=310px	editor_focus=true
+1792215754006389	MOUSE_DRAG_MOVE	button=Some(Left)	x=455px	y=309px	editor_focus=true
+1792215754015893	MOUSE_DRAG_MOVE	button=Some(Left)	x=463px	y=309px	editor_focus=true
+1792215754024376	MOUSE_DRAG_MOVE	button=Some(Left)	x=472px	y=309px	editor_focus=true
+1792215754032626	MOUSE_DRAG_MOVE	button=Some(Left)	x=480px	y=308px	editor_focus=true
+1792215754038591	MOUSE_DRAG_MOVE	button=Some(Left)	x=497px	y=308px	editor_focus=true
+1792215754045950	MOUSE_DRAG_MOVE	button=Some(Left)	x=505px	y=307px	editor_focus=true
+1792215754052058	MOUSE_DRAG_MOVE	button=Some(Left)	x=513px	y=307px	editor_focus=true
+1792215754058282	MOUSE_DRAG_MOVE	button=Some(Left)	x=521px	y=307px	editor_focus=true
+1792215754065071	MOUSE_DRAG_MOVE	button=Some(Left)	x=529px	y=307px	editor_focus=true
+1792215754073145	MOUSE_DRAG_MOVE	button=Some(Left)	x=537px	y=307px	editor_focus=true
+1792215754080454	MOUSE_DRAG_MOVE	button=Some(Left)	x=546px	y=307px	editor_focus=true
+1792215754086394	MOUSE_DRAG_MOVE	button=Some(Left)	x=546px	y=307px	editor_focus=true
+1792215754091644	MOUSE_DRAG_MOVE	button=Some(Left)	x=562px	y=307px	editor_focus=true
+1792215754097296	MOUSE_DRAG_MOVE	button=Some(Left)	x=570px	y=307px	editor_focus=true
+1792215754105368	MOUSE_DRAG_MOVE	button=Some(Left)	x=579px	y=307px	editor_focus=true
+1792215754110400	MOUSE_DRAG_MOVE	button=Some(Left)	x=589px	y=307px	editor_focus=true
+1792215754118030	MOUSE_DRAG_MOVE	button=Some(Left)	x=598px	y=307px	editor_focus=true
+1792215754126019	MOUSE_DRAG_MOVE	button=Some(Left)	x=608px	y=307px	editor_focus=true
+1792215754133018	MOUSE_DRAG_MOVE	button=Some(Left)	x=618px	y=307px	editor_focus=true
+1792215754139991	MOUSE_DRAG_MOVE	button=Some(Left)	x=627px	y=307px	editor_focus=true
+1792215754148030	MOUSE_DRAG_MOVE	button=Some(Left)	x=637px	y=307px	editor_focus=true
+1792215754155321	MOUSE_DRAG_MOVE	button=Some(Left)	x=646px	y=307px	editor_focus=true
+1792215754163075	MOUSE_DRAG_MOVE	button=Some(Left)	x=656px	y=307px	editor_focus=true
+1792215754172868	MOUSE_DRAG_MOVE	button=Some(Left)	x=675px	y=307px	editor_focus=true
+1792215754178392	MOUSE_DRAG_MOVE	button=Some(Left)	x=685px	y=307px	editor_focus=true
+1792215754185032	MOUSE_DRAG_MOVE	button=Some(Left)	x=694px	y=307px	editor_focus=true
+1792215754194241	MOUSE_DRAG_MOVE	button=Some(Left)	x=704px	y=308px	editor_focus=true
+1792215754200342	MOUSE_DRAG_MOVE	button=Some(Left)	x=713px	y=308px	editor_focus=true
+1792215754208027	MOUSE_DRAG_MOVE	button=Some(Left)	x=723px	y=308px	editor_focus=true
+1792215754215039	MOUSE_DRAG_MOVE	button=Some(Left)	x=732px	y=308px	editor_focus=true
+1792215754223049	MOUSE_DRAG_MOVE	button=Some(Left)	x=741px	y=308px	editor_focus=true
+1792215754238040	MOUSE_DRAG_MOVE	button=Some(Left)	x=750px	y=308px	editor_focus=true
+1792215754246789	MOUSE_DRAG_MOVE	button=Some(Left)	x=759px	y=308px	editor_focus=true
+1792215754253278	MOUSE_DRAG_MOVE	button=Some(Left)	x=767px	y=308px	editor_focus=true
+1792215754260051	MOUSE_DRAG_MOVE	button=Some(Left)	x=784px	y=308px	editor_focus=true
+1792215754268143	MOUSE_DRAG_MOVE	button=Some(Left)	x=792px	y=308px	editor_focus=true
+1792215754275656	MOUSE_DRAG_MOVE	button=Some(Left)	x=800px	y=308px	editor_focus=true
+1792215754283261	MOUSE_DRAG_MOVE	button=Some(Left)	x=807px	y=308px	editor_focus=true
+1792215754290038	MOUSE_DRAG_MOVE	button=Some(Left)	x=815px	y=308px	editor_focus=true
+1792215754298033	MOUSE_DRAG_MOVE	button=Some(Left)	x=822px	y=308px	editor_focus=true
+1792215754305058	MOUSE_DRAG_MOVE	button=Some(Left)	x=830px	y=308px	editor_focus=true
+1792215754313048	MOUSE_DRAG_MOVE	button=Some(Left)	x=837px	y=308px	editor_focus=true
+1792215754321697	MOUSE_DRAG_MOVE	button=Some(Left)	x=843px	y=308px	editor_focus=true
+1792215754335064	MOUSE_DRAG_MOVE	button=Some(Left)	x=850px	y=308px	editor_focus=true
+1792215754343029	MOUSE_DRAG_MOVE	button=Some(Left)	x=857px	y=308px	editor_focus=true
+1792215754350684	MOUSE_DRAG_MOVE	button=Some(Left)	x=863px	y=307px	editor_focus=true
+1792215754358008	MOUSE_DRAG_MOVE	button=Some(Left)	x=869px	y=307px	editor_focus=true
+1792215754365001	MOUSE_DRAG_MOVE	button=Some(Left)	x=874px	y=307px	editor_focus=true
+1792215754373048	MOUSE_DRAG_MOVE	button=Some(Left)	x=880px	y=306px	editor_focus=true
+1792215754380008	MOUSE_DRAG_MOVE	button=Some(Left)	x=884px	y=305px	editor_focus=true
+1792215754395021	MOUSE_DRAG_MOVE	button=Some(Left)	x=888px	y=305px	editor_focus=true
+1792215754403112	MOUSE_DRAG_MOVE	button=Some(Left)	x=891px	y=304px	editor_focus=true
+1792215754410025	MOUSE_DRAG_MOVE	button=Some(Left)	x=894px	y=304px	editor_focus=true
+1792215754418030	MOUSE_DRAG_MOVE	button=Some(Left)	x=901px	y=303px	editor_focus=true
+1792215754433093	MOUSE_DRAG_MOVE	button=Some(Left)	x=903px	y=303px	editor_focus=true
+1792215754440119	MOUSE_DRAG_MOVE	button=Some(Left)	x=904px	y=303px	editor_focus=true
+1792215754448015	MOUSE_DRAG_MOVE	button=Some(Left)	x=905px	y=302px	editor_focus=true
+1792215754629293	MOUSE_RELEASE	button=Left	x=905px	y=302px	editor_focus=true
+1792215755408983	MOUSE_PRESS	button=Left	x=817px	y=263px	editor_focus=true
+1792215755416767	MOUSE_DRAG_MOVE	button=Some(Left)	x=809px	y=261px	editor_focus=true
+1792215755423021	MOUSE_DRAG_MOVE	button=Some(Left)	x=805px	y=260px	editor_focus=true
+1792215755430076	MOUSE_DRAG_MOVE	button=Some(Left)	x=794px	y=259px	editor_focus=true
+1792215755438048	MOUSE_DRAG_MOVE	button=Some(Left)	x=788px	y=258px	editor_focus=true
+1792215755446031	MOUSE_DRAG_MOVE	button=Some(Left)	x=784px	y=257px	editor_focus=true
+1792215755460072	MOUSE_DRAG_MOVE	button=Some(Left)	x=773px	y=256px	editor_focus=true
+1792215755468019	MOUSE_DRAG_MOVE	button=Some(Left)	x=768px	y=256px	editor_focus=true
+1792215755475888	MOUSE_DRAG_MOVE	button=Some(Left)	x=751px	y=255px	editor_focus=true
+1792215755483207	MOUSE_DRAG_MOVE	button=Some(Left)	x=745px	y=254px	editor_focus=true
+1792215755491719	MOUSE_DRAG_MOVE	button=Some(Left)	x=739px	y=254px	editor_focus=true
+1792215755498014	MOUSE_DRAG_MOVE	button=Some(Left)	x=727px	y=253px	editor_focus=true
+1792215755505007	MOUSE_DRAG_MOVE	button=Some(Left)	x=720px	y=253px	editor_focus=true
+1792215755513047	MOUSE_DRAG_MOVE	button=Some(Left)	x=715px	y=253px	editor_focus=true
+1792215755521573	MOUSE_DRAG_MOVE	button=Some(Left)	x=709px	y=252px	editor_focus=true
+1792215755528115	MOUSE_DRAG_MOVE	button=Some(Left)	x=696px	y=252px	editor_focus=true
+1792215755534999	MOUSE_DRAG_MOVE	button=Some(Left)	x=690px	y=252px	editor_focus=true
+1792215755543027	MOUSE_DRAG_MOVE	button=Some(Left)	x=684px	y=252px	editor_focus=true
+1792215755550196	MOUSE_DRAG_MOVE	button=Some(Left)	x=678px	y=252px	editor_focus=true
+1792215755558037	MOUSE_DRAG_MOVE	button=Some(Left)	x=666px	y=251px	editor_focus=true
+1792215755566723	MOUSE_DRAG_MOVE	button=Some(Left)	x=659px	y=251px	editor_focus=true
+1792215755573032	MOUSE_DRAG_MOVE	button=Some(Left)	x=653px	y=251px	editor_focus=true
+1792215755580289	MOUSE_DRAG_MOVE	button=Some(Left)	x=646px	y=250px	editor_focus=true
+1792215755588013	MOUSE_DRAG_MOVE	button=Some(Left)	x=639px	y=250px	editor_focus=true
+1792215755596751	MOUSE_DRAG_MOVE	button=Some(Left)	x=631px	y=249px	editor_focus=true
+1792215755603056	MOUSE_DRAG_MOVE	button=Some(Left)	x=615px	y=248px	editor_focus=true
+1792215755610009	MOUSE_DRAG_MOVE	button=Some(Left)	x=606px	y=247px	editor_focus=true
+1792215755618039	MOUSE_DRAG_MOVE	button=Some(Left)	x=597px	y=246px	editor_focus=true
+1792215755625191	MOUSE_DRAG_MOVE	button=Some(Left)	x=588px	y=245px	editor_focus=true
+1792215755633053	MOUSE_DRAG_MOVE	button=Some(Left)	x=578px	y=244px	editor_focus=true
+1792215755641747	MOUSE_DRAG_MOVE	button=Some(Left)	x=568px	y=244px	editor_focus=true
+1792215755648018	MOUSE_DRAG_MOVE	button=Some(Left)	x=558px	y=243px	editor_focus=true
+1792215755670058	MOUSE_DRAG_MOVE	button=Some(Left)	x=538px	y=242px	editor_focus=true
+1792215755678050	MOUSE_DRAG_MOVE	button=Some(Left)	x=528px	y=242px	editor_focus=true
+1792215755685015	MOUSE_DRAG_MOVE	button=Some(Left)	x=501px	y=241px	editor_focus=true
+1792215755693012	MOUSE_DRAG_MOVE	button=Some(Left)	x=493px	y=241px	editor_focus=true
+1792215755700403	MOUSE_DRAG_MOVE	button=Some(Left)	x=485px	y=241px	editor_focus=true
+1792215755708177	MOUSE_DRAG_MOVE	button=Some(Left)	x=477px	y=241px	editor_focus=true
+1792215755715266	MOUSE_DRAG_MOVE	button=Some(Left)	x=469px	y=241px	editor_focus=true
+1792215755726119	MOUSE_DRAG_MOVE	button=Some(Left)	x=462px	y=241px	editor_focus=true
+1792215755731175	MOUSE_DRAG_MOVE	button=Some(Left)	x=455px	y=241px	editor_focus=true
+1792215755738053	MOUSE_DRAG_MOVE	button=Some(Left)	x=448px	y=241px	editor_focus=true
+1792215755746360	MOUSE_DRAG_MOVE	button=Some(Left)	x=442px	y=241px	editor_focus=true
+1792215755753076	MOUSE_DRAG_MOVE	button=Some(Left)	x=436px	y=241px	editor_focus=true
+1792215755760016	MOUSE_DRAG_MOVE	button=Some(Left)	x=430px	y=241px	editor_focus=true
+1792215755768062	MOUSE_DRAG_MOVE	button=Some(Left)	x=424px	y=241px	editor_focus=true
+1792215755777488	MOUSE_DRAG_MOVE	button=Some(Left)	x=419px	y=241px	editor_focus=true
+1792215755783066	MOUSE_DRAG_MOVE	button=Some(Left)	x=414px	y=241px	editor_focus=true
+1792215755791691	MOUSE_DRAG_MOVE	button=Some(Left)	x=409px	y=241px	editor_focus=true
+1792215755798015	MOUSE_DRAG_MOVE	button=Some(Left)	x=405px	y=241px	editor_focus=true
+1792215755805040	MOUSE_DRAG_MOVE	button=Some(Left)	x=400px	y=241px	editor_focus=true
+1792215755813038	MOUSE_DRAG_MOVE	button=Some(Left)	x=395px	y=241px	editor_focus=true
+1792215755820683	MOUSE_DRAG_MOVE	button=Some(Left)	x=390px	y=241px	editor_focus=true
+1792215755828051	MOUSE_DRAG_MOVE	button=Some(Left)	x=386px	y=241px	editor_focus=true
+1792215755835028	MOUSE_DRAG_MOVE	button=Some(Left)	x=381px	y=241px	editor_focus=true
+1792215755843368	MOUSE_DRAG_MOVE	button=Some(Left)	x=376px	y=241px	editor_focus=true
+1792215755850013	MOUSE_DRAG_MOVE	button=Some(Left)	x=372px	y=241px	editor_focus=true
+1792215755859031	MOUSE_DRAG_MOVE	button=Some(Left)	x=367px	y=241px	editor_focus=true
+1792215755865204	MOUSE_DRAG_MOVE	button=Some(Left)	x=362px	y=241px	editor_focus=true
+1792215755873033	MOUSE_DRAG_MOVE	button=Some(Left)	x=357px	y=241px	editor_focus=true
+1792215755880022	MOUSE_DRAG_MOVE	button=Some(Left)	x=352px	y=241px	editor_focus=true
+1792215755888021	MOUSE_DRAG_MOVE	button=Some(Left)	x=347px	y=241px	editor_focus=true
+1792215755895832	MOUSE_DRAG_MOVE	button=Some(Left)	x=342px	y=241px	editor_focus=true
+1792215755903053	MOUSE_DRAG_MOVE	button=Some(Left)	x=336px	y=241px	editor_focus=true
+1792215755910010	MOUSE_DRAG_MOVE	button=Some(Left)	x=330px	y=241px	editor_focus=true
+1792215755918017	MOUSE_DRAG_MOVE	button=Some(Left)	x=324px	y=241px	editor_focus=true
+1792215755925079	MOUSE_DRAG_MOVE	button=Some(Left)	x=318px	y=241px	editor_focus=true
+1792215755933100	MOUSE_DRAG_MOVE	button=Some(Left)	x=313px	y=241px	editor_focus=true
+1792215755940264	MOUSE_DRAG_MOVE	button=Some(Left)	x=308px	y=241px	editor_focus=true
+1792215755948032	MOUSE_DRAG_MOVE	button=Some(Left)	x=303px	y=241px	editor_focus=true
+1792215755955041	MOUSE_DRAG_MOVE	button=Some(Left)	x=298px	y=241px	editor_focus=true
+1792215755963055	MOUSE_DRAG_MOVE	button=Some(Left)	x=295px	y=241px	editor_focus=true
+1792215755970387	MOUSE_DRAG_MOVE	button=Some(Left)	x=292px	y=241px	editor_focus=true
+1792215755978042	MOUSE_DRAG_MOVE	button=Some(Left)	x=289px	y=241px	editor_focus=true
+1792215755985055	MOUSE_DRAG_MOVE	button=Some(Left)	x=288px	y=241px	editor_focus=true
+1792215755993080	MOUSE_DRAG_MOVE	button=Some(Left)	x=286px	y=241px	editor_focus=true
+1792215756008299	MOUSE_DRAG_MOVE	button=Some(Left)	x=285px	y=241px	editor_focus=true
+1792215756106155	MOUSE_RELEASE	button=Left	x=285px	y=241px	editor_focus=true
+1792215756758842	MOUSE_PRESS	button=Left	x=207px	y=238px	editor_focus=true
+1792215756780056	MOUSE_DRAG_MOVE	button=Some(Left)	x=208px	y=238px	editor_focus=true
+1792215756788087	MOUSE_DRAG_MOVE	button=Some(Left)	x=209px	y=238px	editor_focus=true
+1792215756795135	MOUSE_DRAG_MOVE	button=Some(Left)	x=211px	y=238px	editor_focus=true
+1792215756803071	MOUSE_DRAG_MOVE	button=Some(Left)	x=213px	y=238px	editor_focus=true
+1792215756810021	MOUSE_DRAG_MOVE	button=Some(Left)	x=215px	y=238px	editor_focus=true
+1792215756818039	MOUSE_DRAG_MOVE	button=Some(Left)	x=217px	y=239px	editor_focus=true
+1792215756825049	MOUSE_DRAG_MOVE	button=Some(Left)	x=220px	y=239px	editor_focus=true
+1792215756833048	MOUSE_DRAG_MOVE	button=Some(Left)	x=224px	y=240px	editor_focus=true
+1792215756841484	MOUSE_DRAG_MOVE	button=Some(Left)	x=227px	y=240px	editor_focus=true
+1792215756848145	MOUSE_DRAG_MOVE	button=Some(Left)	x=231px	y=240px	editor_focus=true
+1792215756855012	MOUSE_DRAG_MOVE	button=Some(Left)	x=236px	y=241px	editor_focus=true
+1792215756863047	MOUSE_DRAG_MOVE	button=Some(Left)	x=242px	y=241px	editor_focus=true
+1792215756870108	MOUSE_DRAG_MOVE	button=Some(Left)	x=248px	y=242px	editor_focus=true
+1792215756878051	MOUSE_DRAG_MOVE	button=Some(Left)	x=256px	y=242px	editor_focus=true
+1792215756885051	MOUSE_DRAG_MOVE	button=Some(Left)	x=265px	y=243px	editor_focus=true
+1792215756893055	MOUSE_DRAG_MOVE	button=Some(Left)	x=271px	y=243px	editor_focus=true
+1792215756908040	MOUSE_DRAG_MOVE	button=Some(Left)	x=279px	y=243px	editor_focus=true
+1792215756916099	MOUSE_DRAG_MOVE	button=Some(Left)	x=290px	y=244px	editor_focus=true
+1792215756923173	MOUSE_DRAG_MOVE	button=Some(Left)	x=297px	y=244px	editor_focus=true
+1792215756930030	MOUSE_DRAG_MOVE	button=Some(Left)	x=319px	y=245px	editor_focus=true
+1792215756938049	MOUSE_DRAG_MOVE	button=Some(Left)	x=328px	y=245px	editor_focus=true
+1792215756945062	MOUSE_DRAG_MOVE	button=Some(Left)	x=336px	y=245px	editor_focus=true
+1792215756953061	MOUSE_DRAG_MOVE	button=Some(Left)	x=345px	y=245px	editor_focus=true
+1792215756960019	MOUSE_DRAG_MOVE	button=Some(Left)	x=355px	y=245px	editor_focus=true
+1792215756968046	MOUSE_DRAG_MOVE	button=Some(Left)	x=364px	y=245px	editor_focus=true
+1792215756975017	MOUSE_DRAG_MOVE	button=Some(Left)	x=373px	y=246px	editor_focus=true
+1792215756983073	MOUSE_DRAG_MOVE	button=Some(Left)	x=381px	y=246px	editor_focus=true
+1792215756998204	MOUSE_DRAG_MOVE	button=Some(Left)	x=386px	y=246px	editor_focus=true
+1792215757005068	MOUSE_DRAG_MOVE	button=Some(Left)	x=395px	y=246px	editor_focus=true
+1792215757013064	MOUSE_DRAG_MOVE	button=Some(Left)	x=412px	y=245px	editor_focus=true
+1792215757021519	MOUSE_DRAG_MOVE	button=Some(Left)	x=420px	y=245px	editor_focus=true
+1792215757028060	MOUSE_DRAG_MOVE	button=Some(Left)	x=425px	y=245px	editor_focus=true
+1792215757035024	MOUSE_DRAG_MOVE	button=Some(Left)	x=434px	y=244px	editor_focus=true
+1792215757043068	MOUSE_DRAG_MOVE	button=Some(Left)	x=443px	y=244px	editor_focus=true
+1792215757050051	MOUSE_DRAG_MOVE	button=Some(Left)	x=447px	y=244px	editor_focus=true
+1792215757058250	MOUSE_DRAG_MOVE	button=Some(Left)	x=457px	y=243px	editor_focus=true
+1792215757066008	MOUSE_DRAG_MOVE	button=Some(Left)	x=467px	y=243px	editor_focus=true
+1792215757073073	MOUSE_DRAG_MOVE	button=Some(Left)	x=472px	y=243px	editor_focus=true
+1792215757080060	MOUSE_DRAG_MOVE	button=Some(Left)	x=484px	y=242px	editor_focus=true
+1792215757088048	MOUSE_DRAG_MOVE	button=Some(Left)	x=489px	y=242px	editor_focus=true
+1792215757095520	MOUSE_DRAG_MOVE	button=Some(Left)	x=501px	y=242px	editor_focus=true
+1792215757103060	MOUSE_DRAG_MOVE	button=Some(Left)	x=507px	y=242px	editor_focus=true
+1792215757110031	MOUSE_DRAG_MOVE	button=Some(Left)	x=520px	y=242px	editor_focus=true
+1792215757118035	MOUSE_DRAG_MOVE	button=Some(Left)	x=526px	y=241px	editor_focus=true
+1792215757125022	MOUSE_DRAG_MOVE	button=Some(Left)	x=539px	y=241px	editor_focus=true
+1792215757133069	MOUSE_DRAG_MOVE	button=Some(Left)	x=546px	y=241px	editor_focus=true
+1792215757141664	MOUSE_DRAG_MOVE	button=Some(Left)	x=552px	y=241px	editor_focus=true
+1792215757148037	MOUSE_DRAG_MOVE	button=Some(Left)	x=566px	y=241px	editor_focus=true
+1792215757155036	MOUSE_DRAG_MOVE	button=Some(Left)	x=574px	y=241px	editor_focus=true
+1792215757163025	MOUSE_DRAG_MOVE	button=Some(Left)	x=590px	y=241px	editor_focus=true
+1792215757170493	MOUSE_DRAG_MOVE	button=Some(Left)	x=598px	y=241px	editor_focus=true
+1792215757178063	MOUSE_DRAG_MOVE	button=Some(Left)	x=606px	y=241px	editor_focus=true
+1792215757185024	MOUSE_DRAG_MOVE	button=Some(Left)	x=623px	y=241px	editor_focus=true
+1792215757193063	MOUSE_DRAG_MOVE	button=Some(Left)	x=631px	y=241px	editor_focus=true
+1792215757208083	MOUSE_DRAG_MOVE	button=Some(Left)	x=640px	y=241px	editor_focus=true
+1792215757216088	MOUSE_DRAG_MOVE	button=Some(Left)	x=657px	y=241px	editor_focus=true
+1792215757223058	MOUSE_DRAG_MOVE	button=Some(Left)	x=666px	y=241px	editor_focus=true
+1792215757230061	MOUSE_DRAG_MOVE	button=Some(Left)	x=692px	y=241px	editor_focus=true
+1792215757238131	MOUSE_DRAG_MOVE	button=Some(Left)	x=701px	y=241px	editor_focus=true
+1792215757245183	MOUSE_DRAG_MOVE	button=Some(Left)	x=710px	y=241px	editor_focus=true
+1792215757253442	MOUSE_DRAG_MOVE	button=Some(Left)	x=718px	y=241px	editor_focus=true
+1792215757260031	MOUSE_DRAG_MOVE	button=Some(Left)	x=736px	y=242px	editor_focus=true
+1792215757268049	MOUSE_DRAG_MOVE	button=Some(Left)	x=745px	y=242px	editor_focus=true
+1792215757275069	MOUSE_DRAG_MOVE	button=Some(Left)	x=754px	y=242px	editor_focus=true
+1792215757283076	MOUSE_DRAG_MOVE	button=Some(Left)	x=762px	y=242px	editor_focus=true
+1792215757291222	MOUSE_DRAG_MOVE	button=Some(Left)	x=771px	y=242px	editor_focus=true
+1792215757298286	MOUSE_DRAG_MOVE	button=Some(Left)	x=788px	y=242px	editor_focus=true
+1792215757305039	MOUSE_DRAG_MOVE	button=Some(Left)	x=796px	y=242px	editor_focus=true
+1792215757313076	MOUSE_DRAG_MOVE	button=Some(Left)	x=804px	y=242px	editor_focus=true
+1792215757320757	MOUSE_DRAG_MOVE	button=Some(Left)	x=811px	y=242px	editor_focus=true
+1792215757328855	MOUSE_DRAG_MOVE	button=Some(Left)	x=818px	y=242px	editor_focus=true
+1792215757335079	MOUSE_DRAG_MOVE	button=Some(Left)	x=824px	y=242px	editor_focus=true
+1792215757343063	MOUSE_DRAG_MOVE	button=Some(Left)	x=833px	y=242px	editor_focus=true
+1792215757350117	MOUSE_DRAG_MOVE	button=Some(Left)	x=837px	y=242px	editor_focus=true
+1792215757359627	MOUSE_DRAG_MOVE	button=Some(Left)	x=843px	y=242px	editor_focus=true
+1792215757366407	MOUSE_DRAG_MOVE	button=Some(Left)	x=845px	y=242px	editor_focus=true
+1792215757373156	MOUSE_DRAG_MOVE	button=Some(Left)	x=846px	y=242px	editor_focus=true
+1792215757449179	MOUSE_RELEASE	button=Left	x=846px	y=242px	editor_focus=true
+1792215759195849	MOUSE_PRESS	button=Left	x=753px	y=282px	editor_focus=true
+1792215759338973	MOUSE_RELEASE	button=Left	x=753px	y=282px	editor_focus=true
+1792215773551004	MOUSE_PRESS	button=Left	x=1094px	y=-14px	editor_focus=true
+1792215773663613	MOUSE_RELEASE	button=Left	x=1094px	y=-14px	editor_focus=true

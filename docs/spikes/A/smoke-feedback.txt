@@ -1,0 +1,13 @@
+PASS one notch starts one page request and same-direction deltas coalesce 0.67ms
+PASS wheel reversal retargets same burst; idle gap starts next burst 0.14ms
+PASS newest-edge wheel create is deferred once and reversal cancels it 0.23ms
+PASS mouse drag release uses distance, velocity and spring-back 0.28ms
+PASS overscroll creates only past newest note 0.09ms
+PASS interior blank notes prune and trailing blank remains 1.84ms
+PASS checkbox toggle preserves caret and undoes as one edit 7.29ms
+PASS caret Tab and Shift+Tab use shared key helper 1.91ms
+PASS caret inside removed prefix clamps to line start and tab prefix outdents 0.11ms
+PASS selection indent preserves anchors and is one undo group 2.66ms
+PASS selection outdent preserves caret and mapped anchors 0.22ms
+PASS JSON persistence restores notes 28.35ms
+SMOKE PASS checks=12 passed=12 failed=0 elapsed=57.6ms (model-level; does not measure visible focus/hardware/materials)
