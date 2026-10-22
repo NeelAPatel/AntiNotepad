@@ -34,3 +34,9 @@ Watchdog: spike-notes/watchdog.ps1 (detached pwsh, log spike-notes/watchdog.log)
 - 04:00 hardening verified: hotkey 24-30 ms show-to-focus (87 ms first show after --hidden), swipe, Esc/popup, OCR read a test image exactly, drag reorder.
 - 04:10 undo paths verified against antipad.json; looks verified (mica, solid, dotted, grid, contrast, split palette). Drop-down: sync focus 13 ms (the 130 ms number is the post-animation confirmation).
 - 06:55 headless run: /checklist /bullets /numbered /plain /uncheck /tidy via pure TextCommands (selftest-covered); whole-note commands are one undo step. Built to build/headless only.
+
+## State 2026-10-22 ~11:00 (before compaction)
+- Tag antipad-v1 = first overnight build. Since then: V2 (memory/per-note files, detent swipe, structure features, smooth scroll/caret), V3 (polish), V4 (native-weight ink icons, bubbles baseline+column, pane-wide code panels, fence language picker, Settings > Code languages), fence-Enter crash fix (not yet re-tested live by user).
+- User's copy runs from build/antipad on real data (%LOCALAPPDATA%\Antipad, v2 index.json + notes/). Swap procedure: `build/antipad/Antipad.exe --quit`, `dotnet build product/Antipad -c Release -o build/antipad`, `--selftest`, relaunch.
+- Dev builds: spike-notes/dev.sh -> build/dev, instance Antipad-dev, hotkey Ctrl+Alt+Shift+D (spike-notes/press-hotkey.ps1 presses D by default). Computer-use grant covers build\dev\Antipad.exe and build\antipad\Antipad.exe; never type into the user's copy.
+- Crashes now log to <data>/antipad.log ("crash ..."); also Windows Application log (.NET Runtime).
