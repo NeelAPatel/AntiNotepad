@@ -74,9 +74,8 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
             var lastRow = visual.TextLines[^1];
             var rowTop = visual.VisualTop + visual.Height - lastRow.Height - view.VerticalOffset;
             var textEnd = lastRow.WidthIncludingTrailingWhitespace;
-            var x = view.Bounds.Width - ft.Width - 6;
-            // Never draw over the text: when the line is long, sit just after it.
-            if (x < textEnd + 18) x = textEnd + 18;
+            // Sit right after the "=" (or the line's end), so answers stay close at any window width.
+            var x = Math.Min(textEnd + 14, Math.Max(textEnd + 8, view.Bounds.Width - ft.Width - 6));
             var y = rowTop + (lastRow.Height - ft.Height) / 2;
             var rect = new Rect(x - 7, y - 1, ft.Width + 14, ft.Height + 2);
             dc.DrawRectangle(new SolidColorBrush(color, pad.Palette.Dark ? 0.14 : 0.10), null, rect, 7, 7);

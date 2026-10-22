@@ -35,7 +35,7 @@ internal static class SelfTest
             Check(store.Save() && store.Save(), "save twice (replace path)");
             var again = new Store(dir); again.Load();
             Check(again.Data.Stack[0].Text == "hello" && again.Data.Slots[2].Text == "slot three" && again.Data.Slots[2].Slot == 3, "store round trip");
-            File.WriteAllText(Path.Combine(dir, "antipad.json"), "{ broken");
+            File.WriteAllText(Path.Combine(dir, "index.json"), "{ broken");
             var recovered = new Store(dir); recovered.Load();
             Check(recovered.Data.Stack[0].Text == "hello", "recovers from .bak");
         }

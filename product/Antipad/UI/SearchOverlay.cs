@@ -46,6 +46,7 @@ internal sealed class SearchOverlay : Grid
         var tools = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, Margin = new Thickness(6, 0, 0, 0) };
         tools.Children.Add(Kit.IconButton(GridView ? Glyph.List : Glyph.Grid, GridView ? "List view (Ctrl+G)" : "Card grid (Ctrl+G)", _p, ToggleGrid, 32));
         tools.Children.Add(Kit.IconButton(trash ? Glyph.Back : Glyph.Delete, trash ? "Back to notes (Ctrl+T)" : $"Trash · {window.Data.Trash.Count} (Ctrl+T)", _p, ToggleTrash, 32));
+        tools.Children.Add(Kit.IconButton(Glyph.Close, "Close (Esc)", _p, window.CloseOverlay, 32));
         var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(0, 0, 0, 8) };
         header.Children.Add(_query);
         Grid.SetColumn(tools, 1); header.Children.Add(tools);
@@ -74,7 +75,8 @@ internal sealed class SearchOverlay : Grid
     private void Refresh()
     {
         var terms = Query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        _items = Source().Where(n => terms.All(t => n.Text.Contains(t, StringComparison.CurrentCultureIgnoreCase))).ToList();
+        // PeekText reads closed notes from disk without keeping them in memory.
+        _items = Source().Where(n => terms.Length == 0 || terms.All(t => n.PeekText().Contains(t, StringComparison.CurrentCultureIgnoreCase))).ToList();
         _cursor = Math.Clamp(_cursor, 0, Math.Max(0, _items.Count - 1));
         _selected.RemoveWhere(n => !_items.Contains(n));
         _results.Children.Clear();
@@ -99,7 +101,7 @@ internal sealed class SearchOverlay : Grid
         Highlight(snippet, Snippet(note, terms), terms);
         var meta = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         if (note.Slot > 0) meta.Children.Add(Kit.Text($"slot {note.Slot}", _p.Accent, 11, FontWeight.SemiBold));
-        var (mode, _, arg) = Modes.Detect(note.Text);
+        var (mode, _, arg) = note.ModeCache == NoteMode.Plain ? (NoteMode.Plain, 0, null) : Modes.Detect(note.PeekText());
         if (mode != NoteMode.Plain) meta.Children.Add(Kit.Text(Modes.Label(mode, arg), _p.Keyword, 11, FontWeight.SemiBold));
         meta.Children.Add(Kit.Text(ShowingTrash && note.Deleted is { } del ? "deleted " + Kit.Ago(del) : Kit.Ago(note.Modified), _p.Faint, 11));
         var body = new StackPanel { Spacing = 3, Children = { title, snippet, meta } };
@@ -210,7 +212,8 @@ internal sealed class SearchOverlay : Grid
 
     private static string Snippet(Note note, string[] terms)
     {
-        var lines = note.Text.Replace("\r", "").Split('\n').Skip(Modes.Detect(note.Text).KeywordLength > 0 ? 2 : 1).Where(l => l.Trim().Length > 0).ToList();
+        var text = note.PeekText();
+        var lines = text.Replace("\r", "").Split('\n').Take(400).Skip(Modes.Detect(text).KeywordLength > 0 ? 2 : 1).Where(l => l.Trim().Length > 0).ToList();
         if (terms.Length > 0)
         {
             var hit = lines.FindIndex(l => l.Contains(terms[0], StringComparison.CurrentCultureIgnoreCase));

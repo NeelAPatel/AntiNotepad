@@ -12,6 +12,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
+using AvaloniaEdit.Folding;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Rendering;
 using Antipad.Calc;
@@ -32,7 +33,10 @@ internal sealed class PadView : Grid
     private readonly ResultRenderer _results;
     private IReadOnlyList<LineEval?> _math = [];
     private readonly Dictionary<int, CalcResult> _inline = [];
-    private bool[] _fence = [];
+    private FoldingManager? _folding;
+    private ChevronGutter? _gutter;
+    private readonly FenceColorizer _fences;
+    public NoteStructure? Structure { get; private set; }
     private bool _binding;
     private Anim.Handle? _arrive;
     private int _bindToken;
@@ -80,11 +84,17 @@ internal sealed class PadView : Grid
         Avalonia.Automation.AutomationProperties.SetName(Editor, "Note text");
         var view = Editor.TextArea.TextView;
         view.BackgroundRenderers.Add(new PaperRenderer(this));
+        view.BackgroundRenderers.Add(new CodeBlockRenderer(this));
+        view.BackgroundRenderers.Add(new IndentGuideRenderer(this));
         _results = new ResultRenderer(this);
         view.BackgroundRenderers.Add(_results);
         view.BackgroundRenderers.Add(new CheckboxRenderer(this));
+        view.BackgroundRenderers.Add(new SmoothCaret(this));
+        _ = new SmoothScroll(Editor);
         view.LineTransformers.Add(new NoteColorizer(this));
         view.LineTransformers.Add(new MathColorizer(this));
+        _fences = new FenceColorizer(this);
+        view.LineTransformers.Add(_fences);
         view.ElementGenerators.Add(new CheckboxGenerator(this));
         view.ElementGenerators.Add(new BulletGenerator(this));
         view.ElementGenerators.Add(new LinkGenerator(this));
@@ -102,8 +112,12 @@ internal sealed class PadView : Grid
         Editor.TextArea.GotFocus += (_, _) => FocusedPane?.Invoke();
         view.AddHandler(PointerPressedEvent, OnViewPressed, RoutingStrategies.Tunnel);
         view.PointerMoved += OnViewMoved;
+        // Fold chevrons show while the pointer is over the note.
+        PointerEntered += (_, _) => { if (_gutter is not null) _gutter.ShowAll = true; };
+        PointerExited += (_, _) => { if (_gutter is not null) _gutter.ShowAll = false; };
         Editor.TemplateApplied += (_, _) => Dispatcher.UIThread.Post(ClearBackgrounds, DispatcherPriority.Loaded);
         Editor.Loaded += (_, _) => ClearBackgrounds();
+        _analyse.Tick += (_, _) => { _analyse.Stop(); Analyse(); };
         _timers.Tick += () => { if (Mode == NoteMode.Timer) view.InvalidateLayer(KnownLayer.Selection); };
         ApplyLook(palette, settings);
     }
@@ -131,12 +145,17 @@ internal sealed class PadView : Grid
         Editor.TextArea.SelectionForeground = null;
         Editor.TextArea.SelectionBorder = null;
         Editor.TextArea.SelectionCornerRadius = 3;
-        Editor.TextArea.Caret.CaretBrush = new SolidColorBrush(palette.Caret);
+        // SmoothCaret draws the caret; the built-in one stays (for IME placement) but invisible.
+        Editor.TextArea.Caret.CaretBrush = Brushes.Transparent;
         _hint.FontFamily = Editor.FontFamily; _hint.FontSize = settings.FontSize;
         _hint.Foreground = new SolidColorBrush(palette.Faint);
         ApplyCodeHighlighting();
         Redraw();
     }
+
+    /// <summary>Most recently used first; only these notes keep an editor document (and undo history) in memory.</summary>
+    private static readonly LinkedList<string> Recent = new();
+    private static readonly Dictionary<string, Note> Owners = [];
 
     public static TextDocument DocumentFor(Note note)
     {
@@ -144,13 +163,47 @@ internal sealed class PadView : Grid
         {
             doc = new TextDocument(note.Text);
             doc.UndoStack.SizeLimit = 400;
-            doc.TextChanged += (_, _) => { note.Text = doc.Text; note.Modified = DateTime.Now; };
+            // The note reads the live document instead of copying it on every keystroke.
+            note.Attach(() => doc.Text);
+            doc.TextChanged += (_, _) => note.Touched(IsBlank(doc), Modes.Detect(FirstLine(doc)).Mode);
             Documents[note.Id] = doc;
+            Owners[note.Id] = note;
         }
+        Recent.Remove(note.Id);
+        Recent.AddFirst(note.Id);
         return doc;
     }
 
-    public static void Forget(Note note) => Documents.Remove(note.Id);
+    private static bool IsBlank(TextDocument doc) => doc.TextLength == 0 || doc.TextLength < 256 && string.IsNullOrWhiteSpace(doc.Text);
+
+    private static string FirstLine(TextDocument doc) => doc.GetText(doc.GetLineByNumber(1));
+
+    public static void Forget(Note note)
+    {
+        Documents.Remove(note.Id); Owners.Remove(note.Id); Recent.Remove(note.Id);
+        note.Detach();
+    }
+
+    /// <summary>
+    /// Drops editor documents beyond the <paramref name="keep"/> most recent, except notes on screen.
+    /// Call after a save, so released notes leave nothing in memory (their text reloads from disk on demand).
+    /// </summary>
+    public static int Evict(int keep, IReadOnlyCollection<Note?> onScreen)
+    {
+        var released = 0;
+        var index = 0;
+        foreach (var id in Recent.ToList())
+        {
+            index++;
+            if (index <= keep || onScreen.Any(n => n?.Id == id) || !Owners.TryGetValue(id, out var note) || note.Dirty) continue;
+            Documents.Remove(id); Owners.Remove(id); Recent.Remove(id);
+            note.Detach();
+            released++;
+        }
+        return released;
+    }
+
+    public static int CachedDocuments => Documents.Count;
 
     public void Bind(Note note)
     {
@@ -160,16 +213,24 @@ internal sealed class PadView : Grid
         if (Editor.Document is { } old) old.Changed -= OnDocumentChanged;
         Note = note;
         var doc = DocumentFor(note);
+        // Folding state belongs to a document: the old manager must go before the swap (its generator rejects other documents).
+        if (_folding is not null) { FoldingManager.Uninstall(_folding); _folding = null; }
+        foreach (var stale in Editor.TextArea.LeftMargins.OfType<ChevronGutter>().ToList()) Editor.TextArea.LeftMargins.Remove(stale);
+        _gutter = null;
         Editor.Document = doc;
         doc.Changed += OnDocumentChanged;
+        _folding = Settings.Folding ? FoldingManager.Install(Editor.TextArea) : null;
+        if (_folding is not null) _gutter = ChevronGutter.Replace(Editor.TextArea, _folding, this);
+        StyleFoldingMargin();
+        _fences.Reset();
         Editor.CaretOffset = Math.Clamp(note.Caret, 0, doc.TextLength);
         _binding = false;
         Analyse();
         var scroll = note.Scroll;
         var token = ++_bindToken;
-        Editor.ScrollToVerticalOffset(scroll);
+        SmoothScroll.SetOffset(Editor, scroll);
         // Layout may not be ready yet; re-apply once, unless another note was bound meanwhile.
-        Dispatcher.UIThread.Post(() => { if (token == _bindToken) Editor.ScrollToVerticalOffset(scroll); }, DispatcherPriority.Loaded);
+        Dispatcher.UIThread.Post(() => { if (token == _bindToken) SmoothScroll.SetOffset(Editor, scroll); }, DispatcherPriority.Loaded);
     }
 
     /// <summary>Copies caret and scroll back into the note (text is already live).</summary>
@@ -198,9 +259,13 @@ internal sealed class PadView : Grid
     private void OnDocumentChanged(object? sender, DocumentChangeEventArgs e)
     {
         if (_binding) return;
-        Analyse();
+        // Long notes: analysis (modes, fences, folds, answers) waits for a typing pause instead of running per keystroke.
+        if (Editor.Document.LineCount > 1500) { _analyse.Stop(); _analyse.Start(); }
+        else Analyse();
         Edited?.Invoke();
     }
+
+    private readonly DispatcherTimer _analyse = new() { Interval = TimeSpan.FromMilliseconds(140) };
 
     private void Analyse()
     {
@@ -211,14 +276,8 @@ internal sealed class PadView : Grid
         Mode = mode; CodeLanguage = argument; ModeKeywordLength = keyword;
         var lines = new string[doc.LineCount];
         for (var i = 0; i < lines.Length; i++) lines[i] = doc.GetText(doc.GetLineByNumber(i + 1));
-        _fence = new bool[lines.Length + 2];
-        var inside = false;
-        for (var i = 0; i < lines.Length; i++)
-        {
-            var fence = lines[i].TrimStart().StartsWith("```");
-            _fence[i + 1] = inside || fence;
-            if (fence) inside = !inside;
-        }
+        Structure = NoteStructure.Build(lines);
+        UpdateFolds(lines);
         _math = mode == NoteMode.Math ? EvaluateMath(lines) : [];
         _inline.Clear();
         if (mode == NoteMode.Plain && Settings.InlineMath)
@@ -281,7 +340,7 @@ internal sealed class PadView : Grid
 
     private void Redraw() => Editor.TextArea.TextView.Redraw();
 
-    public bool InFence(int line) => line < _fence.Length && _fence[line];
+    public bool InFence(int line) => Structure is { } s && line < s.InFence.Length && s.InFence[line];
     public LineEval? MathLine(int line) => line - 1 < _math.Count ? _math[line - 1] : null;
     public CalcResult? InlineResult(int line) => _inline.GetValueOrDefault(line);
     private string TimerKey(string line) => $"{Note?.Id}:{line.Trim()}";
@@ -362,6 +421,11 @@ internal sealed class PadView : Grid
     {
         var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
         var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        if (ctrl && shift && e.Key is Key.OemOpenBrackets or Key.OemCloseBrackets)
+        {
+            e.Handled = FoldAtCaret(e.Key == Key.OemOpenBrackets);
+            return;
+        }
         if (e.Key == Key.Enter && ctrl && !shift)
         {
             e.Handled = true;
@@ -455,32 +519,39 @@ internal sealed class PadView : Grid
         Editor.TextArea.Caret.BringCaretToView();
     }
 
+    private void UpdateFolds(string[] lines)
+    {
+        if (_folding is null || Structure is null) return;
+        try { _folding.UpdateFoldings(Structure.Folds(Editor.Document, lines, Mode == NoteMode.Code), -1); }
+        catch (ArgumentException) { /* a fold boundary moved under an edit; the next pass fixes it */ }
+    }
+
+    /// <summary>Fold chevrons in the left gutter, palette-coloured; the gutter replaces part of the text margin.</summary>
+    private void StyleFoldingMargin()
+    {
+        var p = Palette;
+        FoldingElementGenerator.TextBrush = new SolidColorBrush(p.Muted);
+        var hasGutter = _gutter is not null;
+        Editor.Margin = new Thickness(hasGutter ? 10 : 26, 4, 18, 40);
+    }
+
+    /// <summary>Ctrl+Shift+[ folds the innermost block around the caret; Ctrl+Shift+] unfolds it.</summary>
+    public bool FoldAtCaret(bool fold)
+    {
+        if (_folding is null) return false;
+        var line = Editor.Document.GetLineByOffset(Editor.CaretOffset);
+        var target = _folding.AllFoldings.Where(f => f.StartOffset <= line.EndOffset && f.EndOffset >= line.Offset)
+            .OrderByDescending(f => f.StartOffset).FirstOrDefault(f => f.IsFolded != fold);
+        if (target is null) return false;
+        target.IsFolded = fold;
+        return true;
+    }
+
     private void ApplyCodeHighlighting()
     {
         if (Mode != NoteMode.Code) { Editor.SyntaxHighlighting = null; return; }
-        var ext = CodeLanguage switch
-        {
-            "py" or "python" => ".py", "js" or "javascript" or "ts" or "typescript" => ".js", "cs" or "csharp" or "c#" => ".cs",
-            "json" => ".json", "html" => ".html", "xml" => ".xml", "css" => ".css", "sql" => ".sql",
-            "ps1" or "powershell" or "pwsh" => ".ps1", "java" => ".java", "cpp" or "c" or "c++" or "h" => ".cpp",
-            "md" or "markdown" => ".md", "php" => ".php", _ => ".py"
-        };
-        var definition = HighlightingManager.Instance.GetDefinitionByExtension(ext);
+        var definition = CodeColors.Definition(CodeLanguage, Palette) ?? CodeColors.Definition("py", Palette);
         if (definition is null) { Editor.SyntaxHighlighting = null; return; }
-        foreach (var color in definition.NamedHighlightingColors)
-        {
-            var n = color.Name.ToLowerInvariant();
-            Color? c = n.Contains("comment") ? Palette.Comment
-                : n.Contains("string") || n.Contains("char") ? Palette.String
-                : n.Contains("number") || n.Contains("digit") ? Palette.Number
-                : n.Contains("method") || n.Contains("function") ? Palette.Identifier
-                : n.Contains("keyword") || n.Contains("modifier") || n.Contains("type") || n.Contains("visibility") || n.Contains("namespace")
-                  || n.Contains("statement") || n.Contains("access") || n.Contains("reference") || n.Contains("operator") || n.Contains("tag") ? Palette.Keyword
-                : n.Contains("attribute") || n.Contains("property") ? Palette.Identifier
-                : null;
-            if (c is { } value) color.Foreground = new SimpleHighlightingBrush(value);
-            color.Background = null;
-        }
         Editor.SyntaxHighlighting = null;
         Editor.SyntaxHighlighting = definition;
     }

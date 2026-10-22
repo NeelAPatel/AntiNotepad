@@ -13,6 +13,10 @@ internal static class Program
     /// <summary>Separate from AntiQuickPad's folder so both apps can run side by side.</summary>
     public static string DataFolder { get; private set; } = "";
     public static bool StartHidden { get; private set; }
+    public static bool IsDev { get; private set; }
+    public static bool SoftwareRendering { get; private set; }
+    public static Store Store { get; private set; } = null!;
+    private static long GpuCacheBytes => long.TryParse(Environment.GetEnvironmentVariable("ANTIPAD_GPU_CACHE_MB"), out var mb) ? mb * 1048576 : 8 * 1048576;
     private static PadWindow? _window;
     private static int _pendingShow;
 
@@ -25,9 +29,21 @@ internal static class Program
         DataFolder = Environment.GetEnvironmentVariable("ANTIPAD_DATA")
             ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Antipad");
         StartHidden = args.Contains("--hidden");
-        using var instance = new SingleInstanceService(RequestShow, "Antipad", RequestQuit);
+        // A custom data folder (dev/test runs) gets its own instance, so it can run beside the real one.
+        IsDev = Environment.GetEnvironmentVariable("ANTIPAD_DATA") is { Length: > 0 };
+        using var instance = new SingleInstanceService(RequestShow, IsDev ? "Antipad-dev" : "Antipad", RequestQuit);
         if (!instance.IsPrimary) return 0;
-        return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args);
+        // The store is plain files, so it loads before Avalonia: the renderer depends on a setting.
+        Store = new Store(DataFolder);
+        Store.Load();
+        Welcome.SeedIfNew(Store.Data);
+        var builder = AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace()
+            // A scratchpad redraws little: a small GPU resource cache instead of Skia's default.
+            .With(new Avalonia.SkiaOptions { MaxGpuResourceSizeBytes = GpuCacheBytes });
+        // Solid windows need no GPU compositing: software rendering uses about 80 MB less memory.
+        SoftwareRendering = Environment.GetEnvironmentVariable("ANTIPAD_RENDER") is { } r ? r == "software" : Store.Data.Settings.Material == "solid";
+        if (SoftwareRendering) builder = builder.With(new Win32PlatformOptions { RenderingMode = [Win32RenderingMode.Software] });
+        return builder.StartWithClassicDesktopLifetime(args);
     }
 
     private static void RequestShow()
@@ -75,9 +91,7 @@ public sealed class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
-            var store = new Store(Program.DataFolder);
-            store.Load();
-            Welcome.SeedIfNew(store.Data);
+            var store = Program.Store;
             var window = new PadWindow(store);
             window.QuitRequested = () => { _tray?.Dispose(); desktop.Shutdown(); };
             _tray = new Tray(window.ShowResident, () => { window.ShowResident(); window.NewNote(); }, window.OpenSettings, window.Quit,

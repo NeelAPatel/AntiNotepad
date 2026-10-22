@@ -31,7 +31,8 @@ internal sealed class NoteColorizer(PadView pad) : DocumentColorizingTransformer
         if (pad.Mode is NoteMode.Code or NoteMode.Math) return; // their own colourizers own these notes
         if (pad.InFence(line.LineNumber))
         {
-            Mono(o, line.EndOffset, text.TrimStart().StartsWith("```") ? p.Muted : p.String);
+            // Fence markers recede; the body is ink, and FenceColorizer adds syntax colours when the language is known.
+            Mono(o, line.EndOffset, text.TrimStart().StartsWith("```") ? p.Faint : p.Ink);
             return;
         }
         var trimmed = text.TrimStart();
@@ -41,9 +42,17 @@ internal sealed class NoteColorizer(PadView pad) : DocumentColorizingTransformer
         if (heading > 0)
         {
             var lead = text.Length - trimmed.Length;
-            Paint(o, line.EndOffset, p.Heading, heading <= 2 ? FontWeight.Bold : FontWeight.SemiBold);
+            // Hierarchy by colour and size: H1 accent and largest, H2 keyword colour, H3 identifier colour, deeper levels muted.
+            var (color, size, weight) = heading switch
+            {
+                1 => (p.Accent, 1.32, FontWeight.Bold),
+                2 => (p.Keyword, 1.16, FontWeight.Bold),
+                3 => (p.Identifier, 1.06, FontWeight.SemiBold),
+                _ => (p.Muted, 1.0, FontWeight.SemiBold),
+            };
+            Paint(o, line.EndOffset, color, weight);
             Paint(o + lead, o + lead + heading, p.Faint);
-            if (heading == 1) ChangeLinePart(o, line.EndOffset, e => e.TextRunProperties.SetFontRenderingEmSize(e.TextRunProperties.FontRenderingEmSize * 1.18));
+            if (size > 1) ChangeLinePart(o, line.EndOffset, e => e.TextRunProperties.SetFontRenderingEmSize(e.TextRunProperties.FontRenderingEmSize * size));
             return;
         }
         var box = CheckboxGenerator.Box.Match(text);

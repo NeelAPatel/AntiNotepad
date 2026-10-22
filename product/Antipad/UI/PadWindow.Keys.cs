@@ -29,6 +29,14 @@ internal sealed partial class PadWindow
 #pragma warning restore CS0618
             return;
         }
+        if (e.Key == Key.F11 && Program.IsDev)
+        {
+            // Dev-only memory probe: managed heap vs what the GC has committed.
+            var info = GC.GetGCMemoryInfo();
+            Program.Log($"mem managed={GC.GetTotalMemory(false) / 1048576.0:F1}MB heap={info.HeapSizeBytes / 1048576.0:F1}MB committed={info.TotalCommittedBytes / 1048576.0:F1}MB docs={Editor.PadView.CachedDocuments} gen2={GC.CollectionCount(2)}");
+            e.Handled = true;
+            return;
+        }
         if (e.Key == Key.Escape && Editor.Completion.IsOpen) return; // the popup closes itself
         if (e.Key == Key.Escape)
         {
@@ -69,8 +77,8 @@ internal sealed partial class PadWindow
         switch (e.Key)
         {
             case Key.N when !shift: NewNote(); break;
-            case Key.OemOpenBrackets or Key.PageUp: Navigate(-1); break;
-            case Key.OemCloseBrackets or Key.PageDown: Navigate(1); break;
+            case Key.OemOpenBrackets or Key.PageUp when !shift: Navigate(-1); break;
+            case Key.OemCloseBrackets or Key.PageDown when !shift: Navigate(1); break;
             case Key.D0 or Key.NumPad0 or Key.OemTilde: ShowStack(); break;
             case Key.Back when shift: DeleteCurrent(); break;
             case Key.F or Key.P or Key.K when !shift: OpenSearch(); break;

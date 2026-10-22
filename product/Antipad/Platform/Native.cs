@@ -48,6 +48,12 @@ internal static class Native
         catch { return true; }
     }
 
+    /// <summary>Hands this process's unused pages back to Windows (they fault back in on demand).</summary>
+    public static void TrimWorkingSet()
+    {
+        try { using var self = Process.GetCurrentProcess(); SetProcessWorkingSetSize(self.Handle, -1, -1); } catch { }
+    }
+
     public static void Chime() { try { MessageBeep(0x40); } catch { } }
 
     public static void Flash(Window window)
@@ -82,6 +88,7 @@ internal static class Native
     [DllImport("user32.dll")] private static extern bool AddClipboardFormatListener(IntPtr hwnd);
     [DllImport("user32.dll")] private static extern bool RemoveClipboardFormatListener(IntPtr hwnd);
     [DllImport("user32.dll")] private static extern bool MessageBeep(uint type);
+    [DllImport("kernel32.dll")] private static extern bool SetProcessWorkingSetSize(IntPtr process, nint min, nint max);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern uint RegisterClipboardFormat(string name);
     [DllImport("user32.dll")] private static extern bool IsClipboardFormatAvailable(uint format);
     [DllImport("user32.dll")] private static extern bool OpenClipboard(IntPtr owner);

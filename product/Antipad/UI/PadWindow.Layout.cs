@@ -13,6 +13,7 @@ namespace Antipad.UI;
 internal sealed partial class PadWindow
 {
     private readonly Border _tint = new() { IsHitTestVisible = false };
+    private readonly LayoutTransformControl _scaler = new();
     private readonly Grid _content = new() { RowDefinitions = new RowDefinitions("36,*") };
     private readonly Grid _top = new() { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
     private readonly StackPanel _meta = new() { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(20, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
@@ -58,7 +59,9 @@ internal sealed partial class PadWindow
         root.Children.Add(_content);
         root.Children.Add(_toast);
         root.Children.Add(_pill);
-        Content = root;
+        // UI scale: one layout transform over everything, so chrome, text and hit targets scale together.
+        _scaler.Child = root;
+        Content = _scaler;
 
         _pill.PointerEntered += (_, _) => WakeChrome(hold: true);
         _top.PointerEntered += (_, _) => WakeChrome(hold: true);
@@ -84,10 +87,11 @@ internal sealed partial class PadWindow
         _icons.Children.Clear();
         _icons.Children.Add(Kit.IconButton(Glyph.Search, "Search notes (Ctrl+F)", p, () => OpenSearch()));
         _icons.Children.Add(Kit.IconButton(Glyph.Split, "Split view with a slot (Ctrl+\\)", p, ToggleSplit));
-        _icons.Children.Add(Kit.IconButton(Settings.Pinned ? Glyph.Pinned : Glyph.Pin, Settings.Pinned ? "Unpin (Ctrl+T)" : "Keep on top (Ctrl+T)", p, TogglePin));
+        // Pinned: the pin is filled with the accent, so the state reads at a glance.
+        _icons.Children.Add(Kit.IconButton(Glyph.Pin, Settings.Pinned ? "Unpin (Ctrl+T)" : "Keep on top (Ctrl+T)", p, TogglePin,
+            filled: Settings.Pinned, color: Settings.Pinned ? p.Accent : null));
         _icons.Children.Add(Kit.IconButton(Glyph.Settings, "Settings (Ctrl+,)", p, OpenSettings));
         _icons.Children.Add(Kit.IconButton(Glyph.Hide, "Hide (Esc)", p, HideResident));
-        if (Settings.Pinned && _icons.Children[2] is Button pin && pin.Content is Border { Child: TextBlock glyph }) glyph.Foreground = new SolidColorBrush(p.Accent);
         _divider.Background = new SolidColorBrush(p.Faint, .45);
         _pill.Background = new SolidColorBrush(p.Surface, p.Dark ? .86 : .9);
         _pill.BorderBrush = new SolidColorBrush(p.Faint, .35); _pill.BorderThickness = new Thickness(1);
@@ -178,7 +182,8 @@ internal sealed partial class PadWindow
         _chromeAnim?.Cancel();
         var from = _icons.Opacity;
         _pill.IsHitTestVisible = to > 0; _icons.IsHitTestVisible = to > 0;
-        _chromeAnim = Anim.Run(this, to > from ? 90 : 220, t =>
+        // Same duration both ways, so appearing and disappearing feel like one motion.
+        _chromeAnim = Anim.Run(this, 180, t =>
         {
             var v = from + (to - from) * t;
             _icons.Opacity = v; _pill.Opacity = v;
@@ -187,7 +192,7 @@ internal sealed partial class PadWindow
 
     // ---------- toast ----------
 
-    internal void Toast(string text, string? action = null, Action? onAction = null)
+    internal void Toast(string text, string? action = null, Action? onAction = null, bool brief = false)
     {
         var p = _palette;
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
@@ -206,7 +211,7 @@ internal sealed partial class PadWindow
         _toast.IsVisible = true;
         Anim.Run(_toast, 120, t => _toast.Opacity = t);
         _toastTimer.Stop();
-        _toastTimer.Interval = TimeSpan.FromMilliseconds(action is null ? 2400 : 7000);
+        _toastTimer.Interval = TimeSpan.FromMilliseconds(action is not null ? 7000 : brief ? 1300 : 2400);
         _toastTimer.Start();
     }
 

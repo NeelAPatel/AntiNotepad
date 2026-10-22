@@ -38,15 +38,16 @@ internal sealed partial class PadWindow
     }
 
     /// <summary>Leaving an empty stack note removes it: abandoned blanks never pile up.</summary>
-    private void DropIfAbandoned(Note leaving)
+    private bool DropIfAbandoned(Note leaving)
     {
-        if (leaving.Slot != 0 || !leaving.IsEmpty || Data.Stack.Count <= 1) return;
+        if (leaving.Slot != 0 || !leaving.IsEmpty || Data.Stack.Count <= 1) return false;
         var index = Data.Stack.IndexOf(leaving);
-        if (index < 0) return;
+        if (index < 0) return false;
         Data.Stack.RemoveAt(index);
         PadView.Forget(leaving);
         if (Data.Current > index) Data.Current--;
         Data.Current = Math.Clamp(Data.Current, 0, Data.Stack.Count - 1);
+        return true;
     }
 
     internal void Navigate(int direction)
@@ -56,17 +57,22 @@ internal sealed partial class PadWindow
         _left.Flush();
         var leaving = Data.Stack[Data.Current];
         var target = Data.Current + direction;
+        var created = false;
         if (target < 0) { Bump(-1); return; }
         if (target >= Data.Stack.Count)
         {
             if (leaving.IsEmpty) { Bump(1); return; }
             Data.Stack.Add(new Note());
+            created = true;
         }
         Data.Current = target;
         var arriving = Data.Stack[target];
-        DropIfAbandoned(leaving);
+        var dropped = DropIfAbandoned(leaving);
         Data.Current = Data.Stack.IndexOf(arriving);
         BindPanes(direction);
+        // Small confirmations for the two things that happen implicitly while swiping.
+        if (created) Toast("New note", brief: true);
+        else if (dropped) Toast("Empty note removed", brief: true);
         Edited();
     }
 
@@ -262,24 +268,35 @@ internal sealed partial class PadWindow
     }
 
     /// <summary>Two-finger horizontal swipe (touchpad) or Shift+wheel pages through the stack.</summary>
+    // ---------- swipe: a detent, not a trigger ----------
+    // Every horizontal input (touchpad, tilt wheel, Shift+wheel) drags the page with rubber-band resistance.
+    // When input stops, the page commits to the next note only past a distance or speed threshold;
+    // otherwise it springs back. One gentle notch is never enough, a deliberate flick always is.
+    private const double SwipePxPerUnit = 48, SwipeCommitPx = 90, SwipeCommitSpeed = 0.9 /* px per ms */, SwipeFarPx = 200;
+    private readonly List<(DateTime At, double Dx)> _swipeSamples = [];
+
     private void OnWheel(object? sender, PointerWheelEventArgs e)
     {
         if (_overlayOpen) return;
-        var touchpad = Math.Abs(e.Delta.X) > 0.001;
-        if (!touchpad && !e.KeyModifiers.HasFlag(KeyModifiers.Shift)) return;
-        var dx = touchpad ? e.Delta.X : e.Delta.Y;
-        if (Math.Abs(dx) < 0.001) return;
+        var horizontal = Math.Abs(e.Delta.X) > 0.001;
+        if (!horizontal && !e.KeyModifiers.HasFlag(KeyModifiers.Shift)) return;
+        var units = horizontal ? e.Delta.X : e.Delta.Y;
+        if (Math.Abs(units) < 0.001) return;
         e.Handled = true;
-        if ((DateTime.Now - _swipeAt).TotalMilliseconds > 350) { _swipe = 0; _swipeFired = false; }
-        _swipeAt = DateTime.Now;
-        if (_swipeFired) return; // one page per gesture: ignore the rest of its inertia
+        var now = DateTime.Now;
+        if ((now - _swipeAt).TotalMilliseconds > 350) { _swipe = 0; _swipeFired = false; _swipeSamples.Clear(); }
+        _swipeAt = now;
+        if (_swipeFired) return; // the rest of a committed gesture's inertia
+        var dx = units * SwipePxPerUnit;
         _swipe += dx;
-        // A mouse notch (Shift+wheel) is a whole page; a touchpad swipe drags the page first.
-        if (!touchpad || Math.Abs(_swipe) >= 2.4) { FireSwipe(); return; }
-        var offset = Math.Clamp(_swipe * 46, -130, 130);
+        _swipeSamples.Add((now, dx));
+        _swipeSamples.RemoveAll(x => (now - x.At).TotalMilliseconds > 90);
+        if (Math.Abs(_swipe) >= SwipeFarPx) { FireSwipe(); return; }
+        // Rubber band: the page follows less and less the further it is pulled.
+        var shown = _swipe / (1 + Math.Abs(_swipe) / 260);
         if (_active.RenderTransform is not TranslateTransform follow) _active.RenderTransform = follow = new TranslateTransform();
-        follow.X = offset;
-        _active.Opacity = 1 - Math.Abs(offset) / 380;
+        follow.X = shown;
+        _active.Opacity = 1 - Math.Abs(shown) / 420;
         _swipeSettle ??= NewSettleTimer();
         _swipeSettle.Stop(); _swipeSettle.Start();
     }
@@ -288,24 +305,30 @@ internal sealed partial class PadWindow
 
     private Avalonia.Threading.DispatcherTimer NewSettleTimer()
     {
-        var timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(120) };
+        var timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(130) };
         timer.Tick += (_, _) =>
         {
             timer.Stop();
             if (_swipeFired) return;
-            if (Math.Abs(_swipe) >= 1.0) { FireSwipe(); return; }
-            // Not far enough: spring back.
-            var pane = _active;
-            var from = (pane.RenderTransform as TranslateTransform)?.X ?? 0;
-            var opacity = pane.Opacity;
-            Anim.Run(pane, 140, t =>
-            {
-                if (pane.RenderTransform is TranslateTransform tt) tt.X = from * (1 - t);
-                pane.Opacity = opacity + (1 - opacity) * t;
-            }, () => { pane.RenderTransform = null; pane.Opacity = 1; });
-            _swipe = 0;
+            var span = _swipeSamples.Count > 1 ? Math.Max(16, (_swipeSamples[^1].At - _swipeSamples[0].At).TotalMilliseconds) : 90;
+            var speed = Math.Abs(_swipeSamples.Sum(x => x.Dx)) / span;
+            if (Math.Abs(_swipe) >= SwipeCommitPx || (speed >= SwipeCommitSpeed && Math.Abs(_swipe) >= SwipeCommitPx / 2)) { FireSwipe(); return; }
+            SpringBack();
         };
         return timer;
+    }
+
+    private void SpringBack()
+    {
+        var pane = _active;
+        var from = (pane.RenderTransform as TranslateTransform)?.X ?? 0;
+        var opacity = pane.Opacity;
+        _swipe = 0;
+        Anim.Run(pane, 200, t =>
+        {
+            if (pane.RenderTransform is TranslateTransform tt) tt.X = from * (1 - t);
+            pane.Opacity = opacity + (1 - opacity) * t;
+        }, () => { pane.RenderTransform = null; pane.Opacity = 1; }, decorative: false);
     }
 
     private void FireSwipe()
@@ -335,7 +358,7 @@ internal sealed partial class PadWindow
             await OcrIntoPane(_snipPane ?? _active);
             return;
         }
-        var target = Data.Stack.Concat(Data.Slots).Where(n => Modes.Detect(n.Text).Mode == NoteMode.Clipboard).MaxBy(n => n.Modified);
+        var target = Data.Stack.Concat(Data.Slots).Where(n => n.ModeCache == NoteMode.Clipboard).MaxBy(n => n.Modified);
         if (target is null || Clipboard is not { } clipboard) return;
         // Password managers mark secrets as not-for-history; never capture those.
         if (Native.ClipboardIsPrivate()) return;
@@ -343,7 +366,7 @@ internal sealed partial class PadWindow
         try { text = await clipboard.TryGetTextAsync(); } catch { return; }
         if (string.IsNullOrWhiteSpace(text) || text == _ownClipboard || text == _lastCaptured) return;
         // Copies out of the clipboard note itself would echo back in; skip anything already in it.
-        if (target.Text.Contains(text.Trim())) return;
+        if (target.PeekText().Contains(text.Trim())) return;
         _lastCaptured = text;
         var doc = PadView.DocumentFor(target);
         var entry = text.Trim().Replace("\r\n", "\n").Replace("\n", "\n  ");

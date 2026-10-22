@@ -36,7 +36,7 @@ internal sealed partial class PadWindow : Window
     public PadWindow(Store store)
     {
         _store = store;
-        Title = "Antipad";
+        Title = Program.IsDev ? "Antipad (dev)" : "Antipad";
         Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new Uri("avares://Antipad/antipad.ico")));
         Anim.Reduced = Settings.ReduceMotion;
         _palette = ResolvePalette();
@@ -55,6 +55,7 @@ internal sealed partial class PadWindow : Window
         ApplyAppearance();
         BindPanes(arrive: 0);
         _saveTimer.Tick += (_, _) => { _saveTimer.Stop(); Save(); };
+        _trim.Tick += (_, _) => TrimWhileHidden();
         _timers.Finished += OnTimerFinished;
         Completion.OcrRequested += pad => _ = RunOcr(pad);
         AddHandler(KeyDownEvent, OnWindowKeyDown, RoutingStrategies.Tunnel);
@@ -144,7 +145,7 @@ internal sealed partial class PadWindow : Window
     {
         Opacity = 0; ShowActivated = false;
         Show();
-        Dispatcher.UIThread.Post(() => { Hide(); Opacity = 1; ShowActivated = true; _hiddenAt = DateTime.Now; }, DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(() => { Hide(); Opacity = 1; ShowActivated = true; _hiddenAt = DateTime.Now; _trim.Start(); }, DispatcherPriority.Background);
     }
 
     /// <summary>Appear without taking focus (finished timers): the user's current app keeps the keyboard.</summary>
@@ -162,6 +163,7 @@ internal sealed partial class PadWindow : Window
         Save();
         _hiddenAt = DateTime.Now;
         Hide();
+        _trim.Stop(); _trim.Start();
     }
 
     public void Quit()
@@ -208,7 +210,31 @@ internal sealed partial class PadWindow : Window
     internal void Save()
     {
         _left.Flush(); _right.Flush();
-        if (!_store.Save()) Toast("Couldn't save · " + _store.LastError);
+        if (!_store.Save()) { Toast("Couldn't save · " + _store.LastError); return; }
+        // Keep editor documents (and undo) for the few notes you swipe between; older ones go back to disk.
+        PadView.Evict(KeepDocuments, [_left.Note, _right.Note]);
+    }
+
+    private const int KeepDocuments = 6;
+    // Long enough that hide-and-show within a minute never pays for paging memory back in.
+    private readonly DispatcherTimer _trim = new() { Interval = TimeSpan.FromSeconds(TrimDelaySeconds) };
+    private static double TrimDelaySeconds => double.TryParse(Environment.GetEnvironmentVariable("ANTIPAD_TRIM_SECONDS"), out var s) ? s : 45;
+
+    /// <summary>
+    /// 45 s after hiding: release every cold document, compact the heap and hand unused pages back to
+    /// Windows. A quick hide-and-show inside the delay skips all of it, so toggling stays instant.
+    /// </summary>
+    private void TrimWhileHidden()
+    {
+        _trim.Stop();
+        if (IsVisible) return;
+        PadView.Evict(0, [_left.Note, _right.Note]);
+        _store.RemoveOrphans();
+        System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
+        GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
+        GC.WaitForPendingFinalizers();
+        Native.TrimWorkingSet();
+        if (Program.IsDev) Program.Log($"trimmed docs={PadView.CachedDocuments} managed={GC.GetTotalMemory(false) / 1048576.0:F1}MB");
     }
 
     private void RememberBounds()
@@ -263,6 +289,15 @@ internal sealed partial class PadWindow : Window
         var fg = new Style(x => x.OfType<TextBox>().Class(":focus"));
         fg.Setters.Add(new Setter(TextBox.ForegroundProperty, new SolidColorBrush(p.Ink)));
         Styles.Add(fg);
+        // Plain buttons draw their own rounded hover; Fluent's square template fill must never show through.
+        foreach (var state in new[] { ":pointerover", ":pressed", ":focus-visible", "" })
+        {
+            var plain = new Style(x => (state.Length == 0 ? x.OfType<Button>().Class("plain") : x.OfType<Button>().Class("plain").Class(state))
+                .Template().OfType<Avalonia.Controls.Presenters.ContentPresenter>().Name("PART_ContentPresenter"));
+            plain.Setters.Add(new Setter(Avalonia.Controls.Presenters.ContentPresenter.BackgroundProperty, Brushes.Transparent));
+            plain.Setters.Add(new Setter(Avalonia.Controls.Presenters.ContentPresenter.BorderBrushProperty, Brushes.Transparent));
+            Styles.Add(plain);
+        }
         var bar = new Style(x => x.OfType<Avalonia.Controls.Primitives.ScrollBar>());
         bar.Setters.Add(new Setter(OpacityProperty, .5));
         Styles.Add(bar);
@@ -300,6 +335,8 @@ internal sealed partial class PadWindow : Window
         TransparencyBackgroundFallback = new SolidColorBrush(_palette.Canvas);
         var tint = Settings.Material == "solid" ? 1 : Math.Clamp(Settings.Tint, 0.3, 1);
         _tint.Background = new SolidColorBrush(_palette.Canvas, tint);
+        var scale = Math.Clamp(Settings.UiScale, 0.8, 2);
+        _scaler.LayoutTransform = Math.Abs(scale - 1) < 0.01 ? null : new ScaleTransform(scale, scale);
         _left?.ApplyLook(_palette, Settings);
         _right?.ApplyLook(SplitPalette(), Settings);
         if (_right is not null) _right.Background = Settings.SplitPalette == "same" ? null : new SolidColorBrush(SplitPalette().Canvas, Settings.Material == "solid" ? 1 : Math.Clamp(Settings.Tint + .08, 0, 1));

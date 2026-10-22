@@ -18,6 +18,26 @@
 
 It runs side by side with AntiQuickPad. It has its own instance ID, its own data folder (`%LOCALAPPDATA%\Antipad`), its own hotkey and its own Run-key name.
 
+## v2 (2026-10-22, after your feedback). The v1 build is tagged `antipad-v1`
+
+| You asked | What changed |
+|---|---|
+| Memory with many and long notes | Each note is now its own file (`index.json` plus `notes/<id>.md`); the v1 `antipad.json` migrates on first launch and is kept as `.v1-backup`. Text loads only when a note is opened, and only changed notes are saved. Editor documents stay cached for the 6 most recent notes. 45 s after hiding, everything else is released, the heap is compacted and the working set is trimmed. Very long notes (over 1,500 lines) are analysed after a typing pause instead of on every keystroke. |
+| | **Measured** (Release build, 71 notes plus a 6,000-line note): hidden working set **152 → 22 MB**; shown **168 → 89 MB**. The rest is the framework floor: the managed heap is about 5 MB. Picking **Solid** switches to software rendering after a restart, about **40 MB** private instead of about 125 MB. Glass needs the GPU. |
+| Fenced code, indent guides, coloured headers, folding | ```` ```python ```` blocks get real syntax colours on a tinted panel. Indent guides are faint, with the caret's level drawn a little stronger. H1, H2 and H3 each have their own colour and size. Folding covers headings, fences, nested lists and code, with quiet chevrons that appear on hover (Ctrl+Shift+[ / ] at the caret). |
+| Scrolling as a detent | Horizontal input now drags the page with rubber-band resistance. When input stops, it commits only past a distance or speed threshold; otherwise it springs back. One gentle notch springs back; a flick moves on. |
+| Answer bubble beside "=" | Answers sit right after the line, so a narrow window still works. |
+| Toolbar fade symmetry | It fades in and out over the same 180 ms. |
+| Toasts for implicit actions | "New note" when swiping past the end; "Empty note removed" when leaving a blank note. |
+| Thin icons | Stroke icons with a 1.7 px pen, a weight heavier than Segoe Fluent Icons. |
+| Filled pin when pinned | Filled in the accent colour. |
+| No close buttons | Search, Settings and Shortcuts each have an ✕ at the top right. |
+| Square grey hover in Settings | Fluent's template fill is turned off; hover uses the same rounded pill as the selected option. |
+| UI scale | Settings › UI scale: 90–150 %, scaling chrome, panels and text together. |
+| Smooth scrolling and caret | The wheel and touchpad glide; the caret glides between positions and blinks only when idle. |
+
+Also: Solid's hint in Settings says when a restart applies the renderer change, and dev builds run beside your copy (`build/dev`, instance "Antipad-dev", Ctrl+Alt+Shift+D).
+
 ## What I built
 
 | Area | What you get |

@@ -25,9 +25,7 @@ internal sealed class SettingsOverlay : Grid
         _scroll = new ScrollViewer { Content = panel, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled };
         Children.Add(_scroll);
 
-        var title = Kit.Text("Settings", _p.Ink, 18, FontWeight.SemiBold);
-        title.Margin = new Thickness(8, 2, 0, 0);
-        panel.Children.Add(title);
+        panel.Children.Add(Kit.PanelHeader("Settings", _p, _w.CloseOverlay));
 
         panel.Children.Add(Kit.Section(_p, "Look"));
         panel.Children.Add(Row("Theme", Kit.Segmented(_p, [("system", "System"), ("light", "Light"), ("dark", "Dark")], S.Theme, v => Set(() => S.Theme = v))));
@@ -39,13 +37,15 @@ internal sealed class SettingsOverlay : Grid
         panel.Children.Add(Row("Split pane", Kit.Segmented(_p, new[] { ("same", "Same as main") }.Concat(Palette.For(_p.Dark).Select(x => (x.Id, x.Name))).ToList(), S.SplitPalette, v => Set(() => S.SplitPalette = v)), "its own palette for the slot beside you"));
         panel.Children.Add(Preview());
         panel.Children.Add(Kit.Section(_p, "Window"));
-        panel.Children.Add(Row("Window", Kit.Segmented(_p, [("acrylic", "Acrylic"), ("mica", "Mica"), ("solid", "Solid")], S.Material, v => Set(() => S.Material = v))));
+        panel.Children.Add(Row("Window", Kit.Segmented(_p, [("acrylic", "Acrylic"), ("mica", "Mica"), ("solid", "Solid")], S.Material, v => Set(() => S.Material = v)),
+            RenderHint()));
         if (S.Material != "solid")
             panel.Children.Add(Row("Glass tint", Kit.Segmented(_p, [("0.55", "Clear"), ("0.7", "Light"), ("0.82", "Medium"), ("0.92", "Dense")], Closest(S.Tint, 0.55, 0.7, 0.82, 0.92), v => Set(() => S.Tint = double.Parse(v, System.Globalization.CultureInfo.InvariantCulture)))));
         panel.Children.Add(Row("Paper", Kit.Segmented(_p, [("blank", "Blank"), ("lined", "Lined"), ("dotted", "Dotted"), ("grid", "Grid"), ("biggrid", "Large grid")], S.Paper, v => Set(() => S.Paper = v))));
         if (S.Paper != "blank")
             panel.Children.Add(Row("Pattern", Kit.Segmented(_p, [("0", "Subtle"), ("1", "Clear"), ("2", "Bold")], S.PaperStrength.ToString(), v => Set(() => S.PaperStrength = int.Parse(v)))));
         panel.Children.Add(Row("Font", Kit.Segmented(_p, [("Cascadia Mono", "Cascadia Mono"), ("Consolas", "Consolas"), ("Cascadia Code", "Cascadia Code"), ("Segoe UI Variable Text", "Segoe UI")], S.Font, v => Set(() => S.Font = v))));
+        panel.Children.Add(Row("UI scale", Kit.Segmented(_p, [("0.9", "90%"), ("1", "100%"), ("1.15", "115%"), ("1.3", "130%"), ("1.5", "150%")], Closest(S.UiScale, 0.9, 1, 1.15, 1.3, 1.5), v => Set(() => S.UiScale = double.Parse(v, System.Globalization.CultureInfo.InvariantCulture))), "everything: chrome, panels and text"));
         panel.Children.Add(Row("Text size", Kit.Segmented(_p, [("13", "13"), ("14", "14"), ("15", "15"), ("16", "16"), ("18", "18"), ("20", "20")], S.FontSize.ToString("0"), v => Set(() => S.FontSize = double.Parse(v)))));
         panel.Children.Add(Row("Controls", Kit.Segmented(_p, [("fade", "Fade while typing"), ("always", "Always visible")], S.Chrome, v => Set(() => S.Chrome = v))));
 
@@ -57,6 +57,8 @@ internal sealed class SettingsOverlay : Grid
         panel.Children.Add(Kit.Switch(_p, "Fade a pinned pad when I click away", S.DimWhenPinned, v => Set(() => S.DimWhenPinned = v)));
         panel.Children.Add(Kit.Switch(_p, "Answer lines ending in =", S.InlineMath, v => Set(() => S.InlineMath = v), "12 * 4 = shows 48 in any note"));
         panel.Children.Add(Kit.Switch(_p, "Clean markdown", S.CleanMarkdown, v => Set(() => S.CleanMarkdown = v), "hide ** and # except on the line you're editing"));
+        panel.Children.Add(Kit.Switch(_p, "Indent guides", S.IndentGuides, v => Set(() => S.IndentGuides = v), "faint lines at each list and code level"));
+        panel.Children.Add(Kit.Switch(_p, "Folding", S.Folding, v => Set(() => S.Folding = v), "chevrons to collapse headings, code blocks and nested lists"));
         panel.Children.Add(Kit.Switch(_p, "Shorten long links", S.ShortenLinks, v => Set(() => S.ShortenLinks = v), "the full URL stays in the text"));
         panel.Children.Add(Kit.Switch(_p, "Reduce motion", S.ReduceMotion, v => Set(() => S.ReduceMotion = v)));
         bool startup = false; try { startup = Startup.IsEnabled; } catch { }
@@ -90,6 +92,14 @@ internal sealed class SettingsOverlay : Grid
     }
 
     private void Set(Action change) { change(); _w.SettingsChanged(); }
+
+    // Solid switches to software rendering (about 80 MB less memory), which needs a restart either way.
+    private string RenderHint()
+    {
+        var wantSoftware = S.Material == "solid";
+        if (wantSoftware == Program.SoftwareRendering) return wantSoftware ? "low-memory mode: no glass, ~40 MB" : "glass uses the GPU, ~125 MB";
+        return wantSoftware ? "restart Antipad to save ~80 MB" : "restart Antipad to get the glass back";
+    }
 
     private static string Closest(double value, params double[] options) =>
         options.MinBy(o => Math.Abs(o - value)).ToString(System.Globalization.CultureInfo.InvariantCulture);
@@ -227,9 +237,7 @@ internal sealed class HelpOverlay : ScrollViewer
         Margin = new Thickness(10, 0, 10, 40);
         HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled;
         var panel = new StackPanel { Margin = new Thickness(8, 0, 14, 12) };
-        var title = Kit.Text("Shortcuts", p.Ink, 18, FontWeight.SemiBold);
-        title.Margin = new Thickness(8, 2, 0, 0);
-        panel.Children.Add(title);
+        panel.Children.Add(Kit.PanelHeader("Shortcuts", p, window.CloseOverlay));
         foreach (var (section, rows) in Sheet)
         {
             panel.Children.Add(Kit.Section(p, section));
