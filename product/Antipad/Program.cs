@@ -14,6 +14,8 @@ internal static class Program
     public static string DataFolder { get; private set; } = "";
     public static bool StartHidden { get; private set; }
     public static bool IsDev { get; private set; }
+    /// <summary>Started from a Claude Code shell (CLAUDECODE=1 is inherited by everything it launches).</summary>
+    public static bool LaunchedByClaude { get; } = Environment.GetEnvironmentVariable("CLAUDECODE") == "1";
     public static bool SoftwareRendering { get; private set; }
     public static Store Store { get; private set; } = null!;
     private static long GpuCacheBytes => long.TryParse(Environment.GetEnvironmentVariable("ANTIPAD_GPU_CACHE_MB"), out var mb) ? mb * 1048576 : 8 * 1048576;

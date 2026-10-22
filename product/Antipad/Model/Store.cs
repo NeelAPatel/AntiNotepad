@@ -92,6 +92,7 @@ public sealed class Settings
     public string SplitPalette { get; set; } = "same";     // the split pane's own palette id, or same
     public string OpenAt { get; set; } = "remember";      // remember | center | mouse | tray | dropdown
     public bool ReduceMotion { get; set; }
+    public string Scrolling { get; set; } = "lines";      // lines (glide 3 lines a notch) | free (momentum, pixel based)
     public string Chrome { get; set; } = "fade";           // fade | always
     public bool InlineMath { get; set; } = true;
     public bool ShortenLinks { get; set; } = true;

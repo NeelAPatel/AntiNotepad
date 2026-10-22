@@ -12,32 +12,62 @@ using Antipad.UI;
 namespace Antipad.Editor;
 
 /// <summary>
-/// Wheel and touchpad scrolling that glides to its target instead of jumping three lines at a time.
-/// Consecutive notches extend the same glide, so fast spinning stays fluid.
+/// Wheel and touchpad scrolling that glides instead of jumping. Two feels:
+/// lines: each notch glides 3 lines; consecutive notches extend the same glide.
+/// free: each notch adds momentum that coasts and decays, so distance follows how fast you spin; a touchpad tracks 1:1 in pixels.
 /// </summary>
 internal sealed class SmoothScroll
 {
+    private const double PxPerUnit = 50;          // touchpad: pixels per wheel unit
+    private const double Impulse = 700;           // free: px/s added per notch (about 115 px coasted alone)
+    private const double Friction = 6;            // free: velocity decays by e^-6 per second
+    private const double MaxSpeed = 9000;
     private readonly TextEditor _editor;
+    private readonly Func<bool> _free;
     private double _target = double.NaN;
+    private double _velocity, _position;
+    private TimeSpan? _last;
     private bool _running;
 
-    public SmoothScroll(TextEditor editor)
+    public SmoothScroll(TextEditor editor, Func<bool> free)
     {
-        _editor = editor;
+        _editor = editor; _free = free;
         editor.AddHandler(InputElement.PointerWheelChangedEvent, OnWheel, RoutingStrategies.Tunnel);
     }
+
+    private double Max => Math.Max(0, _editor.ExtentHeight - _editor.ViewportHeight);
 
     private void OnWheel(object? sender, PointerWheelEventArgs e)
     {
         if (e.KeyModifiers != KeyModifiers.None || Math.Abs(e.Delta.Y) < 0.001 || Math.Abs(e.Delta.X) > Math.Abs(e.Delta.Y)) return;
-        var max = Math.Max(0, _editor.ExtentHeight - _editor.ViewportHeight);
+        var max = Max;
         if (max <= 0) return;
         e.Handled = true;
+        if (_free()) { Free(e.Delta.Y, max); return; }
+        _velocity = 0;
         var step = _editor.TextArea.TextView.DefaultLineHeight * 3;
         var from = _running && !double.IsNaN(_target) ? _target : _editor.VerticalOffset;
         _target = Math.Clamp(from - e.Delta.Y * step, 0, max);
         if (Anim.Reduced) { SetOffset(_editor, _target); return; }
-        if (!_running) { _running = true; Frame(); }
+        Start();
+    }
+
+    private void Free(double delta, double max)
+    {
+        _target = double.NaN;
+        // Precision touchpads send fractions of a notch and already carry their own inertia: follow them exactly.
+        var touchpad = Math.Abs(delta - Math.Round(delta)) > 0.01;
+        if (touchpad || Anim.Reduced)
+        {
+            _velocity = 0;
+            SetOffset(_editor, Math.Clamp(_editor.VerticalOffset - delta * (touchpad ? PxPerUnit : _editor.TextArea.TextView.DefaultLineHeight * 3), 0, max));
+            return;
+        }
+        // Spinning the other way stops the coast first.
+        if (Math.Sign(_velocity) == Math.Sign(delta)) _velocity = 0;
+        if (!_running) _position = _editor.VerticalOffset;
+        _velocity = Math.Clamp(_velocity - delta * Impulse, -MaxSpeed, MaxSpeed);
+        Start();
     }
 
     /// <summary>Moves the editor's own ScrollViewer (TextEditor.ScrollToVerticalOffset doesn't apply reliably here).</summary>
@@ -48,16 +78,38 @@ internal sealed class SmoothScroll
         else editor.ScrollToVerticalOffset(y);
     }
 
+    private void Start()
+    {
+        if (_running) return;
+        _running = true; _last = null; Frame();
+    }
+
     private void Frame()
     {
         if (TopLevel.GetTopLevel(_editor) is not { } top) { _running = false; return; }
-        top.RequestAnimationFrame(_ =>
+        top.RequestAnimationFrame(time =>
         {
-            var now = _editor.VerticalOffset;
-            var gap = _target - now;
-            if (Math.Abs(gap) < 0.5) { SetOffset(_editor, _target); _running = false; return; }
-            // Exponential approach: quick start, soft landing, about 140 ms for a notch.
-            SetOffset(_editor, now + gap * 0.28);
+            var dt = _last is { } last ? Math.Clamp((time - last).TotalSeconds, 0, 0.05) : 1 / 60.0;
+            _last = time;
+            if (!double.IsNaN(_target))
+            {
+                var now = _editor.VerticalOffset;
+                var gap = _target - now;
+                if (Math.Abs(gap) < 0.5) { SetOffset(_editor, _target); _running = false; return; }
+                // Exponential approach: quick start, soft landing, about 140 ms for a notch.
+                SetOffset(_editor, now + gap * 0.28);
+            }
+            else
+            {
+                // Something else moved the view (typing, the scrollbar): let it win.
+                if (Math.Abs(_editor.VerticalOffset - _position) > 2) { _velocity = 0; _running = false; return; }
+                var max = Max;
+                _position = Math.Clamp(_position + _velocity * dt, 0, max);
+                _velocity *= Math.Exp(-Friction * dt);
+                if (_position <= 0 || _position >= max) _velocity = 0;
+                SetOffset(_editor, _position);
+                if (Math.Abs(_velocity) < 15) { _velocity = 0; _running = false; return; }
+            }
             Frame();
         });
     }

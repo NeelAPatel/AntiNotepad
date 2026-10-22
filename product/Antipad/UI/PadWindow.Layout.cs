@@ -15,7 +15,9 @@ internal sealed partial class PadWindow
     private readonly Border _tint = new() { IsHitTestVisible = false };
     private readonly LayoutTransformControl _scaler = new();
     private readonly Grid _content = new() { RowDefinitions = new RowDefinitions("36,*") };
-    private readonly Grid _top = new() { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+    private readonly Grid _top = new() { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto") };
+    /// <summary>Which copy this is; never fades with the icons.</summary>
+    private readonly StackPanel _badges = new() { Orientation = Orientation.Horizontal, Spacing = 4, Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
     private readonly StackPanel _meta = new() { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(20, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
     private readonly StackPanel _icons = new() { Orientation = Orientation.Horizontal, Spacing = 2, Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
     private readonly Grid _panes = new() { ColumnDefinitions = new ColumnDefinitions("*,0,0") };
@@ -35,10 +37,12 @@ internal sealed partial class PadWindow
     {
         var drag = new Border { Background = Brushes.Transparent };
         WindowDecorationProperties.SetElementRole(drag, WindowDecorationsElementRole.TitleBar);
-        Grid.SetColumnSpan(drag, 2);
+        Grid.SetColumnSpan(drag, 3);
         _top.Children.Add(drag);
         _top.Children.Add(_meta);
-        Grid.SetColumn(_icons, 1);
+        Grid.SetColumn(_badges, 1);
+        _top.Children.Add(_badges);
+        Grid.SetColumn(_icons, 2);
         _top.Children.Add(_icons);
         _content.Children.Add(_top);
 
@@ -85,6 +89,10 @@ internal sealed partial class PadWindow
     {
         var p = _palette;
         _icons.Children.Clear();
+        // Which copy is this: who started it, and dev (test data) or prod (your notes).
+        _badges.Children.Clear();
+        if (Program.LaunchedByClaude) _badges.Children.Add(Chip("claude", Color.FromRgb(0xD9, 0x77, 0x57)));
+        _badges.Children.Add(Chip(Program.IsDev ? "dev" : "prod", Program.IsDev ? p.Number : p.Muted));
         _icons.Children.Add(Kit.IconButton(Glyph.Search, "Search notes (Ctrl+F)", p, () => OpenSearch()));
         _icons.Children.Add(Kit.IconButton(Glyph.Split, "Split view with a slot (Ctrl+\\)", p, ToggleSplit));
         // Pinned: the pin is filled with the accent, so the state reads at a glance.

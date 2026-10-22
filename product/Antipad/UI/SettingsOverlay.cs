@@ -60,6 +60,7 @@ internal sealed class SettingsOverlay : Grid
         panel.Children.Add(Kit.Switch(_p, "Indent guides", S.IndentGuides, v => Set(() => S.IndentGuides = v), "faint lines at each list and code level"));
         panel.Children.Add(Kit.Switch(_p, "Folding", S.Folding, v => Set(() => S.Folding = v), "chevrons to collapse headings, code blocks and nested lists"));
         panel.Children.Add(Kit.Switch(_p, "Shorten long links", S.ShortenLinks, v => Set(() => S.ShortenLinks = v), "the full URL stays in the text"));
+        panel.Children.Add(Row("Scrolling", Kit.Segmented(_p, [("lines", "Lines"), ("free", "Free")], S.Scrolling, v => Set(() => S.Scrolling = v)), "lines: each notch glides 3 lines · free: momentum that coasts"));
         panel.Children.Add(Kit.Switch(_p, "Reduce motion", S.ReduceMotion, v => Set(() => S.ReduceMotion = v)));
         bool startup = false; try { startup = Startup.IsEnabled; } catch { }
         panel.Children.Add(Kit.Switch(_p, "Start with Windows", startup, v => { try { Startup.SetEnabled(v); } catch (Exception ex) { _w.Toast(ex.Message); } Set(() => { }); }));

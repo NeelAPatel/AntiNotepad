@@ -40,3 +40,8 @@ Watchdog: spike-notes/watchdog.ps1 (detached pwsh, log spike-notes/watchdog.log)
 - User's copy runs from build/antipad on real data (%LOCALAPPDATA%\Antipad, v2 index.json + notes/). Swap procedure: `build/antipad/Antipad.exe --quit`, `dotnet build product/Antipad -c Release -o build/antipad`, `--selftest`, relaunch.
 - Dev builds: spike-notes/dev.sh -> build/dev, instance Antipad-dev, hotkey Ctrl+Alt+Shift+D (spike-notes/press-hotkey.ps1 presses D by default). Computer-use grant covers build\dev\Antipad.exe and build\antipad\Antipad.exe; never type into the user's copy.
 - Crashes now log to <data>/antipad.log ("crash ..."); also Windows Application log (.NET Runtime).
+
+## Scroll decisions 2026-10-22 (Scroll Lab, https://claude.ai/artifact/JkwihBpKANjcujnsrsTxCJ)
+- User's mouse: Logitech MX Master 3S. Browser and Windows deliver whole clicks (deltaY 100, wheelDelta 120) on both wheels; speed shows only as click rate.
+- LOCKED for vertical scrolling: Eased glide (Antipad "Lines" today), Rate-matched glide (40 px slow click, up to 3.5x at 30 clicks/s, glide <= gap between clicks), Wheel-driven sheet (click rate sets sheet speed, quick stop). Lab source: scratchpad scroll-lab.html, techniques "glide", "rate", "flywheel".
+- Horizontal (note paging): must follow the input visibly before a note change fires, and change exactly one note per gesture. Still being tuned in the lab.
