@@ -111,7 +111,7 @@ internal sealed partial class PadWindow
         if (note.Slot > 0) _meta.Children.Add(Chip($"slot {note.Slot}", p.Accent));
         var label = Modes.Label(_active.Mode, _active.CodeLanguage);
         if (label.Length > 0) _meta.Children.Add(Chip(label, p.Keyword));
-        _meta.Children.Add(Kit.Text(Kit.Ago(note.Modified), p.Faint, 11.5));
+        _meta.Children.Add(Kit.Text(Kit.Ago(note.Modified), p.Muted, 12));
         if (_timers.AnyRunning && _active.Mode != NoteMode.Timer) _meta.Children.Add(Kit.Text("● timer running", p.Number, 11.5));
         BuildPill();
     }

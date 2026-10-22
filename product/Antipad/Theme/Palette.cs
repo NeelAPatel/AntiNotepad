@@ -93,6 +93,9 @@ public sealed record Palette(
         return p with { Canvas = canvas, Surface = surface };
     }
 
+    /// <summary>Structure marks (fences, fold chevrons, indent guides): Faint reads on dark glass, light glass needs more ink.</summary>
+    public Color Marker => Dark ? Faint : Mix(Muted, Ink, .35);
+
     private static Color Mix(Color a, Color b, double t) =>
         Color.FromRgb((byte)(a.R + (b.R - a.R) * t), (byte)(a.G + (b.G - a.G) * t), (byte)(a.B + (b.B - a.B) * t));
 

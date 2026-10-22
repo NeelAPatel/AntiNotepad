@@ -30,7 +30,7 @@ internal sealed class SearchOverlay : Grid
     {
         _window = window; _p = palette; ShowingTrash = trash;
         RowDefinitions = new RowDefinitions("Auto,*,Auto");
-        Margin = new Thickness(14, 2, 14, 46);
+        Margin = new Thickness(14, 14, 14, 46);
 
         _query = new TextBox
         {

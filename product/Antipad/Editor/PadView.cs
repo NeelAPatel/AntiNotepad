@@ -71,7 +71,7 @@ internal sealed class PadView : Grid
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             Padding = new Thickness(0),
             Background = Brushes.Transparent,
-            Margin = new Thickness(26, 4, 18, 40),
+            Margin = new Thickness(36, 4, 30, 40),
         };
         Editor.Options.EnableHyperlinks = false;
         Editor.Options.EnableEmailHyperlinks = false;
@@ -100,7 +100,7 @@ internal sealed class PadView : Grid
         view.ElementGenerators.Add(new MarkerGenerator(this));
         _hint = new TextBlock
         {
-            IsHitTestVisible = false, Margin = new Thickness(27, 7, 18, 0), TextWrapping = TextWrapping.Wrap,
+            IsHitTestVisible = false, Margin = new Thickness(37, 7, 30, 0), TextWrapping = TextWrapping.Wrap,
             VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Left,
         };
         _paper = new PaperLayer(this).Init();
@@ -537,7 +537,7 @@ internal sealed class PadView : Grid
         var p = Palette;
         FoldingElementGenerator.TextBrush = new SolidColorBrush(p.Muted);
         var hasGutter = _gutter is not null;
-        Editor.Margin = new Thickness(hasGutter ? 10 : 26, 4, 18, 40);
+        Editor.Margin = new Thickness(hasGutter ? 20 : 36, 4, 30, 40);
     }
 
     /// <summary>Ctrl+Shift+[ folds the innermost block around the caret; Ctrl+Shift+] unfolds it.</summary>

@@ -32,7 +32,7 @@ internal sealed class NoteColorizer(PadView pad) : DocumentColorizingTransformer
         if (pad.InFence(line.LineNumber))
         {
             // Fence markers recede; the body is ink, and FenceColorizer adds syntax colours when the language is known.
-            Mono(o, line.EndOffset, text.TrimStart().StartsWith("```") ? p.Faint : p.Ink);
+            Mono(o, line.EndOffset, text.TrimStart().StartsWith("```") ? p.Marker : p.Ink);
             return;
         }
         var trimmed = text.TrimStart();

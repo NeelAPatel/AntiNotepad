@@ -14,7 +14,7 @@ namespace Antipad.Editor;
 internal sealed class PaperLayer(PadView pad) : Avalonia.Controls.Control
 {
     /// <summary>
-    /// Fenced blocks get a rounded panel reaching 10 px past the text on both sides. It lives here, behind the
+    /// Fenced blocks get a rounded panel reaching 20 px past the text on both sides. It lives here, behind the
     /// editor, because the text view clips at the text's own left edge.
     /// </summary>
     private void DrawCodePanels(DrawingContext dc, TextView view, Point origin)
@@ -35,7 +35,8 @@ internal sealed class PaperLayer(PadView pad) : Avalonia.Controls.Control
                 bottom = y + v.Height;
             }
             if (double.IsNaN(top)) continue;
-            var left = origin.X - 10;
+            // Wide enough to hold the fold chevrons, which sit in the 16 px just left of the text.
+            var left = origin.X - 20;
             dc.DrawRectangle(fill, null, new Rect(left, top - 2, Bounds.Width - 2 * left, bottom - top + 4), 9, 9);
         }
     }
@@ -97,6 +98,8 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
     public readonly record struct Chip(Rect Bounds, int Line, string Kind, string Value);
     public List<Chip> Chips { get; } = [];
     public KnownLayer Layer => KnownLayer.Selection;
+    private (object?, int, int, double) _key;
+    private double _column;
 
     public void Draw(TextView view, DrawingContext dc)
     {
@@ -105,38 +108,39 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
         var typeface = new Typeface(new FontFamily(pad.Settings.Font + ", Cascadia Mono, Consolas"), FontStyle.Normal, FontWeight.SemiBold);
         var size = pad.Settings.FontSize * 0.93;
         // Pass 1: every visible chip with its line geometry.
-        var items = new List<(int Line, string Text, string Kind, Color Color, string Value, FormattedText Ft, double TextEnd, double RowTop, TextLine Row)>();
+        var items = new List<(int Line, string Text, string Kind, Color Color, string Value, FormattedText Ft, double TextEnd, double Baseline)>();
         foreach (var visual in view.VisualLines)
         {
             var n = visual.LastDocumentLine.LineNumber;
             if (pad.ChipFor(n) is not { } chip) continue;
             var ft = new FormattedText(chip.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeface, size, new SolidColorBrush(chip.Color));
             var row = visual.TextLines[^1];
-            var rowTop = visual.VisualTop + visual.Height - row.Height - view.VerticalOffset;
-            items.Add((n, chip.Text, chip.Kind, chip.Color, chip.Value, ft, row.WidthIncludingTrailingWhitespace, rowTop, row));
+            // The editor's own baseline for the line's last row: line spacing makes row arithmetic drift.
+            var baseline = visual.GetVisualPosition(visual.VisualLength, VisualYPosition.Baseline).Y - view.VerticalOffset;
+            items.Add((n, chip.Text, chip.Kind, chip.Color, chip.Value, ft, row.WidthIncludingTrailingWhitespace, baseline));
         }
-        // Pass 2: consecutive answer lines share one column, just past the longest line in their block.
-        var i = 0;
-        while (i < items.Count)
-        {
-            var j = i;
-            while (j + 1 < items.Count && items[j + 1].Line == items[j].Line + 1) j++;
-            var column = items.Skip(i).Take(j - i + 1).Max(x => x.TextEnd) + 14;
-            for (var k = i; k <= j; k++) DrawChip(view, dc, items[k], column);
-            i = j + 1;
-        }
+        // Pass 2: every answer shares one column, just past the longest line that still leaves room for its chip.
+        // A line too long for that falls back to sitting right after its own text.
+        if (items.Count == 0) return;
+        var fits = items.Where(x => x.TextEnd + 14 + x.Ft.Width + 30 <= view.Bounds.Width).ToList();
+        var column = (fits.Count > 0 ? fits.Max(x => x.TextEnd) : 0) + 14;
+        // Scrolling never pulls the column left; an edit or a resize lets it settle again.
+        var key = (view.Document, view.Document.TextLength, view.Document.LineCount, view.Bounds.Width);
+        if (key == _key) column = Math.Max(column, _column);
+        (_key, _column) = (key, column);
+        foreach (var item in items) DrawChip(view, dc, item, column);
     }
 
-    private void DrawChip(TextView view, DrawingContext dc, (int Line, string Text, string Kind, Color Color, string Value, FormattedText Ft, double TextEnd, double RowTop, TextLine Row) c, double column)
+    private void DrawChip(TextView view, DrawingContext dc, (int Line, string Text, string Kind, Color Color, string Value, FormattedText Ft, double TextEnd, double Baseline) c, double column)
     {
         var ft = c.Ft;
         var icon = c.Kind.StartsWith("timer:") ? c.Kind[6..] : null;
         var iconWidth = icon is null ? 0 : ft.Height * 0.62 + 6;
         var width = ft.Width + iconWidth;
-        // The block's column, pulled left only if the window is too narrow, never onto the text.
+        // The shared column, pulled left only if the window is too narrow, never onto the text.
         var x = Math.Max(c.TextEnd + 10, Math.Min(column, view.Bounds.Width - width - 8));
-        // Baseline-aligned with the line's text (the row is taller than the glyphs because of line spacing).
-        var y = c.RowTop + c.Row.Baseline - ft.Baseline;
+        // Baseline-aligned with the line's text.
+        var y = c.Baseline - ft.Baseline;
         var rect = new Rect(x - 7, y - 2, width + 14, ft.Height + 4);
         dc.DrawRectangle(new SolidColorBrush(c.Color, pad.Palette.Dark ? 0.14 : 0.10), null, rect, 7, 7);
         if (icon is not null) DrawTimerIcon(dc, icon, new Rect(x, y, ft.Height * 0.62, ft.Height), c.Color);

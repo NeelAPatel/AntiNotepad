@@ -224,10 +224,10 @@ internal sealed class IndentGuideRenderer(PadView pad) : IBackgroundRenderer
         var p = pad.Palette;
         var step = pad.Mode == NoteMode.Code ? 4 : 2;
         var space = view.WideSpaceWidth;
-        var faint = new Pen(new SolidColorBrush(p.Faint, 0.35), 1);
+        var faint = new Pen(new SolidColorBrush(p.Marker, 0.35), 1);
         var caretLine = pad.CaretLine;
         var caretLevel = caretLine < s.Indent.Length ? s.Indent[caretLine] / step : 0;
-        var strong = new Pen(new SolidColorBrush(p.Faint, 0.8), 1);
+        var strong = new Pen(new SolidColorBrush(p.Marker, 0.8), 1);
         foreach (var v in view.VisualLines)
         {
             var n = v.FirstDocumentLine.LineNumber;

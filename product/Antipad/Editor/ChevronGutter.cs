@@ -62,7 +62,7 @@ internal sealed class ChevronGutter : AbstractMargin
         {
             var hot = _hover is { } h && bounds.Contains(h);
             if (!folding.IsFolded && !_showAll && !hot) continue;
-            var color = hot ? p.Accent : folding.IsFolded ? p.Muted : p.Faint;
+            var color = hot ? p.Accent : folding.IsFolded ? p.Muted : p.Marker;
             var pen = new Pen(new SolidColorBrush(color), 1.6, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round);
             var c = bounds.Center;
             if (folding.IsFolded)

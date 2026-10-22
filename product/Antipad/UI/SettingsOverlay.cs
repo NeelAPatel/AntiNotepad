@@ -20,7 +20,7 @@ internal sealed class SettingsOverlay : Grid
     public SettingsOverlay(PadWindow window, Palette palette, double scroll)
     {
         _w = window; _p = palette;
-        Margin = new Thickness(10, 0, 10, 40);
+        Margin = new Thickness(10, 14, 10, 40);
         var panel = new StackPanel { Spacing = 2, Margin = new Thickness(6, 0, 14, 12) };
         _scroll = new ScrollViewer { Content = panel, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled };
         Children.Add(_scroll);
@@ -240,7 +240,7 @@ internal sealed class HelpOverlay : ScrollViewer
 
     public HelpOverlay(PadWindow window, Palette p)
     {
-        Margin = new Thickness(10, 0, 10, 40);
+        Margin = new Thickness(10, 14, 10, 40);
         HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled;
         var panel = new StackPanel { Margin = new Thickness(8, 0, 14, 12) };
         panel.Children.Add(Kit.PanelHeader("Shortcuts", p, window.CloseOverlay));
