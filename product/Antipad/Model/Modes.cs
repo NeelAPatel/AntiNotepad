@@ -13,7 +13,7 @@ public static class Modes
         new("list", NoteMode.List, "Checklist: every new line gets a checkbox", "[ ] milk"),
         new("todo", NoteMode.List, "Same as list", "[ ] call back"),
         new("timer", NoteMode.Timer, "Countdowns: one per line, Enter starts", "25m focus"),
-        new("code", NoteMode.Code, "Syntax colouring: code py, code js, code cs …", "code py"),
+        new("code", NoteMode.Code, "Syntax coloring: code py, code js, code cs …", "code py"),
         new("clipboard", NoteMode.Clipboard, "Collects everything you copy while it exists", "(copy something)"),
     ];
 

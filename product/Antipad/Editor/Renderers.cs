@@ -6,45 +6,58 @@ using Antipad.Model;
 
 namespace Antipad.Editor;
 
-/// <summary>Paper texture drawn in text space, so lines and grid stay locked to text while scrolling and resizing.</summary>
-internal sealed class PaperRenderer(PadView pad) : IBackgroundRenderer
+/// <summary>
+/// Paper texture behind the whole pane, with equal margins left and right. Columns are anchored at the text's
+/// starting edge and rows at line boundaries, so letters sit on the pattern; it scrolls with the text.
+/// </summary>
+internal sealed class PaperLayer(PadView pad) : Avalonia.Controls.Control
 {
-    public KnownLayer Layer => KnownLayer.Background;
+    private static double LastColumn(double left, double right, double step) => left + Math.Floor((right + step / 2 - left) / step) * step;
 
-    public void Draw(TextView view, DrawingContext dc)
+    public PaperLayer Init() { IsHitTestVisible = false; return this; }
+
+    public override void Render(DrawingContext dc)
     {
         var kind = pad.Settings.Paper;
         if (kind == "blank") return;
+        var view = pad.Editor.TextArea.TextView;
+        var h = view.DefaultLineHeight;
+        if (h <= 0 || view.TranslatePoint(new Point(0, 0), this) is not { } origin) return;
         var alpha = pad.Settings.PaperStrength switch { 0 => 0.55, 2 => 1.9, _ => 1.0 };
         var color = pad.Palette.Paper;
-        var brush = new SolidColorBrush(color, Math.Min(1, alpha));
-        var pen = new Pen(brush, 1);
-        var h = view.DefaultLineHeight;
-        if (h <= 0) return;
-        var width = view.Bounds.Width; var height = view.Bounds.Height;
-        // Baseline-ish rule under each line, anchored to the document's first line top.
-        var top = -(view.VerticalOffset % h);
+        var pen = new Pen(new SolidColorBrush(color, Math.Min(1, alpha)), 1);
+        // Symmetric frame: the text's left margin, mirrored on the right. Columns start exactly at the text edge;
+        // the last one may sit up to half a step past the mirror, so both margins come out within a few pixels.
+        var left = origin.X; var right = Bounds.Width - origin.X;
+        var top = origin.Y; var bottom = Bounds.Height - 8;
+        if (right <= left) return;
+        var step = kind == "biggrid" ? h * 2 : h;
+        // Row phase follows scrolling; the first row boundary is the bottom of the first visible line.
+        var rowPhase = origin.Y - view.VerticalOffset % step;
+        double Snap(double v) => Math.Round(v) + 0.5;
         switch (kind)
         {
             case "lined":
-                for (var y = top + h - 0.5; y < height; y += h) dc.DrawLine(pen, new Point(0, Math.Round(y) + .5), new Point(width, Math.Round(y) + .5));
+                for (var y = rowPhase + h; y < bottom; y += h)
+                    if (y > top) dc.DrawLine(pen, new Point(left, Snap(y)), new Point(LastColumn(left, right, h), Snap(y)));
                 break;
             case "dotted":
                 {
                     var dot = new SolidColorBrush(color, Math.Min(1, alpha * 2.2));
-                    for (var y = top + h; y < height; y += h)
-                        for (var x = h / 2; x < width; x += h) dc.DrawEllipse(dot, null, new Point(x, y), 1.1, 1.1);
+                    for (var y = rowPhase + h; y < bottom; y += h)
+                    {
+                        if (y <= top) continue;
+                        for (var x = left; x <= right + h / 2; x += h) dc.DrawEllipse(dot, null, new Point(x, y), 1.1, 1.1);
+                    }
                     break;
                 }
             case "grid":
             case "biggrid":
-                {
-                    var step = kind == "grid" ? h : h * 2;
-                    var gtop = -(view.VerticalOffset % step);
-                    for (var y = gtop + step - 0.5; y < height; y += step) dc.DrawLine(pen, new Point(0, Math.Round(y) + .5), new Point(width, Math.Round(y) + .5));
-                    for (var x = step / 2; x < width; x += step) dc.DrawLine(pen, new Point(Math.Round(x) + .5, 0), new Point(Math.Round(x) + .5, height));
-                    break;
-                }
+                for (var y = rowPhase + step; y < bottom; y += step)
+                    if (y > top) dc.DrawLine(pen, new Point(left, Snap(y)), new Point(LastColumn(left, right, step), Snap(y)));
+                for (var x = left; x <= right + step / 2; x += step)
+                    dc.DrawLine(pen, new Point(Snap(x), top), new Point(Snap(x), bottom));
+                break;
         }
     }
 }
@@ -75,12 +88,62 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
             var rowTop = visual.VisualTop + visual.Height - lastRow.Height - view.VerticalOffset;
             var textEnd = lastRow.WidthIncludingTrailingWhitespace;
             // Sit right after the "=" (or the line's end), so answers stay close at any window width.
-            var x = Math.Min(textEnd + 14, Math.Max(textEnd + 8, view.Bounds.Width - ft.Width - 6));
+            var icon = kind.StartsWith("timer:") ? kind[6..] : null;
+            var iconWidth = icon is null ? 0 : ft.Height * 0.62 + 6;
+            var x = Math.Min(textEnd + 14, Math.Max(textEnd + 8, view.Bounds.Width - ft.Width - iconWidth - 6));
             var y = rowTop + (lastRow.Height - ft.Height) / 2;
-            var rect = new Rect(x - 7, y - 1, ft.Width + 14, ft.Height + 2);
+            var rect = new Rect(x - 7, y - 1, ft.Width + iconWidth + 14, ft.Height + 2);
             dc.DrawRectangle(new SolidColorBrush(color, pad.Palette.Dark ? 0.14 : 0.10), null, rect, 7, 7);
-            dc.DrawText(ft, new Point(x, y));
+            if (icon is not null) DrawTimerIcon(dc, icon, new Rect(x, y, ft.Height * 0.62, ft.Height), color);
+            dc.DrawText(ft, new Point(x + iconWidth, y));
             Chips.Add(new Chip(rect, n, kind, value));
+        }
+    }
+
+    /// <summary>Play, pause, running dot and done check, drawn so they match the text weight in any font.</summary>
+    private static void DrawTimerIcon(DrawingContext dc, string icon, Rect box, Color color)
+    {
+        var brush = new SolidColorBrush(color);
+        var s = box.Width;
+        var cx = box.X + s / 2; var cy = box.Y + box.Height / 2;
+        switch (icon)
+        {
+            case "paused":
+                {
+                    var bar = s * 0.24; var h = s * 0.78;
+                    dc.DrawRectangle(brush, null, new Rect(cx - s * 0.3, cy - h / 2, bar, h), 1, 1);
+                    dc.DrawRectangle(brush, null, new Rect(cx + s * 0.06, cy - h / 2, bar, h), 1, 1);
+                    break;
+                }
+            case "ready":
+                {
+                    var g = new StreamGeometry();
+                    using (var c = g.Open())
+                    {
+                        c.BeginFigure(new Point(cx - s * 0.3, cy - s * 0.4), true);
+                        c.LineTo(new Point(cx + s * 0.4, cy));
+                        c.LineTo(new Point(cx - s * 0.3, cy + s * 0.4));
+                        c.EndFigure(true);
+                    }
+                    dc.DrawGeometry(brush, new Pen(brush, 1, lineJoin: PenLineJoin.Round), g);
+                    break;
+                }
+            case "running":
+                dc.DrawEllipse(brush, null, new Point(cx, cy), s * 0.28, s * 0.28);
+                break;
+            case "done":
+                {
+                    var pen = new Pen(brush, 1.6, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round);
+                    var g = new StreamGeometry();
+                    using (var c = g.Open())
+                    {
+                        c.BeginFigure(new Point(cx - s * 0.38, cy), false);
+                        c.LineTo(new Point(cx - s * 0.08, cy + s * 0.3));
+                        c.LineTo(new Point(cx + s * 0.42, cy - s * 0.32));
+                    }
+                    dc.DrawGeometry(null, pen, g);
+                    break;
+                }
         }
     }
 }

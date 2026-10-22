@@ -129,8 +129,11 @@ internal sealed partial class PadWindow
         var onStack = Data.ViewSlot == 0;
         row.Children.Add(Kit.IconButton(Glyph.Back, "Previous note (Ctrl+[)", p, () => Navigate(-1), 24));
         var count = Kit.Text(onStack ? $"{Data.Current + 1} / {Data.Stack.Count}" : "stack", onStack ? p.Muted : p.Faint, 11.5, FontWeight.SemiBold);
-        count.Margin = new Thickness(4, 0); count.MinWidth = 38; count.TextAlignment = TextAlignment.Center;
-        var countButton = Kit.Plain(count, p, height: 22);
+        // Fixed box, centred both ways, tabular digits: "5 / 5" sits in the middle and doesn't shift as numbers change.
+        count.TextAlignment = TextAlignment.Center; count.HorizontalAlignment = HorizontalAlignment.Center; count.VerticalAlignment = VerticalAlignment.Center;
+        count.FontFeatures = new FontFeatureCollection { new FontFeature { Tag = "tnum", Value = 1 } };
+        var digits = Math.Max(Data.Stack.Count.ToString().Length, 1);
+        var countButton = Kit.Plain(count, p, width: 30 + digits * 14, height: 24);
         countButton.Click += (_, _) => { if (!onStack) ShowStack(); else OpenSearch(); };
         Avalonia.Automation.AutomationProperties.SetName(countButton, onStack ? $"Note {Data.Current + 1} of {Data.Stack.Count}" : "Back to the stack");
         row.Children.Add(countButton);

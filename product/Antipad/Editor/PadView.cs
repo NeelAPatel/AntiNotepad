@@ -34,6 +34,7 @@ internal sealed class PadView : Grid
     private IReadOnlyList<LineEval?> _math = [];
     private readonly Dictionary<int, CalcResult> _inline = [];
     private FoldingManager? _folding;
+    private PaperLayer _paper = null!;
     private ChevronGutter? _gutter;
     private readonly FenceColorizer _fences;
     public NoteStructure? Structure { get; private set; }
@@ -83,7 +84,6 @@ internal sealed class PadView : Grid
         Editor.Options.LineHeightFactor = 1.32;
         Avalonia.Automation.AutomationProperties.SetName(Editor, "Note text");
         var view = Editor.TextArea.TextView;
-        view.BackgroundRenderers.Add(new PaperRenderer(this));
         view.BackgroundRenderers.Add(new CodeBlockRenderer(this));
         view.BackgroundRenderers.Add(new IndentGuideRenderer(this));
         _results = new ResultRenderer(this);
@@ -104,7 +104,11 @@ internal sealed class PadView : Grid
             IsHitTestVisible = false, Margin = new Thickness(27, 7, 18, 0), TextWrapping = TextWrapping.Wrap,
             VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Left,
         };
+        _paper = new PaperLayer(this).Init();
+        Children.Add(_paper);
         Children.Add(Editor);
+        view.ScrollOffsetChanged += (_, _) => _paper.InvalidateVisual();
+        view.VisualLinesChanged += (_, _) => _paper.InvalidateVisual();
         Children.Add(_hint);
         Editor.TextArea.AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
         Editor.TextArea.TextEntered += OnTextEntered;
@@ -138,6 +142,7 @@ internal sealed class PadView : Grid
     public void ApplyLook(Palette palette, Settings settings)
     {
         Palette = palette; Settings = settings;
+        _paper?.InvalidateVisual();
         Editor.FontFamily = new FontFamily($"{settings.Font}, Cascadia Mono, Consolas, monospace");
         Editor.FontSize = settings.FontSize;
         Editor.Foreground = new SolidColorBrush(palette.Ink);
@@ -359,10 +364,11 @@ internal sealed class PadView : Grid
                 {
                     var text = Editor.Document.GetText(Editor.Document.GetLineByNumber(line));
                     if (!Timers.TryParse(text, out _, out _) || _timers.Get(TimerKey(text)) is not { } t) return null;
-                    if (t.Done) return ("✓ done", "timer", p.Confirm, t.Key);
-                    if (t.Running) return ("● " + Timers.Format(t.Remaining), "timer", p.Number, t.Key);
-                    if (t.Paused is not null) return ("‖ " + Timers.Format(t.Remaining), "timer", p.Muted, t.Key);
-                    return ("▶ " + Timers.Format(t.Duration), "timer", p.Faint, t.Key);
+                    // The kind carries the icon ResultRenderer draws before the time (drawn, not font glyphs).
+                    if (t.Done) return ("done", "timer:done", p.Confirm, t.Key);
+                    if (t.Running) return (Timers.Format(t.Remaining), "timer:running", p.Number, t.Key);
+                    if (t.Paused is not null) return (Timers.Format(t.Remaining), "timer:paused", p.Muted, t.Key);
+                    return (Timers.Format(t.Duration), "timer:ready", p.Muted, t.Key);
                 }
         }
         return null;
@@ -375,7 +381,7 @@ internal sealed class PadView : Grid
         var chip = _results.Chips.FirstOrDefault(c => c.Bounds.Contains(point));
         if (chip.Bounds.Width <= 0) return;
         e.Handled = true;
-        if (chip.Kind == "timer") { if (_timers.Get(chip.Value) is { } t) _timers.Toggle(t); }
+        if (chip.Kind.StartsWith("timer")) { if (_timers.Get(chip.Value) is { } t) _timers.Toggle(t); }
         else { Copy?.Invoke(chip.Value); Toast?.Invoke($"Copied {chip.Value}"); }
         view.InvalidateLayer(KnownLayer.Selection);
     }

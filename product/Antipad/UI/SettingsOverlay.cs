@@ -49,9 +49,9 @@ internal sealed class SettingsOverlay : Grid
         panel.Children.Add(Row("Text size", Kit.Segmented(_p, [("13", "13"), ("14", "14"), ("15", "15"), ("16", "16"), ("18", "18"), ("20", "20")], S.FontSize.ToString("0"), v => Set(() => S.FontSize = double.Parse(v)))));
         panel.Children.Add(Row("Controls", Kit.Segmented(_p, [("fade", "Fade while typing"), ("always", "Always visible")], S.Chrome, v => Set(() => S.Chrome = v))));
 
-        panel.Children.Add(Kit.Section(_p, "Behaviour"));
+        panel.Children.Add(Kit.Section(_p, "Behavior"));
         panel.Children.Add(Row("New note after", Kit.Segmented(_p, [("0", "Never"), ("5", "5 min"), ("15", "15 min"), ("30", "30 min"), ("120", "2 h")], S.FreshNoteAfterMinutes.ToString(), v => Set(() => S.FreshNoteAfterMinutes = int.Parse(v))), "away, the hotkey opens a fresh page"));
-        panel.Children.Add(Row("Open at", Kit.Segmented(_p, [("remember", "Where I left it"), ("center", "Centre"), ("mouse", "Mouse"), ("tray", "Above the tray"), ("dropdown", "Drop down from the top")], S.OpenAt, v => Set(() => S.OpenAt = v))));
+        panel.Children.Add(Row("Open at", Kit.Segmented(_p, [("remember", "Where I left it"), ("center", "Center"), ("mouse", "Mouse"), ("tray", "Above the tray"), ("dropdown", "Drop down from the top")], S.OpenAt, v => Set(() => S.OpenAt = v))));
         panel.Children.Add(Kit.Switch(_p, "Hide when I click away", S.HideOnBlur, v => Set(() => S.HideOnBlur = v), "unless kept on top"));
         panel.Children.Add(Kit.Switch(_p, "Keep on top", S.Pinned, v => Set(() => S.Pinned = v)));
         panel.Children.Add(Kit.Switch(_p, "Fade a pinned pad when I click away", S.DimWhenPinned, v => Set(() => S.DimWhenPinned = v)));
@@ -104,22 +104,23 @@ internal sealed class SettingsOverlay : Grid
     private static string Closest(double value, params double[] options) =>
         options.MinBy(o => Math.Abs(o - value)).ToString(System.Globalization.CultureInfo.InvariantCulture);
 
+    /// <summary>Label above its control, full width: options don't wrap into orphans in a narrow pad.</summary>
     private Control Row(string label, Control control, string? hint = null)
     {
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("112,*"), Margin = new Thickness(8, 4) };
-        var labels = new StackPanel { Spacing = 1, Margin = new Thickness(0, 4, 8, 0) };
-        labels.Children.Add(Kit.Text(label, _p.Ink, 13));
-        if (hint is not null) labels.Children.Add(new TextBlock { Text = hint, Foreground = new SolidColorBrush(_p.Muted), FontSize = 11, TextWrapping = TextWrapping.Wrap });
-        labels.VerticalAlignment = VerticalAlignment.Top;
-        grid.Children.Add(labels);
-        Grid.SetColumn(control, 1); grid.Children.Add(control);
-        return grid;
+        var stack = new StackPanel { Spacing = 6, Margin = new Thickness(8, 6, 8, 8) };
+        var head = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        head.Children.Add(Kit.Text(label, _p.Ink, 13));
+        if (hint is not null) head.Children.Add(new TextBlock { Text = hint, Foreground = new SolidColorBrush(_p.Muted), FontSize = 11.5, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis });
+        stack.Children.Add(head);
+        stack.Children.Add(control);
+        return stack;
     }
 
     /// <summary>Palette chips that preview each palette's paper, ink and syntax colours.</summary>
     private Control Swatches(bool dark, string current, Action<string> pick)
     {
-        var row = new WrapPanel();
+        // An even grid: three chips per row, every chip the same width.
+        var row = new Avalonia.Controls.Primitives.UniformGrid { Columns = 3 };
         foreach (var palette in Palette.For(dark))
         {
             var selected = palette.Id == current;
@@ -129,9 +130,9 @@ internal sealed class SettingsOverlay : Grid
             var face = new StackPanel { Spacing = 4, Children = { new TextBlock { Text = palette.Name, Foreground = new SolidColorBrush(palette.Ink), FontSize = 11.5, HorizontalAlignment = HorizontalAlignment.Center }, dots } };
             var chip = new Border
             {
-                Background = new SolidColorBrush(palette.Canvas), CornerRadius = new CornerRadius(9), Padding = new Thickness(10, 7), Margin = new Thickness(0, 0, 6, 6),
+                Background = new SolidColorBrush(palette.Canvas), CornerRadius = new CornerRadius(9), Padding = new Thickness(8, 7), Margin = new Thickness(0, 0, 6, 6),
                 BorderBrush = new SolidColorBrush(selected ? _p.Accent : _p.Faint, selected ? 1 : .5), BorderThickness = new Thickness(selected ? 2 : 1),
-                Child = face, Cursor = new Cursor(StandardCursorType.Hand), MinWidth = 84,
+                Child = face, Cursor = new Cursor(StandardCursorType.Hand),
             };
             var id = palette.Id;
             chip.PointerPressed += (_, e) => { e.Handled = true; pick(id); };
@@ -188,7 +189,7 @@ internal sealed class SettingsOverlay : Grid
         return new Border
         {
             Background = new SolidColorBrush(p.Canvas), BorderBrush = new SolidColorBrush(p.Faint, .4), BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(10), Padding = new Thickness(14, 10), Margin = new Thickness(120, 6, 8, 4), Child = lines,
+            CornerRadius = new CornerRadius(10), Padding = new Thickness(14, 10), Margin = new Thickness(8, 4, 8, 8), Child = lines,
         };
     }
 
@@ -229,7 +230,7 @@ internal sealed class HelpOverlay : ScrollViewer
         ("Slots", [("Ctrl+1 … 9", "Open a permanent slot (again to go back)"), ("Ctrl+Shift+1 … 9", "Keep this note in a slot"), ("Ctrl+0", "Back to the stack"), ("Ctrl+\\", "Split: a slot beside your note")]),
         ("Writing", [("Ctrl+Enter", "Toggle a checkbox (or start a timer)"), ("Tab / Shift+Tab", "Indent list items"), ("/", "Commands: /date /sort /json /ocr …"),
             ("Ctrl+Shift+C", "Copy the whole note"), ("Ctrl+Shift+O", "Read text from a screen snip"), ("Ctrl+ + / −", "Text size"), ("Ctrl+T", "Keep on top")]),
-        ("Line 1 modes", [("math", "Live answers, variables, units, %, sum"), ("list", "Every line is a checkbox"), ("timer", "25m focus · Enter starts"), ("code py", "Syntax colours"), ("clipboard", "Collects what you copy")]),
+        ("Line 1 modes", [("math", "Live answers, variables, units, %, sum"), ("list", "Every line is a checkbox"), ("timer", "25m focus · Enter starts"), ("code py", "Syntax colors"), ("clipboard", "Collects what you copy")]),
     ];
 
     public HelpOverlay(PadWindow window, Palette p)

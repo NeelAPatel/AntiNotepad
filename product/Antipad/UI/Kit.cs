@@ -7,51 +7,28 @@ using Antipad.Theme;
 
 namespace Antipad.UI;
 
-/// <summary>
-/// Stroke icons on a 24-unit grid, drawn with a 1.7 px pen (a weight heavier than Segoe Fluent Icons).
-/// Paths follow Lucide (lucide.dev, ISC licence) where noted; the rest are simple geometry.
-/// </summary>
+/// <summary>Segoe Fluent Icons code points used by the chrome.</summary>
 internal static class Glyph
 {
-    public const string
-        Search = "M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14 M20 20l-4-4",
-        Split = "M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M12 4v16",
-        // Lucide "pin"
-        Pin = "M12 17v5 M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4a1 1 0 0 1 1 1z",
-        Pinned = Pin,
-        // Lucide "sliders-horizontal"
-        Settings = "M21 4h-7 M10 4H3 M21 12h-9 M8 12H3 M21 20h-5 M12 20H3 M14 2v4 M8 10v4 M16 18v4",
-        Close = "M18 6L6 18 M6 6l12 12",
-        Hide = "M5 12h14",
-        Back = "M15 18l-6-6l6-6",
-        Forward = "M9 18l6-6l-6-6",
-        Grid = "M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z",
-        List = "M8 6h13 M8 12h13 M8 18h13 M3 6h1 M3 12h1 M3 18h1",
-        // Lucide "trash-2" (simplified)
-        Delete = "M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6 M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2 M10 11v6 M14 11v6",
-        Restore = "M3 12a9 9 0 1 0 3-6.7L3 8 M3 3v5h5";
-
-    /// <summary>The 24-unit icon as a path control, centred in a 16 px box.</summary>
-    public static Control Make(string data, Color stroke, bool filled = false, double size = 16)
-    {
-        var path = new Avalonia.Controls.Shapes.Path
-        {
-            Data = Geometry.Parse(data), Stretch = Stretch.Uniform, Width = size, Height = size,
-            Stroke = new SolidColorBrush(stroke), StrokeThickness = 1.7, StrokeLineCap = PenLineCap.Round, StrokeJoin = PenLineJoin.Round,
-            Fill = filled ? new SolidColorBrush(stroke) : null,
-            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
-        };
-        return path;
-    }
+    public const string Search = "", Pin = "", PinFilled = "", Settings = "", Close = "",
+        Split = "", Delete = "", Back = "", Forward = "", Grid = "",
+        List = "", Restore = "", Hide = "";
+    public static readonly FontFamily Font = new("Segoe Fluent Icons, Segoe MDL2 Assets");
 }
 
 /// <summary>Small hand-built controls so the chrome follows the palette exactly (no Fluent theme chrome).</summary>
 internal static class Kit
 {
-    public static Button IconButton(string glyph, string name, Palette p, Action click, double size = 30, bool filled = false, Color? color = null)
+    public static Button IconButton(string glyph, string name, Palette p, Action click, double size = 28, bool filled = false, Color? color = null)
     {
-        var icon = Glyph.Make(glyph, color ?? p.Muted, filled, size >= 28 ? 16 : 14);
-        var button = Plain(icon, p, size, size, radius: size / 2.6);
+        var text = new TextBlock
+        {
+            // A filled pin is its own glyph in Segoe Fluent Icons.
+            Text = filled && glyph == Glyph.Pin ? Glyph.PinFilled : glyph,
+            FontFamily = Glyph.Font, FontSize = 13, Foreground = new SolidColorBrush(color ?? p.Muted),
+            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center
+        };
+        var button = Plain(text, p, size, size, radius: 7);
         button.Click += (_, _) => click();
         Avalonia.Automation.AutomationProperties.SetName(button, name);
         ToolTip.SetTip(button, name);
@@ -129,14 +106,15 @@ internal static class Kit
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(8, 0, 0, 0) };
         var text = Text(title, p.Ink, 18, FontWeight.SemiBold);
         grid.Children.Add(text);
-        var x = IconButton(Glyph.Close, "Close (Esc)", p, close, 32);
+        var x = IconButton(Glyph.Close, "Close (Esc)", p, close);
+        x.VerticalAlignment = VerticalAlignment.Center;
         Grid.SetColumn(x, 1);
         grid.Children.Add(x);
         return grid;
     }
 
     public static Control Section(Palette p, string title) =>
-        new TextBlock { Text = title.ToUpperInvariant(), Foreground = new SolidColorBrush(p.Faint), FontSize = 11, FontWeight = FontWeight.SemiBold, LetterSpacing = 0.8, Margin = new Thickness(8, 16, 0, 6) };
+        new TextBlock { Text = title.ToUpperInvariant(), Foreground = new SolidColorBrush(p.Faint), FontSize = 11, FontWeight = FontWeight.SemiBold, LetterSpacing = 0.8, Margin = new Thickness(8, 22, 0, 2) };
 
     public static string Ago(DateTime when)
     {
