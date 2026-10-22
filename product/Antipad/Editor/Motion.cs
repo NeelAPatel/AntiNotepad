@@ -12,9 +12,12 @@ using Antipad.UI;
 namespace Antipad.Editor;
 
 /// <summary>
-/// Wheel and touchpad scrolling that glides instead of jumping. Two feels:
+/// Wheel and touchpad scrolling that glides instead of jumping. Four feels (Settings > Scrolling):
 /// lines: each notch glides 3 lines; consecutive notches extend the same glide.
-/// free: each notch adds momentum that coasts and decays, so distance follows how fast you spin; a touchpad tracks 1:1 in pixels.
+/// free: each notch adds momentum that coasts and decays; a touchpad tracks 1:1 in pixels.
+/// rate: slow clicks glide a short way; faster spinning makes every click travel further and the glide tighter.
+/// wheel: the click rate sets the sheet's speed directly, and it stops almost as soon as the wheel does.
+/// The last two were picked in the Scroll Lab; they listen to how fast clicks arrive, since a wheel sends whole clicks.
 /// </summary>
 internal sealed class SmoothScroll
 {
@@ -22,20 +25,25 @@ internal sealed class SmoothScroll
     private const double Impulse = 700;           // free: px/s added per notch (about 115 px coasted alone)
     private const double Friction = 6;            // free: velocity decays by e^-6 per second
     private const double MaxSpeed = 9000;
+    private enum Motion { None, Glide, Coast, Spring, Fly }
     private readonly TextEditor _editor;
-    private readonly Func<bool> _free;
+    private readonly Func<string> _mode;
+    private Motion _motion;
     private double _target = double.NaN;
-    private double _velocity, _position;
+    private double _velocity, _position, _omega, _flyGoal;
+    private long _lastClick, _holdUntil;
+    private double _gap;
     private TimeSpan? _last;
     private bool _running;
 
-    public SmoothScroll(TextEditor editor, Func<bool> free)
+    public SmoothScroll(TextEditor editor, Func<string> mode)
     {
-        _editor = editor; _free = free;
+        _editor = editor; _mode = mode;
         editor.AddHandler(InputElement.PointerWheelChangedEvent, OnWheel, RoutingStrategies.Tunnel);
     }
 
     private double Max => Math.Max(0, _editor.ExtentHeight - _editor.ViewportHeight);
+    private double Line => _editor.TextArea.TextView.DefaultLineHeight;
 
     private void OnWheel(object? sender, PointerWheelEventArgs e)
     {
@@ -43,30 +51,79 @@ internal sealed class SmoothScroll
         var max = Max;
         if (max <= 0) return;
         e.Handled = true;
-        if (_free()) { Free(e.Delta.Y, max); return; }
-        _velocity = 0;
-        var step = _editor.TextArea.TextView.DefaultLineHeight * 3;
-        var from = _running && !double.IsNaN(_target) ? _target : _editor.VerticalOffset;
-        _target = Math.Clamp(from - e.Delta.Y * step, 0, max);
-        if (Anim.Reduced) { SetOffset(_editor, _target); return; }
-        Start();
-    }
-
-    private void Free(double delta, double max)
-    {
-        _target = double.NaN;
+        var delta = e.Delta.Y;
+        var mode = _mode();
+        if (mode == "lines") { Lines(delta, max); return; }
         // Precision touchpads send fractions of a notch and already carry their own inertia: follow them exactly.
         var touchpad = Math.Abs(delta - Math.Round(delta)) > 0.01;
         if (touchpad || Anim.Reduced)
         {
-            _velocity = 0;
-            SetOffset(_editor, Math.Clamp(_editor.VerticalOffset - delta * (touchpad ? PxPerUnit : _editor.TextArea.TextView.DefaultLineHeight * 3), 0, max));
+            _velocity = 0; _motion = Motion.None; _target = double.NaN;
+            SetOffset(_editor, Math.Clamp(_editor.VerticalOffset - delta * (touchpad ? PxPerUnit : Line * 3), 0, max));
             return;
         }
+        if (mode == "rate") Rate(delta, max);
+        else if (mode == "wheel") Fly(delta);
+        else Free(delta);
+    }
+
+    private void Lines(double delta, double max)
+    {
+        var step = Line * 3;
+        var from = _running && _motion == Motion.Glide && !double.IsNaN(_target) ? _target : _editor.VerticalOffset;
+        _velocity = 0;
+        _target = Math.Clamp(from - delta * step, 0, max);
+        if (Anim.Reduced) { SetOffset(_editor, _target); return; }
+        _motion = Motion.Glide;
+        Start();
+    }
+
+    private void Free(double delta)
+    {
+        _target = double.NaN;
         // Spinning the other way stops the coast first.
-        if (Math.Sign(_velocity) == Math.Sign(delta)) _velocity = 0;
-        if (!_running) _position = _editor.VerticalOffset;
+        if (_motion != Motion.Coast || Math.Sign(_velocity) == Math.Sign(delta)) _velocity = 0;
+        if (_motion != Motion.Coast || !_running) _position = _editor.VerticalOffset;
         _velocity = Math.Clamp(_velocity - delta * Impulse, -MaxSpeed, MaxSpeed);
+        _motion = Motion.Coast;
+        Start();
+    }
+
+    /// <summary>Clicks per second, from a smoothed gap between clicks; a pause of 400 ms or more starts slow again.</summary>
+    private double ClickRate()
+    {
+        var now = Environment.TickCount64;
+        var gap = _lastClick == 0 ? 1000 : now - _lastClick;
+        _lastClick = now;
+        _gap = gap >= 400 || _gap <= 0 ? Math.Min(gap, 400) : _gap * 0.4 + gap * 0.6;
+        return 1000 / _gap;
+    }
+
+    // Under 6 clicks a second: the base distance; at 30 a second: the full boost.
+    private static double Boost(double rate, double boost) => 1 + boost * Math.Clamp((rate - 6) / 24, 0, 1);
+
+    private void Rate(double delta, double max)
+    {
+        var gain = Boost(ClickRate(), 2.5);
+        var offset = _editor.VerticalOffset;
+        if (_motion != Motion.Spring || !_running) { _position = offset; _velocity = 0; _target = offset; }
+        // Turning back starts from where the sheet is, not from where it was heading.
+        if (Math.Sign(_target - offset) != Math.Sign(-delta) && Math.Abs(_target - offset) > 1) _target = offset;
+        _target = Math.Clamp(_target - delta * Line * 40 / 24 * gain, 0, max);   // 40 px a slow click at a 24 px line
+        _omega = 2.4 / (Math.Clamp(_gap * 0.9, 45, 160) / 1000);                    // glide no longer than the gap between clicks
+        _motion = Motion.Spring;
+        Start();
+    }
+
+    private void Fly(double delta)
+    {
+        var rate = ClickRate();
+        var gain = Boost(rate, 1.5);
+        if (_motion != Motion.Fly || !_running) { _position = _editor.VerticalOffset; _velocity = 0; }
+        if (_velocity != 0 && Math.Sign(_velocity) != Math.Sign(-delta)) _velocity = 0;
+        _flyGoal = Math.Sign(-delta) * rate * Math.Abs(delta) * Line * 60 / 24 * gain;   // px/s matching the click rate
+        _holdUntil = Environment.TickCount64 + (long)Math.Clamp(_gap * 1.6, 80, 350);    // hold it until the next click is overdue
+        _motion = Motion.Fly;
         Start();
     }
 
@@ -84,34 +141,67 @@ internal sealed class SmoothScroll
         _running = true; _last = null; Frame();
     }
 
+    private void Stop() { _running = false; _motion = Motion.None; _velocity = 0; }
+
     private void Frame()
     {
-        if (TopLevel.GetTopLevel(_editor) is not { } top) { _running = false; return; }
+        if (TopLevel.GetTopLevel(_editor) is not { } top) { Stop(); return; }
         top.RequestAnimationFrame(time =>
         {
             var dt = _last is { } last ? Math.Clamp((time - last).TotalSeconds, 0, 0.05) : 1 / 60.0;
             _last = time;
-            if (!double.IsNaN(_target))
-            {
-                var now = _editor.VerticalOffset;
-                var gap = _target - now;
-                if (Math.Abs(gap) < 0.5) { SetOffset(_editor, _target); _running = false; return; }
-                // Exponential approach: quick start, soft landing, about 140 ms for a notch.
-                SetOffset(_editor, now + gap * 0.28);
-            }
-            else
-            {
-                // Something else moved the view (typing, the scrollbar): let it win.
-                if (Math.Abs(_editor.VerticalOffset - _position) > 2) { _velocity = 0; _running = false; return; }
-                var max = Max;
+            if (_motion == Motion.Glide ? GlideStep() : PhysicsStep(dt)) Frame();
+        });
+    }
+
+    private bool GlideStep()
+    {
+        var now = _editor.VerticalOffset;
+        var gap = _target - now;
+        if (Math.Abs(gap) < 0.5) { SetOffset(_editor, _target); Stop(); return false; }
+        // Exponential approach: quick start, soft landing, about 140 ms for a notch.
+        SetOffset(_editor, now + gap * 0.28);
+        return true;
+    }
+
+    private bool PhysicsStep(double dt)
+    {
+        // Something else moved the view (typing, the scrollbar): let it win.
+        if (Math.Abs(_editor.VerticalOffset - _position) > 2) { Stop(); return false; }
+        var max = Max;
+        switch (_motion)
+        {
+            case Motion.Coast:
                 _position = Math.Clamp(_position + _velocity * dt, 0, max);
                 _velocity *= Math.Exp(-Friction * dt);
                 if (_position <= 0 || _position >= max) _velocity = 0;
                 SetOffset(_editor, _position);
-                if (Math.Abs(_velocity) < 15) { _velocity = 0; _running = false; return; }
-            }
-            Frame();
-        });
+                if (Math.Abs(_velocity) < 15) { Stop(); return false; }
+                return true;
+            case Motion.Spring:
+                {
+                    // Critically damped spring toward the target, in small substeps for stability.
+                    var k = _omega * _omega; var c = 2 * _omega;
+                    var n = Math.Max(1, (int)Math.Ceiling(dt / 0.004)); var h = dt / n;
+                    for (var i = 0; i < n; i++) { _velocity += (k * (_target - _position) - c * _velocity) * h; _position += _velocity * h; }
+                    _position = Math.Clamp(_position, 0, max);
+                    SetOffset(_editor, _position);
+                    if (Math.Abs(_target - _position) < 0.3 && Math.Abs(_velocity) < 4) { SetOffset(_editor, _target); _position = _target; Stop(); return false; }
+                    return true;
+                }
+            case Motion.Fly:
+                {
+                    var holding = Environment.TickCount64 < _holdUntil;
+                    _velocity = holding ? _velocity + (_flyGoal - _velocity) * (1 - Math.Exp(-25 * dt)) : _velocity * Math.Exp(-14 * dt);
+                    _position += _velocity * dt;
+                    if (_position <= 0 || _position >= max) { _position = Math.Clamp(_position, 0, max); _velocity = 0; _holdUntil = 0; holding = false; }
+                    SetOffset(_editor, _position);
+                    if (!holding && Math.Abs(_velocity) < 5) { Stop(); return false; }
+                    return true;
+                }
+        }
+        Stop();
+        return false;
     }
 }
 

@@ -89,7 +89,7 @@ internal sealed class PadView : Grid
         view.BackgroundRenderers.Add(_results);
         view.BackgroundRenderers.Add(new CheckboxRenderer(this));
         view.BackgroundRenderers.Add(new SmoothCaret(this));
-        _ = new SmoothScroll(Editor, () => Settings.Scrolling == "free");
+        _ = new SmoothScroll(Editor, () => Settings.Scrolling);
         view.LineTransformers.Add(new NoteColorizer(this));
         view.LineTransformers.Add(new MathColorizer(this));
         _fences = new FenceColorizer(this);

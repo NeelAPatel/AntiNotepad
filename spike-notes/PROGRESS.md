@@ -44,4 +44,5 @@ Watchdog: spike-notes/watchdog.ps1 (detached pwsh, log spike-notes/watchdog.log)
 ## Scroll decisions 2026-10-22 (Scroll Lab, https://claude.ai/artifact/JkwihBpKANjcujnsrsTxCJ)
 - User's mouse: Logitech MX Master 3S. Browser and Windows deliver whole clicks (deltaY 100, wheelDelta 120) on both wheels; speed shows only as click rate.
 - LOCKED for vertical scrolling: Eased glide (Antipad "Lines" today), Rate-matched glide (40 px slow click, up to 3.5x at 30 clicks/s, glide <= gap between clicks), Wheel-driven sheet (click rate sets sheet speed, quick stop). Lab source: scratchpad scroll-lab.html, techniques "glide", "rate", "flywheel".
-- Horizontal (note paging): must follow the input visibly before a note change fires, and change exactly one note per gesture. Still being tuned in the lab.
+- LOCKED for horizontal (note paging): Progress swipe (220 px of input = a whole note, fires at 0.35, then ignores the rest of the gesture; wheel clicks paid out smoothly, 26 px a click with up to 3x when spun fast).
+- Built into the app (V7): Settings > Behavior > Scrolling = Lines | Free | Rate-matched | Wheel-driven; Swipe between notes = Detent (old, default) | Progress. Old modes kept intact so the user can compare all six.

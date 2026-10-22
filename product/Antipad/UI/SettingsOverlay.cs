@@ -60,7 +60,10 @@ internal sealed class SettingsOverlay : Grid
         panel.Children.Add(Kit.Switch(_p, "Indent guides", S.IndentGuides, v => Set(() => S.IndentGuides = v), "faint lines at each list and code level"));
         panel.Children.Add(Kit.Switch(_p, "Folding", S.Folding, v => Set(() => S.Folding = v), "chevrons to collapse headings, code blocks and nested lists"));
         panel.Children.Add(Kit.Switch(_p, "Shorten long links", S.ShortenLinks, v => Set(() => S.ShortenLinks = v), "the full URL stays in the text"));
-        panel.Children.Add(Row("Scrolling", Kit.Segmented(_p, [("lines", "Lines"), ("free", "Free")], S.Scrolling, v => Set(() => S.Scrolling = v)), "lines: each notch glides 3 lines · free: momentum that coasts"));
+        panel.Children.Add(Row("Scrolling", Kit.Segmented(_p, [("lines", "Lines"), ("free", "Free"), ("rate", "Rate-matched"), ("wheel", "Wheel-driven")], S.Scrolling, v => Set(() => S.Scrolling = v)),
+            "lines: 3 lines a notch · free: coasts · rate-matched: further the faster you spin · wheel-driven: moves with the wheel, stops with it"));
+        panel.Children.Add(Row("Swipe between notes", Kit.Segmented(_p, [("detent", "Detent"), ("progress", "Progress")], S.Swipe, v => Set(() => S.Swipe = v)),
+            "detent: decides when you stop · progress: same feel at any window width, changes as you pass a third of the way"));
         panel.Children.Add(Kit.Switch(_p, "Reduce motion", S.ReduceMotion, v => Set(() => S.ReduceMotion = v)));
         bool startup = false; try { startup = Startup.IsEnabled; } catch { }
         panel.Children.Add(Kit.Switch(_p, "Start with Windows", startup, v => { try { Startup.SetEnabled(v); } catch (Exception ex) { _w.Toast(ex.Message); } Set(() => { }); }));
