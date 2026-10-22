@@ -8,12 +8,21 @@ using Antipad.Theme;
 
 namespace Antipad.UI;
 
-/// <summary>Settings live inside the pad (no second window): one scrolling sheet, every change applies live.</summary>
+/// <summary>
+/// Settings live inside the pad (no second window): a rail of sections on the left, the chosen section on the right.
+/// Every change applies live; the overlay is rebuilt after each change and comes back on the same section and scroll.
+/// </summary>
 internal sealed class SettingsOverlay : Grid
 {
+    private static readonly (string Id, string Name)[] Tabs =
+        [("theme", "Theme"), ("editor", "Editor"), ("ui", "UI"), ("feel", "Feel"), ("system", "System"), ("about", "About")];
+    // Remembered for this run, so a rebuild after a change (or reopening Settings) lands on the same section.
+    private static string _tab = "theme";
+
     private readonly PadWindow _w;
     private readonly Palette _p;
     private readonly ScrollViewer _scroll;
+    private readonly StackPanel _rail = new() { Spacing = 2, Margin = new Thickness(0, 4, 10, 0) };
     public double ScrollOffset => _scroll.Offset.Y;
     private Model.Settings S => _w.Settings;
 
@@ -21,66 +30,137 @@ internal sealed class SettingsOverlay : Grid
     {
         _w = window; _p = palette;
         Margin = new Thickness(10, 14, 10, 40);
-        var panel = new StackPanel { Spacing = 2, Margin = new Thickness(6, 0, 14, 12) };
-        _scroll = new ScrollViewer { Content = panel, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled };
+        RowDefinitions = new RowDefinitions("Auto,*");
+        ColumnDefinitions = new ColumnDefinitions("Auto,*");
+
+        var header = Kit.PanelHeader("Settings", _p, _w.CloseOverlay);
+        header.Margin = new Thickness(0, 0, 14, 8);
+        Grid.SetColumnSpan(header, 2);
+        Children.Add(header);
+
+        Grid.SetRow(_rail, 1);
+        Children.Add(_rail);
+
+        _scroll = new ScrollViewer { HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled };
+        Grid.SetRow(_scroll, 1); Grid.SetColumn(_scroll, 1);
         Children.Add(_scroll);
 
-        panel.Children.Add(Kit.PanelHeader("Settings", _p, _w.CloseOverlay));
+        Show(_tab, scroll);
+        Focusable = true;
+    }
 
-        panel.Children.Add(Kit.Section(_p, "Look"));
+    /// <summary>Selects a section: rebuilds the rail highlight and the section's rows.</summary>
+    private void Show(string tab, double scroll = 0)
+    {
+        _tab = tab;
+        _rail.Children.Clear();
+        foreach (var (id, name) in Tabs)
+        {
+            var selected = id == tab;
+            var label = Kit.Text(name, selected ? _p.Ink : _p.Muted, 13, selected ? FontWeight.SemiBold : FontWeight.Normal);
+            label.Margin = new Thickness(12, 6, 18, 6);
+            var item = new Border
+            {
+                Child = label, CornerRadius = new CornerRadius(8),
+                Background = selected ? new SolidColorBrush(_p.Accent, _p.Dark ? .22 : .16) : Brushes.Transparent,
+            };
+            var button = Kit.Plain(item, _p, radius: 8);
+            button.HorizontalAlignment = HorizontalAlignment.Stretch;
+            Avalonia.Automation.AutomationProperties.SetName(button, name + " settings");
+            var target = id;
+            button.Click += (_, _) => { if (_tab != target) Show(target); };
+            _rail.Children.Add(button);
+        }
+
+        var panel = new StackPanel { Spacing = 2, Margin = new Thickness(0, 0, 14, 12) };
+        switch (tab)
+        {
+            case "theme": ThemeRows(panel); break;
+            case "editor": EditorRows(panel); break;
+            case "ui": UiRows(panel); break;
+            case "feel": FeelRows(panel); break;
+            case "system": SystemRows(panel); break;
+            default: AboutRows(panel); break;
+        }
+        _scroll.Content = panel;
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => { _scroll.Offset = new Vector(0, scroll); Focus(); }, Avalonia.Threading.DispatcherPriority.Loaded);
+    }
+
+    private void ThemeRows(StackPanel panel)
+    {
+        panel.Children.Add(Preview());
         panel.Children.Add(Row("Theme", Kit.Segmented(_p, [("system", "System"), ("light", "Light"), ("dark", "Dark")], S.Theme, v => Set(() => S.Theme = v))));
         panel.Children.Add(Row("Light palette", Swatches(false, S.LightPalette, v => Set(() => { S.LightPalette = v; if (S.Theme == "dark") S.Theme = "light"; }))));
         panel.Children.Add(Row("Dark palette", Swatches(true, S.DarkPalette, v => Set(() => { S.DarkPalette = v; if (S.Theme == "light") S.Theme = "dark"; }))));
-        panel.Children.Add(Kit.Section(_p, "Make it yours"));
-        panel.Children.Add(Row("Accent", AccentSwatches()));
-        panel.Children.Add(Row("Paper tone", Kit.Segmented(_p, Palette.Tones.Select(t => (t.Id, t.Name)).ToList(), S.Tone, v => Set(() => S.Tone = v))));
+        panel.Children.Add(Row("Accent", AccentSwatches(), "caret, selection, top headings, checkboxes, switches, pin and the current-note dot"));
         panel.Children.Add(Row("Split pane", Kit.Segmented(_p, new[] { ("same", "Same as main") }.Concat(Palette.For(_p.Dark).Select(x => (x.Id, x.Name))).ToList(), S.SplitPalette, v => Set(() => S.SplitPalette = v)), "its own palette for the slot beside you"));
-        panel.Children.Add(Preview());
-        panel.Children.Add(Kit.Section(_p, "Window"));
-        panel.Children.Add(Row("Window", Kit.Segmented(_p, [("acrylic", "Acrylic"), ("mica", "Mica"), ("solid", "Solid")], S.Material, v => Set(() => S.Material = v)),
-            RenderHint()));
-        if (S.Material != "solid")
-            panel.Children.Add(Row("Glass tint", Kit.Segmented(_p, [("0.55", "Clear"), ("0.7", "Light"), ("0.82", "Medium"), ("0.92", "Dense")], Closest(S.Tint, 0.55, 0.7, 0.82, 0.92), v => Set(() => S.Tint = double.Parse(v, System.Globalization.CultureInfo.InvariantCulture)))));
-        panel.Children.Add(Row("Paper", Kit.Segmented(_p, [("blank", "Blank"), ("lined", "Lined"), ("dotted", "Dotted"), ("grid", "Grid"), ("biggrid", "Large grid")], S.Paper, v => Set(() => S.Paper = v))));
-        if (S.Paper != "blank")
-            panel.Children.Add(Row("Pattern", Kit.Segmented(_p, [("0", "Subtle"), ("1", "Clear"), ("2", "Bold")], S.PaperStrength.ToString(), v => Set(() => S.PaperStrength = int.Parse(v)))));
-        panel.Children.Add(Row("Font", Kit.Segmented(_p, [("Cascadia Mono", "Cascadia Mono"), ("Consolas", "Consolas"), ("Cascadia Code", "Cascadia Code"), ("Segoe UI Variable Text", "Segoe UI")], S.Font, v => Set(() => S.Font = v))));
-        panel.Children.Add(Row("UI scale", Kit.Segmented(_p, [("0.9", "90%"), ("1", "100%"), ("1.15", "115%"), ("1.3", "130%"), ("1.5", "150%")], Closest(S.UiScale, 0.9, 1, 1.15, 1.3, 1.5), v => Set(() => S.UiScale = double.Parse(v, System.Globalization.CultureInfo.InvariantCulture))), "everything: chrome, panels and text"));
-        panel.Children.Add(Row("Text size", Kit.Segmented(_p, [("13", "13"), ("14", "14"), ("15", "15"), ("16", "16"), ("18", "18"), ("20", "20")], S.FontSize.ToString("0"), v => Set(() => S.FontSize = double.Parse(v)))));
-        panel.Children.Add(Row("Controls", Kit.Segmented(_p, [("fade", "Fade while typing"), ("always", "Always visible")], S.Chrome, v => Set(() => S.Chrome = v))));
+    }
 
-        panel.Children.Add(Kit.Section(_p, "Behavior"));
-        panel.Children.Add(Row("New note after", Kit.Segmented(_p, [("0", "Never"), ("5", "5 min"), ("15", "15 min"), ("30", "30 min"), ("120", "2 h")], S.FreshNoteAfterMinutes.ToString(), v => Set(() => S.FreshNoteAfterMinutes = int.Parse(v))), "away, the hotkey opens a fresh page"));
-        panel.Children.Add(Row("Open at", Kit.Segmented(_p, [("remember", "Where I left it"), ("center", "Center"), ("mouse", "Mouse"), ("tray", "Above the tray"), ("dropdown", "Drop down from the top")], S.OpenAt, v => Set(() => S.OpenAt = v))));
-        panel.Children.Add(Kit.Switch(_p, "Hide when I click away", S.HideOnBlur, v => Set(() => S.HideOnBlur = v), "unless kept on top"));
-        panel.Children.Add(Kit.Switch(_p, "Keep on top", S.Pinned, v => Set(() => S.Pinned = v)));
-        panel.Children.Add(Kit.Switch(_p, "Fade a pinned pad when I click away", S.DimWhenPinned, v => Set(() => S.DimWhenPinned = v)));
+    private void EditorRows(StackPanel panel)
+    {
+        panel.Children.Add(Row("Paper tone", Kit.Segmented(_p, Palette.Tones.Select(t => (t.Id, t.Name)).ToList(), S.Tone, v => Set(() => S.Tone = v))));
+        panel.Children.Add(Row("Backing", Kit.Segmented(_p, [("blank", "Blank"), ("lined", "Lined"), ("dotted", "Dotted"), ("grid", "Grid"), ("biggrid", "Large grid")], S.Paper, v => Set(() => S.Paper = v))));
+        if (S.Paper != "blank")
+            panel.Children.Add(Row("Pattern weight", Kit.Segmented(_p, [("0", "Subtle"), ("1", "Clear"), ("2", "Bold")], S.PaperStrength.ToString(), v => Set(() => S.PaperStrength = int.Parse(v)))));
+        panel.Children.Add(Row("Editor font", Kit.Segmented(_p, [("Cascadia Mono", "Cascadia Mono"), ("Consolas", "Consolas"), ("Cascadia Code", "Cascadia Code"), ("Segoe UI Variable Text", "Segoe UI")], S.Font, v => Set(() => S.Font = v))));
+        panel.Children.Add(Row("Font size", Kit.Segmented(_p, [("13", "13"), ("14", "14"), ("15", "15"), ("16", "16"), ("18", "18"), ("20", "20")], S.FontSize.ToString("0"), v => Set(() => S.FontSize = double.Parse(v)))));
+        panel.Children.Add(Kit.Section(_p, "Writing"));
         panel.Children.Add(Kit.Switch(_p, "Answer lines ending in =", S.InlineMath, v => Set(() => S.InlineMath = v), "12 * 4 = shows 48 in any note"));
         panel.Children.Add(Kit.Switch(_p, "Clean markdown", S.CleanMarkdown, v => Set(() => S.CleanMarkdown = v), "hide ** and # except on the line you're editing"));
         panel.Children.Add(Kit.Switch(_p, "Indent guides", S.IndentGuides, v => Set(() => S.IndentGuides = v), "faint lines at each list and code level"));
         panel.Children.Add(Kit.Switch(_p, "Folding", S.Folding, v => Set(() => S.Folding = v), "chevrons to collapse headings, code blocks and nested lists"));
         panel.Children.Add(Kit.Switch(_p, "Shorten long links", S.ShortenLinks, v => Set(() => S.ShortenLinks = v), "the full URL stays in the text"));
-        panel.Children.Add(Row("Scrolling", Kit.Segmented(_p, [("lines", "Lines"), ("free", "Free"), ("rate", "Rate-matched"), ("wheel", "Wheel-driven")], S.Scrolling, v => Set(() => S.Scrolling = v)),
-            "lines: 3 lines a notch · free: coasts · rate-matched: further the faster you spin · wheel-driven: moves with the wheel, stops with it"));
-        panel.Children.Add(Row("Swipe between notes", Kit.Segmented(_p, [("detent", "Detent"), ("progress", "Progress")], S.Swipe, v => Set(() => S.Swipe = v)),
-            "detent: decides when you stop · progress: same feel at any window width, changes as you pass a third of the way"));
-        panel.Children.Add(Kit.Switch(_p, "Reduce motion", S.ReduceMotion, v => Set(() => S.ReduceMotion = v)));
-        bool startup = false; try { startup = Startup.IsEnabled; } catch { }
-        panel.Children.Add(Kit.Switch(_p, "Start with Windows", startup, v => { try { Startup.SetEnabled(v); } catch (Exception ex) { _w.Toast(ex.Message); } Set(() => { }); }));
-
         panel.Children.Add(Kit.Section(_p, "Code languages"));
         panel.Children.Add(Row("Highlight in code blocks", Kit.Toggles(_p, Editor.CodeColors.Languages.Select(l => (l.Id, l.Name)).ToList(),
             id => !S.DisabledLanguages.Contains(id), id => Set(() => { if (!S.DisabledLanguages.Remove(id)) S.DisabledLanguages.Add(id); })),
             "off: plain text, not offered after ```, never loaded"));
+    }
 
-        panel.Children.Add(Kit.Section(_p, "Shortcut"));
+    private void UiRows(StackPanel panel)
+    {
+        panel.Children.Add(Row("Background", Kit.Segmented(_p, [("acrylic", "Acrylic"), ("mica", "Mica"), ("solid", "Solid")], S.Material, v => Set(() => S.Material = v)),
+            RenderHint()));
+        if (S.Material != "solid")
+            panel.Children.Add(Row("Tint level", Kit.Segmented(_p, [("0.55", "Clear"), ("0.7", "Light"), ("0.82", "Medium"), ("0.92", "Dense")], Closest(S.Tint, 0.55, 0.7, 0.82, 0.92), v => Set(() => S.Tint = double.Parse(v, System.Globalization.CultureInfo.InvariantCulture)))));
+        panel.Children.Add(Row("UI scale", Kit.Segmented(_p, [("0.9", "90%"), ("1", "100%"), ("1.15", "115%"), ("1.3", "130%"), ("1.5", "150%")], Closest(S.UiScale, 0.9, 1, 1.15, 1.3, 1.5), v => Set(() => S.UiScale = double.Parse(v, System.Globalization.CultureInfo.InvariantCulture))), "everything: chrome, panels and text"));
+        panel.Children.Add(Row("Controls", Kit.Segmented(_p, [("fade", "Fade while typing"), ("always", "Always visible")], S.Chrome, v => Set(() => S.Chrome = v))));
+        panel.Children.Add(Kit.Switch(_p, "Fade a pinned pad when I click away", S.DimWhenPinned, v => Set(() => S.DimWhenPinned = v)));
+    }
+
+    private void FeelRows(StackPanel panel)
+    {
+        panel.Children.Add(Row("Scrolling", Kit.Segmented(_p, [("lines", "Lines"), ("free", "Free"), ("rate", "Rate-matched"), ("wheel", "Wheel-driven")], S.Scrolling, v => Set(() => S.Scrolling = v)),
+            ScrollHint(S.Scrolling)));
+        panel.Children.Add(Row("Swipe between notes", Kit.Segmented(_p, [("detent", "Detent"), ("progress", "Progress")], S.Swipe, v => Set(() => S.Swipe = v)),
+            S.Swipe == "progress" ? "same feel at any window width; changes as you pass a third of the way" : "follows with resistance; decides when you stop"));
+        panel.Children.Add(Kit.Switch(_p, "Reduce motion", S.ReduceMotion, v => Set(() => S.ReduceMotion = v), "no glides, coasts or slides"));
+    }
+
+    private static string ScrollHint(string mode) => mode switch
+    {
+        "free" => "each notch adds speed that coasts",
+        "rate" => "slow clicks glide a little; spin faster to go further",
+        "wheel" => "moves with the wheel, stops when it stops",
+        _ => "each notch glides 3 lines",
+    };
+
+    private void SystemRows(StackPanel panel)
+    {
         panel.Children.Add(Hotkey());
+        panel.Children.Add(Row("Open at", Kit.Segmented(_p, [("remember", "Where I left it"), ("center", "Center"), ("mouse", "Mouse"), ("tray", "Above the tray"), ("dropdown", "Drop down from the top")], S.OpenAt, v => Set(() => S.OpenAt = v))));
+        panel.Children.Add(Row("New note after", Kit.Segmented(_p, [("0", "Never"), ("5", "5 min"), ("15", "15 min"), ("30", "30 min"), ("120", "2 h")], S.FreshNoteAfterMinutes.ToString(), v => Set(() => S.FreshNoteAfterMinutes = int.Parse(v))), "away, the hotkey opens a fresh page"));
+        panel.Children.Add(Kit.Switch(_p, "Hide when I click away", S.HideOnBlur, v => Set(() => S.HideOnBlur = v), "unless kept on top"));
+        panel.Children.Add(Kit.Switch(_p, "Keep on top", S.Pinned, v => Set(() => S.Pinned = v)));
+        bool startup = false; try { startup = Startup.IsEnabled; } catch { }
+        panel.Children.Add(Kit.Switch(_p, "Start with Windows", startup, v => { try { Startup.SetEnabled(v); } catch (Exception ex) { _w.Toast(ex.Message); } Set(() => { }); }));
+    }
 
-        panel.Children.Add(Kit.Section(_p, "About"));
+    private void AboutRows(StackPanel panel)
+    {
         var about = new TextBlock
         {
             Text = $"Antipad · a quick scratchpad for Windows\nNotes are saved as you type to\n{Program.DataFolder}",
-            Foreground = new SolidColorBrush(_p.Muted), FontSize = 12, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(8, 0)
+            Foreground = new SolidColorBrush(_p.Muted), FontSize = 12, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(8, 6, 8, 0)
         };
         panel.Children.Add(about);
         var help = Kit.Text("Keyboard shortcuts (F1)", _p.Link, 12.5);
@@ -95,9 +175,6 @@ internal sealed class SettingsOverlay : Grid
         resetButton.HorizontalAlignment = HorizontalAlignment.Left;
         resetButton.Click += (_, _) => _w.ResetSettings();
         panel.Children.Add(resetButton);
-
-        Avalonia.Threading.Dispatcher.UIThread.Post(() => { _scroll.Offset = new Vector(0, scroll); Focus(); }, Avalonia.Threading.DispatcherPriority.Loaded);
-        Focusable = true;
     }
 
     private void Set(Action change) { change(); _w.SettingsChanged(); }
@@ -224,7 +301,7 @@ internal sealed class SettingsOverlay : Grid
         apply.Click += (_, _) => Apply();
         box.KeyDown += (_, e) => { if (e.Key == Key.Enter) { e.Handled = true; Apply(); } };
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { box, apply } };
-        return new StackPanel { Margin = new Thickness(8, 2), Children = { Kit.Text("Show / hide from anywhere", _p.Ink, 13), new Border { Height = 6 }, row, status } };
+        return new StackPanel { Margin = new Thickness(8, 6, 8, 8), Children = { Kit.Text("Hotkey", _p.Ink, 13), Kit.Text("show / hide from anywhere", _p.Muted, 11.5), new Border { Height = 6 }, row, status } };
     }
 }
 
