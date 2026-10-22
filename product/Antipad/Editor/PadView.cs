@@ -574,7 +574,8 @@ internal sealed class PadView : Grid
             var spare = Bounds.Width - left - right - (glyph.WidthIncludingTrailingWhitespace * Settings.TextWidth + 15);
             if (spare > 0) { left += spare / 2; right += spare / 2; }
         }
-        Editor.Margin = new Thickness(_gutter is not null ? left - 16 : left, 4, right, 40);
+        // The pad keeps 40 px clear for its pager; a Settings preview has no pager, so its text runs to the bottom.
+        Editor.Margin = new Thickness(_gutter is not null ? left - 16 : left, 4, right, Private ? 6 : 40);
         _hint.Margin = new Thickness(left + 1, 7, right, 0);
     }
 
