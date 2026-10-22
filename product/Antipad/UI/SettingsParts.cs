@@ -99,7 +99,7 @@ internal sealed partial class SettingsWindow
     private Border[] Expander(string key, Control? icon, string title, string? description, string value, params Border?[] subs)
     {
         var open = Expanded.Contains(key);
-        var chevron = new GlyphIcon("", _p.Muted, 11, 0.1) { RenderTransform = new RotateTransform(open ? 180 : 0), VerticalAlignment = VerticalAlignment.Center };
+        var chevron = new GlyphIcon(char.ConvertFromUtf32(0xf2a3), _p.Muted, 16, 0, Glyph.Fluent) { RenderTransform = new RotateTransform(open ? 180 : 0), VerticalAlignment = VerticalAlignment.Center };
         var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
         right.Children.Add(Kit.Text(value, _p.Muted, 13));
         right.Children.Add(chevron);
@@ -192,7 +192,7 @@ internal sealed partial class SettingsWindow
         var label = Kit.Text(options.FirstOrDefault(o => o.Value == current).Label ?? current, _p.Ink, 13);
         var face = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(12, 0, 10, 0) };
         face.Children.Add(label);
-        var chevron = new GlyphIcon("", _p.Muted, 10, 0.1) { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0) };
+        var chevron = new GlyphIcon(char.ConvertFromUtf32(0xf2a3), _p.Muted, 14, 0, Glyph.Fluent) { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0) };
         Grid.SetColumn(chevron, 1); face.Children.Add(chevron);
         var box = new Border { Height = 32, MinWidth = minWidth, CornerRadius = new CornerRadius(7), BorderBrush = Line, BorderThickness = new Thickness(1), Background = new SolidColorBrush(_p.Surface), Child = face };
         var button = Kit.Plain(box, _p, radius: 7);
@@ -239,10 +239,13 @@ internal sealed partial class SettingsWindow
     /// <summary>A picture with its label under it; the chosen one wears an accent ring.</summary>
     private Control Tile(Control picture, string label, bool selected, System.Action click, double width)
     {
+        var ring = selected ? 2 : 1.5;
         var frame = new Border
         {
-            Width = width, CornerRadius = new CornerRadius(7), ClipToBounds = true, Child = picture,
-            BorderBrush = selected ? new SolidColorBrush(_p.Accent) : Line, BorderThickness = new Thickness(selected ? 2 : 1.5),
+            Width = width, CornerRadius = new CornerRadius(8), Padding = new Thickness(ring),
+            BorderBrush = selected ? new SolidColorBrush(_p.Accent) : Line, BorderThickness = new Thickness(ring),
+            // The picture is clipped to the ring's inner curve, so its corners never show outside the frame.
+            Child = new Border { CornerRadius = new CornerRadius(8 - ring), ClipToBounds = true, Child = picture },
         };
         var stack = new StackPanel { Spacing = 5, HorizontalAlignment = HorizontalAlignment.Center };
         stack.Children.Add(frame);
@@ -272,6 +275,7 @@ internal sealed partial class SettingsWindow
             var chip = new Border
             {
                 Background = new SolidColorBrush(palette.Canvas), CornerRadius = new CornerRadius(9), Margin = new Thickness(0, 0, 8, 0), Child = face,
+                BackgroundSizing = BackgroundSizing.InnerBorderEdge,
                 BorderBrush = selected ? new SolidColorBrush(_p.Accent) : Line, BorderThickness = new Thickness(selected ? 2 : 1), Cursor = new Cursor(StandardCursorType.Hand),
             };
             var id = palette.Id;
@@ -338,7 +342,11 @@ internal sealed partial class SettingsWindow
 
     // ---------- icons ----------
 
-    private Control Sym(string code) => new GlyphIcon(code, IconInk, 16) { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+    /// <summary>A Fluent UI System Icons glyph by codepoint (the bundled font, regular weight at its 20 px design size).</summary>
+    private Control Fl(int codepoint) => new GlyphIcon(char.ConvertFromUtf32(codepoint), IconInk, 20, 0, Glyph.Fluent)
+    {
+        HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+    };
 
     /// <summary>An icon the Segoe set doesn't have, drawn in the same 1.4 px line on a 20 px square.</summary>
     private Control Drawn(Action<DrawingContext, Pen, IBrush> draw) => new DrawnIcon(draw, IconInk);

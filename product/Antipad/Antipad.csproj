@@ -13,6 +13,9 @@
   </PropertyGroup>
   <ItemGroup>
     <AvaloniaResource Include="antipad.ico" />
+    <!-- Microsoft's Fluent UI System Icons (MIT): named icons that look the same on every PC. Its licence ships beside the app. -->
+    <AvaloniaResource Include="Assets/Fonts/FluentSystemIcons-Regular.ttf" />
+    <None Include="Assets/Fonts/FluentSystemIcons-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" Link="Licenses/FluentSystemIcons-LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />

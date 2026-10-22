@@ -154,6 +154,8 @@ internal sealed partial class PadWindow
     /// <summary>Settings open in their own window beside the pad, so every change shows on the real note.</summary>
     internal void OpenSettings()
     {
+        // From the tray the pad may be hidden: show it too, so changes are visible on a real note.
+        if (!IsVisible) ShowResident();
         if (_settingsWindow is { } open) { open.Activate(); return; }
         var window = new SettingsWindow(this);
         _settingsWindow = window;
@@ -162,6 +164,17 @@ internal sealed partial class PadWindow
     }
 
     internal void CloseSettings() => _settingsWindow?.Close();
+
+    /// <summary>
+    /// Settings lost focus or closed. Moving from the pad into Settings skipped the click-away rule; if focus has now gone
+    /// somewhere else entirely, apply it (hide, or dim a pinned pad) as if the pad had just lost focus.
+    /// </summary>
+    internal void SettingsLostFocus() => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+    {
+        if (IsActive || _settingsWindow is { IsActive: true }) return;
+        if (Settings.HideOnBlur && !Topmost && !_overlayOpen && IsVisible) HideResident();
+        else if (Topmost && Settings.DimWhenPinned) FadeWindow(0.72);
+    }, Avalonia.Threading.DispatcherPriority.Background);
 
     internal void OpenHelp() => ShowOverlay(new HelpOverlay(this, _palette));
 

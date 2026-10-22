@@ -15,6 +15,8 @@ internal static class Glyph
         Split = "", Delete = "", Back = "", Forward = "", Grid = "",
         List = "", Restore = "", Hide = "";
     public static readonly FontFamily Font = new("Segoe Fluent Icons, Segoe MDL2 Assets");
+    /// <summary>The bundled Fluent UI System Icons font (named icons; regular weight, drawn at 20 px).</summary>
+    public static readonly FontFamily Fluent = new("avares://Antipad/Assets/Fonts#FluentSystemIcons-Regular");
 }
 
 /// <summary>
@@ -22,12 +24,12 @@ internal static class Glyph
 /// drawn with four extra copies nudged by <c>weight</c> px around it (faux bold); with grayscale antialiasing
 /// that reads as a cleanly thicker stroke.
 /// </summary>
-internal sealed class GlyphIcon(string glyph, Color color, double size = 13, double weight = 0.15) : Control
+internal sealed class GlyphIcon(string glyph, Color color, double size = 13, double weight = 0.15, FontFamily? font = null) : Control
 {
-    private static readonly Typeface Face = new(Glyph.Font);
+    private readonly Typeface _face = new(font ?? Glyph.Font);
 
     private FormattedText Text(IBrush brush) =>
-        new(glyph, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight, Face, size, brush);
+        new(glyph, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight, _face, size, brush);
 
     protected override Size MeasureOverride(Size availableSize) => new(size + 2, size + 2);
 

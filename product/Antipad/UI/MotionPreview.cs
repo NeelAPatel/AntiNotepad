@@ -102,7 +102,7 @@ internal sealed class MotionPreview : StackPanel
         Spacing = 6;
         Margin = new Thickness(0, 0, 0, 4);
         // Same size and place on both pages, so switching tabs never moves it.
-        _pad = new PadView(palette, settings, new Timers()) { Height = 220, ClipToBounds = true };
+        _pad = new PadView(palette, settings, new Timers()) { Height = 220, ClipToBounds = true, Private = true };
         _frame = new Border { Child = _pad, CornerRadius = new CornerRadius(10), ClipToBounds = true, BorderThickness = new Thickness(1) };
         Children.Add(_frame);
 
@@ -137,6 +137,13 @@ internal sealed class MotionPreview : StackPanel
         };
         AttachedToVisualTree += (_, _) => _sampler.Start();
         DetachedFromVisualTree += (_, _) => _sampler.Stop();
+    }
+
+    /// <summary>The Settings window closed: stop sampling and let go of the editor's documents.</summary>
+    public void Release()
+    {
+        _sampler.Stop();
+        _pad.Release();
     }
 
     /// <summary>Editor samples (what you write) or Feel samples (long reading to scroll, notes to switch).</summary>

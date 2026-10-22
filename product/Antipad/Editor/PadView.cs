@@ -211,6 +211,13 @@ internal sealed class PadView : Grid
 
     public static int CachedDocuments => Documents.Count;
 
+    /// <summary>
+    /// A preview editor (Settings) keeps its sample documents to itself: out of the shared cache, so samples never push
+    /// real notes' documents (and their undo history) out, and nothing static holds on to the preview once it's gone.
+    /// </summary>
+    public bool Private { get; init; }
+    private readonly Dictionary<Note, TextDocument> _private = [];
+
     public void Bind(Note note)
     {
         if (ReferenceEquals(Note, note)) return;
@@ -218,7 +225,9 @@ internal sealed class PadView : Grid
         _binding = true;
         if (Editor.Document is { } old) old.Changed -= OnDocumentChanged;
         Note = note;
-        var doc = DocumentFor(note);
+        var doc = Private
+            ? _private.TryGetValue(note, out var own) ? own : _private[note] = new TextDocument(note.PeekText())
+            : DocumentFor(note);
         // Folding state belongs to a document: the old manager must go before the swap (its generator rejects other documents).
         if (_folding is not null) { FoldingManager.Uninstall(_folding); _folding = null; }
         foreach (var stale in Editor.TextArea.LeftMargins.OfType<ChevronGutter>().ToList()) Editor.TextArea.LeftMargins.Remove(stale);
@@ -237,6 +246,14 @@ internal sealed class PadView : Grid
         SmoothScroll.SetOffset(Editor, scroll);
         // Layout may not be ready yet; re-apply once, unless another note was bound meanwhile.
         Dispatcher.UIThread.Post(() => { if (token == _bindToken) SmoothScroll.SetOffset(Editor, scroll); }, DispatcherPriority.Loaded);
+    }
+
+    /// <summary>Lets go of the document (a preview being closed), so nothing it was listening to keeps it alive.</summary>
+    public void Release()
+    {
+        if (Editor.Document is { } doc) doc.Changed -= OnDocumentChanged;
+        _analyse.Stop();
+        _private.Clear();
     }
 
     /// <summary>Copies caret and scroll back into the note (text is already live).</summary>

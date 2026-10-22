@@ -19,10 +19,11 @@ namespace Antipad.UI;
 /// </summary>
 internal sealed partial class SettingsWindow : Window
 {
-    private static readonly (string Id, string Name, string Glyph)[] Sections =
+    private static readonly (string Id, string Name, int Icon)[] Sections =
     [
-        ("theme", "Theme", ""), ("ui", "UI", ""), ("editor", "Editor", ""),
-        ("feel", "Feel", ""), ("system", "System", ""), ("about", "About", ""),
+        // Fluent UI System Icons: color, paint_brush, document_edit, tap_single (a finger touching), desktop, info.
+        ("theme", "Theme", 0xf2f5), ("ui", "UI", 0xf592), ("editor", "Editor", 0xf386),
+        ("feel", "Feel", 0xec8d), ("system", "System", 0xf359), ("about", "About", 0xf4a3),
     ];
     // Remembered while Antipad runs: the last section, and which expanders are open (these start open).
     private static string _section = "theme";
@@ -60,10 +61,13 @@ internal sealed partial class SettingsWindow : Window
         AddHandler(KeyDownEvent, (_, e) =>
         {
             if (e.Key != Key.Escape) return;
+            if (e.Source is TextBox box && !ReferenceEquals(box, _find)) return;
             e.Handled = true;
             if (_find.Text is { Length: > 0 }) _find.Text = "";
             else Close();
         }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        Deactivated += (_, _) => _pad.SettingsLostFocus();
+        Closed += (_, _) => { _preview.Release(); _pad.SettingsLostFocus(); };
     }
 
     // ---------- look ----------
@@ -111,7 +115,9 @@ internal sealed partial class SettingsWindow : Window
         if (!Equals(_p, _pad.CurrentPalette)) { _p = _pad.CurrentPalette; Restyle(); return; }
         ApplyLook();
         _preview.ApplyLook(_p, S);
-        if (rows) Show(_section, animate: false, keepScroll: true);
+        if (!rows) return;
+        if (_find.Text is { Length: > 0 } query) ShowResults(query);
+        else Show(_section, animate: false, keepScroll: true);
     }
 
     // ---------- frame ----------
@@ -146,7 +152,7 @@ internal sealed partial class SettingsWindow : Window
         {
             PlaceholderText = "Find a setting", FontSize = 13, Height = 34, CornerRadius = new CornerRadius(8), Padding = new Thickness(8, 7, 8, 0),
             Foreground = new SolidColorBrush(_p.Ink), CaretBrush = new SolidColorBrush(_p.Caret),
-            InnerLeftContent = new GlyphIcon(Glyph.Search, _p.Muted, 12, 0.1) { Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center },
+            InnerLeftContent = new GlyphIcon(char.ConvertFromUtf32(0xf68f), _p.Muted, 15, 0, Glyph.Fluent) { Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center },
         };
         Avalonia.Automation.AutomationProperties.SetName(_find, "Find a setting");
         _find.TextChanged += (_, _) =>
@@ -173,7 +179,7 @@ internal sealed partial class SettingsWindow : Window
         {
             var on = id == selected;
             var face = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(12, 0), VerticalAlignment = VerticalAlignment.Center };
-            face.Children.Add(new GlyphIcon(glyph, on ? IconInk : _p.Muted, 15) { VerticalAlignment = VerticalAlignment.Center });
+            face.Children.Add(new GlyphIcon(char.ConvertFromUtf32(glyph), on ? IconInk : _p.Muted, 18, 0, Glyph.Fluent) { VerticalAlignment = VerticalAlignment.Center });
             face.Children.Add(Kit.Text(name, on ? _p.Ink : _p.Muted, 14, on ? FontWeight.SemiBold : FontWeight.Normal));
             var item = Kit.Plain(face, _p, height: 36, radius: 8);
             item.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -263,11 +269,11 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Card([
             Row(ModeIcon(), "Mode", "Follow Windows, or stay light or dark",
                 Seg([("system", "System"), ("light", "Light"), ("dark", "Dark")], S.Theme, v => Set(() => S.Theme = v))),
-            .. Expander("light-palette", Sym(""), "Light mode palette", null, Palette.Get(S.LightPalette, false).Name,
+            .. Expander("light-palette", Fl(0xf8a1), "Light mode palette", null, Palette.Get(S.LightPalette, false).Name,
                 SubRow(null, PaletteChips(false, S.LightPalette, v => Set(() => { S.LightPalette = v; if (S.Theme == "dark") S.Theme = "light"; })), wide: true)),
-            .. Expander("dark-palette", Sym(""), "Dark mode palette", null, Palette.Get(S.DarkPalette, true).Name,
+            .. Expander("dark-palette", Fl(0xf87d), "Dark mode palette", null, Palette.Get(S.DarkPalette, true).Name,
                 SubRow(null, PaletteChips(true, S.DarkPalette, v => Set(() => { S.DarkPalette = v; if (S.Theme == "light") S.Theme = "dark"; })), wide: true)),
-            Row(Sym(""), "Accent", "Caret, selection, headings and switches", AccentDots()),
+            Row(Fl(0xf2f5), "Accent", "Caret, selection, headings and switches", AccentDots()),
         ]));
 
         page.Children.Add(Group("Caret"));
@@ -277,11 +283,11 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Card(
             Row(CursorIcon("Ab", clock: false), "Caret style", null, cells),
             Row(CursorIcon("A", clock: true), "Blink", null, Toggle(S.CaretBlink, v => Set(() => S.CaretBlink = v), "Blink")),
-            Row(Sym(""), "Glide between positions", null, Toggle(S.CaretGlide, v => Set(() => S.CaretGlide = v), "Glide between positions"))));
+            Row(Fl(0xe0cd), "Glide between positions", null, Toggle(S.CaretGlide, v => Set(() => S.CaretGlide = v), "Glide between positions"))));
 
         page.Children.Add(Group("Split view"));
         page.Children.Add(Card(
-            Row(Sym(""), "Side pane palette", "The slot beside your note can look different",
+            Row(Fl(0xe8b0), "Side pane palette", "The slot beside your note can look different",
                 Dropdown([("same", "Same as main"), .. Palette.For(_p.Dark).Select(x => (x.Id, x.Name))], S.SplitPalette, v => Set(() => S.SplitPalette = v)))));
     }
 
@@ -292,8 +298,8 @@ internal sealed partial class SettingsWindow : Window
         foreach (var (id, name) in new[] { ("acrylic", "Acrylic"), ("mica", "Mica"), ("solid", "Solid") })
             materials.Children.Add(Tile(MaterialPicture(id), name, S.Material == id, () => Set(() => S.Material = id, rows: true), 78));
         page.Children.Add(Card(
-            Row(Sym(""), "Background", MaterialHint(), materials),
-            S.Material == "solid" ? null : Row(Sym(""), "Tint", "How much of the desktop shows through",
+            Row(Fl(0xf592), "Background", MaterialHint(), materials),
+            S.Material == "solid" ? null : Row(Fl(0xf595), "Tint", "How much of the desktop shows through",
                 Dropdown([("0.55", "Clear"), ("0.7", "Light"), ("0.82", "Medium"), ("0.92", "Dense")], Closest(S.Tint, 0.55, 0.7, 0.82, 0.92), v => Set(() => S.Tint = Num(v)))),
             Row(ScaleIcon(), "Scale", "Toolbar, panels and text together",
                 Dropdown([("0.9", "90%"), ("1", "100%"), ("1.15", "115%"), ("1.3", "130%"), ("1.5", "150%")], Closest(S.UiScale, 0.9, 1, 1.15, 1.3, 1.5), v => Set(() => S.UiScale = Num(v))))));
@@ -321,13 +327,13 @@ internal sealed partial class SettingsWindow : Window
         if (withPreview) page.Children.Add(Preview(feel: false));
         page.Children.Add(Group("Text"));
         page.Children.Add(Card(
-            Row(Sym(""), "Font", null,
+            Row(Fl(0xf7e4), "Font", null,
                 Dropdown([("Cascadia Mono", "Cascadia Mono"), ("Cascadia Code", "Cascadia Code"), ("Consolas", "Consolas"), ("Segoe UI", "Segoe UI")], S.Font, v => Set(() => S.Font = v))),
-            Row(Sym(""), "Font size", null,
+            Row(Fl(0xf7e6), "Font size", null,
                 Dropdown([("13", "13"), ("14", "14"), ("15", "15"), ("16", "16"), ("18", "18"), ("20", "20")], Closest(S.FontSize, 13, 14, 15, 16, 18, 20), v => Set(() => S.FontSize = Num(v)))),
             Row(null, "Text width", "Wide windows center the column",
                 Dropdown([("0", "Full width"), ("60", "60 characters"), ("72", "72 characters"), ("88", "88 characters"), ("110", "110 characters")], Closest(S.TextWidth, 0, 60, 72, 88, 110), v => Set(() => S.TextWidth = int.Parse(v)))),
-            Row(Sym(""), "Line spacing", null,
+            Row(Fl(0xf7f6), "Line spacing", null,
                 Seg([("1.15", "Tight"), ("1.32", "Normal"), ("1.5", "Relaxed"), ("1.7", "Airy")], Closest(S.LineSpacing, 1.15, 1.32, 1.5, 1.7), v => Set(() => S.LineSpacing = Num(v))))));
 
         page.Children.Add(Group("Page"));
@@ -335,9 +341,9 @@ internal sealed partial class SettingsWindow : Window
         foreach (var (id, name) in new[] { ("blank", "Blank"), ("lined", "Lined"), ("dotted", "Dotted"), ("grid", "Grid"), ("biggrid", "Large grid") })
             backings.Children.Add(Tile(new PatternSwatch(id, _p) { Height = 40 }, name, S.Paper == id, () => Set(() => S.Paper = id, rows: true), 60));
         page.Children.Add(Card([
-            Row(Sym(""), "Paper tone", null,
+            Row(Fl(0xf2f9), "Paper tone", null,
                 Dropdown(Palette.Tones.Select(t => (t.Id, t.Id == "default" ? "From palette" : t.Name)).ToList(), S.Tone, v => Set(() => S.Tone = v))),
-            .. Expander("backing", Sym(""), "Backing", null, Label(S.Paper),
+            .. Expander("backing", Fl(0xf462), "Backing", null, Label(S.Paper),
                 SubRow(null, backings, wide: true),
                 S.Paper == "blank" ? null : SubRow("Pattern weight",
                     Seg([("0", "Subtle"), ("1", "Clear"), ("2", "Bold")], S.PaperStrength.ToString(), v => Set(() => S.PaperStrength = int.Parse(v))))),
@@ -346,14 +352,14 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Group("Writing aids"));
         var enabled = Editor.CodeColors.Languages.Count(l => !S.DisabledLanguages.Contains(l.Id));
         page.Children.Add(Card([
-            Row(Sym(""), "Answers", "Lines ending in = show their result", Toggle(S.InlineMath, v => Set(() => S.InlineMath = v), "Answers")),
+            Row(Fl(0xf20a), "Answers", "Lines ending in = show their result", Toggle(S.InlineMath, v => Set(() => S.InlineMath = v), "Answers")),
             Row(null, "Answer position", null,
                 Dropdown([("column", "One column"), ("edge", "Right edge")], S.Bubbles, v => Set(() => S.Bubbles = v))),
-            Row(Sym(""), "Clean markdown", "Hide ** and # except on the line you're editing", Toggle(S.CleanMarkdown, v => Set(() => S.CleanMarkdown = v), "Clean markdown")),
+            Row(Fl(0xe7db), "Clean markdown", "Hide ** and # except on the line you're editing", Toggle(S.CleanMarkdown, v => Set(() => S.CleanMarkdown = v), "Clean markdown")),
             Row(IndentIcon(), "Indent guides", null, Toggle(S.IndentGuides, v => Set(() => S.IndentGuides = v), "Indent guides")),
-            Row(Sym(""), "Folding", null, Toggle(S.Folding, v => Set(() => S.Folding = v), "Folding")),
-            Row(Sym(""), "Short links", "The full address stays in the text", Toggle(S.ShortenLinks, v => Set(() => S.ShortenLinks = v), "Short links")),
-            .. Expander("code", Sym(""), "Code languages", "Off: plain text, not offered after ```",
+            Row(Fl(0xecf4), "Folding", null, Toggle(S.Folding, v => Set(() => S.Folding = v), "Folding")),
+            Row(Fl(0xf4e4), "Short links", "The full address stays in the text", Toggle(S.ShortenLinks, v => Set(() => S.ShortenLinks = v), "Short links")),
+            .. Expander("code", Fl(0xf2ef), "Code languages", "Off: plain text, not offered after ```",
                 enabled == Editor.CodeColors.Languages.Length ? $"All {enabled} on" : $"{enabled} of {Editor.CodeColors.Languages.Length} on",
                 SubRow(null, Kit.Toggles(_p, Editor.CodeColors.Languages.Select(l => (l.Id, l.Name)).ToList(),
                     id => !S.DisabledLanguages.Contains(id), id => Set(() => { if (!S.DisabledLanguages.Remove(id)) S.DisabledLanguages.Add(id); }, rows: true)), wide: true)),
@@ -365,14 +371,14 @@ internal sealed partial class SettingsWindow : Window
         if (withPreview) page.Children.Add(Preview(feel: true));
         page.Children.Add(Group("Scrolling"));
         page.Children.Add(Card([
-            .. Expander("scrolling", Sym(""), "Scroll style", ScrollHint(S.Scrolling), ScrollName(S.Scrolling),
+            .. Expander("scrolling", Fl(0xe077), "Scroll style", ScrollHint(S.Scrolling), ScrollName(S.Scrolling),
                 [SubRow("Style", Seg([("lines", "Lines"), ("free", "Free"), ("rate", "Rate-matched"), ("wheel", "Wheel-driven")], S.Scrolling, v => Set(() => S.Scrolling = v, rows: true))),
                  .. TuningRows()]),
         ]));
 
         page.Children.Add(Group("Switching between notes"));
         page.Children.Add(Card([
-            .. Expander("switching", Sym(""), "Switch style",
+            .. Expander("switching", Fl(0xf18d), "Switch style",
                 S.Swipe == "progress" ? "Same feel at any window width" : "Follows with resistance, decides when you stop",
                 S.Swipe == "progress" ? "Progress" : "Detent",
                 SubRow("Style", Seg([("detent", "Detent"), ("progress", "Progress")], S.Swipe, v => Set(() => S.Swipe = v, rows: true))),
@@ -384,7 +390,7 @@ internal sealed partial class SettingsWindow : Window
 
         page.Children.Add(Group("Motion"));
         page.Children.Add(Card(
-            Row(Sym(""), "Reduce motion", "No glides, coasts or slides", Toggle(S.ReduceMotion, v => Set(() => S.ReduceMotion = v), "Reduce motion"))));
+            Row(Fl(0xf103), "Reduce motion", "No glides, coasts or slides", Toggle(S.ReduceMotion, v => Set(() => S.ReduceMotion = v), "Reduce motion"))));
     }
 
     /// <summary>Presets for the chosen scroll style, shown under it.</summary>
@@ -417,8 +423,8 @@ internal sealed partial class SettingsWindow : Window
     {
         page.Children.Add(Group("Shortcuts"));
         page.Children.Add(Card(
-            Row(Sym(""), "Show or hide Antipad", null, HotkeyEditor(() => _pad.HotkeyStatus, text => _pad.RegisterHotkey(text) && Store(() => S.Hotkey = text), allowEmpty: false)),
-            Row(Sym(""), "Open on a new note", null, HotkeyEditor(() => _pad.NewNoteHotkeyStatus, text =>
+            Row(Fl(0xf4b8), "Show or hide Antipad", null, HotkeyEditor(() => _pad.HotkeyStatus, text => _pad.RegisterHotkey(text) && Store(() => S.Hotkey = text), allowEmpty: false)),
+            Row(Fl(0xf8bd), "Open on a new note", null, HotkeyEditor(() => _pad.NewNoteHotkeyStatus, text =>
             {
                 var value = string.IsNullOrWhiteSpace(text) ? null : text;
                 return _pad.RegisterNewNoteHotkey(value) && Store(() => S.NewNoteHotkey = value);
@@ -429,17 +435,17 @@ internal sealed partial class SettingsWindow : Window
         foreach (var (id, name) in new[] { ("remember", "Where I left it"), ("center", "Center"), ("mouse", "Mouse"), ("tray", "Above the tray"), ("dropdown", "Drop down") })
             tiles.Children.Add(Tile(new ScreenPicture(id, _p) { Height = 62 }, name, S.OpenAt == id, () => Set(() => S.OpenAt = id, rows: true), 104));
         page.Children.Add(Card([
-            .. Expander("open-at", Sym(""), "Open at", null, OpenAtName(S.OpenAt), SubRow(null, tiles, wide: true)),
-            Row(Sym(""), "Fresh note after", "Away this long, the hotkey opens a new page",
+            .. Expander("open-at", Fl(0xee77), "Open at", null, OpenAtName(S.OpenAt), SubRow(null, tiles, wide: true)),
+            Row(Fl(0xf2dd), "Fresh note after", "Away this long, the hotkey opens a new page",
                 Dropdown([("0", "Never"), ("5", "5 minutes"), ("15", "15 minutes"), ("30", "30 minutes"), ("120", "2 hours")], S.FreshNoteAfterMinutes.ToString(), v => Set(() => S.FreshNoteAfterMinutes = int.Parse(v)))),
         ]));
 
         page.Children.Add(Group("Window"));
         bool startup = false; try { startup = Startup.IsEnabled; } catch { }
         page.Children.Add(Card(
-            Row(Sym(""), "Keep on top", null, Toggle(S.Pinned, v => Set(() => S.Pinned = v), "Keep on top")),
-            Row(Sym(""), "Hide when I click away", "Not while kept on top", Toggle(S.HideOnBlur, v => Set(() => S.HideOnBlur = v), "Hide when I click away")),
-            Row(Sym(""), "Start with Windows", null, Toggle(startup, v => { try { Startup.SetEnabled(v); } catch (Exception ex) { _pad.Toast(ex.Message); } }, "Start with Windows"))));
+            Row(Fl(0xf601), "Keep on top", null, Toggle(S.Pinned, v => Set(() => S.Pinned = v), "Keep on top")),
+            Row(Fl(0xf165), "Hide when I click away", "Not while kept on top", Toggle(S.HideOnBlur, v => Set(() => S.HideOnBlur = v), "Hide when I click away")),
+            Row(Fl(0xf60e), "Start with Windows", null, Toggle(startup, v => { try { Startup.SetEnabled(v); } catch (Exception ex) { _pad.Toast(ex.Message); } }, "Start with Windows"))));
     }
 
     private static string OpenAtName(string id) => id switch
@@ -501,10 +507,10 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Group("Antipad"));
         var version = typeof(SettingsWindow).Assembly.GetName().Version?.ToString(3) ?? "";
         page.Children.Add(Card(
-            Row(Sym(""), "Antipad " + version, "A quick scratchpad for Windows", null),
-            Row(Sym(""), "Notes folder", Program.DataFolder + "\nSaved as you type, one file per note", null),
-            Row(Sym(""), "Keyboard shortcuts", "Every shortcut on one page", TextButton("Show", () => { _pad.ShowResident(); _pad.OpenHelp(); })),
-            Row(Sym(""), "Restore default settings", "Undo it from the pad's notice", TextButton("Restore", _pad.ResetSettings))));
+            Row(Fl(0xf4a3), "Antipad " + version, "A quick scratchpad for Windows", null),
+            Row(Fl(0xf418), "Notes folder", Program.DataFolder + "\nSaved as you type, one file per note", null),
+            Row(Fl(0xf4b8), "Keyboard shortcuts", "Every shortcut on one page", TextButton("Show", () => { _pad.ShowResident(); _pad.OpenHelp(); })),
+            Row(Fl(0xf19f), "Restore default settings", "Undo it from the pad's notice", TextButton("Restore", _pad.ResetSettings))));
     }
 
     /// <summary>The one preview, moved to whichever page shows it, so its trace and scroll survive tab changes.</summary>
