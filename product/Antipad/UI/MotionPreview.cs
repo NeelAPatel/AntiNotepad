@@ -12,60 +12,57 @@ using Antipad.Theme;
 namespace Antipad.UI;
 
 /// <summary>
-/// Settings preview: a real note editor over three sample notes, scrolled and swiped with the user's own Editor and Feel
-/// settings (the same SmoothScroll and NoteSwipe the pad uses), above a live trace of both axes.
-/// The sample notes live only in memory and are never saved.
+/// Settings preview: a real note editor over sample notes, scrolled and switched with the user's own Editor and Feel
+/// settings (the same SmoothScroll and NoteSwipe the pad uses), above a live trace of both axes. One instance lives as
+/// long as the Settings window and moves between the Editor and Feel pages; a change restyles it in place.
+/// Editor shows the writing a note is likely to hold (the showcase); Feel shows long reading to scroll and notes to switch.
+/// The samples live only in memory and are never saved.
 /// </summary>
 internal sealed class MotionPreview : StackPanel
 {
-    private static readonly string[] Texts =
-    [
-        """
-        # Weekend plan
-        Saturday: farmers market, then the bike shop
-        [ ] pick up the repaired wheel
-        [x] book the campsite
-        ## Budget
-        groceries = 64
-        fuel = 38
-        campsite = 45
-        total = 147 =
-        ## Packing
-        - tent, poles, pegs
-        - two sleeping bags
-          - the warm one for her
-        - stove and gas
-        - headlamps
-        ```py
-        def split(total, people):
-            return round(total / people, 2)
-        ```
-        ## Route
-        - leave by 8 to beat traffic
-        - lunch stop at the lake
-        - last fuel before the pass
-        ## Notes
-        Scroll up and down here with your wheel or touchpad.
-        Swipe sideways (thumb wheel, two fingers, or Shift + wheel) to change note.
-        The trace below shows both: scroll in one colour, note changes in the other.
-        - line spacing, text width and backing change this note live
-        - so do bubbles, the caret and the font
+    private const string Reading = """
+        # Reading list
+        The Pragmatic Programmer, chapter 7: the one about estimating, and why "it depends" is a fine answer if you say what it depends on.
+        Designing Fluid Interfaces: projection, rubber bands, and why a flick should land where your thumb meant.
+        Refactoring UI: spacing first, then type, then color.
+        ## Notes from the trip
+        - tram 28 before eight, before the crowds
+        - LX Factory on Sunday, the bookshop in the old printing hall
+        - the long walk up to the castle, then down through Alfama
+        - pastéis at the place with the blue door
+        ## Still to read
+        - Thinking in Systems
+        - The Design of Everyday Things, again
+        - A Pattern Language, the chapters on windows
+        ## Quotes worth keeping
+        > Simple things should be simple, complex things should be possible.
+        > The best interface is the one you stop noticing.
+        ## Ideas
+        - a scroll that keeps pace with the wheel
+        - notes that switch at a third of the way, at any width
+        - settings with a preview right where you change them
+        - a showcase page to screenshot after every change
         ## Later
-        [ ] return the borrowed cooler
-        [ ] print the parking pass
-        [ ] charge the power bank
-        end of the sample note
-        """,
-        """
+        [ ] return the library books by the 3rd
+        [ ] back up the notes folder
+        [ ] write up the trip
+        end of the reading list
+        """;
+
+    private const string Standup = """
         # Standup
-        shipped: the scroll lab picks
-        next: settings previews
+        shipped: the scroll picks and the switch feel
+        next: the settings window
         blocked on nothing
         ## Questions
-        - is the swipe too eager at 2200 px?
+        - is the switch too eager in a very wide window?
         - should the trash keep 30 days?
-        """,
-        """
+        ## Numbers
+        1450 / 3 =
+        19.99 * 3 =
+        """;
+
+    private const string Budget = """
         math
         rent = 1450
         utilities = 180
@@ -73,42 +70,51 @@ internal sealed class MotionPreview : StackPanel
         total
         total / 3
         20% of rent
-        """,
-    ];
-    private static Note[]? _samples;
-    private static int _index;   // the sample on screen, kept across Settings rebuilds
+        5 km in mi
+        days until dec 25
+        """;
+
+    private static Note[]? _editorSamples, _feelSamples;
+    private static int _editorIndex, _feelIndex;
 
     private readonly PadView _pad;
+    private readonly Border _frame;
     private readonly Trace _trace;
+    private readonly StackPanel _legend = new() { Orientation = Orientation.Horizontal, Spacing = 14 };
     private readonly NoteSwipe _swipe;
-    private double _pull;        // how far the note is pulled right now, as a share of its width
     private readonly DispatcherTimer _sampler = new() { Interval = TimeSpan.FromMilliseconds(16) };
+    private Palette _p;
+    private Settings _s;
+    private bool _feel;
+    private double _pull;        // how far the note is pulled right now, as a share of its width
+
+    private Note[] Samples => _feel
+        ? _feelSamples ??= [new Note { Text = Clean(Reading) }, new Note { Text = Clean(Standup) }, new Note { Text = Clean(Budget) }]
+        : _editorSamples ??= [new Note { Text = Clean(Showcase.Text) }, new Note { Text = Clean(Standup) }, new Note { Text = Clean(Budget) }];
+
+    private int Index { get => _feel ? _feelIndex : _editorIndex; set { if (_feel) _feelIndex = value; else _editorIndex = value; } }
+
+    private static string Clean(string text) => text.Replace("\r\n", "\n");
 
     public MotionPreview(Palette palette, Settings settings)
     {
+        _p = palette; _s = settings;
         Spacing = 6;
-        Margin = new Thickness(8, 4, 8, 10);
-        _samples ??= Texts.Select(t => new Note { Text = t.Replace("\r\n", "\n") }).ToArray();
+        Margin = new Thickness(0, 0, 0, 4);
+        // Same size and place on both pages, so switching tabs never moves it.
+        _pad = new PadView(palette, settings, new Timers()) { Height = 220, ClipToBounds = true };
+        _frame = new Border { Child = _pad, CornerRadius = new CornerRadius(10), ClipToBounds = true, BorderThickness = new Thickness(1) };
+        Children.Add(_frame);
 
-        _pad = new PadView(palette, settings, new Timers()) { Height = 230, ClipToBounds = true };
-        _pad.Bind(_samples[_index]);
-        var frame = new Border
+        _swipe = new NoteSwipe(_pad, () => _s, () => _pad, direction =>
         {
-            Child = _pad, CornerRadius = new CornerRadius(10), ClipToBounds = true,
-            Background = new SolidColorBrush(palette.Canvas, settings.Material == "solid" ? 1 : .55),
-            BorderBrush = new SolidColorBrush(palette.Faint, .4), BorderThickness = new Thickness(1),
-        };
-        Children.Add(frame);
-
-        _swipe = new NoteSwipe(_pad, () => settings, () => _pad, direction =>
-        {
-            _index = (_index + direction + _samples.Length) % _samples.Length;
-            _pad.Bind(_samples[_index]);
+            Index = (Index + direction + Samples.Length) % Samples.Length;
+            _pad.Bind(Samples[Index]);
             _pad.Arrive(direction);
         });
         _swipe.Moved += share => _pull = share;
-        // Same input rule as the pad: horizontal deltas, or Shift + wheel, swipe; vertical wheel scrolls the note.
-        frame.AddHandler(PointerWheelChangedEvent, (_, e) =>
+        // Same input rule as the pad: horizontal deltas, or Shift + wheel, switch notes; the vertical wheel scrolls.
+        _frame.AddHandler(PointerWheelChangedEvent, (_, e) =>
         {
             var horizontal = Math.Abs(e.Delta.X) > 0.001;
             if (!horizontal && !e.KeyModifiers.HasFlag(KeyModifiers.Shift)) return;
@@ -118,22 +124,45 @@ internal sealed class MotionPreview : StackPanel
             _swipe.Input(units);
         }, RoutingStrategies.Tunnel, handledEventsToo: true);
 
-        _trace = new Trace(palette) { Height = 54 };
+        _trace = new Trace(palette) { Height = 46 };
         Children.Add(_trace);
-        var legend = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 14 };
-        legend.Children.Add(Key(palette.Accent, "scroll"));
-        legend.Children.Add(Key(palette.Number, "note"));
-        legend.Children.Add(Kit.Text("last 2 seconds", palette.Muted, 11));
-        Children.Add(legend);
+        Children.Add(_legend);
+        ApplyLook(palette, settings);
 
         _sampler.Tick += (_, _) =>
         {
             var line = Math.Max(1, _pad.Editor.TextArea.TextView.DefaultLineHeight);
             // Pulling right shows the previous note, so the note position moves against the pull.
-            _trace.Add(_pad.Editor.VerticalOffset / line, _index - _pull);
+            _trace.Add(_pad.Editor.VerticalOffset / line, Index - _pull);
         };
         AttachedToVisualTree += (_, _) => _sampler.Start();
         DetachedFromVisualTree += (_, _) => _sampler.Stop();
+    }
+
+    /// <summary>Editor samples (what you write) or Feel samples (long reading to scroll, notes to switch).</summary>
+    public void UseSamples(bool feel)
+    {
+        if (_feel == feel && _pad.Note is not null) return;
+        _feel = feel;
+        _pad.Bind(Samples[Index]);
+    }
+
+    /// <summary>Restyles in place after a change (no new editor, so the trace and scroll position carry on).</summary>
+    public void ApplyLook(Palette palette, Settings settings)
+    {
+        _p = palette; _s = settings;
+        _pad.ApplyLook(palette, settings);
+        _frame.Background = new SolidColorBrush(palette.Canvas, settings.Material == "solid" ? 1 : .6);
+        _frame.BorderBrush = new SolidColorBrush(palette.Ink, palette.Dark ? .09 : .10);
+        _trace.Palette = palette;
+        _legend.Children.Clear();
+        _legend.Children.Add(Key(palette.Accent, "scroll"));
+        _legend.Children.Add(Key(palette.Number, "note"));
+        _legend.Children.Add(Kit.Text("last 2 seconds", palette.Muted, 11.5));
+        var hint = Kit.Text(_feel ? "Scroll up and down, or sideways to switch notes" : "Type, scroll or switch notes here", palette.Muted, 11.5);
+        hint.Margin = new Thickness(12, 0, 0, 0);
+        _legend.Children.Add(hint);
+        _trace.InvalidateVisual();
     }
 
     private static Control Key(Color color, string label) => new StackPanel
@@ -151,6 +180,7 @@ internal sealed class MotionPreview : StackPanel
     {
         private const double Span = 2000;
         private readonly List<(long T, double V, double H)> _points = [];
+        public Palette Palette { get; set; } = p;
 
         public void Add(double v, double h)
         {
@@ -163,26 +193,27 @@ internal sealed class MotionPreview : StackPanel
         public override void Render(DrawingContext dc)
         {
             var w = Bounds.Width; var h = Bounds.Height;
-            dc.DrawRectangle(new SolidColorBrush(p.Ink, p.Dark ? .06 : .045), null, new Rect(0, 0, w, h), 8, 8);
-            if (_points.Count < 2 || w <= 0) return;
+            dc.DrawRectangle(new SolidColorBrush(Palette.Ink, Palette.Dark ? .06 : .045), null, new Rect(0, 0, w, h), 8, 8);
+            if (_points.Count == 0 || w <= 0) return;
             var now = Environment.TickCount64;
-            Line(dc, x => x.V, 6, p.Accent, now, w, h);
-            Line(dc, x => x.H, 1, p.Number, now, w, h);
+            // At rest each line keeps its own lane (scroll high, note low) so one never hides the other.
+            Line(dc, x => x.V, 6, 0.3, Palette.Accent, now, w, h);
+            Line(dc, x => x.H, 1, 0.7, Palette.Number, now, w, h);
         }
 
-        private void Line(DrawingContext dc, Func<(long T, double V, double H), double> pick, double minSpan, Color color, long now, double w, double h)
+        private void Line(DrawingContext dc, Func<(long T, double V, double H), double> pick, double minSpan, double lane, Color color, long now, double w, double h)
         {
             var lo = _points.Min(pick); var hi = _points.Max(pick);
-            if (hi - lo < minSpan) { var mid = (hi + lo) / 2; lo = mid - minSpan / 2; hi = mid + minSpan / 2; }
+            if (hi - lo < minSpan) { var mid = (hi + lo) / 2; lo = mid - (1 - lane) * minSpan; hi = lo + minSpan; }
             const double pad = 6;
+            double Y(double v) => pad + (1 - (v - lo) / (hi - lo)) * (h - 2 * pad);
             var geometry = new StreamGeometry();
             using (var c = geometry.Open())
             {
-                for (var i = 0; i < _points.Count; i++)
-                {
-                    var pt = new Point((1 - (now - _points[i].T) / Span) * w, pad + (1 - (pick(_points[i]) - lo) / (hi - lo)) * (h - 2 * pad));
-                    if (i == 0) c.BeginFigure(pt, false); else c.LineTo(pt);
-                }
+                // Always from the left edge: before the first sample the value was what it first reads.
+                c.BeginFigure(new Point(0, Y(pick(_points[0]))), false);
+                foreach (var point in _points) c.LineTo(new Point((1 - (now - point.T) / Span) * w, Y(pick(point))));
+                c.LineTo(new Point(w, Y(pick(_points[^1]))));
             }
             dc.DrawGeometry(null, new Pen(new SolidColorBrush(color), 1.8, lineJoin: PenLineJoin.Round), geometry);
         }

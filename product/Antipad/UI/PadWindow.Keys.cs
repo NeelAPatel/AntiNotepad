@@ -138,7 +138,6 @@ internal sealed partial class PadWindow
         switch (current)
         {
             case SearchOverlay s: OpenSearch(s.Query, s.ShowingTrash); break;
-            case SettingsOverlay o: OpenSettings(o.ScrollOffset); break;
             case HelpOverlay: OpenHelp(); break;
         }
     }
@@ -150,14 +149,19 @@ internal sealed partial class PadWindow
         search.FocusQuery();
     }
 
-    internal void OpenSettings() => OpenSettings(0);
+    private SettingsWindow? _settingsWindow;
 
-    private void OpenSettings(double scroll)
+    /// <summary>Settings open in their own window beside the pad, so every change shows on the real note.</summary>
+    internal void OpenSettings()
     {
-        if (!IsVisible) ShowResident();
-        var settings = new SettingsOverlay(this, _palette, scroll);
-        ShowOverlay(settings);
+        if (_settingsWindow is { } open) { open.Activate(); return; }
+        var window = new SettingsWindow(this);
+        _settingsWindow = window;
+        window.Closed += (_, _) => { if (ReferenceEquals(_settingsWindow, window)) _settingsWindow = null; };
+        window.Show();
     }
+
+    internal void CloseSettings() => _settingsWindow?.Close();
 
     internal void OpenHelp() => ShowOverlay(new HelpOverlay(this, _palette));
 
@@ -176,6 +180,7 @@ internal sealed partial class PadWindow
             RegisterHotkey(s.Hotkey);
             RegisterNewNoteHotkey(s.NewNoteHotkey);
             SettingsChanged();
+            _settingsWindow?.Refresh();
         }
     }
 

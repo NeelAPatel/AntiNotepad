@@ -67,6 +67,8 @@ internal sealed partial class PadWindow : Window
         Deactivated += (_, _) =>
         {
             Save();
+            // Moving into the Settings window is not "clicking away": the pad stays up, undimmed, to show each change.
+            if (_settingsWindow is not null) return;
             if (Settings.HideOnBlur && !Topmost && !_overlayOpen && IsVisible) HideResident();
             else if (Topmost && Settings.DimWhenPinned) FadeWindow(0.72);
         };
@@ -172,6 +174,7 @@ internal sealed partial class PadWindow : Window
     {
         Save();
         _quitting = true;
+        CloseSettings();
         _hotkey?.Dispose();
         _newNoteHotkey?.Dispose();
         _clipboardHook?.Dispose();
@@ -308,36 +311,6 @@ internal sealed partial class PadWindow : Window
 
     // ---------- appearance ----------
 
-    /// <summary>Fluent's text boxes go black/teal on focus; keep them on-palette in every state.</summary>
-    private void ApplyInputStyles()
-    {
-        Styles.Clear();
-        var p = _palette;
-        foreach (var state in new[] { "", ":pointerover", ":focus" })
-        {
-            var style = new Style(x => (state.Length == 0 ? x.OfType<TextBox>() : x.OfType<TextBox>().Class(state)).Template().OfType<Border>().Name("PART_BorderElement"));
-            style.Setters.Add(new Setter(Border.BackgroundProperty, new SolidColorBrush(p.Surface)));
-            style.Setters.Add(new Setter(Border.BorderBrushProperty, new SolidColorBrush(state == ":focus" ? p.Accent : p.Faint, state == ":focus" ? .9 : .5)));
-            style.Setters.Add(new Setter(Border.BorderThicknessProperty, new Thickness(state == ":focus" ? 1.5 : 1)));
-            Styles.Add(style);
-        }
-        var fg = new Style(x => x.OfType<TextBox>().Class(":focus"));
-        fg.Setters.Add(new Setter(TextBox.ForegroundProperty, new SolidColorBrush(p.Ink)));
-        Styles.Add(fg);
-        // Plain buttons draw their own rounded hover; Fluent's square template fill must never show through.
-        foreach (var state in new[] { ":pointerover", ":pressed", ":focus-visible", "" })
-        {
-            var plain = new Style(x => (state.Length == 0 ? x.OfType<Button>().Class("plain") : x.OfType<Button>().Class("plain").Class(state))
-                .Template().OfType<Avalonia.Controls.Presenters.ContentPresenter>().Name("PART_ContentPresenter"));
-            plain.Setters.Add(new Setter(Avalonia.Controls.Presenters.ContentPresenter.BackgroundProperty, Brushes.Transparent));
-            plain.Setters.Add(new Setter(Avalonia.Controls.Presenters.ContentPresenter.BorderBrushProperty, Brushes.Transparent));
-            Styles.Add(plain);
-        }
-        var bar = new Style(x => x.OfType<Avalonia.Controls.Primitives.ScrollBar>());
-        bar.Setters.Add(new Setter(OpacityProperty, .5));
-        Styles.Add(bar);
-    }
-
     private bool IsDark => Settings.Theme switch
     {
         "light" => false,
@@ -361,12 +334,8 @@ internal sealed partial class PadWindow : Window
         _palette = ResolvePalette();
         Anim.Reduced = Settings.ReduceMotion;
         RequestedThemeVariant = _palette.Dark ? ThemeVariant.Dark : ThemeVariant.Light;
-        TransparencyLevelHint = Settings.Material switch
-        {
-            "acrylic" => [WindowTransparencyLevel.AcrylicBlur, WindowTransparencyLevel.Mica, WindowTransparencyLevel.None],
-            "mica" => [WindowTransparencyLevel.Mica, WindowTransparencyLevel.None],
-            _ => [WindowTransparencyLevel.None]
-        };
+        // Re-applying the material or the styles makes the window flash, so each happens only when its input changed.
+        if (_appliedMaterial != Settings.Material) { TransparencyLevelHint = Kit.Material(Settings.Material); _appliedMaterial = Settings.Material; }
         TransparencyBackgroundFallback = new SolidColorBrush(_palette.Canvas);
         var tint = Settings.Material == "solid" ? 1 : Math.Clamp(Settings.Tint, 0.3, 1);
         _tint.Background = new SolidColorBrush(_palette.Canvas, tint);
@@ -376,8 +345,15 @@ internal sealed partial class PadWindow : Window
         _left?.ApplyLook(_palette, Settings);
         _right?.ApplyLook(SplitPalette(), Settings);
         if (_right is not null) _right.Background = Settings.SplitPalette == "same" ? null : new SolidColorBrush(SplitPalette().Canvas, Settings.Material == "solid" ? 1 : Math.Clamp(Settings.Tint + .08, 0, 1));
-        ApplyInputStyles();
+        if (!Equals(_stylesPalette, _palette)) { Kit.InputStyles(Styles, _palette); _stylesPalette = _palette; }
         RebuildChrome();
         if (_overlay is { } current) ReopenOverlay(current);
+        _settingsWindow?.SyncLook();
     }
+
+    private string? _appliedMaterial;
+    private Palette? _stylesPalette;
+
+    /// <summary>The palette the pad wears now (the Settings window dresses to match).</summary>
+    internal Palette CurrentPalette => _palette;
 }

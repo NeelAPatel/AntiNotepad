@@ -28,6 +28,8 @@ internal static class Program
         Environment.SetEnvironmentVariable("AVALONIA_TELEMETRY_OPTOUT", "1");
         // Any crash leaves its stack in the data folder's antipad.log.
         AppDomain.CurrentDomain.UnhandledException += (_, e) => Log("crash " + e.ExceptionObject);
+        // UI-thread exceptions end the process before the handler above runs; log them on the way out too.
+        Dispatcher.UIThread.UnhandledException += (_, e) => Log("crash " + e.Exception);
         if (args is ["--selftest"]) return SelfTest.Run();
         // A custom data folder (dev/test runs) gets its own instance, so it can run beside the real one.
         // Decided before --quit, so quitting a dev run never quits the real copy.
@@ -42,6 +44,7 @@ internal static class Program
         Store = new Store(DataFolder);
         Store.Load();
         Welcome.SeedIfNew(Store.Data);
+        Showcase.EnsureInDev(Store.Data, IsDev);
         var builder = AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace()
             // A scratchpad redraws little: a small GPU resource cache instead of Skia's default.
             .With(new Avalonia.SkiaOptions { MaxGpuResourceSizeBytes = GpuCacheBytes });

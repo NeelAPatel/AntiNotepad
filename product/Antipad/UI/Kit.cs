@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Styling;
 using Antipad.Theme;
 
 namespace Antipad.UI;
@@ -161,6 +162,43 @@ internal static class Kit
 
     public static Control Section(Palette p, string title) =>
         new TextBlock { Text = title.ToUpperInvariant(), Foreground = new SolidColorBrush(p.Faint), FontSize = 11, FontWeight = FontWeight.SemiBold, LetterSpacing = 0.8, Margin = new Thickness(8, 22, 0, 2) };
+
+    /// <summary>The window material as a transparency request, best first.</summary>
+    public static WindowTransparencyLevel[] Material(string material) => material switch
+    {
+        "acrylic" => [WindowTransparencyLevel.AcrylicBlur, WindowTransparencyLevel.Mica, WindowTransparencyLevel.None],
+        "mica" => [WindowTransparencyLevel.Mica, WindowTransparencyLevel.None],
+        _ => [WindowTransparencyLevel.None]
+    };
+
+    /// <summary>Fluent's text boxes go black/teal on focus and its buttons paint square fills; keep both on-palette.</summary>
+    public static void InputStyles(Avalonia.Styling.Styles styles, Palette p)
+    {
+        styles.Clear();
+        foreach (var state in new[] { "", ":pointerover", ":focus" })
+        {
+            var style = new Avalonia.Styling.Style(x => (state.Length == 0 ? x.OfType<TextBox>() : x.OfType<TextBox>().Class(state)).Template().OfType<Border>().Name("PART_BorderElement"));
+            style.Setters.Add(new Avalonia.Styling.Setter(Border.BackgroundProperty, new SolidColorBrush(p.Surface)));
+            style.Setters.Add(new Avalonia.Styling.Setter(Border.BorderBrushProperty, new SolidColorBrush(state == ":focus" ? p.Accent : p.Faint, state == ":focus" ? .9 : .5)));
+            style.Setters.Add(new Avalonia.Styling.Setter(Border.BorderThicknessProperty, new Thickness(state == ":focus" ? 1.5 : 1)));
+            styles.Add(style);
+        }
+        var fg = new Avalonia.Styling.Style(x => x.OfType<TextBox>().Class(":focus"));
+        fg.Setters.Add(new Avalonia.Styling.Setter(TextBox.ForegroundProperty, new SolidColorBrush(p.Ink)));
+        styles.Add(fg);
+        // Plain buttons draw their own rounded hover; Fluent's square template fill must never show through.
+        foreach (var state in new[] { ":pointerover", ":pressed", ":focus-visible", "" })
+        {
+            var plain = new Avalonia.Styling.Style(x => (state.Length == 0 ? x.OfType<Button>().Class("plain") : x.OfType<Button>().Class("plain").Class(state))
+                .Template().OfType<Avalonia.Controls.Presenters.ContentPresenter>().Name("PART_ContentPresenter"));
+            plain.Setters.Add(new Avalonia.Styling.Setter(Avalonia.Controls.Presenters.ContentPresenter.BackgroundProperty, Brushes.Transparent));
+            plain.Setters.Add(new Avalonia.Styling.Setter(Avalonia.Controls.Presenters.ContentPresenter.BorderBrushProperty, Brushes.Transparent));
+            styles.Add(plain);
+        }
+        var bar = new Avalonia.Styling.Style(x => x.OfType<Avalonia.Controls.Primitives.ScrollBar>());
+        bar.Setters.Add(new Avalonia.Styling.Setter(Visual.OpacityProperty, .5));
+        styles.Add(bar);
+    }
 
     public static string Ago(DateTime when)
     {

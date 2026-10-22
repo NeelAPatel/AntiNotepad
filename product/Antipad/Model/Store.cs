@@ -217,6 +217,8 @@ public sealed class Store
     {
         var d = Data;
         d.Version = 2;
+        // Older builds stored a family name the editor can't load (it fell back to Cascadia Mono without a word).
+        if (d.Settings.Font == "Segoe UI Variable Text") d.Settings.Font = "Segoe UI";
         if (d.Slots is not { Length: 9 }) d.Slots = Enumerable.Range(1, 9).Select(i => d.Slots?.ElementAtOrDefault(i - 1) ?? new Note { Slot = i }).ToArray();
         for (var i = 0; i < 9; i++) { d.Slots[i] ??= new Note(); d.Slots[i].Slot = i + 1; }
         d.Stack.RemoveAll(n => n is null);
