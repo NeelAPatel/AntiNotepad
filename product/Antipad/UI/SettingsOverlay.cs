@@ -93,6 +93,9 @@ internal sealed class SettingsOverlay : Grid
         panel.Children.Add(Row("Light palette", Swatches(false, S.LightPalette, v => Set(() => { S.LightPalette = v; if (S.Theme == "dark") S.Theme = "light"; }))));
         panel.Children.Add(Row("Dark palette", Swatches(true, S.DarkPalette, v => Set(() => { S.DarkPalette = v; if (S.Theme == "light") S.Theme = "dark"; }))));
         panel.Children.Add(Row("Accent", AccentSwatches(), "caret, selection, top headings, checkboxes, switches, pin and the current-note dot"));
+        panel.Children.Add(Row("Caret", Kit.Segmented(_p, [("bar", "Bar"), ("block", "Block")], S.CaretStyle, v => Set(() => S.CaretStyle = v))));
+        panel.Children.Add(Kit.Switch(_p, "Caret blinks", S.CaretBlink, v => Set(() => S.CaretBlink = v), "after a moment of stillness"));
+        panel.Children.Add(Kit.Switch(_p, "Caret glides", S.CaretGlide, v => Set(() => S.CaretGlide = v), "slides to its new spot instead of jumping"));
         panel.Children.Add(Row("Split pane", Kit.Segmented(_p, new[] { ("same", "Same as main") }.Concat(Palette.For(_p.Dark).Select(x => (x.Id, x.Name))).ToList(), S.SplitPalette, v => Set(() => S.SplitPalette = v)), "its own palette for the slot beside you"));
     }
 
@@ -104,6 +107,11 @@ internal sealed class SettingsOverlay : Grid
             panel.Children.Add(Row("Pattern weight", Kit.Segmented(_p, [("0", "Subtle"), ("1", "Clear"), ("2", "Bold")], S.PaperStrength.ToString(), v => Set(() => S.PaperStrength = int.Parse(v)))));
         panel.Children.Add(Row("Editor font", Kit.Segmented(_p, [("Cascadia Mono", "Cascadia Mono"), ("Consolas", "Consolas"), ("Cascadia Code", "Cascadia Code"), ("Segoe UI Variable Text", "Segoe UI")], S.Font, v => Set(() => S.Font = v))));
         panel.Children.Add(Row("Font size", Kit.Segmented(_p, [("13", "13"), ("14", "14"), ("15", "15"), ("16", "16"), ("18", "18"), ("20", "20")], S.FontSize.ToString("0"), v => Set(() => S.FontSize = double.Parse(v)))));
+        panel.Children.Add(Row("Text width", Kit.Segmented(_p, [("0", "Full"), ("60", "60"), ("72", "72"), ("88", "88"), ("110", "110")], Closest(S.TextWidth, 0, 60, 72, 88, 110), v => Set(() => S.TextWidth = int.Parse(v))),
+            "characters per line; a wider pad centres the column"));
+        panel.Children.Add(Row("Line spacing", Kit.Segmented(_p, [("1.15", "Tight"), ("1.32", "Normal"), ("1.5", "Relaxed"), ("1.7", "Airy")], Closest(S.LineSpacing, 1.15, 1.32, 1.5, 1.7), v => Set(() => S.LineSpacing = double.Parse(v, System.Globalization.CultureInfo.InvariantCulture)))));
+        panel.Children.Add(Row("Answer bubbles", Kit.Segmented(_p, [("column", "One column"), ("edge", "Right edge")], S.Bubbles, v => Set(() => S.Bubbles = v)),
+            S.Bubbles == "edge" ? "pinned to the right edge of the text" : "lined up just past the longest line"));
         panel.Children.Add(Kit.Section(_p, "Writing"));
         panel.Children.Add(Kit.Switch(_p, "Answer lines ending in =", S.InlineMath, v => Set(() => S.InlineMath = v), "12 * 4 = shows 48 in any note"));
         panel.Children.Add(Kit.Switch(_p, "Clean markdown", S.CleanMarkdown, v => Set(() => S.CleanMarkdown = v), "hide ** and # except on the line you're editing"));
@@ -124,6 +132,9 @@ internal sealed class SettingsOverlay : Grid
             panel.Children.Add(Row("Tint level", Kit.Segmented(_p, [("0.55", "Clear"), ("0.7", "Light"), ("0.82", "Medium"), ("0.92", "Dense")], Closest(S.Tint, 0.55, 0.7, 0.82, 0.92), v => Set(() => S.Tint = double.Parse(v, System.Globalization.CultureInfo.InvariantCulture)))));
         panel.Children.Add(Row("UI scale", Kit.Segmented(_p, [("0.9", "90%"), ("1", "100%"), ("1.15", "115%"), ("1.3", "130%"), ("1.5", "150%")], Closest(S.UiScale, 0.9, 1, 1.15, 1.3, 1.5), v => Set(() => S.UiScale = double.Parse(v, System.Globalization.CultureInfo.InvariantCulture))), "everything: chrome, panels and text"));
         panel.Children.Add(Row("Controls", Kit.Segmented(_p, [("fade", "Fade while typing"), ("always", "Always visible")], S.Chrome, v => Set(() => S.Chrome = v))));
+        if (S.Chrome == "fade")
+            panel.Children.Add(Row("Fade after", Kit.Segmented(_p, [("800", "0.8 s"), ("1600", "1.6 s"), ("3000", "3 s"), ("6000", "6 s")], Closest(S.FadeAfterMs, 800, 1600, 3000, 6000), v => Set(() => S.FadeAfterMs = int.Parse(v))),
+                "once the mouse stops"));
         panel.Children.Add(Kit.Switch(_p, "Fade a pinned pad when I click away", S.DimWhenPinned, v => Set(() => S.DimWhenPinned = v)));
     }
 
@@ -131,9 +142,40 @@ internal sealed class SettingsOverlay : Grid
     {
         panel.Children.Add(Row("Scrolling", Kit.Segmented(_p, [("lines", "Lines"), ("free", "Free"), ("rate", "Rate-matched"), ("wheel", "Wheel-driven")], S.Scrolling, v => Set(() => S.Scrolling = v)),
             ScrollHint(S.Scrolling)));
+        TuningRows(panel);
         panel.Children.Add(Row("Swipe between notes", Kit.Segmented(_p, [("detent", "Detent"), ("progress", "Progress")], S.Swipe, v => Set(() => S.Swipe = v)),
             S.Swipe == "progress" ? "same feel at any window width; changes as you pass a third of the way" : "follows with resistance; decides when you stop"));
+        if (S.Swipe == "progress")
+        {
+            panel.Children.Add(Row("Swipe length", Kit.Segmented(_p, [("150", "Short"), ("220", "Normal"), ("320", "Long")], Closest(S.SwipeLength, 150, 220, 320), v => Set(() => S.SwipeLength = Num(v))),
+                "how far you swipe for a whole note"));
+            panel.Children.Add(Row("Changes at", Kit.Segmented(_p, [("0.25", "A quarter"), ("0.35", "A third"), ("0.5", "Halfway")], Closest(S.SwipeFiresAt, 0.25, 0.35, 0.5), v => Set(() => S.SwipeFiresAt = Num(v)))));
+        }
         panel.Children.Add(Kit.Switch(_p, "Reduce motion", S.ReduceMotion, v => Set(() => S.ReduceMotion = v), "no glides, coasts or slides"));
+    }
+
+    private static double Num(string v) => double.Parse(v, System.Globalization.CultureInfo.InvariantCulture);
+
+    /// <summary>Presets for the chosen scrolling feel, shown under it.</summary>
+    private void TuningRows(StackPanel panel)
+    {
+        switch (S.Scrolling)
+        {
+            case "lines":
+                panel.Children.Add(Row("Lines per notch", Kit.Segmented(_p, [("2", "2"), ("3", "3"), ("4", "4"), ("6", "6")], Closest(S.LinesPerNotch, 2, 3, 4, 6), v => Set(() => S.LinesPerNotch = int.Parse(v)))));
+                break;
+            case "free":
+                panel.Children.Add(Row("Push per notch", Kit.Segmented(_p, [("0.65", "Gentle"), ("1", "Normal"), ("1.5", "Strong")], Closest(S.ScrollDistance, 0.65, 1, 1.5), v => Set(() => S.ScrollDistance = Num(v)))));
+                panel.Children.Add(Row("Coast", Kit.Segmented(_p, [("10", "Short"), ("6", "Normal"), ("3.5", "Long")], Closest(S.FreeFriction, 10, 6, 3.5), v => Set(() => S.FreeFriction = Num(v)))));
+                break;
+            case "rate":
+            case "wheel":
+                panel.Children.Add(Row("Distance per click", Kit.Segmented(_p, [("0.65", "Short"), ("1", "Normal"), ("1.5", "Long")], Closest(S.ScrollDistance, 0.65, 1, 1.5), v => Set(() => S.ScrollDistance = Num(v))),
+                    "when you click slowly"));
+                panel.Children.Add(Row("Speed boost", Kit.Segmented(_p, [("0", "None"), ("0.5", "A little"), ("1", "Normal"), ("1.6", "A lot")], Closest(S.ScrollBoost, 0, 0.5, 1, 1.6), v => Set(() => S.ScrollBoost = Num(v))),
+                    "extra distance when you spin fast"));
+                break;
+        }
     }
 
     private static string ScrollHint(string mode) => mode switch
@@ -147,6 +189,7 @@ internal sealed class SettingsOverlay : Grid
     private void SystemRows(StackPanel panel)
     {
         panel.Children.Add(Hotkey());
+        panel.Children.Add(NewNoteHotkey());
         panel.Children.Add(Row("Open at", Kit.Segmented(_p, [("remember", "Where I left it"), ("center", "Center"), ("mouse", "Mouse"), ("tray", "Above the tray"), ("dropdown", "Drop down from the top")], S.OpenAt, v => Set(() => S.OpenAt = v))));
         panel.Children.Add(Row("New note after", Kit.Segmented(_p, [("0", "Never"), ("5", "5 min"), ("15", "15 min"), ("30", "30 min"), ("120", "2 h")], S.FreshNoteAfterMinutes.ToString(), v => Set(() => S.FreshNoteAfterMinutes = int.Parse(v))), "away, the hotkey opens a fresh page"));
         panel.Children.Add(Kit.Switch(_p, "Hide when I click away", S.HideOnBlur, v => Set(() => S.HideOnBlur = v), "unless kept on top"));
@@ -277,6 +320,32 @@ internal sealed class SettingsOverlay : Grid
             Background = new SolidColorBrush(p.Canvas), BorderBrush = new SolidColorBrush(p.Faint, .4), BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(10), Padding = new Thickness(14, 10), Margin = new Thickness(8, 4, 8, 8), Child = lines,
         };
+    }
+
+    /// <summary>Optional second hotkey: empty and Apply turns it off.</summary>
+    private Control NewNoteHotkey()
+    {
+        var box = new TextBox
+        {
+            Text = S.NewNoteHotkey ?? "", PlaceholderText = "e.g. Ctrl+Alt+Shift+N", Width = 190, FontSize = 13,
+            Background = new SolidColorBrush(_p.Surface), Foreground = new SolidColorBrush(_p.Ink), BorderBrush = new SolidColorBrush(_p.Faint, .5),
+            CornerRadius = new CornerRadius(8), CaretBrush = new SolidColorBrush(_p.Caret),
+        };
+        Avalonia.Automation.AutomationProperties.SetName(box, "New note shortcut");
+        var status = new TextBlock { Text = "Now: " + _w.NewNoteHotkeyStatus, Foreground = new SolidColorBrush(_p.Muted), FontSize = 11.5, Margin = new Thickness(0, 4, 0, 0), TextWrapping = TextWrapping.Wrap };
+        var apply = Kit.Plain(Kit.Text("Apply", _p.Accent, 13, FontWeight.SemiBold), _p, radius: 8);
+        if (apply.Content is Border b) b.Padding = new Thickness(12, 5);
+        void Apply()
+        {
+            var text = box.Text?.Trim();
+            var value = string.IsNullOrEmpty(text) ? null : text;
+            if (_w.RegisterNewNoteHotkey(value)) { S.NewNoteHotkey = value; status.Text = "Now: " + _w.NewNoteHotkeyStatus; _w.SettingsChanged(); }
+            else status.Text = $"Couldn't use {text}; it may belong to another app.";
+        }
+        apply.Click += (_, _) => Apply();
+        box.KeyDown += (_, e) => { if (e.Key == Key.Enter) { e.Handled = true; Apply(); } };
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { box, apply } };
+        return new StackPanel { Margin = new Thickness(8, 6, 8, 8), Children = { Kit.Text("New note hotkey", _p.Ink, 13), Kit.Text("opens Antipad on a fresh note · leave empty for none", _p.Muted, 11.5), new Border { Height = 6 }, row, status } };
     }
 
     private Control Hotkey()

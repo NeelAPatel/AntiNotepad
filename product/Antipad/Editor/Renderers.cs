@@ -128,7 +128,9 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
         var key = (view.Document, view.Document.TextLength, view.Document.LineCount, view.Bounds.Width);
         if (key == _key) column = Math.Max(column, _column);
         (_key, _column) = (key, column);
-        foreach (var item in items) DrawChip(view, dc, item, column);
+        // "edge": every bubble right-aligned to the text's right edge instead.
+        var edge = pad.Settings.Bubbles == "edge";
+        foreach (var item in items) DrawChip(view, dc, item, edge ? double.PositiveInfinity : column);
     }
 
     private void DrawChip(TextView view, DrawingContext dc, (int Line, string Text, string Kind, Color Color, string Value, FormattedText Ft, double TextEnd, double Baseline) c, double column)

@@ -174,6 +174,7 @@ internal sealed partial class PadWindow
             Data.Settings = s;
             _left.ApplyLook(_palette, s); _right.ApplyLook(_palette, s);
             RegisterHotkey(s.Hotkey);
+            RegisterNewNoteHotkey(s.NewNoteHotkey);
             SettingsChanged();
         }
     }

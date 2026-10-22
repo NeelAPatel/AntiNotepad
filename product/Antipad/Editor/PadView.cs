@@ -81,7 +81,6 @@ internal sealed class PadView : Grid
         Editor.Options.IndentationSize = 2;
         Editor.Options.ConvertTabsToSpaces = true;
         Editor.Options.CutCopyWholeLine = true;
-        Editor.Options.LineHeightFactor = 1.32;
         Avalonia.Automation.AutomationProperties.SetName(Editor, "Note text");
         var view = Editor.TextArea.TextView;
         view.BackgroundRenderers.Add(new IndentGuideRenderer(this));
@@ -89,7 +88,7 @@ internal sealed class PadView : Grid
         view.BackgroundRenderers.Add(_results);
         view.BackgroundRenderers.Add(new CheckboxRenderer(this));
         view.BackgroundRenderers.Add(new SmoothCaret(this));
-        _ = new SmoothScroll(Editor, () => Settings.Scrolling);
+        _ = new SmoothScroll(Editor, () => Settings);
         view.LineTransformers.Add(new NoteColorizer(this));
         view.LineTransformers.Add(new MathColorizer(this));
         _fences = new FenceColorizer(this);
@@ -109,6 +108,7 @@ internal sealed class PadView : Grid
         view.ScrollOffsetChanged += (_, _) => _paper.InvalidateVisual();
         view.VisualLinesChanged += (_, _) => _paper.InvalidateVisual();
         Children.Add(_hint);
+        SizeChanged += (_, e) => { if (Math.Abs(e.NewSize.Width - e.PreviousSize.Width) > 0.5) ApplyMargins(); };
         Editor.TextArea.AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
         Editor.TextArea.TextEntered += OnTextEntered;
         Editor.TextArea.Caret.PositionChanged += (_, _) => OnCaretMoved();
@@ -153,6 +153,8 @@ internal sealed class PadView : Grid
         Editor.TextArea.Caret.CaretBrush = Brushes.Transparent;
         _hint.FontFamily = Editor.FontFamily; _hint.FontSize = settings.FontSize;
         _hint.Foreground = new SolidColorBrush(palette.Faint);
+        if (Math.Abs(Editor.Options.LineHeightFactor - settings.LineSpacing) > 0.001) Editor.Options.LineHeightFactor = settings.LineSpacing;
+        ApplyMargins();
         ApplyCodeHighlighting();
         Redraw();
     }
@@ -536,8 +538,27 @@ internal sealed class PadView : Grid
     {
         var p = Palette;
         FoldingElementGenerator.TextBrush = new SolidColorBrush(p.Muted);
-        var hasGutter = _gutter is not null;
-        Editor.Margin = new Thickness(hasGutter ? 20 : 36, 4, 30, 40);
+        ApplyMargins();
+    }
+
+    /// <summary>
+    /// Text sits 36 px from the left (the fold gutter takes 16 of those) and 30 px from the right. With a text width set,
+    /// a pad wider than that many characters adds the spare room to both sides, so the column stays centred.
+    /// The paper pattern, code panels and bubbles follow the text edges, so they centre with it.
+    /// </summary>
+    private void ApplyMargins()
+    {
+        double left = 36, right = 30;
+        if (Settings.TextWidth > 0 && Bounds.Width > 0)
+        {
+            var glyph = new FormattedText("0", System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+                new Typeface(Editor.FontFamily), Settings.FontSize, null);
+            // Room for the editor's own scrollbar and rounding, so a full-width line doesn't wrap one character early.
+            var spare = Bounds.Width - left - right - (glyph.WidthIncludingTrailingWhitespace * Settings.TextWidth + 15);
+            if (spare > 0) { left += spare / 2; right += spare / 2; }
+        }
+        Editor.Margin = new Thickness(_gutter is not null ? left - 16 : left, 4, right, 40);
+        _hint.Margin = new Thickness(left + 1, 7, right, 0);
     }
 
     /// <summary>Ctrl+Shift+[ folds the innermost block around the caret; Ctrl+Shift+] unfolds it.</summary>

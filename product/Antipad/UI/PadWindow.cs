@@ -23,7 +23,7 @@ internal sealed partial class PadWindow : Window
     private bool _quitting;
     private DateTime _hiddenAt = DateTime.Now;
     private IDisposable? _clipboardHook;
-    private GlobalHotkey? _hotkey;
+    private GlobalHotkey? _hotkey, _newNoteHotkey;
     private PadView _left = null!, _right = null!;
     private PadView _active = null!;
 
@@ -82,7 +82,7 @@ internal sealed partial class PadWindow : Window
     internal void InstallHooks()
     {
         RegisterHotkey(Settings.Hotkey);
-        _clipboardHook = Native.ListenClipboard(this, () => Dispatcher.UIThread.Post(() => _ = OnClipboardChanged()));
+        RegisterNewNoteHotkey(Settings.NewNoteHotkey);        _clipboardHook = Native.ListenClipboard(this, () => Dispatcher.UIThread.Post(() => _ = OnClipboardChanged()));
     }
 
     // ---------- lifecycle ----------
@@ -173,6 +173,7 @@ internal sealed partial class PadWindow : Window
         Save();
         _quitting = true;
         _hotkey?.Dispose();
+        _newNoteHotkey?.Dispose();
         _clipboardHook?.Dispose();
         Close();
         QuitRequested?.Invoke();
@@ -256,22 +257,54 @@ internal sealed partial class PadWindow : Window
     {
         try
         {
-            var next = new GlobalHotkey(this, pressed => Dispatcher.UIThread.Post(() => { _hotkeyPressed = pressed; ToggleResident(); }), gesture);
-            if (!next.IsRegistered)
-            {
-                var error = next.RegistrationErrorMessage;
-                next.Dispose();
-                if (_hotkey is null) { HotkeyStatus = $"{gesture ?? GlobalHotkey.DefaultGesture.Label} unavailable: {error}"; HotkeyStatusChanged?.Invoke(HotkeyStatus); }
-                return false;
-            }
-            _hotkey?.Dispose();
-            _hotkey = next;
-            HotkeyStatus = next.GestureLabel;
+            // No gesture: the dev override, else the default.
+            var wanted = gesture ?? (Environment.GetEnvironmentVariable("ANTIPAD_HOTKEY") is { Length: > 0 } env ? env : GlobalHotkey.DefaultGesture.Label);
+            var label = GlobalHotkey.HotkeyGesture.Parse(wanted).Label;
+            var ok = SwapHotkey(ref _hotkey, wanted, label,
+                g => new GlobalHotkey(this, pressed => Dispatcher.UIThread.Post(() => { _hotkeyPressed = pressed; ToggleResident(); }), g), out var error);
+            HotkeyStatus = _hotkey?.GestureLabel ?? $"{label} unavailable: {error}";
             HotkeyStatusChanged?.Invoke(HotkeyStatus);
-            return true;
+            return ok;
         }
         catch (FormatException ex) { Toast(ex.Message); return false; }
     }
+
+    /// <summary>
+    /// Replaces a registered hotkey. Windows keeps two registrations with the same id side by side and may release either,
+    /// so the old key is released first, and put back if Windows refuses the new one. The same key again changes nothing.
+    /// </summary>
+    private static bool SwapHotkey(ref GlobalHotkey? slot, string wanted, string label, Func<string, GlobalHotkey> make, out string? error)
+    {
+        error = null;
+        if (slot is { IsRegistered: true } && string.Equals(slot.GestureLabel, label, StringComparison.OrdinalIgnoreCase)) return true;
+        var previous = slot?.GestureLabel;
+        slot?.Dispose(); slot = null;
+        var next = make(wanted);
+        if (next.IsRegistered) { slot = next; return true; }
+        error = next.RegistrationErrorMessage;
+        next.Dispose();
+        if (previous is not null)
+        {
+            var back = make(previous);
+            if (back.IsRegistered) slot = back; else back.Dispose();
+        }
+        return false;
+    }
+
+    /// <summary>A second global hotkey that shows the pad on a fresh note. Empty turns it off. Returns false if Windows refused it.</summary>
+    internal bool RegisterNewNoteHotkey(string? gesture)
+    {
+        if (string.IsNullOrWhiteSpace(gesture)) { _newNoteHotkey?.Dispose(); _newNoteHotkey = null; return true; }
+        try
+        {
+            var label = GlobalHotkey.HotkeyGesture.Parse(gesture).Label;
+            return SwapHotkey(ref _newNoteHotkey, gesture, label,
+                g => new GlobalHotkey(this, _ => Dispatcher.UIThread.Post(() => { ShowResident(); NewNote(); }), g, id: 0x4151, fromEnvironment: false), out _);
+        }
+        catch (FormatException ex) { Toast(ex.Message); return false; }
+    }
+
+    internal string NewNoteHotkeyStatus => _newNoteHotkey?.GestureLabel ?? "off";
 
     // ---------- appearance ----------
 

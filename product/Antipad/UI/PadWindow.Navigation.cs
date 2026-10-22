@@ -345,7 +345,8 @@ internal sealed partial class PadWindow
     // movement moves the note the same share of the way in a narrow or a very wide window. Passing a third of the
     // way changes the note at once; the rest of that gesture (touchpad inertia, more wheel clicks) is ignored.
     // Wheel clicks (the MX thumb wheel, Shift+wheel) are paid out smoothly over a few frames, further when spun faster.
-    private const double ProgressFullPx = 220, ProgressFiresAt = 0.35, ProgressClickPx = 26, ProgressPxPerUnit = 100;
+    // Swipe length (px for a whole note) and the share where it changes come from Settings > Feel.
+    private const double ProgressClickPx = 26, ProgressPxPerUnit = 100;
     private const int ProgressQuietMs = 260, ProgressRearmMs = 110;
     private double _progress, _progressOwed, _progressGap;
     private long _progressClick, _progressFrameAt;
@@ -391,8 +392,8 @@ internal sealed partial class PadWindow
     private void ProgressAdvance(double px)
     {
         if (_swipeFired) return;
-        _progress += px / ProgressFullPx;
-        if (Math.Abs(_progress) >= ProgressFiresAt) { _swipe = _progress; _progressOwed = 0; FireSwipe(); return; }
+        _progress += px / Math.Max(60, Settings.SwipeLength);
+        if (Math.Abs(_progress) >= Math.Clamp(Settings.SwipeFiresAt, 0.1, 0.9)) { _swipe = _progress; _progressOwed = 0; FireSwipe(); return; }
         // Nearly 1:1 for the first half note, then a rubber band (never reached before it fires at the defaults).
         var a = Math.Abs(_progress);
         var share = Math.Sign(_progress) * (a <= 0.5 ? a : 0.5 + (1 - 1 / ((a - 0.5) * 0.55 / 0.5 + 1)) * 0.5);

@@ -175,7 +175,7 @@ internal sealed partial class PadWindow
     {
         _chromeSleep.Stop();
         if (!_chromeAwake) { _chromeAwake = true; FadeChrome(1); }
-        if (!hold && Settings.Chrome == "fade") _chromeSleep.Start();
+        if (!hold && Settings.Chrome == "fade") { _chromeSleep.Interval = TimeSpan.FromMilliseconds(Math.Max(300, Settings.FadeAfterMs)); _chromeSleep.Start(); }
     }
 
     private void SleepChrome(bool soon)

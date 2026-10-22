@@ -22,12 +22,11 @@ namespace Antipad.Editor;
 internal sealed class SmoothScroll
 {
     private const double PxPerUnit = 50;          // touchpad: pixels per wheel unit
-    private const double Impulse = 700;           // free: px/s added per notch (about 115 px coasted alone)
-    private const double Friction = 6;            // free: velocity decays by e^-6 per second
+    private const double Impulse = 700;           // free: px/s added per notch (about 115 px coasted alone at friction 6)
     private const double MaxSpeed = 9000;
     private enum Motion { None, Glide, Coast, Spring, Fly }
     private readonly TextEditor _editor;
-    private readonly Func<string> _mode;
+    private readonly Func<Model.Settings> _settings;
     private Motion _motion;
     private double _target = double.NaN;
     private double _velocity, _position, _omega, _flyGoal;
@@ -36,9 +35,9 @@ internal sealed class SmoothScroll
     private TimeSpan? _last;
     private bool _running;
 
-    public SmoothScroll(TextEditor editor, Func<string> mode)
+    public SmoothScroll(TextEditor editor, Func<Model.Settings> settings)
     {
-        _editor = editor; _mode = mode;
+        _editor = editor; _settings = settings;
         editor.AddHandler(InputElement.PointerWheelChangedEvent, OnWheel, RoutingStrategies.Tunnel);
     }
 
@@ -52,7 +51,7 @@ internal sealed class SmoothScroll
         if (max <= 0) return;
         e.Handled = true;
         var delta = e.Delta.Y;
-        var mode = _mode();
+        var mode = _settings().Scrolling;
         if (mode == "lines") { Lines(delta, max); return; }
         // Precision touchpads send fractions of a notch and already carry their own inertia: follow them exactly.
         var touchpad = Math.Abs(delta - Math.Round(delta)) > 0.01;
@@ -69,7 +68,7 @@ internal sealed class SmoothScroll
 
     private void Lines(double delta, double max)
     {
-        var step = Line * 3;
+        var step = Line * Math.Clamp(_settings().LinesPerNotch, 1, 10);
         var from = _running && _motion == Motion.Glide && !double.IsNaN(_target) ? _target : _editor.VerticalOffset;
         _velocity = 0;
         _target = Math.Clamp(from - delta * step, 0, max);
@@ -84,7 +83,7 @@ internal sealed class SmoothScroll
         // Spinning the other way stops the coast first.
         if (_motion != Motion.Coast || Math.Sign(_velocity) == Math.Sign(delta)) _velocity = 0;
         if (_motion != Motion.Coast || !_running) _position = _editor.VerticalOffset;
-        _velocity = Math.Clamp(_velocity - delta * Impulse, -MaxSpeed, MaxSpeed);
+        _velocity = Math.Clamp(_velocity - delta * Impulse * _settings().ScrollDistance, -MaxSpeed, MaxSpeed);
         _motion = Motion.Coast;
         Start();
     }
@@ -104,12 +103,13 @@ internal sealed class SmoothScroll
 
     private void Rate(double delta, double max)
     {
-        var gain = Boost(ClickRate(), 2.5);
+        var s = _settings();
+        var gain = Boost(ClickRate(), 2.5 * s.ScrollBoost);
         var offset = _editor.VerticalOffset;
         if (_motion != Motion.Spring || !_running) { _position = offset; _velocity = 0; _target = offset; }
         // Turning back starts from where the sheet is, not from where it was heading.
         if (Math.Sign(_target - offset) != Math.Sign(-delta) && Math.Abs(_target - offset) > 1) _target = offset;
-        _target = Math.Clamp(_target - delta * Line * 40 / 24 * gain, 0, max);   // 40 px a slow click at a 24 px line
+        _target = Math.Clamp(_target - delta * Line * 40 / 24 * s.ScrollDistance * gain, 0, max);   // 40 px a slow click at a 24 px line
         _omega = 2.4 / (Math.Clamp(_gap * 0.9, 45, 160) / 1000);                    // glide no longer than the gap between clicks
         _motion = Motion.Spring;
         Start();
@@ -118,10 +118,11 @@ internal sealed class SmoothScroll
     private void Fly(double delta)
     {
         var rate = ClickRate();
-        var gain = Boost(rate, 1.5);
+        var s = _settings();
+        var gain = Boost(rate, 1.5 * s.ScrollBoost);
         if (_motion != Motion.Fly || !_running) { _position = _editor.VerticalOffset; _velocity = 0; }
         if (_velocity != 0 && Math.Sign(_velocity) != Math.Sign(-delta)) _velocity = 0;
-        _flyGoal = Math.Sign(-delta) * rate * Math.Abs(delta) * Line * 60 / 24 * gain;   // px/s matching the click rate
+        _flyGoal = Math.Sign(-delta) * rate * Math.Abs(delta) * Line * 60 / 24 * s.ScrollDistance * gain;   // px/s matching the click rate
         _holdUntil = Environment.TickCount64 + (long)Math.Clamp(_gap * 1.6, 80, 350);    // hold it until the next click is overdue
         _motion = Motion.Fly;
         Start();
@@ -173,7 +174,7 @@ internal sealed class SmoothScroll
         {
             case Motion.Coast:
                 _position = Math.Clamp(_position + _velocity * dt, 0, max);
-                _velocity *= Math.Exp(-Friction * dt);
+                _velocity *= Math.Exp(-_settings().FreeFriction * dt);
                 if (_position <= 0 || _position >= max) _velocity = 0;
                 SetOffset(_editor, _position);
                 if (Math.Abs(_velocity) < 15) { Stop(); return false; }
@@ -230,8 +231,8 @@ internal sealed class SmoothCaret : IBackgroundRenderer
         _editor.TextArea.LostFocus += (_, _) => { _blink.Stop(); Invalidate(); };
         _blink.Tick += (_, _) =>
         {
-            // Stay solid for a moment after any movement, then blink.
-            if ((DateTime.Now - _movedAt).TotalMilliseconds < 600) { _on = true; return; }
+            // Stay solid for a moment after any movement, then blink (or never, if blinking is off).
+            if (!_pad.Settings.CaretBlink || (DateTime.Now - _movedAt).TotalMilliseconds < 600) { if (!_on) { _on = true; Invalidate(); } return; }
             _on = !_on; Invalidate();
         };
     }
@@ -244,14 +245,17 @@ internal sealed class SmoothCaret : IBackgroundRenderer
         var top = view.GetVisualPosition(pos, VisualYPosition.TextTop);
         var bottom = view.GetVisualPosition(pos, VisualYPosition.TextBottom);
         if (double.IsNaN(top.X) || double.IsNaN(top.Y)) return null;
-        return new Rect(top.X, top.Y, 2, Math.Max(4, bottom.Y - top.Y));
+        // A block covers one character cell; a bar is 2 px.
+        var cell = view.WideSpaceWidth;
+        var width = _pad.Settings.CaretStyle == "block" && double.IsFinite(cell) && cell > 2 ? cell : 2;
+        return new Rect(top.X, top.Y, width, Math.Max(4, bottom.Y - top.Y));
     }
 
     private void Moved()
     {
         _movedAt = DateTime.Now; _on = true;
         if (!_editor.TextArea.TextView.VisualLinesValid || Target() is not { } target) { Invalidate(); return; }
-        if (Anim.Reduced || _to == default) { _from = _to = target; Invalidate(); return; }
+        if (Anim.Reduced || !_pad.Settings.CaretGlide || _to == default) { _from = _to = target; Invalidate(); return; }
         _from = Current(); _to = target;
         if (!_animating) { _animating = true; Frame(); }
     }
@@ -284,6 +288,8 @@ internal sealed class SmoothCaret : IBackgroundRenderer
         var r = _animating ? Current() : _to;
         if (r == default) return;
         var rect = new Rect(r.X - view.HorizontalOffset, r.Y - view.VerticalOffset, r.Width, r.Height);
-        dc.DrawRectangle(new SolidColorBrush(_pad.Palette.Caret), null, rect, 1, 1);
+        // The block is translucent so the character under it stays readable.
+        var block = _pad.Settings.CaretStyle == "block";
+        dc.DrawRectangle(new SolidColorBrush(_pad.Palette.Caret, block ? 0.45 : 1), null, rect, block ? 2 : 1, block ? 2 : 1);
     }
 }

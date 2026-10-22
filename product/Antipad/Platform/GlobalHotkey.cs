@@ -7,7 +7,7 @@ namespace Antipad.Platform;
 /// <summary>A system-wide hotkey registered against an Avalonia window handle.</summary>
 public sealed class GlobalHotkey : IDisposable
 {
-    private const int HotkeyId = 0x4150;
+    private readonly int _id;               // one per hotkey on the same window
     private const uint WmHotkey = 0x0312;
     private const uint ModAlt = 0x0001, ModControl = 0x0002, ModShift = 0x0004, ModWin = 0x0008, ModNoRepeat = 0x4000;
 
@@ -28,11 +28,14 @@ public sealed class GlobalHotkey : IDisposable
         : RegistrationError == 0 ? null : new System.ComponentModel.Win32Exception(RegistrationError).Message;
     public string GestureLabel => _gesture.Label;
 
-    public GlobalHotkey(Window window, Action<long> onPressed, string? gesture = null)
+    /// <param name="id">Distinct per hotkey registered on this window.</param>
+    /// <param name="fromEnvironment">Only the show/hide hotkey honours the ANTIPAD_HOTKEY override (dev runs).</param>
+    public GlobalHotkey(Window window, Action<long> onPressed, string? gesture = null, int id = 0x4150, bool fromEnvironment = true)
     {
         _window = window ?? throw new ArgumentNullException(nameof(window));
         _onPressed = onPressed ?? throw new ArgumentNullException(nameof(onPressed));
-        var configured = gesture ?? Environment.GetEnvironmentVariable("ANTIPAD_HOTKEY");
+        _id = id;
+        var configured = gesture ?? (fromEnvironment ? Environment.GetEnvironmentVariable("ANTIPAD_HOTKEY") : null);
         _gesture = string.IsNullOrWhiteSpace(configured) ? DefaultGesture : HotkeyGesture.Parse(configured);
         _window.Opened += OnOpened;
         _window.Closed += OnClosed;
@@ -53,7 +56,7 @@ public sealed class GlobalHotkey : IDisposable
 
         Win32Properties.AddWndProcHookCallback(_window, WndProc);
         _hookAdded = true;
-        IsRegistered = RegisterHotKey(_hwnd, HotkeyId, _gesture.Modifiers | ModNoRepeat, _gesture.VirtualKey);
+        IsRegistered = RegisterHotKey(_hwnd, _id, _gesture.Modifiers | ModNoRepeat, _gesture.VirtualKey);
         RegistrationError = IsRegistered ? 0 : Marshal.GetLastWin32Error();
         if (!IsRegistered)
         {
@@ -64,7 +67,7 @@ public sealed class GlobalHotkey : IDisposable
 
     private IntPtr WndProc(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (message == WmHotkey && wParam.ToInt32() == HotkeyId)
+        if (message == WmHotkey && wParam.ToInt32() == _id)
         {
             handled = true;
             _onPressed(Stopwatch.GetTimestamp());
@@ -82,7 +85,7 @@ public sealed class GlobalHotkey : IDisposable
         _window.Closed -= OnClosed;
         if (OperatingSystem.IsWindows())
         {
-            if (IsRegistered) UnregisterHotKey(_hwnd, HotkeyId);
+            if (IsRegistered) UnregisterHotKey(_hwnd, _id);
             if (_hookAdded) Win32Properties.RemoveWndProcHookCallback(_window, WndProc);
         }
         IsRegistered = false;
