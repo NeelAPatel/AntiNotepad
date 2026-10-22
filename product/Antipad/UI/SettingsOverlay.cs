@@ -101,6 +101,7 @@ internal sealed class SettingsOverlay : Grid
 
     private void EditorRows(StackPanel panel)
     {
+        panel.Children.Add(new MotionPreview(_p, S));
         panel.Children.Add(Row("Paper tone", Kit.Segmented(_p, Palette.Tones.Select(t => (t.Id, t.Name)).ToList(), S.Tone, v => Set(() => S.Tone = v))));
         panel.Children.Add(Row("Backing", Kit.Segmented(_p, [("blank", "Blank"), ("lined", "Lined"), ("dotted", "Dotted"), ("grid", "Grid"), ("biggrid", "Large grid")], S.Paper, v => Set(() => S.Paper = v))));
         if (S.Paper != "blank")
@@ -140,6 +141,7 @@ internal sealed class SettingsOverlay : Grid
 
     private void FeelRows(StackPanel panel)
     {
+        panel.Children.Add(new MotionPreview(_p, S));
         panel.Children.Add(Row("Scrolling", Kit.Segmented(_p, [("lines", "Lines"), ("free", "Free"), ("rate", "Rate-matched"), ("wheel", "Wheel-driven")], S.Scrolling, v => Set(() => S.Scrolling = v)),
             ScrollHint(S.Scrolling)));
         TuningRows(panel);

@@ -29,12 +29,13 @@ internal static class Program
         // Any crash leaves its stack in the data folder's antipad.log.
         AppDomain.CurrentDomain.UnhandledException += (_, e) => Log("crash " + e.ExceptionObject);
         if (args is ["--selftest"]) return SelfTest.Run();
-        if (args is ["--quit"]) return SingleInstanceService.RequestQuit();
+        // A custom data folder (dev/test runs) gets its own instance, so it can run beside the real one.
+        // Decided before --quit, so quitting a dev run never quits the real copy.
+        IsDev = Environment.GetEnvironmentVariable("ANTIPAD_DATA") is { Length: > 0 };
+        if (args is ["--quit"]) return SingleInstanceService.RequestQuit(IsDev ? "Antipad-dev" : "Antipad");
         DataFolder = Environment.GetEnvironmentVariable("ANTIPAD_DATA")
             ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Antipad");
         StartHidden = args.Contains("--hidden");
-        // A custom data folder (dev/test runs) gets its own instance, so it can run beside the real one.
-        IsDev = Environment.GetEnvironmentVariable("ANTIPAD_DATA") is { Length: > 0 };
         using var instance = new SingleInstanceService(RequestShow, IsDev ? "Antipad-dev" : "Antipad", RequestQuit);
         if (!instance.IsPrimary) return 0;
         // The store is plain files, so it loads before Avalonia: the renderer depends on a setting.

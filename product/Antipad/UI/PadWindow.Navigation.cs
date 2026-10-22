@@ -11,9 +11,7 @@ namespace Antipad.UI;
 
 internal sealed partial class PadWindow
 {
-    private double _swipe;
-    private DateTime _swipeAt;
-    private bool _swipeFired;
+    private NoteSwipe? _noteSwipe;
     private bool _sizingForSplit;
 
     private Note LeftNote => Data.ViewSlot > 0 ? Data.Slots[Data.ViewSlot - 1] : Data.Stack[Data.Current];
@@ -267,14 +265,7 @@ internal sealed partial class PadWindow
         Edited();
     }
 
-    /// <summary>Two-finger horizontal swipe (touchpad) or Shift+wheel pages through the stack.</summary>
-    // ---------- swipe: a detent, not a trigger ----------
-    // Every horizontal input (touchpad, tilt wheel, Shift+wheel) drags the page with rubber-band resistance.
-    // When input stops, the page commits to the next note only past a distance or speed threshold;
-    // otherwise it springs back. One gentle notch is never enough, a deliberate flick always is.
-    private const double SwipePxPerUnit = 48, SwipeCommitPx = 90, SwipeCommitSpeed = 0.9 /* px per ms */, SwipeFarPx = 200;
-    private readonly List<(DateTime At, double Dx)> _swipeSamples = [];
-
+    /// <summary>Two-finger horizontal swipe (touchpad), tilt or thumb wheel, or Shift+wheel pages through the stack (see NoteSwipe).</summary>
     private void OnWheel(object? sender, PointerWheelEventArgs e)
     {
         if (_overlayOpen) return;
@@ -283,136 +274,8 @@ internal sealed partial class PadWindow
         var units = horizontal ? e.Delta.X : e.Delta.Y;
         if (Math.Abs(units) < 0.001) return;
         e.Handled = true;
-        var now = DateTime.Now;
-        if (Settings.Swipe == "progress") { ProgressSwipe(units, now); return; }
-        if ((now - _swipeAt).TotalMilliseconds > 350) { _swipe = 0; _swipeFired = false; _swipeSamples.Clear(); }
-        _swipeAt = now;
-        if (_swipeFired) return; // the rest of a committed gesture's inertia
-        var dx = units * SwipePxPerUnit;
-        _swipe += dx;
-        _swipeSamples.Add((now, dx));
-        _swipeSamples.RemoveAll(x => (now - x.At).TotalMilliseconds > 90);
-        if (Math.Abs(_swipe) >= SwipeFarPx) { FireSwipe(); return; }
-        // Rubber band: the page follows less and less the further it is pulled.
-        var shown = _swipe / (1 + Math.Abs(_swipe) / 260);
-        if (_active.RenderTransform is not TranslateTransform follow) _active.RenderTransform = follow = new TranslateTransform();
-        follow.X = shown;
-        _active.Opacity = 1 - Math.Abs(shown) / 420;
-        _swipeSettle ??= NewSettleTimer();
-        _swipeSettle.Stop(); _swipeSettle.Start();
-    }
-
-    private Avalonia.Threading.DispatcherTimer? _swipeSettle;
-
-    private Avalonia.Threading.DispatcherTimer NewSettleTimer()
-    {
-        var timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(130) };
-        timer.Tick += (_, _) =>
-        {
-            timer.Stop();
-            if (_swipeFired) return;
-            var span = _swipeSamples.Count > 1 ? Math.Max(16, (_swipeSamples[^1].At - _swipeSamples[0].At).TotalMilliseconds) : 90;
-            var speed = Math.Abs(_swipeSamples.Sum(x => x.Dx)) / span;
-            if (Math.Abs(_swipe) >= SwipeCommitPx || (speed >= SwipeCommitSpeed && Math.Abs(_swipe) >= SwipeCommitPx / 2)) { FireSwipe(); return; }
-            SpringBack();
-        };
-        return timer;
-    }
-
-    private void SpringBack()
-    {
-        var pane = _active;
-        var from = (pane.RenderTransform as TranslateTransform)?.X ?? 0;
-        var opacity = pane.Opacity;
-        _swipe = 0;
-        Anim.Run(pane, 200, t =>
-        {
-            if (pane.RenderTransform is TranslateTransform tt) tt.X = from * (1 - t);
-            pane.Opacity = opacity + (1 - opacity) * t;
-        }, () => { pane.RenderTransform = null; pane.Opacity = 1; }, decorative: false);
-    }
-
-    private void FireSwipe()
-    {
-        _swipeFired = true;
-        _swipeSettle?.Stop();
-        _active.RenderTransform = null; _active.Opacity = 1;
-        Navigate(_swipe > 0 ? -1 : 1);
-    }
-
-    // ---------- swipe: progress (picked in the Scroll Lab) ----------
-    // The swipe is measured in its own distance, not the window's: 220 px of input is a whole note, so the same
-    // movement moves the note the same share of the way in a narrow or a very wide window. Passing a third of the
-    // way changes the note at once; the rest of that gesture (touchpad inertia, more wheel clicks) is ignored.
-    // Wheel clicks (the MX thumb wheel, Shift+wheel) are paid out smoothly over a few frames, further when spun faster.
-    // Swipe length (px for a whole note) and the share where it changes come from Settings > Feel.
-    private const double ProgressClickPx = 26, ProgressPxPerUnit = 100;
-    private const int ProgressQuietMs = 260, ProgressRearmMs = 110;
-    private double _progress, _progressOwed, _progressGap;
-    private long _progressClick, _progressFrameAt;
-    private bool _progressDraining;
-    private TimeSpan? _progressLast;
-    private Avalonia.Threading.DispatcherTimer? _progressSettle;
-
-    private void ProgressSwipe(double units, DateTime now)
-    {
-        // After a change, a short pause re-arms the next swipe; before one, slow wheel clicks keep adding up for longer.
-        if ((now - _swipeAt).TotalMilliseconds > (_swipeFired ? ProgressRearmMs : ProgressQuietMs)) { _progress = 0; _progressOwed = 0; _swipeFired = false; }
-        _swipeAt = now;        if (_swipeFired) return;
-        var click = Math.Abs(units - Math.Round(units)) < 0.01;
-        if (!click) ProgressAdvance(units * ProgressPxPerUnit);
-        else
-        {
-            var tick = Environment.TickCount64;
-            var gap = _progressClick == 0 ? 1000 : tick - _progressClick;
-            _progressClick = tick;
-            _progressGap = gap >= 400 || _progressGap <= 0 ? Math.Min(gap, 400) : _progressGap * 0.4 + gap * 0.6;
-            var gain = 1 + 2 * Math.Clamp((1000 / _progressGap - 6) / 24, 0, 1);
-            _progressOwed += units * ProgressClickPx * gain;
-            // A hidden window gets no frames, so a pay-out cut off by hiding is restarted rather than trusted.
-            if (!_progressDraining || tick - _progressFrameAt > 150) { _progressDraining = true; _progressLast = null; _progressFrameAt = tick; ProgressFrame(); }
-        }
-        _progressSettle ??= NewProgressSettle();
-        _progressSettle.Stop(); _progressSettle.Start();
-    }
-
-    private void ProgressFrame() => RequestAnimationFrame(time =>
-    {
-        var dt = _progressLast is { } last ? Math.Clamp((time - last).TotalSeconds, 0, 0.05) : 1 / 60.0;
-        _progressLast = time;
-        _progressFrameAt = Environment.TickCount64;
-        if (_swipeFired || Math.Abs(_progressOwed) < 0.01) { _progressOwed = 0; _progressDraining = false; return; }
-        var part = _progressOwed * (1 - Math.Exp(-22 * dt));
-        if (Math.Abs(_progressOwed - part) < 0.5) part = _progressOwed;
-        _progressOwed -= part;
-        ProgressAdvance(part);
-        ProgressFrame();
-    });
-
-    private void ProgressAdvance(double px)
-    {
-        if (_swipeFired) return;
-        _progress += px / Math.Max(60, Settings.SwipeLength);
-        if (Math.Abs(_progress) >= Math.Clamp(Settings.SwipeFiresAt, 0.1, 0.9)) { _swipe = _progress; _progressOwed = 0; FireSwipe(); return; }
-        // Nearly 1:1 for the first half note, then a rubber band (never reached before it fires at the defaults).
-        var a = Math.Abs(_progress);
-        var share = Math.Sign(_progress) * (a <= 0.5 ? a : 0.5 + (1 - 1 / ((a - 0.5) * 0.55 / 0.5 + 1)) * 0.5);
-        if (_active.RenderTransform is not TranslateTransform follow) _active.RenderTransform = follow = new TranslateTransform();
-        follow.X = share * _active.Bounds.Width;        _active.Opacity = 1 - Math.Min(0.7, Math.Abs(share) * 1.2);
-    }
-
-    private Avalonia.Threading.DispatcherTimer NewProgressSettle()
-    {
-        var timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(ProgressQuietMs) };
-        timer.Tick += (_, _) =>
-        {
-            if (Math.Abs(_progressOwed) > 0.5) return;     // still paying out the last clicks
-            timer.Stop();
-            if (_swipeFired) return;
-            _progress = 0;
-            SpringBack();
-        };
-        return timer;
+        _noteSwipe ??= new NoteSwipe(this, () => Settings, () => _active, Navigate);
+        _noteSwipe.Input(units);
     }
 
     // ---------- clipboard capture ----------
