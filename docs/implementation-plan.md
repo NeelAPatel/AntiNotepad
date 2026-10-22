@@ -24,6 +24,7 @@ No line-height control; no inner padding in code panels; true rounded/transparen
 | M4 | **Carousel**: wheel notch = prev/next note with ~220 ms slide, drag = 1:1 direct manipulation with snap, new/delete note, page indicator | Wheel and drag verified by user on MX Master 3S |
 | M5 | **Release measurement**: hotkey-to-visible-and-focused, hide time, idle RAM, idle CPU, in Release; record in `docs/perf.md` | Numbers recorded; compare against a speed budget agreed with user (proposed: show < 100 ms) |
 | M6 | **Look pass**: implement 2 to 3 variants from `demos/ui-variants` (candidates Ink, Paper, Slate) as `Look` entries, runtime switch; user picks | User chooses default look |
+| M6b | **Hover bars** (user request 2026-10-17): top and bottom bars hidden until the mouse enters that edge; top bar drags the window and has Pin (always-on-top toggle, default off), Minimize and Close (= hide, like Esc); bottom bar content TBD. Styled from the `Look` record | User checks reveal, drag, and buttons |
 | M7 | **Settings and polish**: hotkey setting, font size, data folder, start with Windows, about/version | Manual checklist |
 
 M0 to M2 can start immediately; M3 and M4 depend on M0 only and can run in parallel after it (different files). M5 needs M1 to M4. M6 needs M3.

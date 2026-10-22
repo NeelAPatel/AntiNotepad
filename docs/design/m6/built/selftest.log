@@ -1,0 +1,11 @@
+T007 indent PASS: 7 empty marker indent/outdent/numbering cases and single undo.
+T013 quiet show-to-focus internal ms=4.414
+T013 quiet show-to-focus internal ms=3.406
+T013 quiet show-to-focus internal ms=3.136
+T013 quiet PASS: switching/caret, palettes, simulated system update, menu VM routes, persistence, pin, resident focus, close/hide, autosave, carousel.
+T013 card show-to-focus internal ms=2.772
+T013 card show-to-focus internal ms=2.997
+T013 card show-to-focus internal ms=2.511
+T013 card PASS: switching/caret, palettes, simulated system update, menu VM routes, persistence, pin, resident focus, close/hide, autosave, carousel.
+SELFTEST PASS: Quiet + Card production shells and retained Classic capability suite.
+T006 PASS: successful quit start/finish logs.

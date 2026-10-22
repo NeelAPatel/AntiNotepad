@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../AntiQuickPad.Core/AntiQuickPad.Core.csproj" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+    <PackageReference Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Tokens/quiet.tokens.json" LogicalName="AntiQuickPad.Tokens.quiet.tokens.json" />
+  </ItemGroup>
+</Project>

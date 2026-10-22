@@ -1,0 +1,494 @@
+[
+  {
+    "path": "card/dark/bars-hover@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "99EA0A6C67221042829B68988A66804244FBEF58672A474C72369D826A5C31E5"
+  },
+  {
+    "path": "card/dark/bars-hover@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "0CB36D5A3D0EA803B3D0FCB1062465809678BBC3909E69E39BA90C373586FCBA"
+  },
+  {
+    "path": "card/dark/carousel@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "92973AF5DCF541D092ECCE3A1D3CE9B404312719A6EDCDDCA76B9B36DD42621D"
+  },
+  {
+    "path": "card/dark/carousel@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "79F7644CDB446D97A7DF760A41FB6621C98751EE90DCBEE269EA262CE91D2A74"
+  },
+  {
+    "path": "card/dark/empty@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "9768979DA9088C73446F6255C4403E1590E76856AD2874531784CB25E979B867"
+  },
+  {
+    "path": "card/dark/empty@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "48B8D50105062AA9A72023C38E112CC826BE728DC41AFEFE27991A4D214FEC01"
+  },
+  {
+    "path": "card/dark/fold-hover-closeup.png",
+    "width": 700,
+    "height": 220,
+    "sha256": "F7E0FE66CD4BD57573A5E2A2D0DE33EDC333324744B0722E92624D60BAFE4D89"
+  },
+  {
+    "path": "card/dark/fold-hover@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "20A68441CF2548F12C2A8D7288305AADAD266F2D0D050B68DB0B69E34AC7724E"
+  },
+  {
+    "path": "card/dark/fold-hover@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "0E54A091B2884B41E20BF306BA470BBE6024AC589C265564710DB4914DB104A8"
+  },
+  {
+    "path": "card/dark/main@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "A211FA5EF3865B824E425D3483EB03FC8E819E25DFBB776F8B6ED5F6FBBE23A3"
+  },
+  {
+    "path": "card/dark/main@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "EA3D96FBF3068ABAC7F39112500A35CE34BD57B43D763E018CF8C9A8E18EC09E"
+  },
+  {
+    "path": "card/dark/menu-open-closeup.png",
+    "width": 250,
+    "height": 410,
+    "sha256": "6FED28C4FD3E3C4F275F8D69CDD692E64EE9F7D86DAF5BCE13B5DA2C8B5EF079"
+  },
+  {
+    "path": "card/dark/menu-open@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "2A3AB043B02AEF5C51B9DA9D68F650818A99E61D6C8CFA42A8F410E93B2D349A"
+  },
+  {
+    "path": "card/dark/menu-open@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "4F4C938ED11233779E019A6AECBD44443429FFA3C27CCA7E60000A06767D35C1"
+  },
+  {
+    "path": "card/dark/proof-active-guide.png",
+    "width": 1464,
+    "height": 610,
+    "sha256": "674E7BE91AD1DC366418EC90933D044E146CEB47F0B599BC543317322C71A27E"
+  },
+  {
+    "path": "card/dark/proof-headings.png",
+    "width": 732,
+    "height": 240,
+    "sha256": "AD4FDE649F0F9D124153BF3D459B448EE43DD6886A969650DA703A90A27F5697"
+  },
+  {
+    "path": "card/dark/proof-strike.png",
+    "width": 732,
+    "height": 610,
+    "sha256": "902752202862FB1C171A5BA483240AC73579D783D68095B1B9DCDC21DC8A903A"
+  },
+  {
+    "path": "card/dark/proof-T-009-checkbox.png",
+    "width": 732,
+    "height": 610,
+    "sha256": "35CF83E7E201B68F6357C2AD961289E6C2058D8213A0C2550534467A189A703C"
+  },
+  {
+    "path": "card/dark/proof-T-009-guides.png",
+    "width": 732,
+    "height": 610,
+    "sha256": "A120547A7CC419D5A3A480F6FEBAA7DB770BCE81AA724BD015BDB5CF3D12BB4E"
+  },
+  {
+    "path": "card/light/bars-hover@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "9578941C6F5B27EB74E6A10456D0D47BCD43777B4A225D9A681BF409E3300406"
+  },
+  {
+    "path": "card/light/bars-hover@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "2BE29B5B9DB63A99E2A7652AE56B9C3DB68D60C2F4BCB41780C85F7C9058645E"
+  },
+  {
+    "path": "card/light/carousel@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "9B75FFE3BD12D600917A13D4E2E856C3371D0C330436C58BF83C299A36D33F7F"
+  },
+  {
+    "path": "card/light/carousel@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "0D7E22B4A5E93B216C3D028AE32A4152A94733BBF34E7B57D3743DAA7E035DFA"
+  },
+  {
+    "path": "card/light/empty@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "BC62BC4A1BAC479385B446036A5F2A91FC008B2C70CD5423C6B77C4F9DB82209"
+  },
+  {
+    "path": "card/light/empty@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "930F721A6FDB3FC2D5B18974C311F739A701646894AB22BD858D0A5D7B59F041"
+  },
+  {
+    "path": "card/light/fold-hover-closeup.png",
+    "width": 700,
+    "height": 220,
+    "sha256": "3BF67B59A94FA02B5BE70D9AF75301759328BDD39B8BF0933FC9E41B98736C49"
+  },
+  {
+    "path": "card/light/fold-hover@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "BEDA0A8CEA6B134D062D49F908F7DD80B761F58BC6C1CB879646EFBB5724CF2C"
+  },
+  {
+    "path": "card/light/fold-hover@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "701689CCA0EEC9E4351E343319308214809D01168F3485A2CD9210B8B534E6EF"
+  },
+  {
+    "path": "card/light/main@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "54AF21E63174766B2685C821E9C2A6FB836A938D47D9B3231A3A29882A0D6243"
+  },
+  {
+    "path": "card/light/main@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "EB7B413FC937C4F22906D94312E90FB857BC4CBC23C3B608F83FB3A7142F444C"
+  },
+  {
+    "path": "card/light/menu-open-closeup.png",
+    "width": 250,
+    "height": 410,
+    "sha256": "D61C63CF29B2F01E4F24D43AFCEE4EE12D34B5225CA61CB17F4F83BAC4A2F0CB"
+  },
+  {
+    "path": "card/light/menu-open@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "94E5D6A71F67D8A02A6C054630CC510BE9B9B94D2E5B913A01F93A0EEE75C1AB"
+  },
+  {
+    "path": "card/light/menu-open@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "379A9C1488D82B4F55581C5BE1B7E953F63A1D8FC055A1802A5AB47B126B55E7"
+  },
+  {
+    "path": "card/light/proof-active-guide.png",
+    "width": 1464,
+    "height": 610,
+    "sha256": "C63229D9DB2F1E57C1F46D6BB7DD7702E6F18058F3F0D3B81A48FFF54A7F1EBE"
+  },
+  {
+    "path": "card/light/proof-headings.png",
+    "width": 732,
+    "height": 240,
+    "sha256": "B3F34574F43EB6E84B610D9EDF3BC8F64D1FAC480E356FEA9548A5EEA486F848"
+  },
+  {
+    "path": "card/light/proof-strike.png",
+    "width": 732,
+    "height": 610,
+    "sha256": "521D0EC439CFB9699FD07C83B24B56D2E22C4EEDCAEEA9432E26A403758504C9"
+  },
+  {
+    "path": "card/light/proof-T-009-checkbox.png",
+    "width": 732,
+    "height": 610,
+    "sha256": "A059AECE7918A6CA825A4BDD425C35E6603A1BF87F769E8DC9E88FE9B9783CCB"
+  },
+  {
+    "path": "card/light/proof-T-009-guides.png",
+    "width": 732,
+    "height": 610,
+    "sha256": "9F53917EFBABE084F6F024F59609C789A1C12703174FEC3E5EB609E461C0AC37"
+  },
+  {
+    "path": "quiet/dark/bars-hover@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "06155154FCCA72BDD43181B9412776829302158D65AE83E7BD2C38AEE84C9F24"
+  },
+  {
+    "path": "quiet/dark/bars-hover@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "418661C3C5DE07053950E91C68CF8B6F246A85AFE72254A8B56F46CB367864CF"
+  },
+  {
+    "path": "quiet/dark/carousel@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "3987C9B58F162A2E0F7816A5DDD221A6D9A9ADE8705345CC357745028FB9572F"
+  },
+  {
+    "path": "quiet/dark/carousel@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "07BBA1B137C8E4C73AB3F70981E1D4CA2BDFCFE8F6359E1B2E90FA19982885BA"
+  },
+  {
+    "path": "quiet/dark/empty@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "44F16C82C07FE01100F7F1206B2DBB2C4A367CEA4B5000CF5E500E76E3AE8319"
+  },
+  {
+    "path": "quiet/dark/empty@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "9B513C7AD90C91862692F1D11241C17B3DEB117C81FEDEFBD6EF1CBEC6DC5005"
+  },
+  {
+    "path": "quiet/dark/fold-hover-closeup.png",
+    "width": 700,
+    "height": 220,
+    "sha256": "CAA5B3636B217C0DA3F0E045CDC3F81436056B1F90277795E202B01E565631C4"
+  },
+  {
+    "path": "quiet/dark/fold-hover@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "0231D93421FE659647BEF26611D540416C475EDE3FA7D8BBB0CF8DE39E3E32F5"
+  },
+  {
+    "path": "quiet/dark/fold-hover@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "2700A0DB4D23E1DC8C4C8B9CF81130F1A88D13E73D49F1EBEAA5170F87A5CD34"
+  },
+  {
+    "path": "quiet/dark/main@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "CF52B4FC689C9A3C4F7D81038CAF968603EB57512D820A7C70D660C242592BDC"
+  },
+  {
+    "path": "quiet/dark/main@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "B7D9F1226880C0E514DAA507AFF41EA03F7A3405AC05EF3F606DD63E0D0461FD"
+  },
+  {
+    "path": "quiet/dark/menu-open-closeup.png",
+    "width": 250,
+    "height": 410,
+    "sha256": "2D4B4085E95546CEE0C88AAA8AD57D1B7A6B47801F7A002E36113D2C7BA623F8"
+  },
+  {
+    "path": "quiet/dark/menu-open@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "1BCFECBC344D4D23C2CB5CBB663475BA212078C8410337F84825232DC7D61469"
+  },
+  {
+    "path": "quiet/dark/menu-open@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "42687DAF402AC9DB3308F04CEA084E664563DA5C2C9005CB50173F5D453AC6B2"
+  },
+  {
+    "path": "quiet/dark/proof-active-guide.png",
+    "width": 1560,
+    "height": 635,
+    "sha256": "082A46D7E6E6397DE048A1F497D29D2455669D513D32035E14CD50D61C9A6BD0"
+  },
+  {
+    "path": "quiet/dark/proof-headings.png",
+    "width": 780,
+    "height": 240,
+    "sha256": "D1F8BE20DD1C2BEDBD4FD7EAA9A24864A994BC7BE3AEFFA3EE2504229077700D"
+  },
+  {
+    "path": "quiet/dark/proof-strike.png",
+    "width": 780,
+    "height": 635,
+    "sha256": "97497ABDC99F4AC27F8D5BE6A360E69F21D93F8B130F9B4E76F0B666453D855A"
+  },
+  {
+    "path": "quiet/dark/proof-T-009-checkbox.png",
+    "width": 780,
+    "height": 635,
+    "sha256": "5C8ED072FD48B2737F0AA3130480719432E1F1E4196DC7960E3AED8539DCA8F1"
+  },
+  {
+    "path": "quiet/dark/proof-T-009-guides.png",
+    "width": 780,
+    "height": 635,
+    "sha256": "B1722B01BDDD9CF0D16FE286317C4246C44FEA36198C657E4B37D1BA184301E1"
+  },
+  {
+    "path": "quiet/light/bars-hover@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "795857D3C5E4B4CAA0E0926BE49071F5C982C8067A9F5EC5A025858D4B3BB137"
+  },
+  {
+    "path": "quiet/light/bars-hover@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "071F2EB6CD95A9CFBBC22911A792080AA3180530C830F8ED7AED02BBF96D40AF"
+  },
+  {
+    "path": "quiet/light/carousel@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "00172D087C0AE6E6B62731485B527F773A69EEFDECF752C655FA6643669586A4"
+  },
+  {
+    "path": "quiet/light/carousel@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "72F8DF9663E3E9E84506EAF530FB5A2DF51190FEE1A151E1843969869C2D16B2"
+  },
+  {
+    "path": "quiet/light/empty@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "BDBFF40C38DE8B898FFD2DCFA6A8233CA5EA197E8BCFFF81163B35F7E76ACCA8"
+  },
+  {
+    "path": "quiet/light/empty@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "A35035179CA571A07577A73623F2CBE22169D696D8218A04164968DFAB7F8242"
+  },
+  {
+    "path": "quiet/light/fold-hover-closeup.png",
+    "width": 700,
+    "height": 220,
+    "sha256": "199F78AAA00C7583DF926AC9D7D398D0848A41B1EAA0034A555B4E91AE971BA0"
+  },
+  {
+    "path": "quiet/light/fold-hover@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "9A7E3C473C973B9EDA9E058CEBD8EB3A535E756274E98C99B623507F39FCE3CE"
+  },
+  {
+    "path": "quiet/light/fold-hover@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "2E4B8E5A7C569B03454778669ACC21D60CDABBD540F83D11539F93EC853BBF8C"
+  },
+  {
+    "path": "quiet/light/main@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "6F49845EF910CDBABA23CB580B856D08194ED23021F266E706E572536DBD52EB"
+  },
+  {
+    "path": "quiet/light/main@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "112804E42F447F5D2544BCA3AE9B8D0BAFC16E5E8674E32FD28F71A1C640F797"
+  },
+  {
+    "path": "quiet/light/menu-open-closeup.png",
+    "width": 250,
+    "height": 410,
+    "sha256": "A87C39A3DD940B197C1619025DD62837106EAB4A4BAC7A41E0F10285B95B5054"
+  },
+  {
+    "path": "quiet/light/menu-open@1.5x.png",
+    "width": 1440,
+    "height": 1200,
+    "sha256": "BE93BCBDC9567200F590FA9BD6029B107DAA1F0ADE31297A75D35B2069005B8B"
+  },
+  {
+    "path": "quiet/light/menu-open@1x.png",
+    "width": 960,
+    "height": 800,
+    "sha256": "149324E3A7161D81CDBDE5241294DBA09C966B6320702E5654ED11AC8FEB358E"
+  },
+  {
+    "path": "quiet/light/proof-active-guide.png",
+    "width": 1560,
+    "height": 635,
+    "sha256": "FC1B9BF39A43E2CBFC3B18B3EF26522D63D6787DDC4AD1E00CD5FD47253371AD"
+  },
+  {
+    "path": "quiet/light/proof-headings.png",
+    "width": 780,
+    "height": 240,
+    "sha256": "3CD4C821955DDD9BEE87E507D53ED7B2BC7BBBF2D5499D663DDE8762B7F28D5F"
+  },
+  {
+    "path": "quiet/light/proof-strike.png",
+    "width": 780,
+    "height": 635,
+    "sha256": "4D03BAEAA6D3FC28ACDBE65B884B0D6D654B3531F7577A9B50A0B704262934A5"
+  },
+  {
+    "path": "quiet/light/proof-T-009-checkbox.png",
+    "width": 780,
+    "height": 635,
+    "sha256": "532ABCCC7FB6723AB88BE2E89DC44C1EA4C144D1566DB812563FE14BDF082C1E"
+  },
+  {
+    "path": "quiet/light/proof-T-009-guides.png",
+    "width": 780,
+    "height": 635,
+    "sha256": "937B1F430A35CEE565D09A8C46E15B4DE01B1D99F9392A3F59C855DA16E5CC31"
+  },
+  {
+    "path": "review-T014-card-dark.png",
+    "width": 2400,
+    "height": 850,
+    "sha256": "3493F928CA8390270D5F4B33B20D9C59799E4C1967B19D28D3F7312E07545366"
+  },
+  {
+    "path": "review-T014-card-light.png",
+    "width": 2400,
+    "height": 850,
+    "sha256": "69909829822A7BD50CB16ED1969F2B06E33FFBB646205DA7EF6A41B753E6F229"
+  },
+  {
+    "path": "review-T014-closeups.png",
+    "width": 1400,
+    "height": 950,
+    "sha256": "CDC7F6AA9684D65D7ABFA08E3CEABDB500365F1A54F98855EA583749FC9E669E"
+  },
+  {
+    "path": "review-T014-headings.png",
+    "width": 1560,
+    "height": 480,
+    "sha256": "AF9D767997005094931354F3EEA0E81758AE2BDDD6B1109C4EA8A4C7B6C66E64"
+  },
+  {
+    "path": "review-T014-quiet-dark.png",
+    "width": 2400,
+    "height": 850,
+    "sha256": "B844C3D5470D78C68E779D5B7FFFC37B2EDDB68B9F1C92171D3EAFB2A9A3881A"
+  },
+  {
+    "path": "review-T014-quiet-light.png",
+    "width": 2400,
+    "height": 850,
+    "sha256": "C1A7A000610EF87099575E15CCCB18CF4FEB7D4F180120083B849FAC16209593"
+  }
+]

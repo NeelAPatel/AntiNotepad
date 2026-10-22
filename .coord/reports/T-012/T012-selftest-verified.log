@@ -1,0 +1,44 @@
+T007 indent PASS: 7 empty marker indent/outdent/numbering cases and single undo.
+T012 PASS: shell/look IDs can change through VM settings and survive bounds saves.
+T007 chrome PASS: Close hides; Pin toggles Topmost and persists; bounds round trip.
+M3 PASS: Markdown classification; undoable checkbox text edit; Shift+Tab; decorated visual lines.
+T007 typefaces PASS: plain/strike Regular; bold strike Bold; italic strike Italic.
+T007 pixels: scale=1 size=798x510 strikeHeight=3px affectedRows=30,31,32 plainInk=0.8043 strikeInk=0.8068 delta=0.0024 tolerance=0.10 glyphDifferenceOutsideStrike=0; PNG=F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\bin\Release\net10.0\selftest\e75027b3fa95465eb516764a4bcfd38c\T-009-strike.png
+T008 open line=1: box/bullet deltaY=1.00px row=22.917
+T008 checkbox line=2: check centre delta=(0.50,0.00)px box/bullet deltaY=1.00px row=22.917
+T008 open line=4: box/bullet deltaY=0.50px row=22.917
+T008 checkbox line=5: check centre delta=(0.00,0.50)px box/bullet deltaY=0.50px row=22.917
+T008 row pixel control: max bullet-centre displacement vs all-plain rows=0.00px; hover/hit/undo PASS.
+T008 guides line=1 indentColumns= pixelX=
+T008 guides line=2 indentColumns=4 pixelX=82
+T008 guides line=3 indentColumns=4,8 pixelX=82,122
+T008 guides line=4 indentColumns=4,8 pixelX=82,122
+T008 guides line=5 indentColumns=4,8 pixelX=82,122
+T008 guides line=6 indentColumns= pixelX=
+T008 guides line=7 indentColumns= pixelX=
+T008 guides line=8 indentColumns=4 pixelX=82
+T008 guides line=9 indentColumns=4 pixelX=82
+T008 guides line=10 indentColumns=4,8 pixelX=82,122
+T008 guides line=11 indentColumns=4,8,12 pixelX=82,122,162
+T008 guides line=12 indentColumns=4,8 pixelX=82,122
+T008 guides line=13 indentColumns=4,8 pixelX=82,122
+T008 guides line=14 indentColumns=4 pixelX=82
+T008 guides line=15 indentColumns= pixelX=
+T008 guides line=16 indentColumns=4 pixelX=82
+T008 guides line=17 indentColumns=4,8 pixelX=82,122
+T008 guides line=18 indentColumns= pixelX=
+T008 guides line=19 indentColumns= pixelX=
+T008 PASS: checkbox rows all 22.917 DIP; guide columns, blank continuation/end, tabs, code font and off setting verified; PNGs=F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\bin\Release\net10.0\selftest\e75027b3fa95465eb516764a4bcfd38c
+T009 active line=3 column=8 block=3-5 x=122: brighter=70 pixels, other-guide/outside changes=0; RGB 68,81,96 -> 113,133,155.
+T009 active line=11 column=8 block=11-12 x=122: brighter=46 pixels, other-guide/outside changes=0; RGB 68,81,96 -> 113,133,155.
+T009 active PASS: unindented reset, exact block extent, unchanged other pixels; proof=F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\bin\Release\net10.0\selftest\e75027b3fa95465eb516764a4bcfd38c\T-009-active.png size=1596x510.
+T009 command quit PASS: isolated resident exit=0, pending edit saved, source=command start/finish, no Show signal; elapsed=1024ms.
+T009 timeout PASS: exit=1 after 5068ms; no-resident exit=0.
+T010 PASS: --measure --samples 3 wrote baseline/heavy JSON (unavailable desktop endpoints remain explicit gaps).
+M4 PASS: integrated notch/burst; 1:1 drag; long/short snap; caret/scroll; cancellation; delete keeps one note.
+show-to-focus internal ms=1.934
+show-to-focus internal ms=0.959
+show-to-focus internal ms=1.117
+T006 PASS: heading boundaries; list Enter/undo; quit failure restores visible status and logs reason.
+SELFTEST PASS: same resident editor; toggle/focus; debounced save; next-process reload; second-process signal/show; notes round trip.
+T006 PASS: successful quit start/finish logs.

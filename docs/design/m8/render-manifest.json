@@ -1,0 +1,305 @@
+{
+  "generatedAtUtc": "2026-10-21T16:36:09.6896157+00:00",
+  "entries": [
+    {
+      "variant": "V1-compact-pill",
+      "state": "light-idle",
+      "sizeDip": {
+        "width": 480,
+        "height": 560
+      },
+      "pixels": {
+        "width": 530,
+        "height": 610
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V1-compact-pill/light-idle.png"
+    },
+    {
+      "variant": "V1-compact-pill",
+      "state": "light-hover",
+      "sizeDip": {
+        "width": 480,
+        "height": 560
+      },
+      "pixels": {
+        "width": 530,
+        "height": 610
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V1-compact-pill/light-hover.png"
+    },
+    {
+      "variant": "V1-compact-pill",
+      "state": "dark-idle",
+      "sizeDip": {
+        "width": 480,
+        "height": 560
+      },
+      "pixels": {
+        "width": 530,
+        "height": 610
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V1-compact-pill/dark-idle.png"
+    },
+    {
+      "variant": "V1-compact-pill",
+      "state": "dark-hover",
+      "sizeDip": {
+        "width": 480,
+        "height": 560
+      },
+      "pixels": {
+        "width": 530,
+        "height": 610
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V1-compact-pill/dark-hover.png"
+    },
+    {
+      "variant": "V2-roomy-calm",
+      "state": "light-idle",
+      "sizeDip": {
+        "width": 760,
+        "height": 680
+      },
+      "pixels": {
+        "width": 810,
+        "height": 730
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V2-roomy-calm/light-idle.png"
+    },
+    {
+      "variant": "V2-roomy-calm",
+      "state": "light-hover",
+      "sizeDip": {
+        "width": 760,
+        "height": 680
+      },
+      "pixels": {
+        "width": 810,
+        "height": 730
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V2-roomy-calm/light-hover.png"
+    },
+    {
+      "variant": "V2-roomy-calm",
+      "state": "dark-idle",
+      "sizeDip": {
+        "width": 760,
+        "height": 680
+      },
+      "pixels": {
+        "width": 810,
+        "height": 730
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V2-roomy-calm/dark-idle.png"
+    },
+    {
+      "variant": "V2-roomy-calm",
+      "state": "dark-hover",
+      "sizeDip": {
+        "width": 760,
+        "height": 680
+      },
+      "pixels": {
+        "width": 810,
+        "height": 730
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V2-roomy-calm/dark-hover.png"
+    },
+    {
+      "variant": "V3-paper-grid",
+      "state": "light-idle",
+      "sizeDip": {
+        "width": 480,
+        "height": 560
+      },
+      "pixels": {
+        "width": 530,
+        "height": 610
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V3-paper-grid/light-idle.png"
+    },
+    {
+      "variant": "V3-paper-grid",
+      "state": "light-hover",
+      "sizeDip": {
+        "width": 480,
+        "height": 560
+      },
+      "pixels": {
+        "width": 530,
+        "height": 610
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V3-paper-grid/light-hover.png"
+    },
+    {
+      "variant": "V3-paper-grid",
+      "state": "dark-idle",
+      "sizeDip": {
+        "width": 480,
+        "height": 560
+      },
+      "pixels": {
+        "width": 530,
+        "height": 610
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V3-paper-grid/dark-idle.png"
+    },
+    {
+      "variant": "V3-paper-grid",
+      "state": "dark-hover",
+      "sizeDip": {
+        "width": 480,
+        "height": 560
+      },
+      "pixels": {
+        "width": 530,
+        "height": 610
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V3-paper-grid/dark-hover.png"
+    },
+    {
+      "variant": "V4-edge-strips",
+      "state": "light-idle",
+      "sizeDip": {
+        "width": 560,
+        "height": 640
+      },
+      "pixels": {
+        "width": 610,
+        "height": 690
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V4-edge-strips/light-idle.png"
+    },
+    {
+      "variant": "V4-edge-strips",
+      "state": "light-hover",
+      "sizeDip": {
+        "width": 560,
+        "height": 640
+      },
+      "pixels": {
+        "width": 610,
+        "height": 690
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V4-edge-strips/light-hover.png"
+    },
+    {
+      "variant": "V4-edge-strips",
+      "state": "dark-idle",
+      "sizeDip": {
+        "width": 560,
+        "height": 640
+      },
+      "pixels": {
+        "width": 610,
+        "height": 690
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V4-edge-strips/dark-idle.png"
+    },
+    {
+      "variant": "V4-edge-strips",
+      "state": "dark-hover",
+      "sizeDip": {
+        "width": 560,
+        "height": 640
+      },
+      "pixels": {
+        "width": 610,
+        "height": 690
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V4-edge-strips/dark-hover.png"
+    },
+    {
+      "variant": "V5-bare",
+      "state": "light-idle",
+      "sizeDip": {
+        "width": 520,
+        "height": 600
+      },
+      "pixels": {
+        "width": 570,
+        "height": 650
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V5-bare/light-idle.png"
+    },
+    {
+      "variant": "V5-bare",
+      "state": "light-hover",
+      "sizeDip": {
+        "width": 520,
+        "height": 600
+      },
+      "pixels": {
+        "width": 570,
+        "height": 650
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V5-bare/light-hover.png"
+    },
+    {
+      "variant": "V5-bare",
+      "state": "dark-idle",
+      "sizeDip": {
+        "width": 520,
+        "height": 600
+      },
+      "pixels": {
+        "width": 570,
+        "height": 650
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V5-bare/dark-idle.png"
+    },
+    {
+      "variant": "V5-bare",
+      "state": "dark-hover",
+      "sizeDip": {
+        "width": 520,
+        "height": 600
+      },
+      "pixels": {
+        "width": 570,
+        "height": 650
+      },
+      "actualTransparencyLevel": "AcrylicBlur",
+      "dpiScale": 1,
+      "file": "V5-bare/dark-hover.png"
+    }
+  ]
+}

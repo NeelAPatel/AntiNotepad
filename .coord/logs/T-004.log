@@ -1,0 +1,3253 @@
+OpenAI Codex v0.162.0
+--------
+workdir: F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: medium
+reasoning summaries: none
+session id: 01a14c08-aa88-7dc3-aa3a-c558c88de4c3
+--------
+user
+# T-004: M0 + M1 + M2 (skeleton, shell/hotkey, notes persistence)
+
+Director: Codex gpt-6.1-sol medium. Workers: Luna gpt-6-luna high for bounded subtasks.
+Read first: AGENTS.md, docs/implementation-plan.md (M0-M2), docs/spike-spec.md, spikes/A/README.md and spikes/A source (reference; do NOT edit spikes/).
+Write only in `src/AntiQuickPad/` and `.coord/reports/T-004.md`, `.coord/status-T004.md`. Do not touch .git (manager commits) or .coord/STATUS.md.
+Network: none. Packages are already restored (net10.0, Avalonia 12.1.4, AvaloniaEdit 12.0.0). Use `dotnet build -c Release --no-restore`.
+
+Decisions (user, 2026-10-17): hotkey Ctrl+Alt+Shift+A (configurable, default constant in one place); speed budget show-to-focus < 100 ms; transparency de-prioritized (opaque window fine); theming via one `Look` record.
+
+Finish ALL three milestones in ONE turn. Write a checkpoint line to .coord/status-T004.md after each. Never end the turn mid-task or wait; end only when the report is written or you are blocked.
+
+## M0 skeleton
+Proper App/Program/MainWindow structure under src/AntiQuickPad (subfolders Shell, Notes, Editor, Carousel, Look.cs, RuntimePaths.cs). One default `Look` record (palette, fonts, gutter flag). Reuse spike A code where sound. Empty-but-themed window opens. Release build clean.
+
+## M1 shell + hotkey
+Borderless always-on-top window created once at startup and kept alive; show/hide only toggles visibility. Tray icon (Show/Hide, Quit). Single instance (second launch signals first to show). Global hotkey Ctrl+Alt+Shift+A toggles; Esc hides. Show gives focus to the editor. Log show-to-focus ms to a log file (Stopwatch from hotkey message to editor focused). Subtle reopen cue (e.g. short fade/caret flash).
+Add `--selftest` flag: starts, toggles via the internal show/hide path, prints timings, exits 0/1.
+
+## M2 notes model + persistence
+Note list, current index, plain `.md` files in a data folder (RuntimePaths), atomic writes (temp+rename), debounced autosave plus save on hide/exit, restore last note and caret on relaunch. New/delete note APIs (no carousel UI yet; a simple editor bound to current note is enough, using AvaloniaEdit TextEditor).
+Smoke check (`--selftest` extension): create, edit, save, reload round trip.
+
+## Done when
+`dotnet build -c Release --no-restore` is clean, `--selftest` exits 0, and `.coord/reports/T-004.md` lists what was built, timings, what is unverified (physical hotkey/tray need the user), and any blockers.
+
+warning: Under-development features enabled: local_thread_store_compression. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in C:\Users\Neel\.codex\config.toml.
+codex
+I’ll read the handoff and M0–M2 requirements, delegate bounded work to Luna, then integrate and run the Release build and self-test. I’ll write only to the paths authorized for T-004.
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Get-Content AGENTS.md; Get-Content .coord/STATUS.md; Get-Content .coord/HANDOFF.md; Get-Content docs/agents.md; Get-Content docs/implementation-plan.md; Get-Content docs/spike-spec.md; Get-Content spikes/A/README.md; Get-Content .coord/tasks/T-004.md' in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 492ms:
+Unable to open session log file "C:\\Users\\Neel\\.cache\\starship\\session_PMzc5AbOpQ0EhJL7.log": Os { code: 5, kind: PermissionDenied, message: "Access is denied." }!
+
+# AntiQuickPad
+
+Windows 11 hotkey-summoned, chrome-free translucent scratchpad, inspired by AntiNote (functionality, not a 1:1 copy). Speed of show/hide is the priority. Stack is undecided: spikes A (Avalonia + AvaloniaEdit) and B (GPUI + GPUI Kit) are being compared; C (Tauri + CodeMirror 6) is backup only.
+
+## Rules
+- Local git only. No GitHub. Commit per completed task.
+- One writer per folder: `spikes/A`, `spikes/B`, `docs/`, `.coord/`.
+- Keep this file minimal. Put detail in linked docs.
+- Tests are small smoke checks of capability, not app coverage. Disposable.
+- First-party libraries first; other stacks/libraries only on a concrete need, and only if maintained and documented.
+- Update `.coord/STATUS.md` at every dispatch, milestone and completion. Never rely on chat memory.
+
+## Roles (Codex usage first, Claude manages)
+- CEO / manager: whichever Claude session is driving (currently Sonnet 5.5 medium; Opus 5.5 is the intended final reviewer when available). Directors: Codex `gpt-6.1-sol` medium. Workers: Codex `gpt-6-luna` high (backup `gpt-5.6-luna` xhigh). Junior reviewer: Claude Sonnet 5.5 medium (visible session).
+
+## Read when
+- Starting or resuming any work: `.coord/STATUS.md`, then `.coord/HANDOFF.md`.
+- Launching or messaging agents: `docs/agents.md`.
+- Building or judging a spike: `docs/spike-spec.md`.
+- Why something was chosen: `docs/decisions-log.md`.
+- Your task: `.coord/tasks/<id>.md`; write your result to `.coord/reports/<id>.md`.
+# STATUS (update at every dispatch / milestone / completion)
+
+Phase: implementation. Plan approved 2026-10-17 (docs/implementation-plan.md). Skeleton + restore done by manager (src/AntiQuickPad).
+Updated: 2026-10-17 night
+
+## Running now
+- T-004 (M0+M1+M2) Director gpt-6.1-sol medium, headless codex exec. Brief .coord/tasks/T-004.md, log .coord/logs/T-004.log, report .coord/reports/T-004.md, checkpoints .coord/status-T004.md.
+
+## Decisions
+- Speed budget show-to-focus < 100 ms; hotkey Ctrl+Alt+Shift+A; one notch = one page.
+
+## Waiting on user
+- Nothing until T-004 reports (then physical hotkey/tray check).
+# HANDOFF (overwritten at every pause or manager swap)
+
+Read AGENTS.md, then .coord/STATUS.md, docs/retrospective-2026-10-17.md, docs/decisions-log.md.
+
+State (2026-10-17 evening): spike A (Avalonia + AvaloniaEdit) validated by the user: core features plus all 4 retest checks pass. Spike B (GPUI) parked (docs/spikes/B/PARKED.md). 6 UI variants rendered in Avalonia (demos/ui-variants/REPORT.md, out/*.png): Ink, Paper, Terminal, Slate, Midnight, Carousel.
+
+Open for the next session (suggested: fresh Opus 5.5 medium chat):
+1. Confirm stack = Avalonia + AvaloniaEdit (user leans A; ask once).
+2. Choose a UI direction from the variants; list the known Avalonia limits (no leading control, code-panel inner padding, rounded transparent window, fold margin styling).
+3. Write the real implementation plan: carousel (wheel = page switch, drag = direct manipulation), notes model/persistence, markdown + fenced-code colorizing, checkbox widgets, tray/hotkey (Ctrl+Alt+Space collides on this machine), Release-build speed measurement, theming via one Look record. Milestones, small smoke checks only, local git, AGENTS.md pointers.
+4. Dispatch: Codex first (Directors gpt-6.1-sol medium via app session + codex queue, or codex exec with per-run `-c 'windows.sandbox="unelevated"'`; Luna gpt-6-luna high workers). Codex sandbox has NO network: manager runs restore/fetch, Directors build offline. Claude helpers as visible sessions. Directors must finish all milestones in one turn.
+
+User rules: no full-access Codex; transparency de-prioritized; goal = native-Mac-app fit and finish; wheel notches (MX Master 3S, no touchpad); no non-Avalonia mockups presented as our UI; Claude usage conserved.
+
+Resume prompt: "You are resuming AntiQuickPad. Read AGENTS.md, .coord/STATUS.md, .coord/HANDOFF.md and docs/retrospective-2026-10-17.md. Then confirm the stack with the user and write the implementation plan."
+# Launching and messaging agents
+
+| From -> To | How |
+|---|---|
+| Claude -> Claude | `start_session` (visible in Claude Desktop) / `SendMessage` to `local_...` id |
+| Codex -> Codex | `codex exec resume <id>`, `codex queue --thread <id|name> --message "..."`, `codex fork` |
+| Claude -> Codex | headless: `codex exec -m gpt-6.1-sol -c model_reasoning_effort=medium -C <dir> --sandbox workspace-write --output-last-message <report> - < task.md > .coord/logs/<task>.log`, run in background. Exit wakes the caller. |
+| Codex -> Claude | files only: `.coord/reports/`, `STATUS.md`, `HANDOFF.md`; then exit |
+
+Directors (Codex `gpt-6.1-sol` medium) spawn Luna (`gpt-6-luna` high) subagents. Sonnet 5.5 medium reviews as a visible session.
+
+Limits: write a checkpoint to STATUS.md after every milestone. On a limit stop write HANDOFF.md (task id, session id, earliest resume time). Failover: same agent after reset (`exec resume`) -> other Codex model -> Sonnet session -> CEO if small. Never poll for limits.
+
+**Second route (user-approved, per invocation only, never global):** add `-c 'windows.sandbox="unelevated"'` to `codex exec` (keep `--sandbox workspace-write`; never full access). Verified for file write + Luna subagent. Optional tool, app sessions stay primary.
+
+**Current working route (2026-10-17):** `codex exec` fails here (sandbox setup error). Use Codex **app sessions** instead: the user starts a session in this project (gpt-6.1-sol medium) and names it; the manager sends work with `codex queue --thread <name> --message "..."`. Delivery happens between turns (user clicks Steer for mid-turn). Directors run all milestones in ONE turn, writing STATUS.md checkpoints as they go, and end the turn only when the report is written or they are blocked. They never wait inside a turn and must not end a turn mid-task (the manager is not polling; an ended turn means idle until queued). Point them at a task file (`.coord/tasks/T-###.md`) instead of long messages.
+
+Verified recipes: see `docs/comms-tests.md`.
+# Implementation plan (v1, 2026-10-17)
+
+Stack confirmed by user: **Avalonia + AvaloniaEdit** (spike B parked, C unused). UI direction: undecided; ship one default `Look` and choose after seeing the real app. Transparency stays de-prioritized.
+
+## Principles
+- Speed of show/hide is the top goal: pre-created window kept alive, show/hide only toggles visibility. Measure in Release.
+- Start from spike A code (`spikes/A`), moved into `src/AntiQuickPad/` and cleaned. Spikes stay as reference, untouched.
+- Smoke checks only (models, stores, a few scripted UI probes). Disposable.
+- One `Look` record drives all theming (palette, fonts, gutter, checkbox style, code panel).
+- Local git, one commit per milestone. Manager commits (Directors cannot write `.git`).
+- Codex sandbox is offline: manager runs `dotnet restore` before dispatch.
+
+## Known Avalonia limits (accepted)
+No line-height control; no inner padding in code panels; true rounded/transparent window flaky; fold margin only restylable by brush. Design around these, do not fight them.
+
+## Milestones
+
+| # | Milestone | Done when |
+|---|---|---|
+| M0 | **Project skeleton**: `src/AntiQuickPad` (net, Avalonia 12.1.4, AvaloniaEdit 12.0.0), `Look` record + one default look, `RuntimePaths`, solution, restore done offline-ready | `dotnet build -c Release` clean; empty window opens |
+| M1 | **Shell and hotkey**: borderless always-on-top window, tray icon, single instance, global hotkey (default **Ctrl+Alt+Shift+A**, configurable; Ctrl+Alt+Space collides here), show = focus editor, hide = Esc/hotkey, reopen cue | Scripted + manual: hotkey toggles, focus lands in editor |
+| M2 | **Notes model and persistence**: note list, current index, autosave (debounced + on hide/exit), atomic writes, plain `.md` files in a data folder, restore last note and caret on relaunch | Smoke check: create/edit/relaunch round trip |
+| M3 | **Editor**: Markdown decoration (headings, bold/italic/strike with dimmed markers), fenced-code colouring (Python first, language from fence or first-line `python:`), `- [ ]`/`- [x]` checkbox widgets with click toggle and hover cursor, Tab/Shift+Tab indent, folding, line numbers per Look | Fixture file renders; checkbox toggles text |
+| M4 | **Carousel**: wheel notch = prev/next note with ~220 ms slide, drag = 1:1 direct manipulation with snap, new/delete note, page indicator | Wheel and drag verified by user on MX Master 3S |
+| M5 | **Release measurement**: hotkey-to-visible-and-focused, hide time, idle RAM, idle CPU, in Release; record in `docs/perf.md` | Numbers recorded; compare against a speed budget agreed with user (proposed: show < 100 ms) |
+| M6 | **Look pass**: implement 2 to 3 variants from `demos/ui-variants` (candidates Ink, Paper, Slate) as `Look` entries, runtime switch; user picks | User chooses default look |
+| M7 | **Settings and polish**: hotkey setting, font size, data folder, start with Windows, about/version | Manual checklist |
+
+M0 to M2 can start immediately; M3 and M4 depend on M0 only and can run in parallel after it (different files). M5 needs M1 to M4. M6 needs M3.
+
+## Dispatch (per AGENTS.md roles)
+- Directors (Codex `gpt-6.1-sol` medium) own a milestone each and finish it in one turn; Luna workers (`gpt-6-luna` high) do bounded subtasks (colorizer, checkbox generator, carousel animation).
+- Task briefs in `.coord/tasks/<id>.md`, reports in `.coord/reports/<id>.md`. STATUS.md updated by the manager at each dispatch and milestone.
+- Folder ownership: `src/` is a new folder; one writer at a time per subfolder (`src/AntiQuickPad/Editor`, `/Shell`, `/Notes`, `/Carousel`). AGENTS.md rule list to be extended with these.
+- Claude reviews each report (Sonnet junior reviewer; Opus final review when available).
+
+## Risks and mitigations
+- **Hotkey/tray unproven in Release**: M1 is first and tested before editor work.
+- **Carousel feel**: M4 isolates animation; tune duration/easing after user test.
+- **Polish ceiling**: M6 decides; if the bar is not met, record it and stop rather than reopen B.
+- **Quota**: one milestone per Director turn, token budget noted in each brief.
+
+## Open decisions for the user
+- Speed budget for M5 (proposed < 100 ms show-to-focus).
+- Final hotkey chord.
+- Wheel behaviour: one notch = one page (current) or smoother.
+- Whether transparency returns later.
+# Spike spec (identical for A and B)
+
+Build a disposable prototype in `spikes/<A|B>/`. Report in `docs/spikes/<A|B>/REPORT.md`: pass/fail per item, numbers, screenshots, effort estimate, and what blocked you.
+
+Status 2026-10-17: spikes are complete (A validated, B parked). The carousel item below was consolidated from three earlier versions (original touchpad-based gate, then a wheel-only gate, then page-switch clarification); the version here is the current intent. The real app plan supersedes this file.
+
+1. Resident tray app. Global hotkey toggles a frameless window that stays initialized while hidden.
+2. Backgrounds: true transparent, Acrylic, Mica. Which work; is text crisp. (De-prioritized: broken in both spikes.)
+3. Fixture note: heading colors by level; bold/italic/strike with visible markers; clickable `- [ ]` toggling the text; Tab/Shift+Tab indent on selection; fenced python block highlighted, rest stays markdown.
+4. Carousel (MUST).
+   - **Input hardware:** the user has no precision touchpad, only a Logitech MX Master 3S with a notched horizontal wheel (one notch = WM_MOUSEHWHEEL delta 120, roughly 80-170 ms apart, no hi-res deltas). Record the mouse model/driver in reports.
+   - **Wheel = page switch:** one horizontal notch (or a quick burst, coalesced) moves to the previous/next note with an animated slide. A wheel has no contact or lift, so a burst "ends" after a short idle gap (~80-150 ms, tunable).
+   - **Mouse drag = direct manipulation:** content follows the pointer 1:1; on release distance + velocity decide advance or spring back; momentum then snap; rubber-band overscroll past the newest note.
+   - **New and blank notes:** overscroll past the newest note (wheel burst or drag beyond a threshold) creates one new note; blank interior notes are pruned.
+   - Word-wrapped notes; vertical scroll within a note still works; the horizontal gesture does not fight text selection.
+   - **Optional, not a gate:** precision-touchpad two-finger pan, with finger-lift vs inertia distinguished (laptop users later).
+5. Autosave to disk, restore on relaunch.
+6. Wishlist probes (not blockers): code folding, line numbers. yes/no/effort.
+7. Measurements (script where possible): cold launch to editable, hotkey to visible+focused, hide time, idle RAM, dev-loop friction.
+
+Testing: about 10-15 smoke checks, disposable, header `# spike`. No exhaustive suites.
+# spike — Avalonia + AvaloniaEdit
+
+Default launch is the mouse-driven scratchpad prototype. Diagnostic mode is `--probe`. Dependencies are already cached; no new package is required.
+
+From the repository root:
+
+```powershell
+$env:AVALONIA_TELEMETRY_OPTOUT = '1'
+dotnet build .\spikes\A\InputProbe.csproj --no-restore -p:UseAppHost=false -p:OutDir=bin/verify/retest/
+dotnet .\spikes\A\bin\verify\retest\InputProbe.dll
+```
+
+Use the DLL command, not the old Debug executable. An old user-owned diagnostic process may still lock that executable; this output avoids it. The application finds spikes/A by its project file regardless of output-directory depth.
+
+Controls:
+- Horizontal wheel: first notch starts one 220 ms cubic page slide. Quick bursts coalesce; no page queue or repeated same-direction restart. Burst ends after slide completion and a 140 ms idle gap. Reversal retargets continuously. Positive Avalonia delta requests newer notes; hi-res/inertial drivers remain untested.
+- Blue `DRAG NOTES HERE` strip: left-button drag with pointer capture and real release; a short slow drag springs back. Editor mouse selection is kept separate.
+- Pull left beyond the newest note by more than 170 logical pixels to create one note. Resistance is capped near 180 px; one wheel burst beyond newest commits one new note. `+ Note` / Ctrl+N also adds a note. Blank interior notes are removed when creating another note; newest blank remains.
+- Checkbox source markers show a Hand cursor and toggle tooltip on hover, and are clickable. Ctrl+Z undoes changes. Tab/Shift+Tab handles caret-only and selected lines; outdent removes up to four spaces or one tab. Fixture keeps Markdown markers visible and colors heading levels, emphasis and Python fence keyword/string tokens.
+- `Fold code` installs/removes folding margins for current fences; click the margin chevron to fold. Line numbers are enabled. Folding definitions are a one-shot probe, not maintained live after document edits.
+- Material selector requests AcrylicBlur, Mica or Transparent; footer records actual value.
+- Escape / Hide retains the initialized window. Tray click/menu always shows and focuses. Ctrl+Alt+Shift+A toggles globally when registered. Footer/tray tooltip shows the chord or unavailable; Exit older copies to release it. Exit quits.
+
+Notes autosave synchronously to `spikes/A/data/notes.json` via temporary-file replacement. Content/order restore on launch; current index/undo history do not persist. This disposable store is not a recovery system: keep test data disposable. Data/logs/build outputs are ignored by git.
+
+Small checks:
+
+```powershell
+dotnet .\spikes\A\bin\verify\retest\InputProbe.dll --smoke       # 12 model/editor/store checks
+dotnet .\spikes\A\bin\verify\retest\InputProbe.dll --ui-smoke    # temporary notes, opens, checks, renders preview, exits
+dotnet .\spikes\A\bin\verify\retest\InputProbe.dll --probe       # raw Avalonia / native input diagnostic
+```
+
+UI smoke logs focus, template/layout, programmatic insert/undo, material actual values, memory sample and method-level hide/show dispatch. Its preview excludes Windows compositor backdrops. Logs/previews go to spikes/A/logs; the UI smoke JSON is temporary and deleted on exit. These checks do not prove physical typing, mouse feel, hotkey delivery, tray accessibility or text clarity on desktop materials. Use docs/spikes/A/MANUAL-CHECKS.md and the CURRENT instructions at the end of .coord/status-A.md.
+# T-004: M0 + M1 + M2 (skeleton, shell/hotkey, notes persistence)
+
+Director: Codex gpt-6.1-sol medium. Workers: Luna gpt-6-luna high for bounded subtasks.
+Read first: AGENTS.md, docs/implementation-plan.md (M0-M2), docs/spike-spec.md, spikes/A/README.md and spikes/A source (reference; do NOT edit spikes/).
+Write only in `src/AntiQuickPad/` and `.coord/reports/T-004.md`, `.coord/status-T004.md`. Do not touch .git (manager commits) or .coord/STATUS.md.
+Network: none. Packages are already restored (net10.0, Avalonia 12.1.4, AvaloniaEdit 12.0.0). Use `dotnet build -c Release --no-restore`.
+
+Decisions (user, 2026-10-17): hotkey Ctrl+Alt+Shift+A (configurable, default constant in one place); speed budget show-to-focus < 100 ms; transparency de-prioritized (opaque window fine); theming via one `Look` record.
+
+Finish ALL three milestones in ONE turn. Write a checkpoint line to .coord/status-T004.md after each. Never end the turn mid-task or wait; end only when the report is written or you are blocked.
+
+## M0 skeleton
+Proper App/Program/MainWindow structure under src/AntiQuickPad (subfolders Shell, Notes, Editor, Carousel, Look.cs, RuntimePaths.cs). One default `Look` record (palette, fonts, gutter flag). Reuse spike A code where sound. Empty-but-themed window opens. Release build clean.
+
+## M1 shell + hotkey
+Borderless always-on-top window created once at startup and kept alive; show/hide only toggles visibility. Tray icon (Show/Hide, Quit). Single instance (second launch signals first to show). Global hotkey Ctrl+Alt+Shift+A toggles; Esc hides. Show gives focus to the editor. Log show-to-focus ms to a log file (Stopwatch from hotkey message to editor focused). Subtle reopen cue (e.g. short fade/caret flash).
+Add `--selftest` flag: starts, toggles via the internal show/hide path, prints timings, exits 0/1.
+
+## M2 notes model + persistence
+Note list, current index, plain `.md` files in a data folder (RuntimePaths), atomic writes (temp+rename), debounced autosave plus save on hide/exit, restore last note and caret on relaunch. New/delete note APIs (no carousel UI yet; a simple editor bound to current note is enough, using AvaloniaEdit TextEditor).
+Smoke check (`--selftest` extension): create, edit, save, reload round trip.
+
+## Done when
+`dotnet build -c Release --no-restore` is clean, `--selftest` exits 0, and `.coord/reports/T-004.md` lists what was built, timings, what is unverified (physical hotkey/tray need the user), and any blockers.
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "rg -n \"AntiQuickPad|AntiScratchPad\" C:\\Users\\Neel\\.codex\\memories\\MEMORY.md" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 652ms:
+Unable to open session log file "C:\\Users\\Neel\\.cache\\starship\\session_M5JTyVsLcQ0IefCU.log": Os { code: 5, kind: PermissionDenied, message: "Access is denied." }!
+
+47:# Task Group: AntiScratchPad checkout, native WPF MVP, and safe external-worker smoke testing
+49:scope: Set up and maintain the AntiScratchPad checkout, implement its bounded native Windows MVP, and validate a privacy-safe Claude Haiku CLI smoke test.
+50:applies_to: cwd=F:\LocalVSProj\Visual Studio Apps\AntiScratchPad; reuse_rule=reuse project-specific implementation and branch facts only in this checkout; require explicit permission for desktop viewing/control and external private-data egress.
+52:## Task 1: Clone and fast-forward the AntiScratchPad repository
+56:- rollout_summaries/2026-10-14T16-50-50-Rv6X-clone_and_update_antiscratchpad_repository.md (cwd=\\?\F:\LocalVSProj\Visual Studio Apps\AntiScratchPad, rollout_path=C:\Users\Neel\.codex\sessions\2026\10\14\rollout-2026-10-14T12-50-50-01a13b52-e42d-7c02-a79c-4e092b091383.jsonl, updated_at=2026-10-14T19:09:57+00:00, thread_id=01a13b52-e42d-7c02-a79c-4e092b091383, success: clean main synchronized to origin/main)
+66:- rollout_summaries/2026-10-14T19-09-33-AW6G-antiscratchpad_v01_native_wpf_mvp_draft_pr.md (cwd=\\?\F:\LocalVSProj\Visual Studio Apps\AntiScratchPad, rollout_path=\\?\C:\Users\Neel\.codex\sessions\2026\10\14\rollout-2026-10-14T15-10-06-01a13bd1-e590-7d82-9b2c-4c2db18d97f6_01a13bd2-65e2-79e1-b04b-fe30c152d2a4.jsonl, updated_at=2026-10-14T19:32:46+00:00, thread_id=01a13bd1-e590-7d82-9b2c-4c2db18d97f6, success: headless checks and draft PR; live GUI unverified)
+76:- rollout_summaries/2026-10-14T19-29-40-BdNi-claude_haiku_safe_smoke_test.md (cwd=\\?\F:\LocalVSProj\Visual Studio Apps\AntiScratchPad, rollout_path=C:\Users\Neel\.codex\sessions\2026\10\14\rollout-2026-10-14T15-29-40-01a13be4-4e2d-7ae0-a3a1-334b372270dc.jsonl, updated_at=2026-10-14T19:32:45+00:00, thread_id=01a13be4-4e2d-7ae0-a3a1-334b372270dc, success: synthetic no-tools worker only)
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'rg --files src/AntiQuickPad spikes/A' in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 435ms:
+Unable to open session log file "C:\\Users\\Neel\\.cache\\starship\\session_NU8iv6y1AeTaQord.log": Os { code: 5, kind: PermissionDenied, message: "Access is denied." }!
+
+spikes/A\SpikeWindow.cs
+src/AntiQuickPad\Program.cs
+spikes/A\SmokeChecks.cs
+spikes/A\RuntimePaths.cs
+spikes/A\README.md
+spikes/A\Program.cs
+spikes/A\ProbeWindow.cs
+spikes/A\MarkdownColorizer.cs
+spikes/A\InputProbe.csproj
+spikes/A\EditorOperations.cs
+spikes/A\CarouselModel.cs
+spikes/A\App.cs
+spikes/A\App.axaml
+src/AntiQuickPad\AntiQuickPad.csproj
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command 'Get-Content src/AntiQuickPad/Program.cs; Get-Content src/AntiQuickPad/AntiQuickPad.csproj; Get-Content spikes/A/App.cs; Get-Content spikes/A/Program.cs; Get-Content spikes/A/RuntimePaths.cs; Get-Content spikes/A/SpikeWindow.cs' in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 229ms:
+// placeholder so restore/build work offline; Director replaces in M0
+return 0;
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+    <PackageReference Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
+  </ItemGroup>
+</Project>
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Markup.Xaml;
+
+namespace InputProbe;
+
+public sealed class App : Application
+{
+    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+
+    public override void OnFrameworkInitializationCompleted()
+    {
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            desktop.MainWindow = Program.Args.Contains("--probe", StringComparer.OrdinalIgnoreCase)
+                ? new ProbeWindow()
+                : new SpikeWindow();
+        base.OnFrameworkInitializationCompleted();
+    }
+}
+using Avalonia;
+
+namespace InputProbe;
+
+internal static class Program
+{
+    private static readonly long StartedAt = System.Diagnostics.Stopwatch.GetTimestamp();
+    public static string[] Args { get; private set; } = [];
+    public static double ElapsedMs => System.Diagnostics.Stopwatch.GetElapsedTime(StartedAt).TotalMilliseconds;
+    public static string? PersistencePath { get; private set; }
+    public static string PersistenceMarkerPath => PersistencePath + ".expected-marker.txt";
+    public static bool PersistenceWrite => Args.Contains("--persistence-write", StringComparer.OrdinalIgnoreCase);
+    public static bool PersistenceRead => Args.Contains("--persistence-read", StringComparer.OrdinalIgnoreCase);
+    public static bool IsPersistenceMode => PersistenceWrite || PersistenceRead;
+
+    [STAThread]
+    public static void Main(string[] args)
+    {
+        Environment.SetEnvironmentVariable("AVALONIA_TELEMETRY_OPTOUT", "1");
+        Args = args;
+        if (!ConfigurePersistence(args)) return;
+        if (args.Contains("--smoke", StringComparer.OrdinalIgnoreCase))
+        {
+            Environment.ExitCode = SmokeChecks.Run();
+            return;
+        }
+        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    }
+
+    private static bool ConfigurePersistence(string[] args)
+    {
+        var write = args.Contains("--persistence-write", StringComparer.OrdinalIgnoreCase);
+        var read = args.Contains("--persistence-read", StringComparer.OrdinalIgnoreCase);
+        var pathIndex = Array.FindIndex(args, x => string.Equals(x, "--data-path", StringComparison.OrdinalIgnoreCase));
+        if (!write && !read && pathIndex < 0) return true;
+        if (write == read || pathIndex < 0 || pathIndex + 1 >= args.Length)
+        {
+            Console.Error.WriteLine("Use exactly one persistence mode with --data-path <isolated-temp-file.json>.");
+            Environment.ExitCode = 2;
+            return false;
+        }
+
+        var path = Path.GetFullPath(args[pathIndex + 1]);
+        var tempRoot = Path.GetFullPath(Path.GetTempPath()).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        if (!path.StartsWith(tempRoot, StringComparison.OrdinalIgnoreCase) || !path.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.Error.WriteLine("Persistence smoke accepts a .json path inside the system temp directory only.");
+            Environment.ExitCode = 2;
+            return false;
+        }
+        if (write && (File.Exists(path) || File.Exists(path + ".expected-marker.txt")))
+        {
+            Console.Error.WriteLine("Refusing to overwrite existing persistence smoke files.");
+            Environment.ExitCode = 2;
+            return false;
+        }
+        if (read && (!File.Exists(path) || !File.Exists(path + ".expected-marker.txt")))
+        {
+            Console.Error.WriteLine("Persistence read needs existing data and expected-marker files from a write run.");
+            Environment.ExitCode = 2;
+            return false;
+        }
+        PersistencePath = path;
+        return true;
+    }
+
+    public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace();
+}
+namespace InputProbe;
+
+internal static class RuntimePaths
+{
+    public static string Root { get; } = FindRoot();
+    private static string FindRoot()
+    {
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
+            if (File.Exists(Path.Combine(directory.FullName, "InputProbe.csproj"))) return directory.FullName;
+        throw new InvalidOperationException("Run this disposable spike from its spikes/A checkout build output.");
+    }
+}
+using System.Diagnostics;
+using System.Globalization;
+using System.Runtime.InteropServices;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Layout;
+using Avalonia.Media;
+using Avalonia.Threading;
+using AvaloniaEdit;
+using AvaloniaEdit.Document;
+using AvaloniaEdit.Folding;
+
+namespace InputProbe;
+
+public sealed class SpikeWindow : Window
+{
+    private const int HotkeyId = 0x5141;
+    private const uint WmHotkey = 0x0312;
+    private const uint ModAlt = 0x0001, ModControl = 0x0002, ModShift = 0x0004, ModNoRepeat = 0x4000;
+    private const double CardWidth = 760, CardGap = 24, WheelPageMs = 220;
+    private readonly NoteStore _store;
+    private List<Note> _notes;
+    private readonly List<TextEditor> _editors = [];
+    private readonly Canvas _canvas = new();
+    private readonly Canvas _stripCanvas = new();
+    private readonly Border _grabStrip = new();
+    private readonly TextBlock _status = new() { TextWrapping = TextWrapping.Wrap };
+    private readonly ComboBox _material = new();
+    private readonly DispatcherTimer _animation;
+    private readonly WheelBurstState _wheelBurst = new();
+    private readonly Stopwatch _clock = Stopwatch.StartNew();
+    private readonly string _logPath;
+    private StreamWriter? _log;
+    private TrayIcon? _tray;
+    private FoldingManager? _folding;
+    private long _gestureAt, _animationStartedAt, _showRequestedAt;
+    private Point _dragStart;
+    private Point _lastPointer;
+    private double _dragOffset, _targetOffset, _lastVelocity, _dragOriginOffset, _animationStartX, _wheelTargetX;
+    private int _initializationCount;
+    private int _currentIndex;
+    private IPointer? _captured;
+    private bool _isDragging, _closing, _hotkeyRegistered, _initialized, _wheelAnimation;
+    private IntPtr _hwnd;
+    private string _hotkeyLabel = "Ctrl+Alt+Shift+A";
+
+    public SpikeWindow()
+    {
+        Title = "AntiQuickPad spike";
+        Width = 900; Height = 700; MinWidth = 760; MinHeight = 560;
+        WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        WindowDecorations = Avalonia.Controls.WindowDecorations.None;
+        Topmost = true;
+        Background = new SolidColorBrush(Color.Parse("#CC111820"));
+        TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur, WindowTransparencyLevel.Mica, WindowTransparencyLevel.Transparent];
+
+        var data = Path.Combine(RuntimePaths.Root, "data");
+        var storePath = Program.IsPersistenceMode ? Program.PersistencePath!
+            : Program.Args.Contains("--ui-smoke", StringComparer.OrdinalIgnoreCase)
+                ? Path.Combine(Path.GetTempPath(), $"aqp-ui-smoke-{Guid.NewGuid():N}.json")
+                : Path.GetFullPath(Path.Combine(data, "notes.json"));
+        _store = new NoteStore(storePath);
+        _notes = _store.Load();
+        _logPath = Path.Combine(RuntimePaths.Root, "logs", $"spike-{DateTime.Now:yyyyMMdd-HHmmss-fff}.log");
+        Directory.CreateDirectory(Path.GetDirectoryName(_logPath)!);
+        _log = new StreamWriter(new FileStream(_logPath, FileMode.Append, FileAccess.Write, FileShare.Read)) { AutoFlush = true };
+
+        BuildEditors();
+        var toolbar = BuildToolbar();
+        _grabStrip.Child = new TextBlock { Text = "≡   DRAG NOTES HERE   ≡", HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Foreground = Brushes.White, FontWeight = FontWeight.Bold };
+        _grabStrip.Height = 34; _grabStrip.Background = new SolidColorBrush(Color.Parse("#663E83A8"));
+        _grabStrip.Cursor = new Cursor(StandardCursorType.SizeAll);
+        _grabStrip.PointerPressed += StartDrag;
+        _grabStrip.PointerMoved += MoveDrag;
+        _grabStrip.PointerReleased += EndDrag;
+        _grabStrip.PointerCaptureLost += (_, _) => CancelDrag("capture-lost");
+
+        var root = new DockPanel { LastChildFill = true, Margin = new Thickness(12) };
+        DockPanel.SetDock(toolbar, Dock.Top); root.Children.Add(toolbar);
+        DockPanel.SetDock(_grabStrip, Dock.Top); root.Children.Add(_grabStrip);
+        _canvas.ClipToBounds = true; _canvas.Children.Add(_stripCanvas);
+        var footer = new Border { Child = _status, Margin = new Thickness(2, 6) };
+        DockPanel.SetDock(footer, Dock.Bottom); root.Children.Add(footer);
+        root.Children.Add(_canvas);
+        Content = root;
+
+        _animation = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+        _animation.Tick += (_, _) => AnimateSnap();
+        AddHandler(InputElement.PointerWheelChangedEvent, Wheel, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
+        AddHandler(InputElement.KeyDownEvent, KeyPressed, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
+        Opened += (_, _) =>
+        {
+            if (_initialized) { Dispatcher.UIThread.Post(FocusCurrent, DispatcherPriority.Input); return; }
+            _initialized = true;
+            _initializationCount++;
+            Log($"opened os={RuntimeInformation.OSDescription} framework={RuntimeInformation.FrameworkDescription} dpi={RenderScaling * 96:F0} restoredNotes={_notes.Count} processToOpened={Program.ElapsedMs:F1}ms");
+            InstallNativeHooks();
+            Dispatcher.UIThread.Post(FocusCurrent, DispatcherPriority.Input);
+            Dispatcher.UIThread.Post(FocusCurrent, DispatcherPriority.Background);
+            if (Program.PersistenceWrite) Dispatcher.UIThread.Post(RunPersistenceWrite, DispatcherPriority.Background);
+            else if (Program.PersistenceRead) Dispatcher.UIThread.Post(RunPersistenceRead, DispatcherPriority.Background);
+            else if (Program.Args.Contains("--ui-smoke", StringComparer.OrdinalIgnoreCase)) Dispatcher.UIThread.Post(RunUiSmoke, DispatcherPriority.Background);
+        };
+        Activated += (_, _) => Dispatcher.UIThread.Post(FocusCurrent, DispatcherPriority.Input);
+        Deactivated += (_, _) => { CancelDrag("deactivated"); SaveNotes(); };
+        Closed += (_, _) => Cleanup();
+        UpdateStrip(0);
+    }
+
+    private void BuildEditors()
+    {
+        _stripCanvas.Children.Clear(); _editors.Clear();
+        for (var i = 0; i < _notes.Count; i++)
+        {
+            var editor = new TextEditor
+            {
+                Width = CardWidth, Height = 560, FontFamily = new FontFamily("Cascadia Code, Consolas"), FontSize = 17,
+                ShowLineNumbers = true, WordWrap = true, Background = new SolidColorBrush(Color.Parse("#E8172029")),
+                Foreground = new SolidColorBrush(Color.Parse("#FFF5F7FA")), Padding = new Thickness(18),
+                Text = _notes[i].Text
+            };
+            editor.TextArea.TextView.LineTransformers.Add(new MarkdownColorizer());
+            var id = i;
+            editor.TextChanged += (_, _) => { _notes[id].Text = editor.Text; SaveNotes(); Log($"text-changed note={id} chars={editor.Text.Length} focused={editor.IsKeyboardFocusWithin}"); };
+            editor.AddHandler(InputElement.PointerPressedEvent, (_, e) => TryToggleCheckbox(editor, e), Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
+            editor.AddHandler(InputElement.PointerMovedEvent, (_, e) => UpdateCheckboxHover(editor, e.GetPosition(editor.TextArea.TextView)), Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
+            editor.PointerExited += (_, _) => SetEditorCursor(editor, false);
+            editor.TextArea.TextView.PointerExited += (_, _) => SetEditorCursor(editor, false);
+            editor.GotFocus += (_, _) => Log($"editor-focus note={id} actual={editor.IsKeyboardFocusWithin}");
+            _editors.Add(editor);
+            var card = new Border { Child = editor, CornerRadius = new CornerRadius(12), BorderBrush = new SolidColorBrush(Color.Parse("#665F8299")), BorderThickness = new Thickness(1), ClipToBounds = true };
+            Canvas.SetLeft(card, i * (CardWidth + CardGap)); Canvas.SetTop(card, 0); _stripCanvas.Children.Add(card);
+        }
+        SetCanvasPosition(0);
+    }
+
+    private Control BuildToolbar()
+    {
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
+        row.Children.Add(new TextBlock { Text = "AntiQuickPad", FontSize = 18, FontWeight = FontWeight.Bold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 10, 0) });
+        AddButton(row, "＋ Note", CreateNote);
+        AddButton(row, "←", () => GoTo(_currentIndex - 1)); AddButton(row, "→", () => GoTo(_currentIndex + 1));
+        AddButton(row, "Fold code", ToggleCodeFold);
+        _material.ItemsSource = new[] { "AcrylicBlur", "Mica", "Transparent" }; _material.SelectedIndex = 0; _material.Width = 130;
+        _material.SelectionChanged += (_, _) => ApplyMaterial(); row.Children.Add(_material);
+        AddButton(row, "Hide", HideResident); AddButton(row, "Exit", ExitApp);
+        return row;
+    }
+
+    private static void AddButton(Panel panel, string text, Action action)
+    { var b = new Button { Content = text, Padding = new Thickness(9, 5) }; b.Click += (_, _) => action(); panel.Children.Add(b); }
+
+    private void ApplyMaterial()
+    {
+        var name = _material.SelectedItem?.ToString() ?? "AcrylicBlur";
+        var level = name switch { "Mica" => WindowTransparencyLevel.Mica, "Transparent" => WindowTransparencyLevel.Transparent, _ => WindowTransparencyLevel.AcrylicBlur };
+        TransparencyLevelHint = [level, WindowTransparencyLevel.AcrylicBlur, WindowTransparencyLevel.Mica, WindowTransparencyLevel.Transparent];
+        Background = name == "Transparent" ? Brushes.Transparent : new SolidColorBrush(Color.Parse("#D9141D26"));
+        Dispatcher.UIThread.Post(() => { UpdateFocusStatus(); Log($"material requested={name} actual={ActualTransparencyLevel}"); });
+    }
+
+    private void Wheel(object? sender, PointerWheelEventArgs e)
+    {
+        if (Math.Abs(e.Delta.X) < .001) return;
+        if (_isDragging) { e.Handled = true; return; }
+        var nowMs = (long)_clock.Elapsed.TotalMilliseconds;
+        var animationInFlight = _wheelAnimation && Stopwatch.GetElapsedTime(_animationStartedAt).TotalMilliseconds < WheelPageMs;
+        if (_wheelBurst.IsExpired(nowMs, animationInFlight)) FinishWheelBurst();
+        var result = _wheelBurst.Add(_currentIndex, _notes.Count, e.Delta.X, nowMs, animationInFlight);
+        if (!_wheelAnimation)
+        {
+            _animation.Stop();
+            _animationStartX = (_stripCanvas.RenderTransform as TranslateTransform)?.X ?? -_currentIndex * (CardWidth + CardGap);
+            _animationStartedAt = Stopwatch.GetTimestamp();
+            _wheelAnimation = true;
+        }
+        var requestedX = result.CreateAtNewestEdge
+            ? -_currentIndex * (CardWidth + CardGap) - 100
+            : -result.TargetIndex * (CardWidth + CardGap);
+        if (_wheelAnimation && requestedX != _wheelTargetX)
+        {
+            _animationStartX = (_stripCanvas.RenderTransform as TranslateTransform)?.X ?? _animationStartX;
+            _animationStartedAt = Stopwatch.GetTimestamp();
+        }
+        _wheelTargetX = requestedX;
+        _animation.Start();
+        Log($"wheel-page burst={result.BurstNumber} dx={e.Delta.X:F3} target={result.TargetIndex} edge={result.CreateAtNewestEdge} animated=220ms");
+        e.Handled = true;
+    }
+
+    private void StartDrag(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(_grabStrip).Properties.IsLeftButtonPressed) return;
+        if (_wheelBurst.IsActive) FinishWheelBurst();
+        _dragOriginOffset = ((_stripCanvas.RenderTransform as TranslateTransform)?.X ?? 0) + _currentIndex * (CardWidth + CardGap);
+        _animation.Stop(); _wheelAnimation = false; _captured = e.Pointer; _captured.Capture(_grabStrip); _isDragging = true;
+        _dragStart = _lastPointer = e.GetPosition(_grabStrip); _dragOffset = _dragOriginOffset; _lastVelocity = 0; _gestureAt = Stopwatch.GetTimestamp();
+        e.Handled = true; Log("drag-start capture=true");
+    }
+
+    private void MoveDrag(object? sender, PointerEventArgs e)
+    {
+        if (!_isDragging) return;
+        var p = e.GetPosition(_grabStrip); var now = Stopwatch.GetTimestamp();
+        var delta = CarouselMath.DragDelta(_lastPointer.X, p.X); _dragOffset = _dragOriginOffset + CarouselMath.DragDelta(_dragStart.X, p.X);
+        var ms = Math.Max(.1, Stopwatch.GetElapsedTime(_gestureAt, now).TotalMilliseconds);
+        _lastVelocity = delta / ms; _lastPointer = p; _gestureAt = now;
+        UpdateStrip(_dragOffset); e.Handled = true;
+    }
+
+    private void EndDrag(object? sender, PointerReleasedEventArgs e)
+    {
+        if (!_isDragging) return;
+        if (Stopwatch.GetElapsedTime(_gestureAt).TotalMilliseconds > 80) _lastVelocity = 0;
+        _isDragging = false; _captured?.Capture(null); _captured = null;
+        Log($"drag-release distance={_dragOffset:F1} velocity={_lastVelocity:F3}px/ms"); FinishGesture(); e.Handled = true;
+    }
+
+    private void CancelDrag(string reason)
+    {
+        if (!_isDragging) return;
+        _isDragging = false; var pointer = _captured; _captured = null; pointer?.Capture(null); Log($"drag-cancel {reason}");
+        _dragOffset = 0; SnapTo(_currentIndex);
+    }
+
+    private void FinishGesture()
+    {
+        var displacement = _dragOffset;
+        var edge = CarouselMath.ShouldCreateNote(_currentIndex, _notes.Count, displacement);
+        if (edge) { CreateNote(); Log($"rubber-band create displacement={displacement:F1}"); }
+        else
+        {
+            SnapTo(CarouselMath.SnapIndex(_currentIndex, displacement, _lastVelocity, _notes.Count));
+        }
+        _dragOffset = 0;
+    }
+
+    private void UpdateStrip(double offset)
+    {
+        var min = -_currentIndex * (CardWidth + CardGap);
+        var max = -Math.Max(0, _notes.Count - 1) * (CardWidth + CardGap);
+        var global = min + offset;
+        if (global > 0) global = CarouselMath.RubberBand(global);
+        if (global < max) global = max + CarouselMath.RubberBand(global - max);
+        SetCanvasPosition(global);
+    }
+    private void SetCanvasPosition(double x) => _stripCanvas.RenderTransform = new TranslateTransform(x, 0);
+
+    private void GoTo(int index)
+    {
+        _wheelBurst.Reset(); _wheelAnimation = false;
+        var clamped = Math.Clamp(index, 0, _notes.Count - 1);
+        _wheelAnimation = false; _currentIndex = clamped; _targetOffset = -_currentIndex * (CardWidth + CardGap); _animationStartedAt = Stopwatch.GetTimestamp(); _animationStartX = (_stripCanvas.RenderTransform as TranslateTransform)?.X ?? 0; _animation.Start(); UpdateFocusStatus();
+    }
+    private void SnapTo(int index) { _wheelBurst.Reset(); _dragOffset = 0; _wheelAnimation = false; _currentIndex = Math.Clamp(index, 0, _notes.Count - 1); _targetOffset = -_currentIndex * (CardWidth + CardGap); _animationStartX = (_stripCanvas.RenderTransform as TranslateTransform)?.X ?? 0; _animationStartedAt = Stopwatch.GetTimestamp(); _animation.Start(); }
+    private void AnimateSnap()
+    {
+        var transform = _stripCanvas.RenderTransform as TranslateTransform;
+        var x = transform?.X ?? 0;
+        if (_wheelAnimation)
+        {
+            var elapsed = Stopwatch.GetElapsedTime(_animationStartedAt).TotalMilliseconds;
+            var progress = Math.Clamp(elapsed / WheelPageMs, 0, 1);
+            var eased = 1 - Math.Pow(1 - progress, 3);
+            SetCanvasPosition(_animationStartX + (_wheelTargetX - _animationStartX) * eased);
+            if (progress >= 1 && _wheelBurst.IsExpired((long)_clock.Elapsed.TotalMilliseconds)) FinishWheelBurst();
+            return;
+        }
+        var progressToTarget = Math.Clamp(Stopwatch.GetElapsedTime(_animationStartedAt).TotalMilliseconds / WheelPageMs, 0, 1);
+        var next = _animationStartX + (_targetOffset - _animationStartX) * (1 - Math.Pow(1 - progressToTarget, 3));
+        if (progressToTarget >= 1) { next = _targetOffset; _animation.Stop(); Dispatcher.UIThread.Post(FocusCurrent, DispatcherPriority.Input); }
+        SetCanvasPosition(next); UpdateFocusStatus();
+    }
+
+    private void FinishWheelBurst()
+    {
+        if (!_wheelBurst.IsActive) return;
+        var result = _wheelBurst.Complete();
+        _wheelAnimation = false;
+        if (result.CreateAtNewestEdge) { Log($"wheel-edge create burst={result.BurstNumber}"); CreateNote(); return; }
+        _currentIndex = result.TargetIndex;
+        _targetOffset = -_currentIndex * (CardWidth + CardGap);
+        SetCanvasPosition(_targetOffset);
+        _animation.Stop();
+        UpdateFocusStatus();
+        Dispatcher.UIThread.Post(FocusCurrent, DispatcherPriority.Input);
+        Log($"wheel-page-complete burst={result.BurstNumber} index={_currentIndex}");
+    }
+    private void CreateNote()
+    {
+        _animation.Stop(); _wheelAnimation = false; _wheelBurst.Reset();
+        if (_folding is not null) { FoldingManager.Uninstall(_folding); _folding = null; }
+        for (var i = 0; i < _editors.Count; i++) _notes[i].Text = _editors[i].Text;
+        _notes = CarouselMath.PruneInteriorBlanks(_notes.Append(new Note()).ToList());
+        _currentIndex = _notes.Count - 1; BuildEditors();
+        _targetOffset = -_currentIndex * (CardWidth + CardGap); SetCanvasPosition(_targetOffset); SaveNotes(); FocusCurrent(); Log("note-created");
+    }
+
+    private void TryToggleCheckbox(TextEditor editor, PointerPressedEventArgs e)
+    {
+        if (e.Handled || !e.GetCurrentPoint(editor).Properties.IsLeftButtonPressed) return;
+        if (!TryGetCheckboxAtPoint(editor, e.GetPosition(editor.TextArea.TextView), out var markerOffset, out var line, out var checkedMarker)) return;
+        var caret = editor.TextArea.Caret.Offset;
+        var replacement = EditorOperations.ToggleCheckbox(editor.Document, markerOffset, ref caret);
+        if (replacement is null) return;
+        editor.TextArea.Caret.Offset = caret;
+        editor.TextArea.TextView.Redraw();
+        Log($"checkbox-toggle line={line.LineNumber} checked={!checkedMarker} undo={editor.Document.UndoStack.CanUndo} caret={editor.TextArea.Caret.Offset}");
+        e.Handled = true;
+    }
+
+    private static bool TryGetCheckboxAtPoint(TextEditor editor, Point visualPoint, out int markerOffset, out DocumentLine line, out bool checkedMarker)
+    {
+        markerOffset = 0; line = null!; checkedMarker = false;
+        var position = editor.TextArea.TextView.GetPosition(visualPoint + editor.TextArea.TextView.ScrollOffset);
+        if (position is null) return false;
+        var offset = editor.Document.GetOffset(position.Value.Location);
+        line = editor.Document.GetLineByOffset(offset);
+        var text = editor.Document.GetText(line);
+        var marker = text.IndexOf("[ ]", StringComparison.Ordinal);
+        if (marker < 0) { marker = text.IndexOf("[x]", StringComparison.OrdinalIgnoreCase); checkedMarker = true; }
+        markerOffset = line.Offset + Math.Max(0, marker);
+        return marker >= 0 && offset >= markerOffset && offset <= markerOffset + 2;
+    }
+
+    private static void UpdateCheckboxHover(TextEditor editor, Point visualPoint)
+    {
+        var hit = TryGetCheckboxAtPoint(editor, visualPoint, out _, out _, out _);
+        SetEditorCursor(editor, hit);
+    }
+
+    private static void SetEditorCursor(TextEditor editor, bool checkbox)
+    {
+        var cursor = new Cursor(checkbox ? StandardCursorType.Hand : StandardCursorType.Ibeam);
+        editor.Cursor = cursor; editor.TextArea.Cursor = cursor; editor.TextArea.TextView.Cursor = cursor;
+        ToolTip.SetTip(editor.TextArea.TextView, checkbox ? "Toggle task checkbox" : null);
+    }
+
+    private void HandleEditorKey(TextEditor editor, KeyEventArgs e)
+    {
+        if (e.Key != Key.Tab) return;
+        var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        var segment = editor.TextArea.Selection.SurroundingSegment;
+        var result = EditorOperations.ApplyTab(editor.Document, editor.TextArea.Caret.Offset, segment?.Offset, segment?.EndOffset, shift);
+        if (result.SelectionStart is int start && result.SelectionEnd is int end && end > start)
+            editor.TextArea.Selection = AvaloniaEdit.Editing.Selection.Create(editor.TextArea, start, end);
+        editor.TextArea.Caret.Offset = result.CaretOffset;
+        Log($"selection-indent shift={shift} selection={editor.TextArea.Selection.Length} changed={result.Changed} undo={editor.Document.UndoStack.CanUndo}"); e.Handled = true;
+    }
+
+    private void ToggleCodeFold()
+    {
+        var editor = _editors[_currentIndex];
+        try
+        {
+            if (_folding is not null) { FoldingManager.Uninstall(_folding); _folding = null; UpdateFocusStatus(); Log("folding disabled"); return; }
+            _folding = FoldingManager.Install(editor.TextArea);
+            var lines = editor.Document.Lines.ToArray(); var ranges = new List<NewFolding>(); var start = -1;
+            foreach (var line in lines)
+            {
+                var t = editor.Document.GetText(line);
+                if (t.TrimStart().StartsWith("```")) { if (start < 0) start = line.Offset; else { ranges.Add(new NewFolding(start, line.EndOffset)); start = -1; } }
+            }
+            _folding.UpdateFoldings(ranges, -1); UpdateFocusStatus(); Log($"folding available=true ranges={ranges.Count}");
+        }
+        catch (Exception ex) { UpdateFocusStatus(); Log($"folding error={ex.GetType().Name}:{ex.Message}"); }
+    }
+
+    private void UpdateFocusStatus()
+    {
+        if (_editors.Count == 0) return;
+        _status.Text = $"Note {_currentIndex + 1}/{_notes.Count} · focus={_editors[_currentIndex].IsKeyboardFocusWithin} · {_material.SelectedItem} -> {ActualTransparencyLevel} · {(_hotkeyRegistered ? $"Reopen: {_hotkeyLabel} / tray" : "Reopen: tray (hotkey unavailable)")}";
+    }
+    private void FocusCurrent()
+    {
+        if (!IsVisible || _editors.Count == 0) return;
+        Activate(); _editors[_currentIndex].TextArea.Focus();
+        var showRequestedAt = _showRequestedAt;
+        _showRequestedAt = 0;
+        Dispatcher.UIThread.Post(() => { var focused = _editors[_currentIndex].TextArea.IsKeyboardFocusWithin; UpdateFocusStatus(); var showDelta = showRequestedAt == 0 ? "n/a" : $"{Stopwatch.GetElapsedTime(showRequestedAt).TotalMilliseconds:F1}ms"; Log($"focus-check actual={focused} editorWithin={_editors[_currentIndex].IsKeyboardFocusWithin} mainToFocus={Program.ElapsedMs:F1}ms showToFocus={showDelta}"); }, DispatcherPriority.Background);
+    }
+    private void HideResident() { SaveNotes(); var started = Stopwatch.GetTimestamp(); Hide(); Log($"window-hidden resident=true hideDispatch={Stopwatch.GetElapsedTime(started).TotalMilliseconds:F2}ms"); SampleIdleMemory(); }
+    private void ShowToggle()
+    {
+        if (IsVisible && IsActive) HideResident();
+        else ShowResident("hotkey");
+    }
+    private void ShowResident(string source)
+    {
+        var started = Stopwatch.GetTimestamp();
+        _showRequestedAt = started;
+        WindowState = WindowState.Normal; Show(); Activate();
+        Dispatcher.UIThread.Post(FocusCurrent, DispatcherPriority.Input);
+        Log($"resident-show source={source} dispatchMs={Stopwatch.GetElapsedTime(started).TotalMilliseconds:F3}");
+    }
+    private void SampleIdleMemory()
+    {
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        timer.Tick += (_, _) => { timer.Stop(); if (IsVisible) return; using var process = Process.GetCurrentProcess(); process.Refresh(); Log($"idle-memory privateBytes={process.PrivateMemorySize64} workingSetBytes={process.WorkingSet64} sampleAfterHide=1000ms"); };
+        timer.Start();
+    }
+    private void ExitApp() { SaveNotes(); _closing = true; Close(); }
+    private void SaveNotes()
+    {
+        if (_closing) return;
+        try { _store.Save(_notes); Log($"autosave notes={_notes.Count} path={_store.Path}"); }
+        catch (Exception ex) { Log($"autosave-error {ex.GetType().Name}:{ex.Message}"); }
+    }
+    private void InstallNativeHooks()
+    {
+        if (!OperatingSystem.IsWindows()) { _status.Text = "Windows hotkey unavailable"; return; }
+        Win32Properties.AddWndProcHookCallback(this, WndProc);
+        _hwnd = TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
+        if (_hwnd != IntPtr.Zero)
+        {
+            _hotkeyRegistered = RegisterHotKey(_hwnd, HotkeyId, ModControl | ModAlt | ModShift | ModNoRepeat, 0x41);
+            Log($"hotkey-register result={_hotkeyRegistered} error={Marshal.GetLastWin32Error()}");
+        }
+        SetupTray();
+    }
+    private void SetupTray()
+    {
+        var menu = new NativeMenu();
+        var show = new NativeMenuItem(_hotkeyRegistered ? $"Show / focus · {_hotkeyLabel}" : "Show / focus · hotkey unavailable"); show.Click += (_, _) => ShowResident("tray-menu");
+        var exit = new NativeMenuItem("Exit"); exit.Click += (_, _) => ExitApp();
+        menu.Items.Add(show); menu.Items.Add(exit);
+        _tray = new TrayIcon { ToolTipText = _hotkeyRegistered ? $"AntiQuickPad · {_hotkeyLabel} · click to show" : "AntiQuickPad · hotkey unavailable · click to show", IsVisible = true, Menu = menu, Icon = CreateTrayIcon() };
+        _tray.Clicked += (_, _) => ShowResident("tray-click");
+        TrayIcon.SetIcons(Application.Current!, new TrayIcons { _tray });
+        _status.Text = _hotkeyRegistered ? $"Reopen: {_hotkeyLabel} / tray" : "Reopen: tray (hotkey unavailable)";
+    }
+    private IntPtr WndProc(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == WmHotkey && wParam.ToInt32() == HotkeyId) { handled = true; ShowToggle(); return IntPtr.Zero; }
+        return IntPtr.Zero;
+    }
+    private void Cleanup()
+    {
+        _animation.Stop();
+        SaveNotes();
+        if (OperatingSystem.IsWindows())
+        {
+            Win32Properties.RemoveWndProcHookCallback(this, WndProc);
+            if (_hotkeyRegistered) UnregisterHotKey(_hwnd, HotkeyId);
+        }
+        if (_tray is not null) { _tray.IsVisible = false; _tray.Dispose(); }
+        if (Program.Args.Contains("--ui-smoke", StringComparer.OrdinalIgnoreCase) && File.Exists(_store.Path)) File.Delete(_store.Path);
+        _log?.Dispose(); _log = null;
+        if (Program.Args.Contains("--ui-smoke", StringComparer.OrdinalIgnoreCase) && File.Exists(_store.Path)) File.Delete(_store.Path);
+    }
+
+    private WindowIcon CreateTrayIcon()
+    {
+        // Tiny generated 16x16 opaque blue-green icon; no extra asset/package required.
+        using var stream = new MemoryStream(); using var writer = new BinaryWriter(stream);
+        writer.Write((ushort)0); writer.Write((ushort)1); writer.Write((ushort)1);
+        writer.Write((byte)16); writer.Write((byte)16); writer.Write((byte)0); writer.Write((byte)0); writer.Write((ushort)1); writer.Write((ushort)32); writer.Write(40 + 16 * 16 * 4 + 64); writer.Write(22);
+        writer.Write(40); writer.Write(16); writer.Write(32); writer.Write((ushort)1); writer.Write((ushort)32); writer.Write(0); writer.Write(16 * 16 * 4); writer.Write(0); writer.Write(0); writer.Write(0); writer.Write(0);
+        for (var i = 0; i < 256; i++) { writer.Write((byte)0xB7); writer.Write((byte)0x8B); writer.Write((byte)0x38); writer.Write((byte)0xFF); }
+        for (var i = 0; i < 64; i++) writer.Write((byte)0);
+        stream.Position = 0; return new WindowIcon(stream);
+    }
+
+    private void RunUiSmoke()
+    {
+        if (_editors.Count == 0) { Environment.ExitCode = 1; Log("ui-smoke FAIL no editor"); Close(); return; }
+        FocusCurrent();
+        var editor = _editors[_currentIndex];
+        Dispatcher.UIThread.Post(() =>
+        {
+            var focused = editor.TextArea.IsKeyboardFocusWithin;
+            var before = editor.Text;
+            const string marker = "\nui-smoke-programmatic-edit";
+            editor.Document.Insert(editor.Document.TextLength, marker);
+            var inserted = editor.Text.EndsWith(marker, StringComparison.Ordinal);
+            if (inserted) editor.Document.UndoStack.Undo();
+            var restored = editor.Text == before;
+            Log($"ui-smoke editableTemplate={editor.TextArea.IsVisible} textViewMeasureValid={editor.TextArea.TextView.IsMeasureValid} focused={focused} programmaticInsert={inserted} undoRestored={restored} equality={editor.Text == before}");
+            var t = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1900) };
+            t.Tick += (_, _) =>
+            {
+                t.Stop();
+                using var process = Process.GetCurrentProcess();
+                process.Refresh();
+                Environment.ExitCode = focused && inserted && restored && editor.TextArea.TextView.IsMeasureValid ? 0 : 1;
+                Log($"ui-smoke settled material={_material.SelectedItem} actual={ActualTransparencyLevel} bounds={Bounds.Width:F0}x{Bounds.Height:F0} textViewBounds={editor.TextArea.TextView.Bounds} measureValid={editor.TextArea.TextView.IsMeasureValid} focus={editor.TextArea.IsKeyboardFocusWithin} privateBytes={process.PrivateMemorySize64} workingSetBytes={process.WorkingSet64} processToSettled={Program.ElapsedMs:F1}ms; physical typing not exercised");
+                try
+                {
+                    using var preview = new Avalonia.Media.Imaging.RenderTargetBitmap(new PixelSize((int)Bounds.Width, (int)Bounds.Height), new Vector(96, 96));
+                    preview.Render(this);
+                    var path = Path.ChangeExtension(_logPath, ".png");
+                    preview.Save(path, Avalonia.Media.Imaging.PngBitmapEncoderOptions.Default);
+                    Log($"render-preview={path}; framework render only, excludes Windows compositor backdrop");
+                }
+                catch (Exception ex) { Log($"render-preview-error {ex.Message}"); }
+                var stage = 0;
+                var materials = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(180) };
+                materials.Tick += (_, _) =>
+                {
+                    if (stage == 0) { _material.SelectedIndex = 1; stage++; }
+                    else if (stage == 1) { Log($"ui-smoke material requested=Mica actual={ActualTransparencyLevel}"); _material.SelectedIndex = 2; stage++; }
+                    else if (stage == 2) { Log($"ui-smoke material requested=Transparent actual={ActualTransparencyLevel}"); HideResident(); materials.Interval = TimeSpan.FromMilliseconds(1400); stage++; }
+                    else if (stage == 3) { ShowResident("ui-smoke-tray-handler"); materials.Interval = TimeSpan.FromMilliseconds(180); stage++; }
+                    else
+                    {
+                        var sameEditor = ReferenceEquals(editor, _editors[_currentIndex]);
+                        var trayShowPass = IsVisible && editor.TextArea.IsKeyboardFocusWithin && sameEditor && _initializationCount == 1;
+                        Log($"ui-smoke resident-show visible={IsVisible} focused={editor.TextArea.IsKeyboardFocusWithin} sameEditor={sameEditor} initializationCount={_initializationCount} trayShowHandlerPass={trayShowPass}; physical tray and hotkey delivery not exercised");
+                        if (!trayShowPass) Environment.ExitCode = 1;
+                        materials.Stop(); SaveNotes(); Close();
+                    }
+                };
+                materials.Start();
+            };
+            t.Start();
+        }, DispatcherPriority.Background);
+    }
+
+    private void RunPersistenceWrite()
+    {
+        var marker = $"AQP-PERSISTENCE-{Guid.NewGuid():N}";
+        try
+        {
+            File.WriteAllText(Program.PersistenceMarkerPath, marker);
+            var editor = _editors[_currentIndex];
+            editor.Document.Insert(editor.Document.TextLength, $"\n{marker}");
+            SaveNotes();
+            var wrote = _store.Load().Any(note => note.Text.Contains(marker, StringComparison.Ordinal));
+            Environment.ExitCode = wrote ? 0 : 1;
+            Log($"persistence-write {(wrote ? "PASS" : "FAIL")} markerChars={marker.Length} notes={_notes.Count} path={_store.Path}; actual document edit and autosave");
+        }
+        catch (Exception ex) { Environment.ExitCode = 1; Log($"persistence-write FAIL {ex.GetType().Name}:{ex.Message}"); }
+        Close();
+    }
+
+    private void RunPersistenceRead()
+    {
+        try
+        {
+            var marker = File.ReadAllText(Program.PersistenceMarkerPath);
+            var restored = _notes.Any(note => note.Text.Contains(marker, StringComparison.Ordinal));
+            Environment.ExitCode = restored && _notes.Count > 0 ? 0 : 1;
+            Log($"persistence-read {(Environment.ExitCode == 0 ? "PASS" : "FAIL")} markerRestored={restored} notes={_notes.Count} path={_store.Path}; loaded by next process through SpikeWindow");
+        }
+        catch (Exception ex) { Environment.ExitCode = 1; Log($"persistence-read FAIL {ex.GetType().Name}:{ex.Message}"); }
+        Close();
+    }
+    private void Log(string message) => _log?.WriteLine($"{DateTimeOffset.UtcNow:O} +{_clock.Elapsed.TotalMilliseconds:F1}ms visible={IsVisible} focused={(_editors.Count > 0 && _editors[_currentIndex].IsKeyboardFocusWithin)} {message}");
+    private void KeyPressed(object? sender, KeyEventArgs e)
+    {
+        if (e.Handled) return;
+        if (e.Key == Key.Tab)
+        {
+            var editor = _editors.FirstOrDefault(x => x.IsKeyboardFocusWithin);
+            if (editor is null) return;
+            HandleEditorKey(editor, e);
+        }
+        else if (e.Key == Key.Escape) { HideResident(); e.Handled = true; }
+        else if (e.Key == Key.N && e.KeyModifiers.HasFlag(KeyModifiers.Control)) { CreateNote(); e.Handled = true; }
+    }
+    [DllImport("user32.dll", SetLastError = true)] private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint modifiers, int key);
+    [DllImport("user32.dll", SetLastError = true)] private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+}
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command 'Get-Content docs/retrospective-2026-10-17.md; Get-Content docs/decisions-log.md; Get-ChildItem src/AntiQuickPad -Force; rg --files -g AGENTS.md src; Get-Content spikes/A/App.axaml' in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 210ms:
+# Retrospective, 2026-10-17
+
+Written from the repo files, logs and `git log`. It does not rely on chat memory.
+
+## 1. What was achieved
+
+**Verified (user hands-on or a real-process test):**
+- **Spike A (Avalonia) works.** The user confirmed focus, decorated Markdown, Python fence colours, checkbox click, folding, line numbers and wheel page-switch ([USER-FEEDBACK A](spikes/A/USER-FEEDBACK.md)). The user's words: "works surprisingly better than I thought".
+- **A autosave and relaunch** passed an automated real-process test ([REPORT A](spikes/A/REPORT.md)).
+- **B input gate** passed: 279 wheel events and 11 press / 10 release events from the MX Master 3S ([input-gate1.tsv](spikes/B/input-gate1.tsv)).
+- **B builds and runs.** The user saw smoother animation and nicer text than A ([USER-FEEDBACK B](spikes/B/USER-FEEDBACK.md)).
+- **Decisions are recorded:** B parked, A leading, transparency de-prioritized ([decisions-log.md](decisions-log.md)).
+
+**Claimed only, not verified:**
+- **A's feedback fixes** (Shift+Tab, hover cursor, 220 ms page slide) are committed in 422bca8. The REPORT lists them as "awaiting short retest".
+- **A's tray and hotkey delivery** was never physically tested. Another copy held the chord.
+- **Latency numbers** are single scripted debug-build samples: 3.2 ms show-to-focus, 1882 ms main-to-opened. They are not hotkey-to-paint.
+- **B's tray and hotkey failed** (`SHELL ERROR`) and was never diagnosed.
+- **B's checkbox, Tab/Shift+Tab, autosave and measurements** are PENDING in its own REPORT. The user said only that "expected features work".
+- **The 15/15 and 12/12 smoke checks** cover models and stores, not the UI.
+
+## 2. What could have been done better
+
+- **Ask first.** Input hardware (no touchpad) and the Codex sandbox having no network were found only after Directors had built to the wrong gate. The touchpad finger-lift gate was written into the plan and T-001 before anyone asked what the user owns.
+- **Sandbox diagnosis took hours.** `codex exec` failed with `node_repl` os error 32. The `windows.sandbox="unelevated"` fix came from a peer session (per the task brief). Exactly how many hours this cost is not recorded in the repo.
+- **"Wait inside a turn" mistake.** Directors were told to finish in one turn, and the same lesson is recorded in [comms-tests.md](comms-tests.md). It was learned the hard way, and the manager had no polling of its own.
+- **Quota burn.** Logs total about 44,650 lines. Single resumes used 500k and 330k tokens. The limit hit at ~2 AM mid-B-fix (T-003-resume4.log:1843). A and B ran in parallel, so one fix round of B was the last spend before the user parked it anyway. A cheaper order would have been A first and B only on a concrete failure.
+- **Coordination overhead.** `.coord/status-A.md` is 22 KB against a 1.5 KB STATUS.md. Many Director resumes carried large briefs and logs.
+- **Commits.** Directors could not write `.git`, so the manager committed everything. Per-task commits were never real.
+
+## 3. What was overlooked
+
+- **Gate definitions moved mid-run** (touchpad, then mouse wheel, then wheel = page switch). Specs 4, 4a and 4b now coexist in [spike-spec.md](spike-spec.md) and contradict each other.
+- **Network:** crates and NuGet packages had to be fetched by the manager because the Codex sandbox is offline.
+- **Shared STATUS.md:** Directors were told not to touch it, so STATUS was stale between manager updates. Nobody owned it formally.
+- **Never tested:**
+  - hide and reopen. The user saw no cue, which is a UX gap in itself.
+  - the Ctrl+Alt+Space collision (error 1409) was found in A, but B still used that chord and only had the A chord suggested at parking (PARKED.md).
+  - B's idle-versus-animating GPU baseline (the user had no baseline for the ~4-5% reading).
+  - which text-rendering parts of A the user prefers. The specifics were not collected.
+  - release-build performance (everything was measured in Debug).
+- **The "Mac AppKit polish" goal** arrived late and was never in the spike spec. The spikes proved capability, not feel.
+
+## 4. Risks still open for the real app
+
+- **Polish ceiling:** Avalonia on Windows is unlikely to match native Mac fit and finish unless there is custom styling work. The UI variants are the test of that.
+- **Carousel feel** with a notched wheel is hitchy in A. Direct manipulation applies only to drag, through a grab strip.
+- **Editor effort:** the Markdown and Python scanner is a bounded regex transformer. A production parser or grammar path is several days of work.
+- **Hotkey and tray** reliability is unproven in both spikes.
+- **Speed priority** (the project's top goal) has no valid measurement yet.
+- **Maintenance:** AvaloniaEdit's 12.0.0 package dates from 2026-04. B's GPUI snapshot is a vendored fork.
+
+## 5. Recommended next steps (priority order)
+
+1. **Retest A's 4 checks** (end of `.coord/status-A.md`): Shift+Tab, hover, wheel feel, tray/hotkey with the old copy closed.
+2. **Review the UI variants** and judge whether Avalonia can reach the polish you want.
+3. **Decide the stack** (A leaning), then write the real implementation plan.
+4. **Measure a Release build:** hotkey-to-visible-and-focused, hide time, idle RAM.
+5. **Resume B only if A fails** the polish or feel review. Use `PARKED.md`.
+
+**Process changes**
+- **Intake first:** list hardware, network, quota and OS constraints before writing any gate.
+- **One spec, one version:** supersede spec items instead of appending them.
+- **Cap quota per run:** set a token budget and one milestone per Director turn. Prefer Sonnet sessions for small fixes.
+- **Sequential spikes:** start the second only if the first fails a gate.
+- **Fix the commit path early** so every task gets a real commit.
+- **Single STATUS owner:** the manager copies from the per-agent status files.
+
+## 6. Decisions the user still owns
+
+- **Final stack:** A, or revisit B or C.
+- **Polish bar:** how close to AppKit is "good enough".
+- **Whether transparency returns** to the requirements.
+- **Hotkey choice:** Ctrl+Alt+Shift+A, or another chord.
+- **Wheel behaviour:** one notch = one page, or something smoother.
+- **Spend:** more Codex usage, or Claude-only work.
+# Decisions log (append-only)
+
+- 2026-10-17: Two spikes first, A = Avalonia + AvaloniaEdit, B = GPUI + GPUI Kit. C = Tauri + CodeMirror 6 only as backup if A/B fail badly.
+- 2026-10-17: Not a 1:1 AntiNote copy; take functionality, choose our own methods. Least-resistance library choices.
+- 2026-10-17: Code notes: fenced blocks first, then first-line `python:`; drop `code: py` unless trivial. Checkboxes via `- [ ]`. Folding and line numbers are wishlist, not blockers.
+- 2026-10-17: Carousel is a must: direct manipulation drag-to-snap, position bound to the gesture.
+- 2026-10-17: Codex first, Claude manages. Directors run headless (`codex exec`) with files for state; Claude helpers are visible desktop sessions.
+- 2026-10-17: Luna worker = `gpt-6-luna` high (no 6.1 Luna exists locally).
+- 2026-10-17: T-001 reviewed by manager: GO spike A, conditional GO spike B, both gated first on a precision-touchpad finger-lift probe (neither framework proven to expose release vs inertia). WinUI/WPF custom editor and WinUIEdit: NO-GO. C stays backup. Directors run all milestones in one turn (ending a turn leaves them idle).
+- 2026-10-17: Dispatch route = Codex app sessions + codex queue (codex exec sandbox fails here). One named app session per Director: spike-a-director, spike-b-director.
+- 2026-10-17: User has no touchpad, only a mouse with a horizontal scroll wheel. Carousel gate redefined: horizontal wheel deltas + mouse drag are primary; release = idle gap after last wheel delta; touchpad finger-lift probe becomes optional. Spike A/B Directors to be resumed with this change.
+- 2026-10-17: Mouse = Logitech MX Master 3S. Horizontal wheel switches pages (one notch = prev/next note, animated); mouse drag is the direct-manipulation input. Spike B input probe captured 279 wheel + 11 press/10 release drag events with no F-key labels.
+- 2026-10-17: Spike A hands-on by user: core features work (focus, decorated markdown, python fence, checkbox, folding, line numbers, wheel page switch, Transparent/Acrylic/Mica). Rough edges: wheel animation hitchy, no checkbox affordance, Hide untested. See docs/spikes/A/USER-FEEDBACK.md.
+- 2026-10-17: User feedback after both prototypes: transparency/Mica/Blur effectively broken in both -> DE-PRIORITIZED. Product goal: native-Mac-app (AppKit/Swift) level fit and finish. Spike B smoother with stutter, nicer text; spike A text has parts the user prefers. B tray/hotkey SHELL ERROR to be diagnosed. Wait for both Directors to finish before further user tests. See docs/spikes/*/USER-FEEDBACK.md.
+- 2026-10-17: Spike B PARKED by user (user leans Avalonia/A). Documented in docs/spikes/B/PARKED.md. UI demo rule: realistic Avalonia-only renders, no other engines without disclosure; at least 5 AntiNote-suited variants requested (demos/ui-variants/).
+- 2026-10-17: Spike A retest: all 4 checks PASS (Shift+Tab, wheel+drag, checkbox hover/click, Hide/reopen by tray and Ctrl+Alt+Shift+A). Animation feel 'a bit weird' but acceptable for a spike. Spike A is now the leading stack; stack decision and real implementation plan are the next step (planned for a fresh Opus chat).
+- 2026-10-17: docs/spike-spec.md carousel item consolidated (old 4/4a/4b merged into one item 4: wheel = page switch, drag = 1:1, touchpad optional).
+- 2026-10-17: Stack CONFIRMED by user: Avalonia + AvaloniaEdit. UI look undecided; theming via one Look record, pick after real app (M6). Plan: docs/implementation-plan.md.
+- 2026-10-17: Plan approved. Speed budget show-to-focus < 100 ms; hotkey Ctrl+Alt+Shift+A; one notch = one page. T-004 (M0-M2) dispatched via codex exec with per-run windows.sandbox=unelevated (per agents.md second route, workspace-write only).
+
+    Directory: F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          10/17/2026  6:42 PM                bin
+d----          10/17/2026  6:42 PM                obj
+-a---          10/17/2026  6:43 PM             10 .gitignore
+-a---          10/17/2026  6:43 PM            575 AntiQuickPad.csproj
+-a---          10/17/2026  6:42 PM             80 Program.cs
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:fluent="clr-namespace:Avalonia.Themes.Fluent;assembly=Avalonia.Themes.Fluent"
+             x:Class="InputProbe.App">
+  <Application.Styles>
+    <fluent:FluentTheme />
+    <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
+  </Application.Styles>
+</Application>
+
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command "Set-Content .coord/status-T004.md 'T-004 dispatched: director integrates App/MainWindow/Look/RuntimePaths/selftest; Luna owns Notes and Shell service files. Only authorized T-004 paths; no git/network.'" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 137ms:
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command 'New-Item -ItemType Directory -Force src/AntiQuickPad/Editor,src/AntiQuickPad/Carousel | Out-Null' in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 118ms:
+2026-10-17T22:44:01.594484Z ERROR codex_core::tools::router: error=apply_patch verification failed: invalid patch: multiple operations target F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\Program.cs
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command "@'
+using Avalonia;
+namespace AntiQuickPad;
+internal static class Program
+{
+    public static bool SelfTest { get; private set; }
+    public static RuntimePaths Paths { get; private set; } = null"'!;
+    [STAThread]
+    public static int Main(string[] args)
+    {
+        Environment.SetEnvironmentVariable("AVALONIA_TELEMETRY_OPTOUT", "1");
+        SelfTest = args.Contains("--selftest", StringComparer.OrdinalIgnoreCase);
+        Paths = SelfTest ? RuntimePaths.ForSelfTest() : RuntimePaths.Default;
+        try { return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args); }
+        catch (Exception ex) { Console.Error.WriteLine(ex); return 1; }
+    }
+}
+'"'@ | Set-Content src/AntiQuickPad/Program.cs
+@'
+using Avalonia.Media;
+namespace AntiQuickPad;
+public sealed record Look(string Name, Color Background, Color Foreground, Color Muted,
+    Color Accent, string EditorFont, string InterfaceFont, double FontSize, bool ShowGutter)
+{
+    public static Look Default { get; } = new(\"Ink\", Color.Parse(\"#171D25\"),
+        Color.Parse(\"#EBEFF4\"), Color.Parse(\"#9BA9B8\"), Color.Parse(\"#7FA9CA\"),
+        \"Cascadia Code, Consolas\", \"Segoe UI\", 17, false);
+}
+'@ | Set-Content src/AntiQuickPad/Look.cs
+@'
+namespace AntiQuickPad;
+public sealed record RuntimePaths(string Root)
+{
+    public string Notes => Path.Combine(Root, \"notes\");
+    public string Log => Path.Combine(Root, \"logs\", \"shell.log\");
+    public string Settings => Path.Combine(Root, \"settings.json\");
+    public static RuntimePaths Default => new(Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), \"AntiQuickPad\"));
+    public static RuntimePaths ForSelfTest() => new(Path.Combine(AppContext.BaseDirectory,
+        \"selftest\", Guid.NewGuid().ToString(\"N\")));
+}
+'@ | Set-Content src/AntiQuickPad/RuntimePaths.cs
+@'
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Markup.Xaml.Styling;
+using Avalonia.Themes.Fluent;
+namespace AntiQuickPad;
+public sealed class App : Application
+{
+    public override void Initialize()
+    {
+        RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Dark;
+        Styles.Add(new FluentTheme());
+        Styles.Add(new StyleInclude(new Uri(\"avares://AntiQuickPad/\"))
+        { Source = new Uri(\"avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml\") });
+    }
+    public override void OnFrameworkInitializationCompleted()
+    {
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
+            desktop.MainWindow = new MainWindow();
+        }
+        base.OnFrameworkInitializationCompleted();
+    }
+}
+'@ | Set-Content src/AntiQuickPad/App.cs
+@'
+using Avalonia.Controls;
+using Avalonia.Media;
+namespace AntiQuickPad;
+public sealed class MainWindow : Window
+{
+    public MainWindow()
+    {
+        Title = \"AntiQuickPad\"; Width = 800; Height = 600;
+        WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        Background = new SolidColorBrush(Look.Default.Background);
+        Foreground = new SolidColorBrush(Look.Default.Foreground);
+        FontFamily = new FontFamily(Look.Default.InterfaceFont);
+    }
+}
+'@ | Set-Content src/AntiQuickPad/MainWindow.cs
+'Carousel gestures and animation are reserved for M4. M2 exposes note selection APIs.' | Set-Content src/AntiQuickPad/Carousel/README.md
+dotnet build src/AntiQuickPad/AntiQuickPad.csproj -c Release --no-restore" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ exited 1 in 908ms:
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018: The "AvaloniaStatsTask" task failed unexpectedly. [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018: System.UnauthorizedAccessException: Access to the path 'C:\Users\Neel\AppData\Local\AvaloniaUI\BuildServices\buildtasks.log' is denied. [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at Avalonia.Telemetry.Logger.AppendLine(String path, String line) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at Avalonia.Telemetry.Logger.LogException(Exception exception, String message) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at Avalonia.Telemetry.AvaloniaStatsTask.WriteTelemetry(TelemetryPayload telemetryData) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at Avalonia.Telemetry.AvaloniaStatsTask.Execute() [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at Microsoft.Build.BackEnd.TaskExecutionHost.Execute() [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at Microsoft.Build.BackEnd.TaskBuilder.ExecuteInstantiatedTask(TaskExecutionHost taskExecutionHost, TaskLoggingContext taskLoggingContext, TaskHost taskHost, ItemBucket bucket, TaskExecutionMode howToExecuteTask) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+
+Build FAILED.
+
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018: The "AvaloniaStatsTask" task failed unexpectedly. [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018: System.UnauthorizedAccessException: Access to the path 'C:\Users\Neel\AppData\Local\AvaloniaUI\BuildServices\buildtasks.log' is denied. [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at Avalonia.Telemetry.Logger.AppendLine(String path, String line) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at Avalonia.Telemetry.Logger.LogException(Exception exception, String message) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at Avalonia.Telemetry.AvaloniaStatsTask.WriteTelemetry(TelemetryPayload telemetryData) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at Avalonia.Telemetry.AvaloniaStatsTask.Execute() [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at Microsoft.Build.BackEnd.TaskExecutionHost.Execute() [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+C:\Users\Neel\.nuget\packages\avalonia.buildservices\11.3.2\buildTransitive\Avalonia.BuildServices.targets(9,9): error MSB4018:    at Microsoft.Build.BackEnd.TaskBuilder.ExecuteInstantiatedTask(TaskExecutionHost taskExecutionHost, TaskLoggingContext taskLoggingContext, TaskHost taskHost, ItemBucket bucket, TaskExecutionMode howToExecuteTask) [F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\AntiQuickPad.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:00.52
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command 'Get-Content C:/Users/Neel/.nuget/packages/avalonia.buildservices/11.3.2/buildTransitive/Avalonia.BuildServices.targets; Get-Content src/AntiQuickPad/Notes/*.cs' in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 169ms:
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <UsingTask TaskName="AvaloniaStatsTask"
+               AssemblyFile="$(MSBuildThisFileDirectory)\..\tools\netstandard2.0\Avalonia.BuildServices.dll"/>
+
+    <Target Name="AvaloniaStats"
+            BeforeTargets="CoreCompile"
+            Condition="$(DesignTimeBuild) != 'true' And $(UsedAvaloniaProducts) != '' And $(TargetFramework) != ''">
+        <AvaloniaStatsTask
+                ProjectName="$(MSBuildProjectName)"
+                TargetFramework="$(TargetFramework)"
+                RuntimeIdentifier="$(RuntimeIdentifier)"
+                AvaloniaPackageVersion="$(AvaloniaMainPackageVersion)"
+                LicenseKeys="@(AvaloniaUILicenseKey)"
+                OutputType="$(OutputType)"
+        />
+    </Target>
+</Project>
+namespace AntiQuickPad.Notes;
+
+/// <summary>A single Markdown note and its last editor caret position.</summary>
+public sealed record Note(string Id, string Text, int CaretOffset);
+using System.Text.Json;
+
+namespace AntiQuickPad.Notes;
+
+/// <summary>Loads and persists a small ordered collection of plain Markdown notes.</summary>
+public sealed class NotesSession
+{
+    private const string StateFileName = "notes.json";
+    private readonly string _directory;
+    private readonly string _statePath;
+    private List<Note> _notes;
+
+    public NotesSession(string directory)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(directory);
+        _directory = Path.GetFullPath(directory);
+        _statePath = Path.Combine(_directory, StateFileName);
+
+        if (File.Exists(_statePath))
+        {
+            (_notes, CurrentIndex) = Load();
+        }
+        else
+        {
+            _notes = [NewEmptyNote()];
+            CurrentIndex = 0;
+            Save();
+        }
+    }
+
+    public IReadOnlyList<Note> Notes => _notes.AsReadOnly();
+    public int CurrentIndex { get; private set; }
+    public Note Current => _notes[CurrentIndex];
+
+    public Note CreateNote()
+    {
+        var note = NewEmptyNote();
+        _notes.Add(note);
+        CurrentIndex = _notes.Count - 1;
+        return note;
+    }
+
+    public void DeleteCurrent()
+    {
+        var removed = Current;
+        _notes.RemoveAt(CurrentIndex);
+        if (_notes.Count == 0)
+        {
+            _notes.Add(NewEmptyNote());
+            CurrentIndex = 0;
+        }
+        else if (CurrentIndex >= _notes.Count)
+        {
+            CurrentIndex = _notes.Count - 1;
+        }
+
+        // Persist the new index/order before removing content, so a failed manifest
+        // write never leaves a manifest pointing at a deleted note.
+        Save();
+        var oldPath = NotePath(removed.Id);
+        if (File.Exists(oldPath)) File.Delete(oldPath);
+    }
+
+    public void Select(int index)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, _notes.Count);
+        CurrentIndex = index;
+    }
+
+    public void UpdateCurrent(string text, int caretOffset)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        _notes[CurrentIndex] = Current with
+        {
+            Text = text,
+            CaretOffset = Math.Clamp(caretOffset, 0, text.Length)
+        };
+    }
+
+    /// <summary>Atomically replaces each Markdown file and then the session manifest.</summary>
+    public void Save()
+    {
+        Directory.CreateDirectory(_directory);
+        foreach (var note in _notes)
+            AtomicWrite(NotePath(note.Id), note.Text);
+
+        var manifest = new StateDto
+        {
+            CurrentIndex = CurrentIndex,
+            Notes = _notes.Select(n => new NoteDto { Id = n.Id, CaretOffset = n.CaretOffset }).ToList()
+        };
+        AtomicWrite(_statePath, JsonSerializer.Serialize(manifest, JsonOptions));
+    }
+
+    /// <summary>Exercises create, edit, save, and reload without touching user data.</summary>
+    public static bool RunPersistenceSmoke(string parentDirectory)
+    {
+        var scratch = Path.Combine(Path.GetFullPath(parentDirectory), "notes-smoke-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var first = new NotesSession(scratch);
+            first.UpdateCurrent("# round trip\n", 4);
+            first.CreateNote();
+            first.UpdateCurrent("second", 3);
+            first.Select(0);
+            first.Save();
+
+            var restored = new NotesSession(scratch);
+            return restored.Notes.Count == 2
+                && restored.CurrentIndex == 0
+                && restored.Current.Text == "# round trip\n"
+                && restored.Current.CaretOffset == 4
+                && restored.Notes[1].Text == "second"
+                && restored.Notes[1].CaretOffset == 3;
+        }
+        finally
+        {
+            if (Directory.Exists(scratch)) Directory.Delete(scratch, recursive: true);
+        }
+    }
+
+    private (List<Note> Notes, int CurrentIndex) Load()
+    {
+        try
+        {
+            var json = File.ReadAllText(_statePath);
+            var state = JsonSerializer.Deserialize<StateDto>(json, JsonOptions)
+                ?? throw new InvalidDataException("Notes manifest is empty.");
+            if (state.Notes is null || state.Notes.Count == 0)
+                throw new InvalidDataException("Notes manifest contains no notes.");
+            if (state.CurrentIndex < 0 || state.CurrentIndex >= state.Notes.Count)
+                throw new InvalidDataException("Notes manifest current index is out of range.");
+
+            var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var notes = new List<Note>(state.Notes.Count);
+            foreach (var entry in state.Notes)
+            {
+                if (!Guid.TryParseExact(entry.Id, "N", out _) || !ids.Add(entry.Id))
+                    throw new InvalidDataException("Notes manifest contains an invalid or duplicate note id.");
+                var text = File.ReadAllText(NotePath(entry.Id));
+                notes.Add(new Note(entry.Id, text, Math.Clamp(entry.CaretOffset, 0, text.Length)));
+            }
+
+            return (notes, state.CurrentIndex);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidDataException("Notes manifest is corrupt; it was left untouched.", ex);
+        }
+    }
+
+    private static Note NewEmptyNote() => new(Guid.NewGuid().ToString("N"), string.Empty, 0);
+    private string NotePath(string id) => Path.Combine(_directory, id + ".md");
+
+    private static void AtomicWrite(string destination, string contents)
+    {
+        var temp = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            File.WriteAllText(temp, contents);
+            File.Move(temp, destination, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(temp)) File.Delete(temp);
+        }
+    }
+
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+
+    private sealed class StateDto
+    {
+        public int CurrentIndex { get; set; }
+        public List<NoteDto>? Notes { get; set; }
+    }
+
+    private sealed class NoteDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public int CaretOffset { get; set; }
+    }
+}
+
+codex
+The skeleton is in place, and the notes worker has delivered the persistence model. The first build hit a sandbox restriction in Avalonia’s build telemetry logger; I’m disabling telemetry for the offline build, then continuing with shell integration.
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command '$env:AVALONIA_TELEMETRY_OPTOUT='"'1'
+dotnet build src/AntiQuickPad/AntiQuickPad.csproj -c Release --no-restore" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 2656ms:
+  AntiQuickPad -> F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\bin\Release\net10.0\AntiQuickPad.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.29
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command "Add-Content .coord/status-T004.md 'M0 complete: App/Program/MainWindow, Look and RuntimePaths skeleton plus Editor/Carousel folders; Release offline build 0 warnings/errors (AVALONIA_TELEMETRY_OPTOUT=1). Runtime opening checked with integrated selftest below.'" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 117ms:
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command "@'
+using Avalonia.Media;
+using AvaloniaEdit;
+namespace AntiQuickPad.Editor;
+internal static class EditorFactory
+{
+    public static TextEditor Create(Look look) => new()
+    {
+        FontFamily = new FontFamily(look.EditorFont), FontSize = look.FontSize,
+        Background = new SolidColorBrush(look.Background),
+        Foreground = new SolidColorBrush(look.Foreground),
+        LineNumbersForeground = new SolidColorBrush(look.Muted),
+        ShowLineNumbers = look.ShowGutter, WordWrap = true,
+        Padding = new Avalonia.Thickness(20)
+    };
+}
+'@ | Set-Content src/AntiQuickPad/Editor/EditorFactory.cs
+@'
+using System.Diagnostics;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Media;
+using Avalonia.Threading;
+using AvaloniaEdit;
+using AntiQuickPad.Editor;
+using AntiQuickPad.Notes;
+using AntiQuickPad.Shell;
+namespace AntiQuickPad;
+
+public sealed class MainWindow : Window
+{
+    private readonly TextEditor _editor = EditorFactory.Create(Look.Default);
+    private readonly NotesSession _notes;
+    private readonly DispatcherTimer _autosave = new() { Interval = TimeSpan.FromMilliseconds(350) };
+    private readonly DispatcherTimer _cue = new() { Interval = TimeSpan.FromMilliseconds(130) };
+    private readonly Border _frame = new();
+    private readonly TextBlock _status = new() { FontSize = 11, Margin = new Thickness(20, 5) };
+    private readonly StreamWriter _log;
+    private TrayIcon? _tray;
+    private GlobalHotkey? _hotkey;
+    private bool _binding, _quitting, _initialized, _saveFailed;
+    private long _showStarted;
+    private string _showSource = \"startup\";
+    private TaskCompletionSource<double>? _focusCompletion;
+    public double LastShowToFocusMs { get; private set; }
+
+    public MainWindow()
+    {
+        Title = \"AntiQuickPad\"; Width = 800; Height = 600; MinWidth = 360; MinHeight = 240;
+        WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        WindowDecorations = WindowDecorations.None; Topmost = true;
+        Background = new SolidColorBrush(Look.Default.Background);
+        Foreground = new SolidColorBrush(Look.Default.Foreground);
+        FontFamily = new FontFamily(Look.Default.InterfaceFont);
+        Directory.CreateDirectory(Path.GetDirectoryName(Program.Paths.Log)"'!);
+        _log = new StreamWriter(new FileStream(Program.Paths.Log, FileMode.Append, FileAccess.Write, FileShare.Read)) { AutoFlush = true };
+        _notes = new NotesSession(Program.Paths.Notes);
+        var content = new DockPanel();
+        DockPanel.SetDock(_status, Dock.Bottom); content.Children.Add(_status); content.Children.Add(_editor);
+        _frame.Child = content; _frame.BorderThickness = new Thickness(1);
+        _frame.BorderBrush = new SolidColorBrush(Look.Default.Muted); Content = _frame;
+        BindCurrent();
+        _editor.TextChanged += (_, _) => ScheduleSave();
+        _editor.TextArea.Caret.PositionChanged += (_, _) => ScheduleSave();
+        _editor.TextArea.GotFocus += (_, _) => CompleteFocus();
+        _autosave.Tick += (_, _) => SaveNotes();
+        _cue.Tick += (_, _) => { _cue.Stop(); _frame.BorderBrush = new SolidColorBrush(Look.Default.Muted); };
+        AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel, true);
+        Opened += (_, _) => InitializeResident();
+        Activated += (_, _) => Dispatcher.UIThread.Post(FocusEditor, DispatcherPriority.Input);
+        Closing += (_, e) => { if (!_quitting) { e.Cancel = true; HideResident(); } };
+        Closed += (_, _) => { _autosave.Stop(); _cue.Stop(); _hotkey?.Dispose(); _tray?.Dispose(); _log.Dispose(); };
+    }
+
+    private void InitializeResident()
+    {
+        if (_initialized) return;
+        _initialized = true;
+        // The selftest does not claim the real hotkey or affect an existing resident app.
+        if (!Program.SelfTest)
+        {
+            InstallHotkey();
+            SetupTray();
+        }
+        _showStarted = Stopwatch.GetTimestamp();
+        Dispatcher.UIThread.Post(FocusEditor, DispatcherPriority.Input);
+        if (Program.SelfTest) Dispatcher.UIThread.Post(async () => await RunSelfTest(), DispatcherPriority.Background);
+    }
+
+    private void InstallHotkey()
+    {
+        // Filled by shell integration.
+    }
+
+    public void Toggle(long started = 0)
+    {
+        if (IsVisible) HideResident(); else ShowResident("toggle", started);
+    }
+
+    public void ShowResident(string source, long started = 0)
+    {
+        _showStarted = started == 0 ? Stopwatch.GetTimestamp() : started; _showSource = source;
+        WindowState = WindowState.Normal; Show(); Activate();
+        _frame.BorderBrush = new SolidColorBrush(Look.Default.Accent); _cue.Stop(); _cue.Start();
+        FocusEditor();
+        Dispatcher.UIThread.Post(FocusEditor, DispatcherPriority.Input);
+    }
+
+    public void HideResident()
+    {
+        if (!SaveNotes()) return;
+        _showStarted = 0; Hide(); Log("hidden resident=true");
+    }
+
+    private void FocusEditor()
+    {
+        if (!IsVisible) return;
+        Activate(); _editor.TextArea.Focus(); CompleteFocus();
+    }
+
+    private void CompleteFocus()
+    {
+        if (_showStarted == 0 || !IsVisible || !_editor.TextArea.IsKeyboardFocusWithin) return;
+        LastShowToFocusMs = Stopwatch.GetElapsedTime(_showStarted).TotalMilliseconds;
+        _showStarted = 0;
+        Log($"show-to-focus source={_showSource} ms={LastShowToFocusMs:F3} focused=true");
+        _focusCompletion?.TrySetResult(LastShowToFocusMs);
+    }
+
+    private void ScheduleSave()
+    {
+        if (_binding) return;
+        _notes.UpdateCurrent(_editor.Text, _editor.CaretOffset);
+        _autosave.Stop(); _autosave.Start();
+    }
+
+    private bool SaveNotes()
+    {
+        _autosave.Stop();
+        try
+        {
+            _notes.UpdateCurrent(_editor.Text, _editor.CaretOffset); _notes.Save();
+            _saveFailed = false; UpdateStatus(); return true;
+        }
+        catch (Exception ex)
+        {
+            _saveFailed = true; UpdateStatus(); Log($"save-error {ex}"); return false;
+        }
+    }
+
+    private void BindCurrent()
+    {
+        _binding = true;
+        try { _editor.Text = _notes.Current.Text; _editor.CaretOffset = _notes.Current.CaretOffset; _editor.Document.UndoStack.ClearAll(); }
+        finally { _binding = false; }
+        UpdateStatus();
+    }
+
+    public void CreateNote() { if (!SaveNotes()) return; _notes.CreateNote(); BindCurrent(); SaveNotes(); FocusEditor(); }
+    public void DeleteCurrentNote() { if (!SaveNotes()) return; _notes.DeleteCurrent(); BindCurrent(); FocusEditor(); }
+    public void SelectNote(int index) { if (!SaveNotes()) return; _notes.Select(index); BindCurrent(); SaveNotes(); FocusEditor(); }
+    private void UpdateStatus()
+    {
+        _status.Foreground = new SolidColorBrush(_saveFailed ? Look.Default.Accent : Look.Default.Muted);
+        _status.Text = _saveFailed ? "Could not save. Your note is still open; check the log and disk access."
+            : $"{_notes.CurrentIndex + 1} / {_notes.Notes.Count}    ·    Ctrl+N new    ·    Esc hide";
+    }
+
+    public void Quit()
+    {
+        if (!SaveNotes()) return;
+        _quitting = true; Close();
+        (Application.Current!.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)!.Shutdown();
+    }
+
+    private void OnKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape) { HideResident(); e.Handled = true; }
+        else if (e.Key == Key.N && e.KeyModifiers == KeyModifiers.Control) { CreateNote(); e.Handled = true; }
+    }
+
+    private void SetupTray()
+    {
+        var menu = new NativeMenu();
+        var toggle = new NativeMenuItem("Show / Hide"); toggle.Click += (_, _) => Toggle(); menu.Items.Add(toggle);
+        var quit = new NativeMenuItem("Quit"); quit.Click += (_, _) => Quit(); menu.Items.Add(quit);
+        _tray = new TrayIcon { ToolTipText = "AntiQuickPad", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
+        _tray.Clicked += (_, _) => ShowResident("tray");
+        TrayIcon.SetIcons(Application.Current!, new TrayIcons { _tray });
+    }
+
+    private static WindowIcon CreateTrayIcon()
+    {
+        using var stream = new MemoryStream(); using var writer = new BinaryWriter(stream);
+        writer.Write((ushort)0); writer.Write((ushort)1); writer.Write((ushort)1);
+        writer.Write((byte)16); writer.Write((byte)16); writer.Write((byte)0); writer.Write((byte)0);
+        writer.Write((ushort)1); writer.Write((ushort)32); writer.Write(40 + 16 * 16 * 4 + 64); writer.Write(22);
+        writer.Write(40); writer.Write(16); writer.Write(32); writer.Write((ushort)1); writer.Write((ushort)32);
+        writer.Write(0); writer.Write(16 * 16 * 4); writer.Write(0); writer.Write(0); writer.Write(0); writer.Write(0);
+        var color = Look.Default.Accent;
+        for (var i = 0; i < 256; i++) { writer.Write(color.B); writer.Write(color.G); writer.Write(color.R); writer.Write((byte)255); }
+        writer.Write(new byte[64]); stream.Position = 0; return new WindowIcon(stream);
+    }
+
+    private async Task RunSelfTest()
+    {
+        var exitCode = 1;
+        try
+        {
+            await Task.Delay(200);
+            if (!IsVisible || !_editor.TextArea.IsKeyboardFocusWithin) throw new Exception("Startup editor focus failed.");
+            var originalEditor = _editor;
+            var timings = new List<double>();
+            for (var i = 0; i < 3; i++)
+            {
+                Toggle(); if (IsVisible) throw new Exception("Toggle did not hide.");
+                await Task.Delay(40);
+                _focusCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                Toggle(Stopwatch.GetTimestamp());
+                timings.Add(await _focusCompletion.Task.WaitAsync(TimeSpan.FromSeconds(3)));
+                if (!ReferenceEquals(originalEditor, _editor) || !_editor.TextArea.IsKeyboardFocusWithin)
+                    throw new Exception("Resident editor was recreated or not focused.");
+            }
+            CreateNote(); _editor.Text = "# editor round trip'"\\nsecond line\"; _editor.CaretOffset = 7;
+            if ("'!SaveNotes()) throw new Exception("Editor save failed.");
+            var reload = new NotesSession(Program.Paths.Notes);
+            if (reload.Current.Text != _editor.Text || reload.Current.CaretOffset != 7 || reload.CurrentIndex != 1)
+                throw new Exception("Editor round trip failed.");
+            if (!NotesSession.RunPersistenceSmoke(Program.Paths.Root)) throw new Exception("Persistence smoke failed.");
+            foreach (var ms in timings) Console.WriteLine($"show-to-focus internal ms={ms:F3}");
+            if (timings.Any(ms => ms >= 100)) throw new Exception("Internal show-to-focus exceeded 100 ms.");
+            Console.WriteLine("SELFTEST PASS: same resident editor; toggle/focus; editor and notes round trips.");
+            Log("SELFTEST PASS"); exitCode = 0;
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"SELFTEST FAIL: {ex}"); Log($"SELFTEST FAIL: {ex}"); }
+        finally
+        {
+            _quitting = true; SaveNotes(); Close();
+            (Application.Current!.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)!.Shutdown(exitCode);
+        }
+    }
+    private void Log(string message) => _log.WriteLine($"{DateTimeOffset.UtcNow:O} {message}");
+}
+'"'@ | Set-Content src/AntiQuickPad/MainWindow.cs" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 158ms:
+codex
+The Release skeleton build is clean. Shell and notes are now integrated; I’m checking resident show/hide focus and persistence through `--selftest`. That test will measure the internal show path; physical hotkey delivery and tray interaction will still need the user’s check.
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command 'Get-Content src/AntiQuickPad/Shell/*.cs' in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 142ms:
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using Avalonia.Controls;
+
+namespace AntiQuickPad.Shell;
+
+/// <summary>A system-wide hotkey registered against an Avalonia window handle.</summary>
+public sealed class GlobalHotkey : IDisposable
+{
+    private const int HotkeyId = 0x5141;
+    private const uint WmHotkey = 0x0312;
+    private const uint ModAlt = 0x0001, ModControl = 0x0002, ModShift = 0x0004, ModWin = 0x0008, ModNoRepeat = 0x4000;
+
+    // The default is defined here once. Override with ANTIQUICKPAD_HOTKEY, e.g. Ctrl+Alt+Shift+A.
+    public static HotkeyGesture DefaultGesture { get; } = new("Ctrl+Alt+Shift+A", ModControl | ModAlt | ModShift, 0x41);
+
+    private readonly Window _window;
+    private readonly HotkeyGesture _gesture;
+    private readonly Action<long> _onPressed;
+    private IntPtr _hwnd;
+    private bool _hookAdded;
+    private bool _disposed;
+
+    public bool IsRegistered { get; private set; }
+    public int RegistrationError { get; private set; }
+    public string? RegistrationErrorMessage => !OperatingSystem.IsWindows()
+        ? "Global hotkeys are supported only on Windows."
+        : RegistrationError == 0 ? null : new System.ComponentModel.Win32Exception(RegistrationError).Message;
+    public string GestureLabel => _gesture.Label;
+
+    public GlobalHotkey(Window window, Action<long> onPressed, string? gesture = null)
+    {
+        _window = window ?? throw new ArgumentNullException(nameof(window));
+        _onPressed = onPressed ?? throw new ArgumentNullException(nameof(onPressed));
+        var configured = gesture ?? Environment.GetEnvironmentVariable("ANTIQUICKPAD_HOTKEY");
+        _gesture = string.IsNullOrWhiteSpace(configured) ? DefaultGesture : HotkeyGesture.Parse(configured);
+        _window.Opened += OnOpened;
+        _window.Closed += OnClosed;
+        if (_window.IsVisible) Register();
+    }
+
+    private void OnOpened(object? sender, EventArgs e) => Register();
+
+    private void Register()
+    {
+        if (_disposed || !OperatingSystem.IsWindows() || IsRegistered) return;
+        _hwnd = _window.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
+        if (_hwnd == IntPtr.Zero)
+        {
+            RegistrationError = 1400; // ERROR_INVALID_WINDOW_HANDLE
+            return;
+        }
+
+        Win32Properties.AddWndProcHookCallback(_window, WndProc);
+        _hookAdded = true;
+        IsRegistered = RegisterHotKey(_hwnd, HotkeyId, _gesture.Modifiers | ModNoRepeat, _gesture.VirtualKey);
+        RegistrationError = IsRegistered ? 0 : Marshal.GetLastWin32Error();
+        if (!IsRegistered)
+        {
+            Win32Properties.RemoveWndProcHookCallback(_window, WndProc);
+            _hookAdded = false;
+        }
+    }
+
+    private IntPtr WndProc(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (message == WmHotkey && wParam.ToInt32() == HotkeyId)
+        {
+            handled = true;
+            _onPressed(Stopwatch.GetTimestamp());
+        }
+        return IntPtr.Zero;
+    }
+
+    private void OnClosed(object? sender, EventArgs e) => Dispose();
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _window.Opened -= OnOpened;
+        _window.Closed -= OnClosed;
+        if (OperatingSystem.IsWindows())
+        {
+            if (IsRegistered) UnregisterHotKey(_hwnd, HotkeyId);
+            if (_hookAdded) Win32Properties.RemoveWndProcHookCallback(_window, WndProc);
+        }
+        IsRegistered = false;
+    }
+
+    public readonly record struct HotkeyGesture(string Label, uint Modifiers, int VirtualKey)
+    {
+        public static HotkeyGesture Parse(string value)
+        {
+            var parts = value.Split('+', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2) throw new FormatException("Hotkey must include a modifier and a key, for example Ctrl+Alt+Shift+A.");
+            uint modifiers = 0;
+            int key = 0;
+            foreach (var part in parts)
+            {
+                switch (part.ToLowerInvariant())
+                {
+                    case "ctrl": case "control": modifiers |= ModControl; break;
+                    case "alt": modifiers |= ModAlt; break;
+                    case "shift": modifiers |= ModShift; break;
+                    case "win": case "windows": modifiers |= ModWin; break;
+                    default:
+                        if (key != 0) throw new FormatException("Hotkey must contain exactly one key.");
+                        key = ParseVirtualKey(part);
+                        break;
+                }
+            }
+            if (modifiers == 0 || key == 0) throw new FormatException("Hotkey must include modifiers and one supported key.");
+            return new HotkeyGesture(string.Join('+', parts), modifiers, key);
+        }
+
+        private static int ParseVirtualKey(string key)
+        {
+            if (key.Length == 1 && char.IsAsciiLetterOrDigit(key[0])) return char.ToUpperInvariant(key[0]);
+            if (key.Length >= 2 && (key[0] is 'F' or 'f') && int.TryParse(key.AsSpan(1), out var function) && function is >= 1 and <= 24)
+                return 0x70 + function - 1;
+            return key.ToLowerInvariant() switch
+            {
+                "space" => 0x20, "escape" or "esc" => 0x1B, "tab" => 0x09,
+                "enter" => 0x0D, "insert" => 0x2D, "delete" => 0x2E,
+                _ => throw new FormatException($"Unsupported hotkey key '{key}'. Use A-Z, 0-9, F1-F24, Space, Escape, Tab, Enter, Insert, or Delete.")
+            };
+        }
+    }
+
+    [DllImport("user32.dll", SetLastError = true)] private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint modifiers, int key);
+    [DllImport("user32.dll", SetLastError = true)] private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+}
+using System.Security.Cryptography;
+using System.Text;
+
+namespace AntiQuickPad.Shell;
+
+/// <summary>Per-Windows-user process singleton with a signal for an already-running instance.</summary>
+public sealed class SingleInstanceService : IDisposable
+{
+    private readonly Mutex _mutex;
+    private readonly EventWaitHandle _showSignal;
+    private readonly Action _onSecondLaunch;
+    private readonly CancellationTokenSource _stop = new();
+    private readonly Thread? _listener;
+    private readonly int _ownerThreadId;
+    private bool _disposed;
+
+    public bool IsPrimary { get; }
+    public bool WasAbandoned { get; }
+
+    public SingleInstanceService(Action onSecondLaunch, string applicationId = "AntiQuickPad")
+    {
+        _onSecondLaunch = onSecondLaunch ?? throw new ArgumentNullException(nameof(onSecondLaunch));
+        ArgumentException.ThrowIfNullOrWhiteSpace(applicationId);
+        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Single-instance coordination is currently supported on Windows only.");
+
+        // Local\ keeps objects within the current logon session; the SID-derived suffix separates users.
+        var sid = System.Security.Principal.WindowsIdentity.GetCurrent().User?.Value
+                  ?? $"{Environment.UserDomainName}\\{Environment.UserName}";
+        var suffix = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(sid)))[..20];
+        var stem = $"Local\\{applicationId}-{suffix}";
+        _mutex = new Mutex(false, $"{stem}-Mutex");
+        _showSignal = new EventWaitHandle(false, EventResetMode.AutoReset, $"{stem}-Show");
+        _ownerThreadId = Environment.CurrentManagedThreadId;
+
+        try
+        {
+            try { IsPrimary = _mutex.WaitOne(0); }
+            catch (AbandonedMutexException) { IsPrimary = true; WasAbandoned = true; }
+
+            if (IsPrimary)
+            {
+                _listener = new Thread(Listen) { IsBackground = true, Name = $"{applicationId} second-launch listener" };
+                _listener.Start();
+            }
+            else
+            {
+                _showSignal.Set();
+            }
+        }
+        catch
+        {
+            _showSignal.Dispose();
+            _mutex.Dispose();
+            throw;
+        }
+    }
+
+    private void Listen()
+    {
+        var handles = new WaitHandle[] { _showSignal, _stop.Token.WaitHandle };
+        while (WaitHandle.WaitAny(handles) == 0)
+        {
+            if (_stop.IsCancellationRequested) break;
+            try { _onSecondLaunch(); }
+            catch { /* The owner callback cannot be allowed to kill the lifetime listener. */ }
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        if (IsPrimary && Environment.CurrentManagedThreadId != _ownerThreadId)
+            throw new InvalidOperationException("Dispose the primary SingleInstanceService on the thread that created it, because that thread owns the named mutex.");
+
+        _disposed = true;
+        _stop.Cancel();
+        _listener?.Join();
+        _showSignal.Dispose();
+        _stop.Dispose();
+        if (IsPrimary) _mutex.ReleaseMutex();
+        _mutex.Dispose();
+    }
+}
+
+apply patch
+patch: completed
+F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\App.cs
+F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\MainWindow.cs
+F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\Program.cs
+diff --git a/src/AntiQuickPad/App.cs b/src/AntiQuickPad/App.cs
+index cf0e4a7f586c91a0de804ca163ea6a6d258e19de..2479239e760cc74a7ffe3fb232de8e9f7b795f3a
+--- a/src/AntiQuickPad/App.cs
++++ b/src/AntiQuickPad/App.cs
+@@ -18,6 +18,7 @@
+         {
+             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
+             desktop.MainWindow = new MainWindow();
++            Program.Attach((MainWindow)desktop.MainWindow);
+         }
+         base.OnFrameworkInitializationCompleted();
+     }
+diff --git a/src/AntiQuickPad/MainWindow.cs b/src/AntiQuickPad/MainWindow.cs
+index 7c1b30c5efa0d52a3172fbd8722af30d1cccad47..6a1e90e51fe925bdd34c7839f8ceadadf7cc87b9
+--- a/src/AntiQuickPad/MainWindow.cs
++++ b/src/AntiQuickPad/MainWindow.cs
+@@ -74,7 +74,12 @@
+ 
+     private void InstallHotkey()
+     {
+-        // Filled by shell integration.
++        try
++        {
++            _hotkey = new GlobalHotkey(this, timestamp => Toggle(timestamp));
++            Log($"hotkey gesture={_hotkey.GestureLabel} registered={_hotkey.IsRegistered} error={_hotkey.RegistrationError} {_hotkey.RegistrationErrorMessage}");
++        }
++        catch (FormatException ex) { Log($"hotkey-configuration-error {ex.Message}"); }
+     }
+ 
+     public void Toggle(long started = 0)
+@@ -169,7 +174,8 @@
+         var menu = new NativeMenu();
+         var toggle = new NativeMenuItem("Show / Hide"); toggle.Click += (_, _) => Toggle(); menu.Items.Add(toggle);
+         var quit = new NativeMenuItem("Quit"); quit.Click += (_, _) => Quit(); menu.Items.Add(quit);
+-        _tray = new TrayIcon { ToolTipText = "AntiQuickPad", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
++        var hotkeyStatus = _hotkey is { IsRegistered: true } ? _hotkey.GestureLabel : "hotkey unavailable; see log";
++        _tray = new TrayIcon { ToolTipText = $"AntiQuickPad · {hotkeyStatus}", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
+         _tray.Clicked += (_, _) => ShowResident("tray");
+         TrayIcon.SetIcons(Application.Current!, new TrayIcons { _tray });
+     }
+diff --git a/src/AntiQuickPad/Program.cs b/src/AntiQuickPad/Program.cs
+index 45c39c31d5b1d4a1da485c21bbfc49642760dcbc..f2f1c75dbd269297487fa180de4d31c620f598bc
+--- a/src/AntiQuickPad/Program.cs
++++ b/src/AntiQuickPad/Program.cs
+@@ -1,16 +1,39 @@
+ using Avalonia;
++using Avalonia.Threading;
++using AntiQuickPad.Shell;
+ namespace AntiQuickPad;
+ internal static class Program
+ {
+     public static bool SelfTest { get; private set; }
+     public static RuntimePaths Paths { get; private set; } = null!;
++    private static MainWindow? _window;
++    private static int _pendingShow;
++    public static void Attach(MainWindow window)
++    {
++        Volatile.Write(ref _window, window);
++        if (Interlocked.Exchange(ref _pendingShow, 0) != 0)
++            Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
++    private static void RequestShow()
++    {
++        Interlocked.Exchange(ref _pendingShow, 1);
++        var window = Volatile.Read(ref _window);
++        if (window is null) return;
++        Interlocked.Exchange(ref _pendingShow, 0);
++        Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
+     [STAThread]
+     public static int Main(string[] args)
+     {
+         Environment.SetEnvironmentVariable("AVALONIA_TELEMETRY_OPTOUT", "1");
+         SelfTest = args.Contains("--selftest", StringComparer.OrdinalIgnoreCase);
+         Paths = SelfTest ? RuntimePaths.ForSelfTest() : RuntimePaths.Default;
+-        try { return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args); }
++        try
++        {
++            using var instance = SelfTest ? null : new SingleInstanceService(RequestShow);
++            if (instance is { IsPrimary: false }) return 0;
++            return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args);
++        }
+         catch (Exception ex) { Console.Error.WriteLine(ex); return 1; }
+     }
+ }
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command '$env:AVALONIA_TELEMETRY_OPTOUT='"'1'
+dotnet build -c Release --no-restore" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad
+ succeeded in 2469ms:
+  AntiQuickPad -> F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\bin\Release\net10.0\AntiQuickPad.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.13
+
+diff --git a/src/AntiQuickPad/App.cs b/src/AntiQuickPad/App.cs
+index cf0e4a7f586c91a0de804ca163ea6a6d258e19de..2479239e760cc74a7ffe3fb232de8e9f7b795f3a
+--- a/src/AntiQuickPad/App.cs
++++ b/src/AntiQuickPad/App.cs
+@@ -18,6 +18,7 @@
+         {
+             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
+             desktop.MainWindow = new MainWindow();
++            Program.Attach((MainWindow)desktop.MainWindow);
+         }
+         base.OnFrameworkInitializationCompleted();
+     }
+diff --git a/src/AntiQuickPad/MainWindow.cs b/src/AntiQuickPad/MainWindow.cs
+index 7c1b30c5efa0d52a3172fbd8722af30d1cccad47..6a1e90e51fe925bdd34c7839f8ceadadf7cc87b9
+--- a/src/AntiQuickPad/MainWindow.cs
++++ b/src/AntiQuickPad/MainWindow.cs
+@@ -74,7 +74,12 @@
+ 
+     private void InstallHotkey()
+     {
+-        // Filled by shell integration.
++        try
++        {
++            _hotkey = new GlobalHotkey(this, timestamp => Toggle(timestamp));
++            Log($"hotkey gesture={_hotkey.GestureLabel} registered={_hotkey.IsRegistered} error={_hotkey.RegistrationError} {_hotkey.RegistrationErrorMessage}");
++        }
++        catch (FormatException ex) { Log($"hotkey-configuration-error {ex.Message}"); }
+     }
+ 
+     public void Toggle(long started = 0)
+@@ -169,7 +174,8 @@
+         var menu = new NativeMenu();
+         var toggle = new NativeMenuItem("Show / Hide"); toggle.Click += (_, _) => Toggle(); menu.Items.Add(toggle);
+         var quit = new NativeMenuItem("Quit"); quit.Click += (_, _) => Quit(); menu.Items.Add(quit);
+-        _tray = new TrayIcon { ToolTipText = "AntiQuickPad", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
++        var hotkeyStatus = _hotkey is { IsRegistered: true } ? _hotkey.GestureLabel : "hotkey unavailable; see log";
++        _tray = new TrayIcon { ToolTipText = $"AntiQuickPad · {hotkeyStatus}", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
+         _tray.Clicked += (_, _) => ShowResident("tray");
+         TrayIcon.SetIcons(Application.Current!, new TrayIcons { _tray });
+     }
+diff --git a/src/AntiQuickPad/Program.cs b/src/AntiQuickPad/Program.cs
+index 45c39c31d5b1d4a1da485c21bbfc49642760dcbc..f2f1c75dbd269297487fa180de4d31c620f598bc
+--- a/src/AntiQuickPad/Program.cs
++++ b/src/AntiQuickPad/Program.cs
+@@ -1,16 +1,39 @@
+ using Avalonia;
++using Avalonia.Threading;
++using AntiQuickPad.Shell;
+ namespace AntiQuickPad;
+ internal static class Program
+ {
+     public static bool SelfTest { get; private set; }
+     public static RuntimePaths Paths { get; private set; } = null!;
++    private static MainWindow? _window;
++    private static int _pendingShow;
++    public static void Attach(MainWindow window)
++    {
++        Volatile.Write(ref _window, window);
++        if (Interlocked.Exchange(ref _pendingShow, 0) != 0)
++            Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
++    private static void RequestShow()
++    {
++        Interlocked.Exchange(ref _pendingShow, 1);
++        var window = Volatile.Read(ref _window);
++        if (window is null) return;
++        Interlocked.Exchange(ref _pendingShow, 0);
++        Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
+     [STAThread]
+     public static int Main(string[] args)
+     {
+         Environment.SetEnvironmentVariable("AVALONIA_TELEMETRY_OPTOUT", "1");
+         SelfTest = args.Contains("--selftest", StringComparer.OrdinalIgnoreCase);
+         Paths = SelfTest ? RuntimePaths.ForSelfTest() : RuntimePaths.Default;
+-        try { return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args); }
++        try
++        {
++            using var instance = SelfTest ? null : new SingleInstanceService(RequestShow);
++            if (instance is { IsPrimary: false }) return 0;
++            return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args);
++        }
+         catch (Exception ex) { Console.Error.WriteLine(ex); return 1; }
+     }
+ }
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command 'dotnet bin/Release/net10.0/AntiQuickPad.dll --selftest' in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad
+ succeeded in 2856ms:
+show-to-focus internal ms=3.580
+show-to-focus internal ms=2.964
+show-to-focus internal ms=2.798
+SELFTEST PASS: same resident editor; toggle/focus; editor and notes round trips.
+
+diff --git a/src/AntiQuickPad/App.cs b/src/AntiQuickPad/App.cs
+index cf0e4a7f586c91a0de804ca163ea6a6d258e19de..2479239e760cc74a7ffe3fb232de8e9f7b795f3a
+--- a/src/AntiQuickPad/App.cs
++++ b/src/AntiQuickPad/App.cs
+@@ -18,6 +18,7 @@
+         {
+             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
+             desktop.MainWindow = new MainWindow();
++            Program.Attach((MainWindow)desktop.MainWindow);
+         }
+         base.OnFrameworkInitializationCompleted();
+     }
+diff --git a/src/AntiQuickPad/MainWindow.cs b/src/AntiQuickPad/MainWindow.cs
+index 7c1b30c5efa0d52a3172fbd8722af30d1cccad47..6a1e90e51fe925bdd34c7839f8ceadadf7cc87b9
+--- a/src/AntiQuickPad/MainWindow.cs
++++ b/src/AntiQuickPad/MainWindow.cs
+@@ -74,7 +74,12 @@
+ 
+     private void InstallHotkey()
+     {
+-        // Filled by shell integration.
++        try
++        {
++            _hotkey = new GlobalHotkey(this, timestamp => Toggle(timestamp));
++            Log($"hotkey gesture={_hotkey.GestureLabel} registered={_hotkey.IsRegistered} error={_hotkey.RegistrationError} {_hotkey.RegistrationErrorMessage}");
++        }
++        catch (FormatException ex) { Log($"hotkey-configuration-error {ex.Message}"); }
+     }
+ 
+     public void Toggle(long started = 0)
+@@ -169,7 +174,8 @@
+         var menu = new NativeMenu();
+         var toggle = new NativeMenuItem("Show / Hide"); toggle.Click += (_, _) => Toggle(); menu.Items.Add(toggle);
+         var quit = new NativeMenuItem("Quit"); quit.Click += (_, _) => Quit(); menu.Items.Add(quit);
+-        _tray = new TrayIcon { ToolTipText = "AntiQuickPad", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
++        var hotkeyStatus = _hotkey is { IsRegistered: true } ? _hotkey.GestureLabel : "hotkey unavailable; see log";
++        _tray = new TrayIcon { ToolTipText = $"AntiQuickPad · {hotkeyStatus}", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
+         _tray.Clicked += (_, _) => ShowResident("tray");
+         TrayIcon.SetIcons(Application.Current!, new TrayIcons { _tray });
+     }
+diff --git a/src/AntiQuickPad/Program.cs b/src/AntiQuickPad/Program.cs
+index 45c39c31d5b1d4a1da485c21bbfc49642760dcbc..f2f1c75dbd269297487fa180de4d31c620f598bc
+--- a/src/AntiQuickPad/Program.cs
++++ b/src/AntiQuickPad/Program.cs
+@@ -1,16 +1,39 @@
+ using Avalonia;
++using Avalonia.Threading;
++using AntiQuickPad.Shell;
+ namespace AntiQuickPad;
+ internal static class Program
+ {
+     public static bool SelfTest { get; private set; }
+     public static RuntimePaths Paths { get; private set; } = null!;
++    private static MainWindow? _window;
++    private static int _pendingShow;
++    public static void Attach(MainWindow window)
++    {
++        Volatile.Write(ref _window, window);
++        if (Interlocked.Exchange(ref _pendingShow, 0) != 0)
++            Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
++    private static void RequestShow()
++    {
++        Interlocked.Exchange(ref _pendingShow, 1);
++        var window = Volatile.Read(ref _window);
++        if (window is null) return;
++        Interlocked.Exchange(ref _pendingShow, 0);
++        Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
+     [STAThread]
+     public static int Main(string[] args)
+     {
+         Environment.SetEnvironmentVariable("AVALONIA_TELEMETRY_OPTOUT", "1");
+         SelfTest = args.Contains("--selftest", StringComparer.OrdinalIgnoreCase);
+         Paths = SelfTest ? RuntimePaths.ForSelfTest() : RuntimePaths.Default;
+-        try { return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args); }
++        try
++        {
++            using var instance = SelfTest ? null : new SingleInstanceService(RequestShow);
++            if (instance is { IsPrimary: false }) return 0;
++            return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args);
++        }
+         catch (Exception ex) { Console.Error.WriteLine(ex); return 1; }
+     }
+ }
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command "Add-Content .coord/status-T004.md 'M1 complete: resident borderless/topmost window, hotkey/tray/single-instance services, Esc/save-hide, editor focus and reopen border cue. Release selftest exits 0; internal show-to-focus 3.580 / 2.964 / 2.798 ms. Physical hotkey/tray pending user.'
+Get-Content src/AntiQuickPad/.gitignore; Get-ChildItem -Name *.sln*" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 167ms:
+bin/
+obj/
+
+diff --git a/src/AntiQuickPad/App.cs b/src/AntiQuickPad/App.cs
+index cf0e4a7f586c91a0de804ca163ea6a6d258e19de..2479239e760cc74a7ffe3fb232de8e9f7b795f3a
+--- a/src/AntiQuickPad/App.cs
++++ b/src/AntiQuickPad/App.cs
+@@ -18,6 +18,7 @@
+         {
+             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
+             desktop.MainWindow = new MainWindow();
++            Program.Attach((MainWindow)desktop.MainWindow);
+         }
+         base.OnFrameworkInitializationCompleted();
+     }
+diff --git a/src/AntiQuickPad/MainWindow.cs b/src/AntiQuickPad/MainWindow.cs
+index 7c1b30c5efa0d52a3172fbd8722af30d1cccad47..6a1e90e51fe925bdd34c7839f8ceadadf7cc87b9
+--- a/src/AntiQuickPad/MainWindow.cs
++++ b/src/AntiQuickPad/MainWindow.cs
+@@ -74,7 +74,12 @@
+ 
+     private void InstallHotkey()
+     {
+-        // Filled by shell integration.
++        try
++        {
++            _hotkey = new GlobalHotkey(this, timestamp => Toggle(timestamp));
++            Log($"hotkey gesture={_hotkey.GestureLabel} registered={_hotkey.IsRegistered} error={_hotkey.RegistrationError} {_hotkey.RegistrationErrorMessage}");
++        }
++        catch (FormatException ex) { Log($"hotkey-configuration-error {ex.Message}"); }
+     }
+ 
+     public void Toggle(long started = 0)
+@@ -169,7 +174,8 @@
+         var menu = new NativeMenu();
+         var toggle = new NativeMenuItem("Show / Hide"); toggle.Click += (_, _) => Toggle(); menu.Items.Add(toggle);
+         var quit = new NativeMenuItem("Quit"); quit.Click += (_, _) => Quit(); menu.Items.Add(quit);
+-        _tray = new TrayIcon { ToolTipText = "AntiQuickPad", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
++        var hotkeyStatus = _hotkey is { IsRegistered: true } ? _hotkey.GestureLabel : "hotkey unavailable; see log";
++        _tray = new TrayIcon { ToolTipText = $"AntiQuickPad · {hotkeyStatus}", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
+         _tray.Clicked += (_, _) => ShowResident("tray");
+         TrayIcon.SetIcons(Application.Current!, new TrayIcons { _tray });
+     }
+diff --git a/src/AntiQuickPad/Program.cs b/src/AntiQuickPad/Program.cs
+index 45c39c31d5b1d4a1da485c21bbfc49642760dcbc..f2f1c75dbd269297487fa180de4d31c620f598bc
+--- a/src/AntiQuickPad/Program.cs
++++ b/src/AntiQuickPad/Program.cs
+@@ -1,16 +1,39 @@
+ using Avalonia;
++using Avalonia.Threading;
++using AntiQuickPad.Shell;
+ namespace AntiQuickPad;
+ internal static class Program
+ {
+     public static bool SelfTest { get; private set; }
+     public static RuntimePaths Paths { get; private set; } = null!;
++    private static MainWindow? _window;
++    private static int _pendingShow;
++    public static void Attach(MainWindow window)
++    {
++        Volatile.Write(ref _window, window);
++        if (Interlocked.Exchange(ref _pendingShow, 0) != 0)
++            Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
++    private static void RequestShow()
++    {
++        Interlocked.Exchange(ref _pendingShow, 1);
++        var window = Volatile.Read(ref _window);
++        if (window is null) return;
++        Interlocked.Exchange(ref _pendingShow, 0);
++        Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
+     [STAThread]
+     public static int Main(string[] args)
+     {
+         Environment.SetEnvironmentVariable("AVALONIA_TELEMETRY_OPTOUT", "1");
+         SelfTest = args.Contains("--selftest", StringComparer.OrdinalIgnoreCase);
+         Paths = SelfTest ? RuntimePaths.ForSelfTest() : RuntimePaths.Default;
+-        try { return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args); }
++        try
++        {
++            using var instance = SelfTest ? null : new SingleInstanceService(RequestShow);
++            if (instance is { IsPrimary: false }) return 0;
++            return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args);
++        }
+         catch (Exception ex) { Console.Error.WriteLine(ex); return 1; }
+     }
+ }
+
+codex
+The integrated self-test passed. Three internal hide/show cycles focused the same editor in 3.580, 2.964, and 2.798 ms, all below 100 ms. The note text and caret round trip also passed. I’m adding a check that waits for debounced autosave and a second-process singleton signal check before writing the report.
+
+apply patch
+patch: completed
+F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\MainWindow.cs
+F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\Notes\NotesSession.cs
+F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\Program.cs
+diff --git a/src/AntiQuickPad/App.cs b/src/AntiQuickPad/App.cs
+index cf0e4a7f586c91a0de804ca163ea6a6d258e19de..2479239e760cc74a7ffe3fb232de8e9f7b795f3a
+--- a/src/AntiQuickPad/App.cs
++++ b/src/AntiQuickPad/App.cs
+@@ -18,6 +18,7 @@
+         {
+             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
+             desktop.MainWindow = new MainWindow();
++            Program.Attach((MainWindow)desktop.MainWindow);
+         }
+         base.OnFrameworkInitializationCompleted();
+     }
+diff --git a/src/AntiQuickPad/MainWindow.cs b/src/AntiQuickPad/MainWindow.cs
+index 7c1b30c5efa0d52a3172fbd8722af30d1cccad47..e170b9bc9f14aa94c266b83e9315525d5122c09c
+--- a/src/AntiQuickPad/MainWindow.cs
++++ b/src/AntiQuickPad/MainWindow.cs
+@@ -74,7 +74,12 @@
+ 
+     private void InstallHotkey()
+     {
+-        // Filled by shell integration.
++        try
++        {
++            _hotkey = new GlobalHotkey(this, timestamp => Toggle(timestamp));
++            Log($"hotkey gesture={_hotkey.GestureLabel} registered={_hotkey.IsRegistered} error={_hotkey.RegistrationError} {_hotkey.RegistrationErrorMessage}");
++        }
++        catch (FormatException ex) { Log($"hotkey-configuration-error {ex.Message}"); }
+     }
+ 
+     public void Toggle(long started = 0)
+@@ -169,7 +174,8 @@
+         var menu = new NativeMenu();
+         var toggle = new NativeMenuItem("Show / Hide"); toggle.Click += (_, _) => Toggle(); menu.Items.Add(toggle);
+         var quit = new NativeMenuItem("Quit"); quit.Click += (_, _) => Quit(); menu.Items.Add(quit);
+-        _tray = new TrayIcon { ToolTipText = "AntiQuickPad", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
++        var hotkeyStatus = _hotkey is { IsRegistered: true } ? _hotkey.GestureLabel : "hotkey unavailable; see log";
++        _tray = new TrayIcon { ToolTipText = $"AntiQuickPad · {hotkeyStatus}", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
+         _tray.Clicked += (_, _) => ShowResident("tray");
+         TrayIcon.SetIcons(Application.Current!, new TrayIcons { _tray });
+     }
+@@ -207,14 +213,30 @@
+                     throw new Exception("Resident editor was recreated or not focused.");
+             }
+             CreateNote(); _editor.Text = "# editor round trip\nsecond line"; _editor.CaretOffset = 7;
+-            if (!SaveNotes()) throw new Exception("Editor save failed.");
++            await Task.Delay(550); // Let the real debounce timer persist the edit and caret.
+             var reload = new NotesSession(Program.Paths.Notes);
+             if (reload.Current.Text != _editor.Text || reload.Current.CaretOffset != 7 || reload.CurrentIndex != 1)
+                 throw new Exception("Editor round trip failed.");
+             if (!NotesSession.RunPersistenceSmoke(Program.Paths.Root)) throw new Exception("Persistence smoke failed.");
++            await RunChild("--selftest-reload", Program.Paths.Notes);
++            Toggle();
++            var signalId = "AntiQuickPad-selftest-" + Guid.NewGuid().ToString("N");
++            var signal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++            _focusCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
++            using (var singleton = new SingleInstanceService(() => Dispatcher.UIThread.Post(() =>
++            {
++                ShowResident("selftest-second-launch"); signal.TrySetResult();
++            }), signalId))
++            {
++                if (!singleton.IsPrimary) throw new Exception("Isolated singleton was not primary.");
++                await RunChild("--selftest-signal", signalId);
++                await signal.Task.WaitAsync(TimeSpan.FromSeconds(3));
++                await _focusCompletion.Task.WaitAsync(TimeSpan.FromSeconds(3));
++            }
++            if (!IsVisible || !_editor.TextArea.IsKeyboardFocusWithin) throw new Exception("Second-launch show/focus failed.");
+             foreach (var ms in timings) Console.WriteLine($"show-to-focus internal ms={ms:F3}");
+             if (timings.Any(ms => ms >= 100)) throw new Exception("Internal show-to-focus exceeded 100 ms.");
+-            Console.WriteLine("SELFTEST PASS: same resident editor; toggle/focus; editor and notes round trips.");
++            Console.WriteLine("SELFTEST PASS: same resident editor; toggle/focus; debounced save; next-process reload; second-process signal/show; notes round trip.");
+             Log("SELFTEST PASS"); exitCode = 0;
+         }
+         catch (Exception ex) { Console.Error.WriteLine($"SELFTEST FAIL: {ex}"); Log($"SELFTEST FAIL: {ex}"); }
+@@ -224,5 +246,17 @@
+             (Application.Current!.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)!.Shutdown(exitCode);
+         }
+     }
++    private static async Task RunChild(string mode, string argument)
++    {
++        var executable = Environment.ProcessPath!;
++        var start = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true };
++        if (string.Equals(Path.GetFileNameWithoutExtension(executable), "dotnet", StringComparison.OrdinalIgnoreCase))
++            start.ArgumentList.Add(typeof(Program).Assembly.Location);
++        start.ArgumentList.Add(mode); start.ArgumentList.Add(argument);
++        using var process = Process.Start(start) ?? throw new Exception("Could not start selftest child.");
++        try { await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
++        catch { if (!process.HasExited) process.Kill(); throw; }
++        if (process.ExitCode != 0) throw new Exception($"{mode} child exit={process.ExitCode}");
++    }
+     private void Log(string message) => _log.WriteLine($"{DateTimeOffset.UtcNow:O} {message}");
+ }
+diff --git a/src/AntiQuickPad/Notes/NotesSession.cs b/src/AntiQuickPad/Notes/NotesSession.cs
+index 01aebb07d40ef542b0643df5859a06d11c137504..092d22edb4a6c84b154b229c82e7a2af7408f05d
+--- a/src/AntiQuickPad/Notes/NotesSession.cs
++++ b/src/AntiQuickPad/Notes/NotesSession.cs
+@@ -107,12 +107,21 @@
+             first.Save();
+ 
+             var restored = new NotesSession(scratch);
+-            return restored.Notes.Count == 2
++            var roundTrip = restored.Notes.Count == 2
+                 && restored.CurrentIndex == 0
+                 && restored.Current.Text == "# round trip\n"
+                 && restored.Current.CaretOffset == 4
+                 && restored.Notes[1].Text == "second"
+                 && restored.Notes[1].CaretOffset == 3;
++            var deletedId = restored.Current.Id;
++            restored.DeleteCurrent();
++            var afterDelete = new NotesSession(scratch);
++            var deleted = afterDelete.Notes.Count == 1 && afterDelete.Current.Text == "second"
++                && !File.Exists(Path.Combine(scratch, deletedId + ".md"));
++            afterDelete.DeleteCurrent();
++            var afterLastDelete = new NotesSession(scratch);
++            return roundTrip && deleted && afterLastDelete.Notes.Count == 1
++                && afterLastDelete.Current.Text == string.Empty && afterLastDelete.CurrentIndex == 0;
+         }
+         finally
+         {
+diff --git a/src/AntiQuickPad/Program.cs b/src/AntiQuickPad/Program.cs
+index 45c39c31d5b1d4a1da485c21bbfc49642760dcbc..d7988b85fb74b81ccdb31cdfeac8c5e6542aeb76
+--- a/src/AntiQuickPad/Program.cs
++++ b/src/AntiQuickPad/Program.cs
+@@ -1,16 +1,50 @@
+ using Avalonia;
++using Avalonia.Threading;
++using AntiQuickPad.Shell;
+ namespace AntiQuickPad;
+ internal static class Program
+ {
+     public static bool SelfTest { get; private set; }
+     public static RuntimePaths Paths { get; private set; } = null!;
++    private static MainWindow? _window;
++    private static int _pendingShow;
++    public static void Attach(MainWindow window)
++    {
++        Volatile.Write(ref _window, window);
++        if (Interlocked.Exchange(ref _pendingShow, 0) != 0)
++            Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
++    private static void RequestShow()
++    {
++        Interlocked.Exchange(ref _pendingShow, 1);
++        var window = Volatile.Read(ref _window);
++        if (window is null) return;
++        Interlocked.Exchange(ref _pendingShow, 0);
++        Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
+     [STAThread]
+     public static int Main(string[] args)
+     {
+         Environment.SetEnvironmentVariable("AVALONIA_TELEMETRY_OPTOUT", "1");
++        if (args is ["--selftest-signal", var instanceId])
++        {
++            using var secondary = new SingleInstanceService(() => { }, instanceId);
++            return secondary.IsPrimary ? 1 : 0;
++        }
++        if (args is ["--selftest-reload", var directory])
++        {
++            var notes = new Notes.NotesSession(directory);
++            return notes.CurrentIndex == 1 && notes.Current.Text == "# editor round trip\nsecond line"
++                && notes.Current.CaretOffset == 7 ? 0 : 1;
++        }
+         SelfTest = args.Contains("--selftest", StringComparer.OrdinalIgnoreCase);
+         Paths = SelfTest ? RuntimePaths.ForSelfTest() : RuntimePaths.Default;
+-        try { return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args); }
++        try
++        {
++            using var instance = SelfTest ? null : new SingleInstanceService(RequestShow);
++            if (instance is { IsPrimary: false }) return 0;
++            return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args);
++        }
+         catch (Exception ex) { Console.Error.WriteLine(ex); return 1; }
+     }
+ }
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command '$env:AVALONIA_TELEMETRY_OPTOUT='"'1'
+dotnet build -c Release --no-restore
+dotnet bin/Release/net10.0/AntiQuickPad.dll --selftest" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad
+ succeeded in 5985ms:
+  AntiQuickPad -> F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\bin\Release\net10.0\AntiQuickPad.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.70
+show-to-focus internal ms=5.344
+show-to-focus internal ms=2.048
+show-to-focus internal ms=30.390
+SELFTEST PASS: same resident editor; toggle/focus; debounced save; next-process reload; second-process signal/show; notes round trip.
+
+diff --git a/src/AntiQuickPad/App.cs b/src/AntiQuickPad/App.cs
+index cf0e4a7f586c91a0de804ca163ea6a6d258e19de..2479239e760cc74a7ffe3fb232de8e9f7b795f3a
+--- a/src/AntiQuickPad/App.cs
++++ b/src/AntiQuickPad/App.cs
+@@ -18,6 +18,7 @@
+         {
+             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
+             desktop.MainWindow = new MainWindow();
++            Program.Attach((MainWindow)desktop.MainWindow);
+         }
+         base.OnFrameworkInitializationCompleted();
+     }
+diff --git a/src/AntiQuickPad/MainWindow.cs b/src/AntiQuickPad/MainWindow.cs
+index 7c1b30c5efa0d52a3172fbd8722af30d1cccad47..e170b9bc9f14aa94c266b83e9315525d5122c09c
+--- a/src/AntiQuickPad/MainWindow.cs
++++ b/src/AntiQuickPad/MainWindow.cs
+@@ -74,7 +74,12 @@
+ 
+     private void InstallHotkey()
+     {
+-        // Filled by shell integration.
++        try
++        {
++            _hotkey = new GlobalHotkey(this, timestamp => Toggle(timestamp));
++            Log($"hotkey gesture={_hotkey.GestureLabel} registered={_hotkey.IsRegistered} error={_hotkey.RegistrationError} {_hotkey.RegistrationErrorMessage}");
++        }
++        catch (FormatException ex) { Log($"hotkey-configuration-error {ex.Message}"); }
+     }
+ 
+     public void Toggle(long started = 0)
+@@ -169,7 +174,8 @@
+         var menu = new NativeMenu();
+         var toggle = new NativeMenuItem("Show / Hide"); toggle.Click += (_, _) => Toggle(); menu.Items.Add(toggle);
+         var quit = new NativeMenuItem("Quit"); quit.Click += (_, _) => Quit(); menu.Items.Add(quit);
+-        _tray = new TrayIcon { ToolTipText = "AntiQuickPad", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
++        var hotkeyStatus = _hotkey is { IsRegistered: true } ? _hotkey.GestureLabel : "hotkey unavailable; see log";
++        _tray = new TrayIcon { ToolTipText = $"AntiQuickPad · {hotkeyStatus}", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
+         _tray.Clicked += (_, _) => ShowResident("tray");
+         TrayIcon.SetIcons(Application.Current!, new TrayIcons { _tray });
+     }
+@@ -207,14 +213,30 @@
+                     throw new Exception("Resident editor was recreated or not focused.");
+             }
+             CreateNote(); _editor.Text = "# editor round trip\nsecond line"; _editor.CaretOffset = 7;
+-            if (!SaveNotes()) throw new Exception("Editor save failed.");
++            await Task.Delay(550); // Let the real debounce timer persist the edit and caret.
+             var reload = new NotesSession(Program.Paths.Notes);
+             if (reload.Current.Text != _editor.Text || reload.Current.CaretOffset != 7 || reload.CurrentIndex != 1)
+                 throw new Exception("Editor round trip failed.");
+             if (!NotesSession.RunPersistenceSmoke(Program.Paths.Root)) throw new Exception("Persistence smoke failed.");
++            await RunChild("--selftest-reload", Program.Paths.Notes);
++            Toggle();
++            var signalId = "AntiQuickPad-selftest-" + Guid.NewGuid().ToString("N");
++            var signal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++            _focusCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
++            using (var singleton = new SingleInstanceService(() => Dispatcher.UIThread.Post(() =>
++            {
++                ShowResident("selftest-second-launch"); signal.TrySetResult();
++            }), signalId))
++            {
++                if (!singleton.IsPrimary) throw new Exception("Isolated singleton was not primary.");
++                await RunChild("--selftest-signal", signalId);
++                await signal.Task.WaitAsync(TimeSpan.FromSeconds(3));
++                await _focusCompletion.Task.WaitAsync(TimeSpan.FromSeconds(3));
++            }
++            if (!IsVisible || !_editor.TextArea.IsKeyboardFocusWithin) throw new Exception("Second-launch show/focus failed.");
+             foreach (var ms in timings) Console.WriteLine($"show-to-focus internal ms={ms:F3}");
+             if (timings.Any(ms => ms >= 100)) throw new Exception("Internal show-to-focus exceeded 100 ms.");
+-            Console.WriteLine("SELFTEST PASS: same resident editor; toggle/focus; editor and notes round trips.");
++            Console.WriteLine("SELFTEST PASS: same resident editor; toggle/focus; debounced save; next-process reload; second-process signal/show; notes round trip.");
+             Log("SELFTEST PASS"); exitCode = 0;
+         }
+         catch (Exception ex) { Console.Error.WriteLine($"SELFTEST FAIL: {ex}"); Log($"SELFTEST FAIL: {ex}"); }
+@@ -224,5 +246,17 @@
+             (Application.Current!.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)!.Shutdown(exitCode);
+         }
+     }
++    private static async Task RunChild(string mode, string argument)
++    {
++        var executable = Environment.ProcessPath!;
++        var start = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true };
++        if (string.Equals(Path.GetFileNameWithoutExtension(executable), "dotnet", StringComparison.OrdinalIgnoreCase))
++            start.ArgumentList.Add(typeof(Program).Assembly.Location);
++        start.ArgumentList.Add(mode); start.ArgumentList.Add(argument);
++        using var process = Process.Start(start) ?? throw new Exception("Could not start selftest child.");
++        try { await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
++        catch { if (!process.HasExited) process.Kill(); throw; }
++        if (process.ExitCode != 0) throw new Exception($"{mode} child exit={process.ExitCode}");
++    }
+     private void Log(string message) => _log.WriteLine($"{DateTimeOffset.UtcNow:O} {message}");
+ }
+diff --git a/src/AntiQuickPad/Notes/NotesSession.cs b/src/AntiQuickPad/Notes/NotesSession.cs
+index 01aebb07d40ef542b0643df5859a06d11c137504..092d22edb4a6c84b154b229c82e7a2af7408f05d
+--- a/src/AntiQuickPad/Notes/NotesSession.cs
++++ b/src/AntiQuickPad/Notes/NotesSession.cs
+@@ -107,12 +107,21 @@
+             first.Save();
+ 
+             var restored = new NotesSession(scratch);
+-            return restored.Notes.Count == 2
++            var roundTrip = restored.Notes.Count == 2
+                 && restored.CurrentIndex == 0
+                 && restored.Current.Text == "# round trip\n"
+                 && restored.Current.CaretOffset == 4
+                 && restored.Notes[1].Text == "second"
+                 && restored.Notes[1].CaretOffset == 3;
++            var deletedId = restored.Current.Id;
++            restored.DeleteCurrent();
++            var afterDelete = new NotesSession(scratch);
++            var deleted = afterDelete.Notes.Count == 1 && afterDelete.Current.Text == "second"
++                && !File.Exists(Path.Combine(scratch, deletedId + ".md"));
++            afterDelete.DeleteCurrent();
++            var afterLastDelete = new NotesSession(scratch);
++            return roundTrip && deleted && afterLastDelete.Notes.Count == 1
++                && afterLastDelete.Current.Text == string.Empty && afterLastDelete.CurrentIndex == 0;
+         }
+         finally
+         {
+diff --git a/src/AntiQuickPad/Program.cs b/src/AntiQuickPad/Program.cs
+index 45c39c31d5b1d4a1da485c21bbfc49642760dcbc..d7988b85fb74b81ccdb31cdfeac8c5e6542aeb76
+--- a/src/AntiQuickPad/Program.cs
++++ b/src/AntiQuickPad/Program.cs
+@@ -1,16 +1,50 @@
+ using Avalonia;
++using Avalonia.Threading;
++using AntiQuickPad.Shell;
+ namespace AntiQuickPad;
+ internal static class Program
+ {
+     public static bool SelfTest { get; private set; }
+     public static RuntimePaths Paths { get; private set; } = null!;
++    private static MainWindow? _window;
++    private static int _pendingShow;
++    public static void Attach(MainWindow window)
++    {
++        Volatile.Write(ref _window, window);
++        if (Interlocked.Exchange(ref _pendingShow, 0) != 0)
++            Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
++    private static void RequestShow()
++    {
++        Interlocked.Exchange(ref _pendingShow, 1);
++        var window = Volatile.Read(ref _window);
++        if (window is null) return;
++        Interlocked.Exchange(ref _pendingShow, 0);
++        Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
+     [STAThread]
+     public static int Main(string[] args)
+     {
+         Environment.SetEnvironmentVariable("AVALONIA_TELEMETRY_OPTOUT", "1");
++        if (args is ["--selftest-signal", var instanceId])
++        {
++            using var secondary = new SingleInstanceService(() => { }, instanceId);
++            return secondary.IsPrimary ? 1 : 0;
++        }
++        if (args is ["--selftest-reload", var directory])
++        {
++            var notes = new Notes.NotesSession(directory);
++            return notes.CurrentIndex == 1 && notes.Current.Text == "# editor round trip\nsecond line"
++                && notes.Current.CaretOffset == 7 ? 0 : 1;
++        }
+         SelfTest = args.Contains("--selftest", StringComparer.OrdinalIgnoreCase);
+         Paths = SelfTest ? RuntimePaths.ForSelfTest() : RuntimePaths.Default;
+-        try { return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args); }
++        try
++        {
++            using var instance = SelfTest ? null : new SingleInstanceService(RequestShow);
++            if (instance is { IsPrimary: false }) return 0;
++            return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args);
++        }
+         catch (Exception ex) { Console.Error.WriteLine(ex); return 1; }
+     }
+ }
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command "Add-Content .coord/status-T004.md 'M2 complete: plain Markdown files + ordered state/caret manifest; atomic per-file writes; 350 ms debounce and save on hide/quit; new/delete/select APIs. Release build 0 warnings/errors; extended selftest exit 0 including next-process reload, debounced edit/caret save, deletion, and second-process singleton signal/show. Final internal timings 5.344 / 2.048 / 30.390 ms.'
+Get-ChildItem src/AntiQuickPad/bin/Release/net10.0/selftest -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 1 -ExpandProperty FullName" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 182ms:
+F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\src\AntiQuickPad\bin\Release\net10.0\selftest\e9b4cc05c8214bbbb41ad613d113241c
+
+diff --git a/src/AntiQuickPad/App.cs b/src/AntiQuickPad/App.cs
+index cf0e4a7f586c91a0de804ca163ea6a6d258e19de..2479239e760cc74a7ffe3fb232de8e9f7b795f3a
+--- a/src/AntiQuickPad/App.cs
++++ b/src/AntiQuickPad/App.cs
+@@ -18,6 +18,7 @@
+         {
+             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
+             desktop.MainWindow = new MainWindow();
++            Program.Attach((MainWindow)desktop.MainWindow);
+         }
+         base.OnFrameworkInitializationCompleted();
+     }
+diff --git a/src/AntiQuickPad/MainWindow.cs b/src/AntiQuickPad/MainWindow.cs
+index 7c1b30c5efa0d52a3172fbd8722af30d1cccad47..e170b9bc9f14aa94c266b83e9315525d5122c09c
+--- a/src/AntiQuickPad/MainWindow.cs
++++ b/src/AntiQuickPad/MainWindow.cs
+@@ -74,7 +74,12 @@
+ 
+     private void InstallHotkey()
+     {
+-        // Filled by shell integration.
++        try
++        {
++            _hotkey = new GlobalHotkey(this, timestamp => Toggle(timestamp));
++            Log($"hotkey gesture={_hotkey.GestureLabel} registered={_hotkey.IsRegistered} error={_hotkey.RegistrationError} {_hotkey.RegistrationErrorMessage}");
++        }
++        catch (FormatException ex) { Log($"hotkey-configuration-error {ex.Message}"); }
+     }
+ 
+     public void Toggle(long started = 0)
+@@ -169,7 +174,8 @@
+         var menu = new NativeMenu();
+         var toggle = new NativeMenuItem("Show / Hide"); toggle.Click += (_, _) => Toggle(); menu.Items.Add(toggle);
+         var quit = new NativeMenuItem("Quit"); quit.Click += (_, _) => Quit(); menu.Items.Add(quit);
+-        _tray = new TrayIcon { ToolTipText = "AntiQuickPad", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
++        var hotkeyStatus = _hotkey is { IsRegistered: true } ? _hotkey.GestureLabel : "hotkey unavailable; see log";
++        _tray = new TrayIcon { ToolTipText = $"AntiQuickPad · {hotkeyStatus}", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
+         _tray.Clicked += (_, _) => ShowResident("tray");
+         TrayIcon.SetIcons(Application.Current!, new TrayIcons { _tray });
+     }
+@@ -207,14 +213,30 @@
+                     throw new Exception("Resident editor was recreated or not focused.");
+             }
+             CreateNote(); _editor.Text = "# editor round trip\nsecond line"; _editor.CaretOffset = 7;
+-            if (!SaveNotes()) throw new Exception("Editor save failed.");
++            await Task.Delay(550); // Let the real debounce timer persist the edit and caret.
+             var reload = new NotesSession(Program.Paths.Notes);
+             if (reload.Current.Text != _editor.Text || reload.Current.CaretOffset != 7 || reload.CurrentIndex != 1)
+                 throw new Exception("Editor round trip failed.");
+             if (!NotesSession.RunPersistenceSmoke(Program.Paths.Root)) throw new Exception("Persistence smoke failed.");
++            await RunChild("--selftest-reload", Program.Paths.Notes);
++            Toggle();
++            var signalId = "AntiQuickPad-selftest-" + Guid.NewGuid().ToString("N");
++            var signal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++            _focusCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
++            using (var singleton = new SingleInstanceService(() => Dispatcher.UIThread.Post(() =>
++            {
++                ShowResident("selftest-second-launch"); signal.TrySetResult();
++            }), signalId))
++            {
++                if (!singleton.IsPrimary) throw new Exception("Isolated singleton was not primary.");
++                await RunChild("--selftest-signal", signalId);
++                await signal.Task.WaitAsync(TimeSpan.FromSeconds(3));
++                await _focusCompletion.Task.WaitAsync(TimeSpan.FromSeconds(3));
++            }
++            if (!IsVisible || !_editor.TextArea.IsKeyboardFocusWithin) throw new Exception("Second-launch show/focus failed.");
+             foreach (var ms in timings) Console.WriteLine($"show-to-focus internal ms={ms:F3}");
+             if (timings.Any(ms => ms >= 100)) throw new Exception("Internal show-to-focus exceeded 100 ms.");
+-            Console.WriteLine("SELFTEST PASS: same resident editor; toggle/focus; editor and notes round trips.");
++            Console.WriteLine("SELFTEST PASS: same resident editor; toggle/focus; debounced save; next-process reload; second-process signal/show; notes round trip.");
+             Log("SELFTEST PASS"); exitCode = 0;
+         }
+         catch (Exception ex) { Console.Error.WriteLine($"SELFTEST FAIL: {ex}"); Log($"SELFTEST FAIL: {ex}"); }
+@@ -224,5 +246,17 @@
+             (Application.Current!.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)!.Shutdown(exitCode);
+         }
+     }
++    private static async Task RunChild(string mode, string argument)
++    {
++        var executable = Environment.ProcessPath!;
++        var start = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true };
++        if (string.Equals(Path.GetFileNameWithoutExtension(executable), "dotnet", StringComparison.OrdinalIgnoreCase))
++            start.ArgumentList.Add(typeof(Program).Assembly.Location);
++        start.ArgumentList.Add(mode); start.ArgumentList.Add(argument);
++        using var process = Process.Start(start) ?? throw new Exception("Could not start selftest child.");
++        try { await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
++        catch { if (!process.HasExited) process.Kill(); throw; }
++        if (process.ExitCode != 0) throw new Exception($"{mode} child exit={process.ExitCode}");
++    }
+     private void Log(string message) => _log.WriteLine($"{DateTimeOffset.UtcNow:O} {message}");
+ }
+diff --git a/src/AntiQuickPad/Notes/NotesSession.cs b/src/AntiQuickPad/Notes/NotesSession.cs
+index 01aebb07d40ef542b0643df5859a06d11c137504..092d22edb4a6c84b154b229c82e7a2af7408f05d
+--- a/src/AntiQuickPad/Notes/NotesSession.cs
++++ b/src/AntiQuickPad/Notes/NotesSession.cs
+@@ -107,12 +107,21 @@
+             first.Save();
+ 
+             var restored = new NotesSession(scratch);
+-            return restored.Notes.Count == 2
++            var roundTrip = restored.Notes.Count == 2
+                 && restored.CurrentIndex == 0
+                 && restored.Current.Text == "# round trip\n"
+                 && restored.Current.CaretOffset == 4
+                 && restored.Notes[1].Text == "second"
+                 && restored.Notes[1].CaretOffset == 3;
++            var deletedId = restored.Current.Id;
++            restored.DeleteCurrent();
++            var afterDelete = new NotesSession(scratch);
++            var deleted = afterDelete.Notes.Count == 1 && afterDelete.Current.Text == "second"
++                && !File.Exists(Path.Combine(scratch, deletedId + ".md"));
++            afterDelete.DeleteCurrent();
++            var afterLastDelete = new NotesSession(scratch);
++            return roundTrip && deleted && afterLastDelete.Notes.Count == 1
++                && afterLastDelete.Current.Text == string.Empty && afterLastDelete.CurrentIndex == 0;
+         }
+         finally
+         {
+diff --git a/src/AntiQuickPad/Program.cs b/src/AntiQuickPad/Program.cs
+index 45c39c31d5b1d4a1da485c21bbfc49642760dcbc..d7988b85fb74b81ccdb31cdfeac8c5e6542aeb76
+--- a/src/AntiQuickPad/Program.cs
++++ b/src/AntiQuickPad/Program.cs
+@@ -1,16 +1,50 @@
+ using Avalonia;
++using Avalonia.Threading;
++using AntiQuickPad.Shell;
+ namespace AntiQuickPad;
+ internal static class Program
+ {
+     public static bool SelfTest { get; private set; }
+     public static RuntimePaths Paths { get; private set; } = null!;
++    private static MainWindow? _window;
++    private static int _pendingShow;
++    public static void Attach(MainWindow window)
++    {
++        Volatile.Write(ref _window, window);
++        if (Interlocked.Exchange(ref _pendingShow, 0) != 0)
++            Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
++    private static void RequestShow()
++    {
++        Interlocked.Exchange(ref _pendingShow, 1);
++        var window = Volatile.Read(ref _window);
++        if (window is null) return;
++        Interlocked.Exchange(ref _pendingShow, 0);
++        Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
+     [STAThread]
+     public static int Main(string[] args)
+     {
+         Environment.SetEnvironmentVariable("AVALONIA_TELEMETRY_OPTOUT", "1");
++        if (args is ["--selftest-signal", var instanceId])
++        {
++            using var secondary = new SingleInstanceService(() => { }, instanceId);
++            return secondary.IsPrimary ? 1 : 0;
++        }
++        if (args is ["--selftest-reload", var directory])
++        {
++            var notes = new Notes.NotesSession(directory);
++            return notes.CurrentIndex == 1 && notes.Current.Text == "# editor round trip\nsecond line"
++                && notes.Current.CaretOffset == 7 ? 0 : 1;
++        }
+         SelfTest = args.Contains("--selftest", StringComparer.OrdinalIgnoreCase);
+         Paths = SelfTest ? RuntimePaths.ForSelfTest() : RuntimePaths.Default;
+-        try { return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args); }
++        try
++        {
++            using var instance = SelfTest ? null : new SingleInstanceService(RequestShow);
++            if (instance is { IsPrimary: false }) return 0;
++            return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args);
++        }
+         catch (Exception ex) { Console.Error.WriteLine(ex); return 1; }
+     }
+ }
+
+codex
+The extended checks passed: debounced autosave persisted the edit and caret, a new process reloaded them, and a second process signaled the resident window to show and focus. The final Release build has zero warnings and errors. I’m writing the report with the timings, run commands, and remaining manual checks.
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoProfile -Command "@'
+# T-004 — M0, M1, M2 complete
+
+2026-10-17. Director integrated two bounded Luna workers (Notes and Shell services). Only src/AntiQuickPad/ and the two authorized T-004 report/status files were written. No git operations, network, spike edits, or shared STATUS.md edits. Manager owns commits.
+
+## Built
+
+- M0: Program/App/MainWindow separation; Shell, Notes, Editor, Carousel folders; one default Look record for palette, interface/editor fonts, size and gutter; RuntimePaths. Opaque themed window, AvaloniaEdit styling. The integrated GUI selftest opened and focused this window.
+- M1: One borderless, topmost resident window/editor; hide/show retains both. Esc hides; tray Show / Hide and Quit; tray click shows/focuses. SID/logon-scoped mutex/event enforces one resident process; second launch signals show, including requests received during startup. Ctrl+Alt+Shift+A registration uses Avalonia's Win32 hook and MOD_NOREPEAT. Default is defined in GlobalHotkey.DefaultGesture; override through ANTIQUICKPAD_HOTKEY (e.g. Ctrl+Alt+F8). Registration outcome/errors are logged and unavailable status appears in the tray tooltip. Reopen briefly accents the window border without delaying focus.
+- M2: NotesSession exposes note list, CurrentIndex, Current, CreateNote, DeleteCurrent, Select, UpdateCurrent and Save. MainWindow exposes CreateNote, DeleteCurrentNote and SelectNote; Ctrl+N creates a note. No carousel UI yet. GUID-named plain .md files plus notes.json for order/current index/caret. Same-directory temporary files are renamed over destinations; manifest is written after content. Autosave debounces text/caret changes by 350 ms; hide/quit flush synchronously. Save errors retain the open window and show a status message. Corrupt manifests/missing content fail loading rather than silently replacing notes.
+
+Normal data: %LOCALAPPDATA%/AntiQuickPad/notes/. Log: %LOCALAPPDATA%/AntiQuickPad/logs/shell.log. Selftest uses a unique bin/Release/net10.0/selftest/<id>/ directory, bypasses the production singleton and hotkey/tray, and never touches real notes. Its isolated singleton check uses separate names. Test artifacts are retained in ignored build output for inspection.
+
+## Verification
+
+From src/AntiQuickPad/ (PowerShell):
+
+"'```powershell
+$env:AVALONIA_TELEMETRY_OPTOUT = '"'1'
+dotnet build -c Release --no-restore
+dotnet bin/Release/net10.0/AntiQuickPad.dll --selftest
+"'```
+
+Final build: **exit 0, 0 warnings, 0 errors**. Telemetry opt-out is needed here: without it the cached Avalonia build task tries to write its logger outside the sandbox. No package/config changes or network were needed.
+
+Final selftest: **exit 0**. Checks actual Avalonia startup focus; three internal toggle hide/show cycles; same editor reference; visible/focused state; real debounce persistence; next-process text/current-index/caret reload; create/select/delete and deleting the final note; isolated second-process singleton signal delivered into the resident show/focus path.
+
+Final internal show-to-editor-focus samples: **5.344 ms, 2.048 ms, 30.390 ms**, each <100 ms. Earlier integration samples were 3.580 / 2.964 / 2.798 ms. These are bounded scripted Release samples, not a physical-hotkey latency distribution or compositor-paint measurement. The production WM_HOTKEY callback captures Stopwatch ticks at message arrival and passes them through the same show path; completion is logged when Avalonia reports editor keyboard focus.
+
+Final evidence log: src/AntiQuickPad/bin/Release/net10.0/selftest/e9b4cc05c8214bbbb41ad613d113241c/logs/shell.log.
+
+## Unverified / follow-up
+
+- User must verify physical Ctrl+Alt+Shift+A delivery (close old spike copies if the chord is occupied), typing after reopen from another app, Esc, tray click/menu and Quit. Selftest deliberately avoids registering the real chord or installing a tray icon.
+- Production launch using the normal LocalAppData location, foreground activation from unrelated apps, Windows session shutdown, and visual feel of the reopen cue require a normal desktop check. The process singleton transport and show path were checked automatically with an isolated name; a second normal application launch remains a useful manual check.
+- Per-file replacement is atomic; the whole set of Markdown files plus manifest is not a transactional snapshot or backup system. Crash recovery and external-file conflict handling are outside M0–M2.
+- No manual desktop control or inspection was performed. Carousel/Markdown decoration/settings UI remain later milestones.
+
+Blockers: **none for T-004**. Ready for manager review/commit and physical shell checks.
+'"'@ | Set-Content .coord/reports/T-004.md
+Add-Content .coord/status-T004.md 'T-004 complete: report written at .coord/reports/T-004.md. All M0–M2 implemented, offline Release build and extended --selftest pass. No blockers; manager review/commit and physical hotkey/tray checks remain.'" in F:\LocalVSProj\Visual Studio Apps\AntiQuickPad
+ succeeded in 137ms:
+diff --git a/src/AntiQuickPad/App.cs b/src/AntiQuickPad/App.cs
+index cf0e4a7f586c91a0de804ca163ea6a6d258e19de..2479239e760cc74a7ffe3fb232de8e9f7b795f3a
+--- a/src/AntiQuickPad/App.cs
++++ b/src/AntiQuickPad/App.cs
+@@ -18,6 +18,7 @@
+         {
+             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
+             desktop.MainWindow = new MainWindow();
++            Program.Attach((MainWindow)desktop.MainWindow);
+         }
+         base.OnFrameworkInitializationCompleted();
+     }
+diff --git a/src/AntiQuickPad/MainWindow.cs b/src/AntiQuickPad/MainWindow.cs
+index 7c1b30c5efa0d52a3172fbd8722af30d1cccad47..e170b9bc9f14aa94c266b83e9315525d5122c09c
+--- a/src/AntiQuickPad/MainWindow.cs
++++ b/src/AntiQuickPad/MainWindow.cs
+@@ -74,7 +74,12 @@
+ 
+     private void InstallHotkey()
+     {
+-        // Filled by shell integration.
++        try
++        {
++            _hotkey = new GlobalHotkey(this, timestamp => Toggle(timestamp));
++            Log($"hotkey gesture={_hotkey.GestureLabel} registered={_hotkey.IsRegistered} error={_hotkey.RegistrationError} {_hotkey.RegistrationErrorMessage}");
++        }
++        catch (FormatException ex) { Log($"hotkey-configuration-error {ex.Message}"); }
+     }
+ 
+     public void Toggle(long started = 0)
+@@ -169,7 +174,8 @@
+         var menu = new NativeMenu();
+         var toggle = new NativeMenuItem("Show / Hide"); toggle.Click += (_, _) => Toggle(); menu.Items.Add(toggle);
+         var quit = new NativeMenuItem("Quit"); quit.Click += (_, _) => Quit(); menu.Items.Add(quit);
+-        _tray = new TrayIcon { ToolTipText = "AntiQuickPad", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
++        var hotkeyStatus = _hotkey is { IsRegistered: true } ? _hotkey.GestureLabel : "hotkey unavailable; see log";
++        _tray = new TrayIcon { ToolTipText = $"AntiQuickPad · {hotkeyStatus}", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
+         _tray.Clicked += (_, _) => ShowResident("tray");
+         TrayIcon.SetIcons(Application.Current!, new TrayIcons { _tray });
+     }
+@@ -207,14 +213,30 @@
+                     throw new Exception("Resident editor was recreated or not focused.");
+             }
+             CreateNote(); _editor.Text = "# editor round trip\nsecond line"; _editor.CaretOffset = 7;
+-            if (!SaveNotes()) throw new Exception("Editor save failed.");
++            await Task.Delay(550); // Let the real debounce timer persist the edit and caret.
+             var reload = new NotesSession(Program.Paths.Notes);
+             if (reload.Current.Text != _editor.Text || reload.Current.CaretOffset != 7 || reload.CurrentIndex != 1)
+                 throw new Exception("Editor round trip failed.");
+             if (!NotesSession.RunPersistenceSmoke(Program.Paths.Root)) throw new Exception("Persistence smoke failed.");
++            await RunChild("--selftest-reload", Program.Paths.Notes);
++            Toggle();
++            var signalId = "AntiQuickPad-selftest-" + Guid.NewGuid().ToString("N");
++            var signal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++            _focusCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
++            using (var singleton = new SingleInstanceService(() => Dispatcher.UIThread.Post(() =>
++            {
++                ShowResident("selftest-second-launch"); signal.TrySetResult();
++            }), signalId))
++            {
++                if (!singleton.IsPrimary) throw new Exception("Isolated singleton was not primary.");
++                await RunChild("--selftest-signal", signalId);
++                await signal.Task.WaitAsync(TimeSpan.FromSeconds(3));
++                await _focusCompletion.Task.WaitAsync(TimeSpan.FromSeconds(3));
++            }
++            if (!IsVisible || !_editor.TextArea.IsKeyboardFocusWithin) throw new Exception("Second-launch show/focus failed.");
+             foreach (var ms in timings) Console.WriteLine($"show-to-focus internal ms={ms:F3}");
+             if (timings.Any(ms => ms >= 100)) throw new Exception("Internal show-to-focus exceeded 100 ms.");
+-            Console.WriteLine("SELFTEST PASS: same resident editor; toggle/focus; editor and notes round trips.");
++            Console.WriteLine("SELFTEST PASS: same resident editor; toggle/focus; debounced save; next-process reload; second-process signal/show; notes round trip.");
+             Log("SELFTEST PASS"); exitCode = 0;
+         }
+         catch (Exception ex) { Console.Error.WriteLine($"SELFTEST FAIL: {ex}"); Log($"SELFTEST FAIL: {ex}"); }
+@@ -224,5 +246,17 @@
+             (Application.Current!.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)!.Shutdown(exitCode);
+         }
+     }
++    private static async Task RunChild(string mode, string argument)
++    {
++        var executable = Environment.ProcessPath!;
++        var start = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true };
++        if (string.Equals(Path.GetFileNameWithoutExtension(executable), "dotnet", StringComparison.OrdinalIgnoreCase))
++            start.ArgumentList.Add(typeof(Program).Assembly.Location);
++        start.ArgumentList.Add(mode); start.ArgumentList.Add(argument);
++        using var process = Process.Start(start) ?? throw new Exception("Could not start selftest child.");
++        try { await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
++        catch { if (!process.HasExited) process.Kill(); throw; }
++        if (process.ExitCode != 0) throw new Exception($"{mode} child exit={process.ExitCode}");
++    }
+     private void Log(string message) => _log.WriteLine($"{DateTimeOffset.UtcNow:O} {message}");
+ }
+diff --git a/src/AntiQuickPad/Notes/NotesSession.cs b/src/AntiQuickPad/Notes/NotesSession.cs
+index 01aebb07d40ef542b0643df5859a06d11c137504..092d22edb4a6c84b154b229c82e7a2af7408f05d
+--- a/src/AntiQuickPad/Notes/NotesSession.cs
++++ b/src/AntiQuickPad/Notes/NotesSession.cs
+@@ -107,12 +107,21 @@
+             first.Save();
+ 
+             var restored = new NotesSession(scratch);
+-            return restored.Notes.Count == 2
++            var roundTrip = restored.Notes.Count == 2
+                 && restored.CurrentIndex == 0
+                 && restored.Current.Text == "# round trip\n"
+                 && restored.Current.CaretOffset == 4
+                 && restored.Notes[1].Text == "second"
+                 && restored.Notes[1].CaretOffset == 3;
++            var deletedId = restored.Current.Id;
++            restored.DeleteCurrent();
++            var afterDelete = new NotesSession(scratch);
++            var deleted = afterDelete.Notes.Count == 1 && afterDelete.Current.Text == "second"
++                && !File.Exists(Path.Combine(scratch, deletedId + ".md"));
++            afterDelete.DeleteCurrent();
++            var afterLastDelete = new NotesSession(scratch);
++            return roundTrip && deleted && afterLastDelete.Notes.Count == 1
++                && afterLastDelete.Current.Text == string.Empty && afterLastDelete.CurrentIndex == 0;
+         }
+         finally
+         {
+diff --git a/src/AntiQuickPad/Program.cs b/src/AntiQuickPad/Program.cs
+index 45c39c31d5b1d4a1da485c21bbfc49642760dcbc..d7988b85fb74b81ccdb31cdfeac8c5e6542aeb76
+--- a/src/AntiQuickPad/Program.cs
++++ b/src/AntiQuickPad/Program.cs
+@@ -1,16 +1,50 @@
+ using Avalonia;
++using Avalonia.Threading;
++using AntiQuickPad.Shell;
+ namespace AntiQuickPad;
+ internal static class Program
+ {
+     public static bool SelfTest { get; private set; }
+     public static RuntimePaths Paths { get; private set; } = null!;
++    private static MainWindow? _window;
++    private static int _pendingShow;
++    public static void Attach(MainWindow window)
++    {
++        Volatile.Write(ref _window, window);
++        if (Interlocked.Exchange(ref _pendingShow, 0) != 0)
++            Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
++    private static void RequestShow()
++    {
++        Interlocked.Exchange(ref _pendingShow, 1);
++        var window = Volatile.Read(ref _window);
++        if (window is null) return;
++        Interlocked.Exchange(ref _pendingShow, 0);
++        Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
+     [STAThread]
+     public static int Main(string[] args)
+     {
+         Environment.SetEnvironmentVariable("AVALONIA_TELEMETRY_OPTOUT", "1");
++        if (args is ["--selftest-signal", var instanceId])
++        {
++            using var secondary = new SingleInstanceService(() => { }, instanceId);
++            return secondary.IsPrimary ? 1 : 0;
++        }
++        if (args is ["--selftest-reload", var directory])
++        {
++            var notes = new Notes.NotesSession(directory);
++            return notes.CurrentIndex == 1 && notes.Current.Text == "# editor round trip\nsecond line"
++                && notes.Current.CaretOffset == 7 ? 0 : 1;
++        }
+         SelfTest = args.Contains("--selftest", StringComparer.OrdinalIgnoreCase);
+         Paths = SelfTest ? RuntimePaths.ForSelfTest() : RuntimePaths.Default;
+-        try { return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args); }
++        try
++        {
++            using var instance = SelfTest ? null : new SingleInstanceService(RequestShow);
++            if (instance is { IsPrimary: false }) return 0;
++            return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args);
++        }
+         catch (Exception ex) { Console.Error.WriteLine(ex); return 1; }
+     }
+ }
+
+codex
+M0–M2 complete.
+
+- Release build: **0 warnings, 0 errors**
+- Extended `--selftest`: **exit 0**
+- Internal show-to-focus: **5.344 / 2.048 / 30.390 ms**
+- Persistence, caret restoration, and second-process signaling passed.
+- Physical hotkey/tray checks remain for the user.
+
+[Report](.coord/reports/T-004.md) and milestone checkpoints written. No blockers or git changes.
+diff --git a/src/AntiQuickPad/App.cs b/src/AntiQuickPad/App.cs
+index cf0e4a7f586c91a0de804ca163ea6a6d258e19de..2479239e760cc74a7ffe3fb232de8e9f7b795f3a
+--- a/src/AntiQuickPad/App.cs
++++ b/src/AntiQuickPad/App.cs
+@@ -18,6 +18,7 @@
+         {
+             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
+             desktop.MainWindow = new MainWindow();
++            Program.Attach((MainWindow)desktop.MainWindow);
+         }
+         base.OnFrameworkInitializationCompleted();
+     }
+diff --git a/src/AntiQuickPad/MainWindow.cs b/src/AntiQuickPad/MainWindow.cs
+index 7c1b30c5efa0d52a3172fbd8722af30d1cccad47..e170b9bc9f14aa94c266b83e9315525d5122c09c
+--- a/src/AntiQuickPad/MainWindow.cs
++++ b/src/AntiQuickPad/MainWindow.cs
+@@ -74,7 +74,12 @@
+ 
+     private void InstallHotkey()
+     {
+-        // Filled by shell integration.
++        try
++        {
++            _hotkey = new GlobalHotkey(this, timestamp => Toggle(timestamp));
++            Log($"hotkey gesture={_hotkey.GestureLabel} registered={_hotkey.IsRegistered} error={_hotkey.RegistrationError} {_hotkey.RegistrationErrorMessage}");
++        }
++        catch (FormatException ex) { Log($"hotkey-configuration-error {ex.Message}"); }
+     }
+ 
+     public void Toggle(long started = 0)
+@@ -169,7 +174,8 @@
+         var menu = new NativeMenu();
+         var toggle = new NativeMenuItem("Show / Hide"); toggle.Click += (_, _) => Toggle(); menu.Items.Add(toggle);
+         var quit = new NativeMenuItem("Quit"); quit.Click += (_, _) => Quit(); menu.Items.Add(quit);
+-        _tray = new TrayIcon { ToolTipText = "AntiQuickPad", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
++        var hotkeyStatus = _hotkey is { IsRegistered: true } ? _hotkey.GestureLabel : "hotkey unavailable; see log";
++        _tray = new TrayIcon { ToolTipText = $"AntiQuickPad · {hotkeyStatus}", Icon = CreateTrayIcon(), Menu = menu, IsVisible = true };
+         _tray.Clicked += (_, _) => ShowResident("tray");
+         TrayIcon.SetIcons(Application.Current!, new TrayIcons { _tray });
+     }
+@@ -207,14 +213,30 @@
+                     throw new Exception("Resident editor was recreated or not focused.");
+             }
+             CreateNote(); _editor.Text = "# editor round trip\nsecond line"; _editor.CaretOffset = 7;
+-            if (!SaveNotes()) throw new Exception("Editor save failed.");
++            await Task.Delay(550); // Let the real debounce timer persist the edit and caret.
+             var reload = new NotesSession(Program.Paths.Notes);
+             if (reload.Current.Text != _editor.Text || reload.Current.CaretOffset != 7 || reload.CurrentIndex != 1)
+                 throw new Exception("Editor round trip failed.");
+             if (!NotesSession.RunPersistenceSmoke(Program.Paths.Root)) throw new Exception("Persistence smoke failed.");
++            await RunChild("--selftest-reload", Program.Paths.Notes);
++            Toggle();
++            var signalId = "AntiQuickPad-selftest-" + Guid.NewGuid().ToString("N");
++            var signal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++            _focusCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
++            using (var singleton = new SingleInstanceService(() => Dispatcher.UIThread.Post(() =>
++            {
++                ShowResident("selftest-second-launch"); signal.TrySetResult();
++            }), signalId))
++            {
++                if (!singleton.IsPrimary) throw new Exception("Isolated singleton was not primary.");
++                await RunChild("--selftest-signal", signalId);
++                await signal.Task.WaitAsync(TimeSpan.FromSeconds(3));
++                await _focusCompletion.Task.WaitAsync(TimeSpan.FromSeconds(3));
++            }
++            if (!IsVisible || !_editor.TextArea.IsKeyboardFocusWithin) throw new Exception("Second-launch show/focus failed.");
+             foreach (var ms in timings) Console.WriteLine($"show-to-focus internal ms={ms:F3}");
+             if (timings.Any(ms => ms >= 100)) throw new Exception("Internal show-to-focus exceeded 100 ms.");
+-            Console.WriteLine("SELFTEST PASS: same resident editor; toggle/focus; editor and notes round trips.");
++            Console.WriteLine("SELFTEST PASS: same resident editor; toggle/focus; debounced save; next-process reload; second-process signal/show; notes round trip.");
+             Log("SELFTEST PASS"); exitCode = 0;
+         }
+         catch (Exception ex) { Console.Error.WriteLine($"SELFTEST FAIL: {ex}"); Log($"SELFTEST FAIL: {ex}"); }
+@@ -224,5 +246,17 @@
+             (Application.Current!.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)!.Shutdown(exitCode);
+         }
+     }
++    private static async Task RunChild(string mode, string argument)
++    {
++        var executable = Environment.ProcessPath!;
++        var start = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true };
++        if (string.Equals(Path.GetFileNameWithoutExtension(executable), "dotnet", StringComparison.OrdinalIgnoreCase))
++            start.ArgumentList.Add(typeof(Program).Assembly.Location);
++        start.ArgumentList.Add(mode); start.ArgumentList.Add(argument);
++        using var process = Process.Start(start) ?? throw new Exception("Could not start selftest child.");
++        try { await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
++        catch { if (!process.HasExited) process.Kill(); throw; }
++        if (process.ExitCode != 0) throw new Exception($"{mode} child exit={process.ExitCode}");
++    }
+     private void Log(string message) => _log.WriteLine($"{DateTimeOffset.UtcNow:O} {message}");
+ }
+diff --git a/src/AntiQuickPad/Notes/NotesSession.cs b/src/AntiQuickPad/Notes/NotesSession.cs
+index 01aebb07d40ef542b0643df5859a06d11c137504..092d22edb4a6c84b154b229c82e7a2af7408f05d
+--- a/src/AntiQuickPad/Notes/NotesSession.cs
++++ b/src/AntiQuickPad/Notes/NotesSession.cs
+@@ -107,12 +107,21 @@
+             first.Save();
+ 
+             var restored = new NotesSession(scratch);
+-            return restored.Notes.Count == 2
++            var roundTrip = restored.Notes.Count == 2
+                 && restored.CurrentIndex == 0
+                 && restored.Current.Text == "# round trip\n"
+                 && restored.Current.CaretOffset == 4
+                 && restored.Notes[1].Text == "second"
+                 && restored.Notes[1].CaretOffset == 3;
++            var deletedId = restored.Current.Id;
++            restored.DeleteCurrent();
++            var afterDelete = new NotesSession(scratch);
++            var deleted = afterDelete.Notes.Count == 1 && afterDelete.Current.Text == "second"
++                && !File.Exists(Path.Combine(scratch, deletedId + ".md"));
++            afterDelete.DeleteCurrent();
++            var afterLastDelete = new NotesSession(scratch);
++            return roundTrip && deleted && afterLastDelete.Notes.Count == 1
++                && afterLastDelete.Current.Text == string.Empty && afterLastDelete.CurrentIndex == 0;
+         }
+         finally
+         {
+diff --git a/src/AntiQuickPad/Program.cs b/src/AntiQuickPad/Program.cs
+index 45c39c31d5b1d4a1da485c21bbfc49642760dcbc..d7988b85fb74b81ccdb31cdfeac8c5e6542aeb76
+--- a/src/AntiQuickPad/Program.cs
++++ b/src/AntiQuickPad/Program.cs
+@@ -1,16 +1,50 @@
+ using Avalonia;
++using Avalonia.Threading;
++using AntiQuickPad.Shell;
+ namespace AntiQuickPad;
+ internal static class Program
+ {
+     public static bool SelfTest { get; private set; }
+     public static RuntimePaths Paths { get; private set; } = null!;
++    private static MainWindow? _window;
++    private static int _pendingShow;
++    public static void Attach(MainWindow window)
++    {
++        Volatile.Write(ref _window, window);
++        if (Interlocked.Exchange(ref _pendingShow, 0) != 0)
++            Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
++    private static void RequestShow()
++    {
++        Interlocked.Exchange(ref _pendingShow, 1);
++        var window = Volatile.Read(ref _window);
++        if (window is null) return;
++        Interlocked.Exchange(ref _pendingShow, 0);
++        Dispatcher.UIThread.Post(() => window.ShowResident("second-launch"));
++    }
+     [STAThread]
+     public static int Main(string[] args)
+     {
+         Environment.SetEnvironmentVariable("AVALONIA_TELEMETRY_OPTOUT", "1");
++        if (args is ["--selftest-signal", var instanceId])
++        {
++            using var secondary = new SingleInstanceService(() => { }, instanceId);
++            return secondary.IsPrimary ? 1 : 0;
++        }
++        if (args is ["--selftest-reload", var directory])
++        {
++            var notes = new Notes.NotesSession(directory);
++            return notes.CurrentIndex == 1 && notes.Current.Text == "# editor round trip\nsecond line"
++                && notes.Current.CaretOffset == 7 ? 0 : 1;
++        }
+         SelfTest = args.Contains("--selftest", StringComparer.OrdinalIgnoreCase);
+         Paths = SelfTest ? RuntimePaths.ForSelfTest() : RuntimePaths.Default;
+-        try { return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args); }
++        try
++        {
++            using var instance = SelfTest ? null : new SingleInstanceService(RequestShow);
++            if (instance is { IsPrimary: false }) return 0;
++            return AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace().StartWithClassicDesktopLifetime(args);
++        }
+         catch (Exception ex) { Console.Error.WriteLine(ex); return 1; }
+     }
+ }
+
+tokens used
+54,832
+M0–M2 complete.
+
+- Release build: **0 warnings, 0 errors**
+- Extended `--selftest`: **exit 0**
+- Internal show-to-focus: **5.344 / 2.048 / 30.390 ms**
+- Persistence, caret restoration, and second-process signaling passed.
+- Physical hotkey/tray checks remain for the user.
+
+[Report](.coord/reports/T-004.md) and milestone checkpoints written. No blockers or git changes.
+exit 0

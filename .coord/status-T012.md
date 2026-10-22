@@ -1,0 +1,11 @@
+# T-012 checkpoints
+
+- Dispatch: read handoff, task, feedback and M6 design direction. Parent owns integration/VM/views; bounded workers own pure text extraction and Shell services. No git or shared STATUS edits.
+- Core checkpoint: moved Note/NotesSession into package-free net10.0 class library; added settings persistence and save events. UI integration/validation in progress.
+- ViewModel/platform/view checkpoint: MainViewModel owns note commands and Core access, per-editor edit plans route through its VM, Classic shell implements IShellView; platform services injected. First offline Release build passed: Core + UI, 0 warnings/errors. Starting smoke/runtime validation.
+- Validation checkpoint: initial full --selftest exit 0 (internal focus 1.947/1.114/1.179 ms); final Release build 0 warnings/errors after review. Standalone Core smoke also passes legacy settings and shell/look ID round trips, without Avalonia loaded. Final selftest underway; architecture diagram/feature map/five shell steps written.
+- ViewModels checkpoint complete: INPC/RelayCommand, Main/Note/Status projections, note/navigation commands, save state and VM settings adapter. Editor text plans route per-document through its VM (no global callback).
+- Views checkpoint complete: current shell moved to Views/Classic, IShellView/IEditorHost contracts added, Design shares IEditorHost; App constructs the dependency graph and selects the shell. Carousel selects through MainViewModel, never the store.
+- Platform checkpoint complete: hotkey/tray/single-instance/window interfaces and Avalonia/Windows adapters. No direct Win32 calls added to views or ViewModels.
+- Review follow-up: shell/look changes are accepted by VM SaveSettings and preserved during normal/hidden/maximized bounds saves; added focused smoke and rebuilt (0 warnings/errors, 2.11 s). Third full selftest running against this final binary; first two full runs passed.
+- Completion: final Core + UI Release build exit 0, 0 warnings/errors; standalone Core smoke exit 0 with no Avalonia referenced/loaded; final full selftest exit 0, internal focus 1.934/0.959/1.117 ms. All three render-design modes exit 0; 30/30 PNG hashes exactly match M6 baseline. Four backdrop probes exit 0 with unchanged reported levels. Report T-012.md complete; manager owns git and desktop --measure recheck.

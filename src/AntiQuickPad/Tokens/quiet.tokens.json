@@ -1,0 +1,113 @@
+{
+  "$description": "AntiQuickPad Quiet design tokens (M6c-design-tokens). DTCG format: every token is an object with $value and $type. Colour modes live under color.light and color.dark; everything else is shared. The shell reads only these tokens (via Tokens/DesignTokens.cs).",
+  "color": {
+    "light": {
+      "canvas": { "$type": "color", "$value": "#FAFAF7", "$description": "Tint layer colour over the backdrop; opaque fallback when no material." },
+      "ink": { "$type": "color", "$value": "#29332F" },
+      "muted": { "$type": "color", "$value": "#5A645E", "$description": "Secondary text: position, save line, hints, menu headings. F43: >= 4.5:1 on 90% tint over black or white (was #758079, 3.1:1)." },
+      "accent": { "$type": "color", "$value": "#2E6A48", "$description": "Selected dot, focus ring, failed-save text, checkbox fill. F43: >= 4.5:1 as text (was #537864, 3.8:1); kept clearly greener than muted so selected and idle states stay distinct." },
+      "rule": { "$type": "color", "$value": "#E2E4DF" },
+      "surface": { "$type": "color", "$value": "#FAFAF7", "$description": "Opaque More-menu surface." },
+      "marker": { "$type": "color", "$value": "#9DA69F", "$description": "Markdown markers; deliberately dim (F8), decorative." },
+      "codePanel": { "$type": "color", "$value": "#99EEF0EB", "$description": "Translucent so the glass reads through code blocks." },
+      "activeLine": { "$type": "color", "$value": "#66EAF0E9" },
+      "guide": { "$type": "color", "$value": "#DDE2DC" },
+      "guideActive": { "$type": "color", "$value": "#A1B5A5" },
+      "checkboxCheck": { "$type": "color", "$value": "#FFFFFF" },
+      "keyword": { "$type": "color", "$value": "#70578C" },
+      "string": { "$type": "color", "$value": "#52765B" },
+      "comment": { "$type": "color", "$value": "#7E8880" },
+      "heading": { "$type": "color", "$value": ["#91452F", "#805C25", "#5E682B", "#356D55", "#356B80", "#62588D"], "$description": "H1-H6, warm to cool (F27)." },
+      "shadow": { "$type": "color", "$value": "#30000000" }
+    },
+    "dark": {
+      "canvas": { "$type": "color", "$value": "#202823" },
+      "ink": { "$type": "color", "$value": "#E1E9E1" },
+      "muted": { "$type": "color", "$value": "#A3B1A6", "$description": "F43: >= 4.5:1 worst case (was #9CAA9F, 4.6:1 over white backdrop at the limit)." },
+      "accent": { "$type": "color", "$value": "#9FC8AA" },
+      "rule": { "$type": "color", "$value": "#3C4B40" },
+      "surface": { "$type": "color", "$value": "#202823" },
+      "marker": { "$type": "color", "$value": "#798C7D" },
+      "codePanel": { "$type": "color", "$value": "#9919221D" },
+      "activeLine": { "$type": "color", "$value": "#66304537" },
+      "guide": { "$type": "color", "$value": "#34483B" },
+      "guideActive": { "$type": "color", "$value": "#84A58E" },
+      "checkboxCheck": { "$type": "color", "$value": "#202823" },
+      "keyword": { "$type": "color", "$value": "#C5ACE8" },
+      "string": { "$type": "color", "$value": "#A5C9AD" },
+      "comment": { "$type": "color", "$value": "#8E9E9B" },
+      "heading": { "$type": "color", "$value": ["#F0B69A", "#DDC590", "#C5D29A", "#A0D0B2", "#9AC9DC", "#BEB6E0"] },
+      "shadow": { "$type": "color", "$value": "#30000000" }
+    }
+  },
+  "material": {
+    "kind": { "$type": "string", "$value": "acrylic", "$description": "acrylic | mica | solid (F25 verdict: Acrylic base)." },
+    "tintAlpha": { "$type": "number", "$value": 0.9 }
+  },
+  "font": {
+    "editor": { "$type": "fontFamily", "$value": "Cascadia Mono, Consolas" },
+    "code": { "$type": "fontFamily", "$value": "Cascadia Mono, Consolas" },
+    "interface": { "$type": "fontFamily", "$value": "Segoe UI Variable Text" },
+    "icon": { "$type": "fontFamily", "$value": "Segoe Fluent Icons" },
+    "size": {
+      "body": { "$type": "dimension", "$value": 14 },
+      "heading": { "$type": "dimension", "$value": [28, 24, 21, 19, 18, 17] },
+      "icon": { "$type": "dimension", "$value": 15 },
+      "status": { "$type": "dimension", "$value": 11 },
+      "hint": { "$type": "dimension", "$value": 10, "$description": "Esc-to-hide hint." },
+      "menuHeading": { "$type": "dimension", "$value": 11 },
+      "menuLabel": { "$type": "dimension", "$value": 12 }
+    }
+  },
+  "space": {
+    "inset": { "$type": "dimension", "$value": 24, "$description": "Side inset of bars and page; the folding gutter adds another 24." },
+    "topBar": { "$type": "dimension", "$value": 38 },
+    "bottomBar": { "$type": "dimension", "$value": 36 },
+    "bottomGap": { "$type": "dimension", "$value": 10 },
+    "pageBottom": { "$type": "dimension", "$value": 56, "$description": "Editor ends this far above the window bottom so the last lines clear the pill (F50)." },
+    "actions": { "$type": "dimension", "$value": 4 },
+    "dots": { "$type": "dimension", "$value": 0, "$description": "Dot gaps come from the hit slots (F42)." },
+    "saveLine": { "$type": "dimension", "$value": 8 },
+    "menuTop": { "$type": "dimension", "$value": 40 },
+    "menuPadding": { "$type": "dimension", "$value": 5 },
+    "menuItem": { "$type": "dimension", "$value": 10, "$description": "Horizontal padding inside a menu row." },
+    "menuCheck": { "$type": "dimension", "$value": 24, "$description": "Check-mark column; headings and rules indent by menuCheck + menuItem." },
+    "menuList": { "$type": "dimension", "$value": 2 }
+  },
+  "size": {
+    "window": { "$type": "dimension", "$value": [480, 560] },
+    "windowMin": { "$type": "dimension", "$value": [360, 420] },
+    "button": { "$type": "dimension", "$value": [32, 30] },
+    "targetMin": { "$type": "dimension", "$value": 24, "$description": "Minimum pointer target (F42, WCAG 2.5.8)." },
+    "dot": { "$type": "dimension", "$value": 5 },
+    "dotSelected": { "$type": "dimension", "$value": 14 },
+    "dotSlot": { "$type": "dimension", "$value": [8, 24], "$description": "Hit slot of an unselected dot (width, height). Height meets targetMin; width stays compact because Previous/Next (32 x 30) are the equivalent targets (WCAG 2.5.8 equivalent exception). A selected dot's slot is its ink plus the same 3 DIP." },
+    "dotIdleOpacity": { "$type": "number", "$value": 1, "$description": "F43: idle dots at full muted for >= 3:1 non-text contrast (was 0.5, 1.7:1)." },
+    "menuWidth": { "$type": "dimension", "$value": 250 },
+    "menuRow": { "$type": "dimension", "$value": 32 },
+    "grab": { "$type": "dimension", "$value": 12 },
+    "focusRing": { "$type": "dimension", "$value": 2, "$description": "F51: accent ring on keyboard focus (not on pointer focus)." }
+  },
+  "radius": {
+    "button": { "$type": "dimension", "$value": 6 },
+    "pill": { "$type": "dimension", "$value": 18 },
+    "menu": { "$type": "dimension", "$value": 10 },
+    "menuItem": { "$type": "dimension", "$value": 5 },
+    "dot": { "$type": "dimension", "$value": 3 }
+  },
+  "elevation": {
+    "menu": { "$type": "shadow", "$value": { "color": "{color.*.shadow}", "offsetX": 0, "offsetY": 10, "blur": 30, "spread": 0 } }
+  },
+  "motion": {
+    "revealIn": { "$type": "duration", "$value": "120ms" },
+    "revealOut": { "$type": "duration", "$value": "150ms" },
+    "revealLinger": { "$type": "duration", "$value": "400ms" }
+  },
+  "editor": {
+    "padding": { "$type": "dimension", "$value": 0 },
+    "checkbox": { "$type": "dimension", "$value": 14 },
+    "checkboxRadius": { "$type": "dimension", "$value": 4 },
+    "checkboxStroke": { "$type": "dimension", "$value": 1.25 },
+    "strikeEm": { "$type": "number", "$value": 0.1 }
+  }
+}

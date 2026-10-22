@@ -1,0 +1,1 @@
+mode=acrylic; requested=AcrylicBlur; actual=AcrylicBlur; OS=Microsoft Windows 10.0.26340; Avalonia=12.1.4.0

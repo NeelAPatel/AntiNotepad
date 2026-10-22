@@ -1,0 +1,236 @@
+[
+  {
+    "scale": 1,
+    "countY": 767.5,
+    "previousY": 767.5,
+    "nextY": 767.5,
+    "saveY": 767,
+    "pagerY": 767,
+    "delta": 0.5
+  },
+  {
+    "scale": 1,
+    "row": "New note",
+    "highlightX": 6,
+    "highlightRight": 244,
+    "checkX": 16,
+    "checkInkX": 17,
+    "textX": 40,
+    "textInkX": 41,
+    "height": 32
+  },
+  {
+    "scale": 1,
+    "row": "Delete note",
+    "highlightX": 6,
+    "highlightRight": 244,
+    "checkX": 16,
+    "checkInkX": 17,
+    "textX": 40,
+    "textInkX": 41,
+    "height": 32
+  },
+  {
+    "scale": 1,
+    "row": "System",
+    "highlightX": 6,
+    "highlightRight": 244,
+    "checkX": 16,
+    "checkInkX": 17,
+    "textX": 40,
+    "textInkX": 40,
+    "height": 32
+  },
+  {
+    "scale": 1,
+    "row": "Light",
+    "highlightX": 6,
+    "highlightRight": 244,
+    "checkX": 16,
+    "checkInkX": 17,
+    "textX": 40,
+    "textInkX": 41,
+    "height": 32
+  },
+  {
+    "scale": 1,
+    "row": "Dark",
+    "highlightX": 6,
+    "highlightRight": 244,
+    "checkX": 16,
+    "checkInkX": 17,
+    "textX": 40,
+    "textInkX": 41,
+    "height": 32
+  },
+  {
+    "scale": 1,
+    "row": "Quiet",
+    "highlightX": 6,
+    "highlightRight": 244,
+    "checkX": 16,
+    "checkInkX": 17,
+    "textX": 40,
+    "textInkX": 40,
+    "height": 32
+  },
+  {
+    "scale": 1,
+    "row": "Card",
+    "highlightX": 6,
+    "highlightRight": 244,
+    "checkX": 16,
+    "checkInkX": 17,
+    "textX": 40,
+    "textInkX": 40,
+    "height": 32
+  },
+  {
+    "scale": 1,
+    "row": "Quit AntiQuickPad",
+    "highlightX": 6,
+    "highlightRight": 244,
+    "checkX": 16,
+    "checkInkX": 17,
+    "textX": 40,
+    "textInkX": 40,
+    "height": 32
+  },
+  {
+    "scale": 1,
+    "label": "THEME",
+    "x": 40,
+    "inkX": 40,
+    "topSpacing": 8,
+    "bottomSpacing": 3
+  },
+  {
+    "scale": 1,
+    "label": "SHELL",
+    "x": 40,
+    "inkX": 40,
+    "topSpacing": 8,
+    "bottomSpacing": 3
+  },
+  {
+    "scale": 1,
+    "dividerX": 40
+  },
+  {
+    "scale": 1.5,
+    "countY": 767,
+    "previousY": 767,
+    "nextY": 767,
+    "saveY": 767,
+    "pagerY": 767,
+    "delta": 0
+  },
+  {
+    "scale": 1.5,
+    "row": "New note",
+    "highlightX": 6,
+    "highlightRight": 244,
+    "checkX": 16,
+    "checkInkX": 16.66666666666663,
+    "textX": 40,
+    "textInkX": 41.33333333333337,
+    "height": 32
+  },
+  {
+    "scale": 1.5,
+    "row": "Delete note",
+    "highlightX": 6,
+    "highlightRight": 244,
+    "checkX": 16,
+    "checkInkX": 16.66666666666663,
+    "textX": 40,
+    "textInkX": 41.33333333333337,
+    "height": 32
+  },
+  {
+    "scale": 1.5,
+    "row": "System",
+    "highlightX": 6,
+    "highlightRight": 244,
+    "checkX": 16,
+    "checkInkX": 16.66666666666663,
+    "textX": 40,
+    "textInkX": 40,
+    "height": 32
+  },
+  {
+    "scale": 1.5,
+    "row": "Light",
+    "highlightX": 6,
+    "highlightRight": 244,
+    "checkX": 16,
+    "checkInkX": 16.66666666666663,
+    "textX": 40,
+    "textInkX": 41.33333333333337,
+    "height": 32
+  },
+  {
+    "scale": 1.5,
+    "row": "Dark",
+    "highlightX": 6,
+    "highlightRight": 244,
+    "checkX": 16,
+    "checkInkX": 16.66666666666663,
+    "textX": 40,
+    "textInkX": 41.33333333333337,
+    "height": 32
+  },
+  {
+    "scale": 1.5,
+    "row": "Quiet",
+    "highlightX": 6,
+    "highlightRight": 244,
+    "checkX": 16,
+    "checkInkX": 16.66666666666663,
+    "textX": 40,
+    "textInkX": 40.66666666666663,
+    "height": 32
+  },
+  {
+    "scale": 1.5,
+    "row": "Card",
+    "highlightX": 6,
+    "highlightRight": 244,
+    "checkX": 16,
+    "checkInkX": 16.66666666666663,
+    "textX": 40,
+    "textInkX": 40.66666666666663,
+    "height": 32
+  },
+  {
+    "scale": 1.5,
+    "row": "Quit AntiQuickPad",
+    "highlightX": 6,
+    "highlightRight": 244,
+    "checkX": 16,
+    "checkInkX": 16.66666666666663,
+    "textX": 40,
+    "textInkX": 40.66666666666663,
+    "height": 32
+  },
+  {
+    "scale": 1.5,
+    "label": "THEME",
+    "x": 40,
+    "inkX": 40,
+    "topSpacing": 8,
+    "bottomSpacing": 3
+  },
+  {
+    "scale": 1.5,
+    "label": "SHELL",
+    "x": 40,
+    "inkX": 40,
+    "topSpacing": 8,
+    "bottomSpacing": 3
+  },
+  {
+    "scale": 1.5,
+    "dividerX": 40
+  }
+]

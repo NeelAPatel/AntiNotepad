@@ -1,0 +1,354 @@
+T007 indent PASS: 7 empty marker indent/outdent/numbering cases and single undo.
+T014 curve 60Hz: samples=18, maxDelta=71.3341, monotonic PASS
+T014 curve 120Hz: samples=35, maxDelta=35.6924, monotonic PASS
+T014 curve 144Hz: samples=42, maxDelta=29.7473, monotonic PASS
+T-015-alignment-fixes quiet @1 count=768.5 prev=768.5 next=768.5 save=762 pager=768.5
+MENU @1 New note region=692, 58, 238, 32
+MENU @1 Delete note region=692, 92, 238, 32
+MENU @1 System region=692, 154, 238, 32
+MENU @1 Light region=692, 188, 238, 32
+MENU @1 Dark region=692, 222, 238, 32
+MENU @1 Quiet region=692, 284, 238, 32
+MENU @1 Card region=692, 318, 238, 32
+MENU @1 Quit AntiQuickPad region=692, 367, 238, 32
+T-015-alignment-fixes quiet @1.5 count=768.3333333333334 prev=768.3333333333333 next=768.3333333333333 save=762.3333333333333 pager=768.3333333333333
+MENU @1.5 New note region=692, 58, 238, 32
+MENU @1.5 Delete note region=692, 92, 238, 32
+MENU @1.5 System region=692, 154, 238, 32
+MENU @1.5 Light region=692, 188, 238, 32
+MENU @1.5 Dark region=692, 222, 238, 32
+MENU @1.5 Quiet region=692, 284, 238, 32
+MENU @1.5 Card region=692, 318, 238, 32
+MENU @1.5 Quit AntiQuickPad region=692, 367, 238, 32
+T-015-alignment-fixes quiet/light raster PASS: F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\design\m6\built\T015\quiet-light
+T014 quiet/light six heading levels font/size/colour PASS
+T008 open line=1: box/bullet deltaY=1.00px row=22.917
+T008 checkbox line=2: check centre delta=(0.00,0.00)px box/bullet deltaY=1.00px row=22.917
+T008 open line=4: box/bullet deltaY=1.00px row=22.917
+T008 checkbox line=5: check centre delta=(0.00,0.50)px box/bullet deltaY=0.50px row=22.917
+T008 row pixel control: max bullet-centre displacement vs all-plain rows=0.00px; hover/hit/undo PASS.
+T008 guides line=1 indentColumns= pixelX=
+T008 guides line=2 indentColumns=4 pixelX=63
+T008 guides line=3 indentColumns=4,8 pixelX=63,103
+T008 guides line=4 indentColumns=4,8 pixelX=63,103
+T008 guides line=5 indentColumns=4,8 pixelX=63,103
+T008 guides line=6 indentColumns= pixelX=
+T008 guides line=7 indentColumns= pixelX=
+T008 guides line=8 indentColumns=4 pixelX=63
+T008 guides line=9 indentColumns=4 pixelX=63
+T008 guides line=10 indentColumns=4,8 pixelX=63,103
+T008 guides line=11 indentColumns=4,8,12 pixelX=63,103,143
+T008 guides line=12 indentColumns=4,8 pixelX=63,103
+T008 guides line=13 indentColumns=4,8 pixelX=63,103
+T008 guides line=14 indentColumns=4 pixelX=63
+T008 guides line=15 indentColumns= pixelX=
+T008 guides line=16 indentColumns=4 pixelX=63
+T008 guides line=17 indentColumns=4,8 pixelX=63,103
+T008 guides line=18 indentColumns= pixelX=
+T008 guides line=19 indentColumns= pixelX=
+T008 PASS: checkbox rows all 22.917 DIP; guide columns, blank continuation/end, tabs, code font and off setting verified; PNGs=F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\design\m6\built\T015\bin\selftest\5ddd7c312a484af1a0db38b823c716a6\T014-quiet-light
+T007 typefaces PASS: plain/strike Regular; bold strike Bold; italic strike Italic.
+T007 pixels: scale=1 size=780x635 strikeHeight=3px affectedRows=10,11,12 plainInk=0.6455 strikeInk=0.6430 delta=0.0025 tolerance=0.10 glyphDifferenceOutsideStrike=0; PNG=F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\design\m6\built\T015\bin\selftest\5ddd7c312a484af1a0db38b823c716a6\T014-quiet-light\strike.png
+T009 active line=3 column=8 block=3-5 x=103: brighter=70 pixels, other-guide/outside changes=0; RGB 221,226,220 -> 161,181,165.
+T009 active line=11 column=8 block=11-12 x=103: brighter=46 pixels, other-guide/outside changes=0; RGB 221,226,220 -> 161,181,165.
+T009 active PASS: unindented reset, exact block extent, unchanged other pixels; proof=F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\design\m6\built\T015\bin\selftest\5ddd7c312a484af1a0db38b823c716a6\T014-quiet-light\active-guide.png size=1560x635.
+T014 quiet/light PASS: hint bind/switch/edit, mono, 24x24 fold targets, checkbox/strike/guide pixels
+T-015-alignment-fixes quiet @1 count=768.5 prev=768.5 next=768.5 save=762 pager=768.5
+MENU @1 New note region=692, 58, 238, 32
+MENU @1 Delete note region=692, 92, 238, 32
+MENU @1 System region=692, 154, 238, 32
+MENU @1 Light region=692, 188, 238, 32
+MENU @1 Dark region=692, 222, 238, 32
+MENU @1 Quiet region=692, 284, 238, 32
+MENU @1 Card region=692, 318, 238, 32
+MENU @1 Quit AntiQuickPad region=692, 367, 238, 32
+T-015-alignment-fixes quiet @1.5 count=768.3333333333334 prev=768.6666666666666 next=768.6666666666666 save=762.3333333333333 pager=768.6666666666666
+MENU @1.5 New note region=692, 58, 238, 32
+MENU @1.5 Delete note region=692, 92, 238, 32
+MENU @1.5 System region=692, 154, 238, 32
+MENU @1.5 Light region=692, 188, 238, 32
+MENU @1.5 Dark region=692, 222, 238, 32
+MENU @1.5 Quiet region=692, 284, 238, 32
+MENU @1.5 Card region=692, 318, 238, 32
+MENU @1.5 Quit AntiQuickPad region=692, 367, 238, 32
+T-015-alignment-fixes quiet/dark raster PASS: F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\design\m6\built\T015\quiet-dark
+T014 quiet/dark six heading levels font/size/colour PASS
+T008 open line=1: box/bullet deltaY=1.00px row=22.917
+T008 checkbox line=2: check centre delta=(0.00,0.00)px box/bullet deltaY=1.00px row=22.917
+T008 open line=4: box/bullet deltaY=1.00px row=22.917
+T008 checkbox line=5: check centre delta=(0.00,0.50)px box/bullet deltaY=0.50px row=22.917
+T008 row pixel control: max bullet-centre displacement vs all-plain rows=0.00px; hover/hit/undo PASS.
+T008 guides line=1 indentColumns= pixelX=
+T008 guides line=2 indentColumns=4 pixelX=63
+T008 guides line=3 indentColumns=4,8 pixelX=63,103
+T008 guides line=4 indentColumns=4,8 pixelX=63,103
+T008 guides line=5 indentColumns=4,8 pixelX=63,103
+T008 guides line=6 indentColumns= pixelX=
+T008 guides line=7 indentColumns= pixelX=
+T008 guides line=8 indentColumns=4 pixelX=63
+T008 guides line=9 indentColumns=4 pixelX=63
+T008 guides line=10 indentColumns=4,8 pixelX=63,103
+T008 guides line=11 indentColumns=4,8,12 pixelX=63,103,143
+T008 guides line=12 indentColumns=4,8 pixelX=63,103
+T008 guides line=13 indentColumns=4,8 pixelX=63,103
+T008 guides line=14 indentColumns=4 pixelX=63
+T008 guides line=15 indentColumns= pixelX=
+T008 guides line=16 indentColumns=4 pixelX=63
+T008 guides line=17 indentColumns=4,8 pixelX=63,103
+T008 guides line=18 indentColumns= pixelX=
+T008 guides line=19 indentColumns= pixelX=
+T008 PASS: checkbox rows all 22.917 DIP; guide columns, blank continuation/end, tabs, code font and off setting verified; PNGs=F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\design\m6\built\T015\bin\selftest\5ddd7c312a484af1a0db38b823c716a6\T014-quiet-dark
+T007 typefaces PASS: plain/strike Regular; bold strike Bold; italic strike Italic.
+T007 pixels: scale=1 size=780x635 strikeHeight=3px affectedRows=10,11,12 plainInk=0.3101 strikeInk=0.3006 delta=0.0095 tolerance=0.10 glyphDifferenceOutsideStrike=0; PNG=F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\design\m6\built\T015\bin\selftest\5ddd7c312a484af1a0db38b823c716a6\T014-quiet-dark\strike.png
+T009 active line=3 column=8 block=3-5 x=103: brighter=70 pixels, other-guide/outside changes=0; RGB 52,72,59 -> 132,165,142.
+T009 active line=11 column=8 block=11-12 x=103: brighter=46 pixels, other-guide/outside changes=0; RGB 52,72,59 -> 132,165,142.
+T009 active PASS: unindented reset, exact block extent, unchanged other pixels; proof=F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\design\m6\built\T015\bin\selftest\5ddd7c312a484af1a0db38b823c716a6\T014-quiet-dark\active-guide.png size=1560x635.
+T014 quiet/dark PASS: hint bind/switch/edit, mono, 24x24 fold targets, checkbox/strike/guide pixels
+T013 quiet show-to-focus internal ms=4.347
+T013 quiet show-to-focus internal ms=3.200
+T013 quiet show-to-focus internal ms=3.618
+T014 FRAME quiet ms=0.0000 offset=0.000000
+T014 FRAME quiet ms=0.0000 offset=0.000000
+T014 FRAME quiet ms=1.4565 offset=-0.063097
+T014 FRAME quiet ms=5.5937 offset=-0.921457
+T014 FRAME quiet ms=9.6695 offset=-2.726417
+T014 FRAME quiet ms=13.8314 offset=-5.521908
+T014 FRAME quiet ms=17.9312 offset=-9.186913
+T014 FRAME quiet ms=21.9137 offset=-13.584985
+T014 FRAME quiet ms=26.2434 offset=-19.271635
+T014 FRAME quiet ms=30.4039 offset=-25.593147
+T014 FRAME quiet ms=34.4245 offset=-32.470967
+T014 FRAME quiet ms=38.7120 offset=-40.606435
+T014 FRAME quiet ms=42.7840 offset=-49.068568
+T014 FRAME quiet ms=46.9274 offset=-58.384403
+T014 FRAME quiet ms=51.1412 offset=-68.557107
+T014 FRAME quiet ms=55.5112 offset=-79.817096
+T014 FRAME quiet ms=59.5904 offset=-90.949320
+T014 FRAME quiet ms=63.9127 offset=-103.366859
+T014 FRAME quiet ms=67.7450 offset=-114.884692
+T014 FRAME quiet ms=71.9863 offset=-128.158244
+T014 FRAME quiet ms=76.1622 offset=-141.736951
+T014 FRAME quiet ms=80.2310 offset=-155.424209
+T014 FRAME quiet ms=84.5095 offset=-170.271435
+T014 FRAME quiet ms=88.7445 offset=-185.394351
+T014 FRAME quiet ms=92.8523 offset=-200.437837
+T014 FRAME quiet ms=97.3065 offset=-217.132296
+T014 FRAME quiet ms=101.1019 offset=-231.644008
+T014 FRAME quiet ms=105.4595 offset=-248.598494
+T014 FRAME quiet ms=109.4911 offset=-264.534424
+T014 FRAME quiet ms=113.7808 offset=-281.722081
+T014 FRAME quiet ms=117.7163 offset=-297.672312
+T014 FRAME quiet ms=126.1897 offset=-332.479855
+T014 FRAME quiet ms=130.5914 offset=-350.744680
+T014 FRAME quiet ms=134.3880 offset=-366.562418
+T014 FRAME quiet ms=138.8934 offset=-385.376089
+T014 FRAME quiet ms=142.8332 offset=-401.837112
+T014 FRAME quiet ms=147.0091 offset=-419.263555
+T014 FRAME quiet ms=151.1010 offset=-436.289106
+T014 FRAME quiet ms=155.2928 offset=-453.647895
+T014 FRAME quiet ms=159.5188 offset=-471.032243
+T014 FRAME quiet ms=163.6682 offset=-487.957058
+T014 FRAME quiet ms=167.9799 offset=-505.359368
+T014 FRAME quiet ms=171.9564 offset=-521.212976
+T014 FRAME quiet ms=176.1070 offset=-537.530458
+T014 FRAME quiet ms=180.4425 offset=-554.291154
+T014 FRAME quiet ms=184.5533 offset=-569.884366
+T014 FRAME quiet ms=188.8050 offset=-585.673972
+T014 FRAME quiet ms=193.0362 offset=-601.014041
+T014 FRAME quiet ms=197.3100 offset=-616.097452
+T014 FRAME quiet ms=201.2055 offset=-629.457773
+T014 FRAME quiet ms=205.7756 offset=-644.625072
+T014 FRAME quiet ms=209.7282 offset=-657.272097
+T014 FRAME quiet ms=213.9750 offset=-670.342103
+T014 FRAME quiet ms=217.7723 offset=-681.547961
+T014 FRAME quiet ms=221.9245 offset=-693.253012
+T014 FRAME quiet ms=226.3893 offset=-705.166468
+T014 FRAME quiet ms=230.2312 offset=-714.831480
+T014 FRAME quiet ms=234.9167 offset=-725.847728
+T014 FRAME quiet ms=238.5580 offset=-733.797620
+T014 FRAME quiet ms=242.8798 offset=-742.508435
+T014 FRAME quiet ms=246.9799 offset=-750.015578
+T014 FRAME quiet ms=251.1704 offset=-756.895652
+T014 FRAME quiet ms=255.1309 offset=-762.633527
+T014 FRAME quiet ms=259.4161 offset=-767.973718
+T014 FRAME quiet ms=263.8338 offset=-772.499865
+T014 FRAME quiet ms=267.7848 offset=-775.676030
+T014 FRAME quiet ms=272.1427 offset=-778.191807
+T014 FRAME quiet ms=276.5046 offset=-779.638370
+T014 FRAME quiet ms=280.3782 offset=-780.000000
+T013 quiet PASS: switching/caret, palettes, simulated system update, menu VM routes, persistence, pin, resident focus, close/hide, autosave, carousel.
+T-015-alignment-fixes card @1 count=767.5 prev=767.5 next=767.5 save=767 pager=767
+MENU @1 New note region=692, 72, 238, 32
+MENU @1 Delete note region=692, 106, 238, 32
+MENU @1 System region=692, 168, 238, 32
+MENU @1 Light region=692, 202, 238, 32
+MENU @1 Dark region=692, 236, 238, 32
+MENU @1 Quiet region=692, 298, 238, 32
+MENU @1 Card region=692, 332, 238, 32
+MENU @1 Quit AntiQuickPad region=692, 381, 238, 32
+T-015-alignment-fixes card @1.5 count=767 prev=767 next=767 save=767 pager=767
+MENU @1.5 New note region=692, 72, 238, 32
+MENU @1.5 Delete note region=692, 106, 238, 32
+MENU @1.5 System region=692, 168, 238, 32
+MENU @1.5 Light region=692, 202, 238, 32
+MENU @1.5 Dark region=692, 236, 238, 32
+MENU @1.5 Quiet region=692, 298, 238, 32
+MENU @1.5 Card region=692, 332, 238, 32
+MENU @1.5 Quit AntiQuickPad region=692, 381, 238, 32
+T-015-alignment-fixes card/light raster PASS: F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\design\m6\built\T015\card-light
+T014 card/light six heading levels font/size/colour PASS
+T008 open line=1: box/bullet deltaY=0.50px row=21.569
+T008 checkbox line=2: check centre delta=(0.00,0.00)px box/bullet deltaY=0.00px row=21.569
+T008 open line=4: box/bullet deltaY=0.00px row=21.569
+T008 checkbox line=5: check centre delta=(0.00,0.00)px box/bullet deltaY=0.50px row=21.569
+T008 row pixel control: max bullet-centre displacement vs all-plain rows=0.00px; hover/hit/undo PASS.
+T008 guides line=1 indentColumns= pixelX=
+T008 guides line=2 indentColumns=4 pixelX=61
+T008 guides line=3 indentColumns=4,8 pixelX=61,99
+T008 guides line=4 indentColumns=4,8 pixelX=61,99
+T008 guides line=5 indentColumns=4,8 pixelX=61,99
+T008 guides line=6 indentColumns= pixelX=
+T008 guides line=7 indentColumns= pixelX=
+T008 guides line=8 indentColumns=4 pixelX=61
+T008 guides line=9 indentColumns=4 pixelX=61
+T008 guides line=10 indentColumns=4,8 pixelX=61,99
+T008 guides line=11 indentColumns=4,8,12 pixelX=61,99,136
+T008 guides line=12 indentColumns=4,8 pixelX=61,99
+T008 guides line=13 indentColumns=4,8 pixelX=61,99
+T008 guides line=14 indentColumns=4 pixelX=61
+T008 guides line=15 indentColumns= pixelX=
+T008 guides line=16 indentColumns=4 pixelX=61
+T008 guides line=17 indentColumns=4,8 pixelX=61,99
+T008 guides line=18 indentColumns= pixelX=
+T008 guides line=19 indentColumns= pixelX=
+T008 PASS: checkbox rows all 21.569 DIP; guide columns, blank continuation/end, tabs, code font and off setting verified; PNGs=F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\design\m6\built\T015\bin\selftest\5ddd7c312a484af1a0db38b823c716a6\T014-card-light
+T007 typefaces PASS: plain/strike Regular; bold strike Bold; italic strike Italic.
+T007 pixels: scale=1 size=732x610 strikeHeight=2px affectedRows=10,11 plainInk=0.6171 strikeInk=0.6255 delta=0.0084 tolerance=0.10 glyphDifferenceOutsideStrike=0; PNG=F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\design\m6\built\T015\bin\selftest\5ddd7c312a484af1a0db38b823c716a6\T014-card-light\strike.png
+T009 active line=3 column=8 block=3-5 x=99: brighter=65 pixels, other-guide/outside changes=0; RGB 214,222,239 -> 155,170,222.
+T009 active line=11 column=8 block=11-12 x=99: brighter=44 pixels, other-guide/outside changes=0; RGB 214,222,239 -> 155,170,222.
+T009 active PASS: unindented reset, exact block extent, unchanged other pixels; proof=F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\design\m6\built\T015\bin\selftest\5ddd7c312a484af1a0db38b823c716a6\T014-card-light\active-guide.png size=1464x610.
+T014 card/light PASS: hint bind/switch/edit, mono, 24x24 fold targets, checkbox/strike/guide pixels
+T-015-alignment-fixes card @1 count=767.5 prev=767.5 next=767.5 save=767 pager=767
+MENU @1 New note region=692, 72, 238, 32
+MENU @1 Delete note region=692, 106, 238, 32
+MENU @1 System region=692, 168, 238, 32
+MENU @1 Light region=692, 202, 238, 32
+MENU @1 Dark region=692, 236, 238, 32
+MENU @1 Quiet region=692, 298, 238, 32
+MENU @1 Card region=692, 332, 238, 32
+MENU @1 Quit AntiQuickPad region=692, 381, 238, 32
+T-015-alignment-fixes card @1.5 count=767 prev=767.3333333333334 next=767.3333333333334 save=767 pager=767
+MENU @1.5 New note region=692, 72, 238, 32
+MENU @1.5 Delete note region=692, 106, 238, 32
+MENU @1.5 System region=692, 168, 238, 32
+MENU @1.5 Light region=692, 202, 238, 32
+MENU @1.5 Dark region=692, 236, 238, 32
+MENU @1.5 Quiet region=692, 298, 238, 32
+MENU @1.5 Card region=692, 332, 238, 32
+MENU @1.5 Quit AntiQuickPad region=692, 381, 238, 32
+T-015-alignment-fixes card/dark raster PASS: F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\design\m6\built\T015\card-dark
+T014 card/dark six heading levels font/size/colour PASS
+T008 open line=1: box/bullet deltaY=0.50px row=21.569
+T008 checkbox line=2: check centre delta=(0.00,0.00)px box/bullet deltaY=0.00px row=21.569
+T008 open line=4: box/bullet deltaY=0.00px row=21.569
+T008 checkbox line=5: check centre delta=(0.00,0.00)px box/bullet deltaY=0.50px row=21.569
+T008 row pixel control: max bullet-centre displacement vs all-plain rows=0.00px; hover/hit/undo PASS.
+T008 guides line=1 indentColumns= pixelX=
+T008 guides line=2 indentColumns=4 pixelX=61
+T008 guides line=3 indentColumns=4,8 pixelX=61,99
+T008 guides line=4 indentColumns=4,8 pixelX=61,99
+T008 guides line=5 indentColumns=4,8 pixelX=61,99
+T008 guides line=6 indentColumns= pixelX=
+T008 guides line=7 indentColumns= pixelX=
+T008 guides line=8 indentColumns=4 pixelX=61
+T008 guides line=9 indentColumns=4 pixelX=61
+T008 guides line=10 indentColumns=4,8 pixelX=61,99
+T008 guides line=11 indentColumns=4,8,12 pixelX=61,99,136
+T008 guides line=12 indentColumns=4,8 pixelX=61,99
+T008 guides line=13 indentColumns=4,8 pixelX=61,99
+T008 guides line=14 indentColumns=4 pixelX=61
+T008 guides line=15 indentColumns= pixelX=
+T008 guides line=16 indentColumns=4 pixelX=61
+T008 guides line=17 indentColumns=4,8 pixelX=61,99
+T008 guides line=18 indentColumns= pixelX=
+T008 guides line=19 indentColumns= pixelX=
+T008 PASS: checkbox rows all 21.569 DIP; guide columns, blank continuation/end, tabs, code font and off setting verified; PNGs=F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\design\m6\built\T015\bin\selftest\5ddd7c312a484af1a0db38b823c716a6\T014-card-dark
+T007 typefaces PASS: plain/strike Regular; bold strike Bold; italic strike Italic.
+T007 pixels: scale=1 size=732x610 strikeHeight=2px affectedRows=10,11 plainInk=0.8138 strikeInk=0.8068 delta=0.0070 tolerance=0.10 glyphDifferenceOutsideStrike=0; PNG=F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\design\m6\built\T015\bin\selftest\5ddd7c312a484af1a0db38b823c716a6\T014-card-dark\strike.png
+T009 active line=3 column=8 block=3-5 x=99: brighter=65 pixels, other-guide/outside changes=0; RGB 56,68,95 -> 131,149,203.
+T009 active line=11 column=8 block=11-12 x=99: brighter=44 pixels, other-guide/outside changes=0; RGB 56,68,95 -> 131,149,203.
+T009 active PASS: unindented reset, exact block extent, unchanged other pixels; proof=F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\docs\design\m6\built\T015\bin\selftest\5ddd7c312a484af1a0db38b823c716a6\T014-card-dark\active-guide.png size=1464x610.
+T014 card/dark PASS: hint bind/switch/edit, mono, 24x24 fold targets, checkbox/strike/guide pixels
+T013 card show-to-focus internal ms=3.668
+T013 card show-to-focus internal ms=3.039
+T013 card show-to-focus internal ms=2.811
+T014 FRAME card ms=0.0000 offset=0.000000
+T014 FRAME card ms=0.0000 offset=0.000000
+T014 FRAME card ms=3.2962 offset=-0.346489
+T014 FRAME card ms=11.6961 offset=-4.274653
+T014 FRAME card ms=24.1097 offset=-17.611391
+T014 FRAME card ms=27.8946 offset=-23.349538
+T014 FRAME card ms=31.9609 offset=-30.335327
+T014 FRAME card ms=36.0430 offset=-38.173294
+T014 FRAME card ms=40.4027 offset=-47.421914
+T014 FRAME card ms=44.6719 offset=-57.321179
+T014 FRAME card ms=48.6354 offset=-67.226527
+T014 FRAME card ms=52.8473 offset=-78.474313
+T014 FRAME card ms=57.0988 offset=-90.547727
+T014 FRAME card ms=61.0938 offset=-102.520432
+T014 FRAME card ms=65.3461 offset=-115.898889
+T014 FRAME card ms=69.5515 offset=-129.739552
+T014 FRAME card ms=73.5663 offset=-143.487196
+T014 FRAME card ms=77.8291 offset=-158.621582
+T014 FRAME card ms=81.9184 offset=-173.627953
+T014 FRAME card ms=86.0735 offset=-189.332426
+T014 FRAME card ms=90.1342 offset=-205.093405
+T014 FRAME card ms=94.4791 offset=-222.374795
+T014 FRAME card ms=98.6573 offset=-239.365788
+T014 FRAME card ms=102.6715 offset=-256.002426
+T014 FRAME card ms=107.7769 offset=-277.556623
+T014 FRAME card ms=111.5297 offset=-293.649734
+T014 FRAME card ms=115.6340 offset=-311.460103
+T014 FRAME card ms=119.6345 offset=-329.001678
+T014 FRAME card ms=123.9542 offset=-348.110069
+T014 FRAME card ms=127.7747 offset=-365.125984
+T014 FRAME card ms=131.9532 offset=-383.829275
+T014 FRAME card ms=136.1653 offset=-402.748165
+T014 FRAME card ms=140.2739 offset=-421.232548
+T014 FRAME card ms=144.4655 offset=-440.087935
+T014 FRAME card ms=148.6513 offset=-458.881296
+T014 FRAME card ms=152.7949 offset=-477.416745
+T014 FRAME card ms=156.9276 offset=-495.802989
+T014 FRAME card ms=161.1046 offset=-514.251306
+T014 FRAME card ms=165.2619 offset=-532.444783
+T014 FRAME card ms=169.2697 offset=-549.794584
+T014 FRAME card ms=173.6283 offset=-568.416968
+T014 FRAME card ms=177.8655 offset=-586.239795
+T014 FRAME card ms=181.9999 offset=-603.329590
+T014 FRAME card ms=186.0527 offset=-619.762334
+T014 FRAME card ms=190.3128 offset=-636.660607
+T014 FRAME card ms=194.4398 offset=-652.631437
+T014 FRAME card ms=198.5189 offset=-667.998642
+T014 FRAME card ms=202.8246 offset=-683.733839
+T014 FRAME card ms=206.9641 offset=-698.357854
+T014 FRAME card ms=211.0654 offset=-712.327390
+T014 FRAME card ms=215.1657 offset=-725.744831
+T014 FRAME card ms=219.3377 offset=-738.801118
+T014 FRAME card ms=223.5403 offset=-751.311996
+T014 FRAME card ms=227.7502 offset=-763.165305
+T014 FRAME card ms=231.9423 offset=-774.258937
+T014 FRAME card ms=236.1026 offset=-784.534987
+T014 FRAME card ms=240.2125 offset=-793.936718
+T014 FRAME card ms=244.4197 offset=-802.755681
+T014 FRAME card ms=248.5207 offset=-810.535472
+T014 FRAME card ms=252.7727 offset=-817.716386
+T014 FRAME card ms=256.7771 offset=-823.623741
+T014 FRAME card ms=261.1519 offset=-829.093656
+T014 FRAME card ms=265.1816 offset=-833.190934
+T014 FRAME card ms=269.4221 offset=-836.494053
+T014 FRAME card ms=273.5044 offset=-838.664777
+T014 FRAME card ms=277.7860 offset=-839.843273
+T014 FRAME card ms=281.8098 offset=-840.000000
+T013 card PASS: switching/caret, palettes, simulated system update, menu VM routes, persistence, pin, resident focus, close/hide, autosave, carousel.
+SELFTEST PASS: Quiet + Card production shells and retained Classic capability suite.
+T006 PASS: successful quit start/finish logs.
