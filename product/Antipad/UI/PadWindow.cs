@@ -339,6 +339,7 @@ internal sealed partial class PadWindow : Window
         _tint.Background = new SolidColorBrush(_palette.Canvas, tint);
         var scale = Math.Clamp(Settings.UiScale, 0.8, 2);
         _scaler.LayoutTransform = Math.Abs(scale - 1) < 0.01 ? null : new ScaleTransform(scale, scale);
+        Editor.CodeColors.Disabled = Settings.DisabledLanguages.ToHashSet();
         _left?.ApplyLook(_palette, Settings);
         _right?.ApplyLook(SplitPalette(), Settings);
         if (_right is not null) _right.Background = Settings.SplitPalette == "same" ? null : new SolidColorBrush(SplitPalette().Canvas, Settings.Material == "solid" ? 1 : Math.Clamp(Settings.Tint + .08, 0, 1));

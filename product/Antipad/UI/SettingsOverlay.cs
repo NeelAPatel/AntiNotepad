@@ -64,6 +64,11 @@ internal sealed class SettingsOverlay : Grid
         bool startup = false; try { startup = Startup.IsEnabled; } catch { }
         panel.Children.Add(Kit.Switch(_p, "Start with Windows", startup, v => { try { Startup.SetEnabled(v); } catch (Exception ex) { _w.Toast(ex.Message); } Set(() => { }); }));
 
+        panel.Children.Add(Kit.Section(_p, "Code languages"));
+        panel.Children.Add(Row("Highlight in code blocks", Kit.Toggles(_p, Editor.CodeColors.Languages.Select(l => (l.Id, l.Name)).ToList(),
+            id => !S.DisabledLanguages.Contains(id), id => Set(() => { if (!S.DisabledLanguages.Remove(id)) S.DisabledLanguages.Add(id); })),
+            "off: plain text, not offered after ```, never loaded"));
+
         panel.Children.Add(Kit.Section(_p, "Shortcut"));
         panel.Children.Add(Hotkey());
 

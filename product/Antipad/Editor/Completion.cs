@@ -59,6 +59,15 @@ internal static class Completion
             Show(pad, area.Caret.Offset - 1, Commands.Select(c => (ICompletionData)new Item("/" + c.Name, c.Summary, pad, c)));
             return;
         }
+        // A code fence: offer the enabled languages; picking one closes the fence and puts the caret inside it.
+        if (typed == "`" && before.TrimStart() == "```" && line.EndOffset == area.Caret.Offset && pad.Mode != NoteMode.Code
+            && pad.Structure?.Fences.Any(f => f.Open == line.LineNumber) == true)   // opening fences only, never a closing one
+        {
+            var langs = CodeColors.Languages.Where(l => !CodeColors.Disabled.Contains(l.Id))
+                .Select(l => (ICompletionData)new FenceItem(l.Aliases[0], l.Name, pad)).ToList();
+            if (langs.Count > 0) Show(pad, area.Caret.Offset, langs);
+            return;
+        }
         if (line.LineNumber == 1 && before.Trim().Length == 1 && line.EndOffset == area.Caret.Offset && doc.LineCount == 1 && char.IsLetter(typed[0]))
         {
             var items = Modes.Keywords.Where(k => k.Word.StartsWith(before.Trim(), StringComparison.OrdinalIgnoreCase))
@@ -82,6 +91,34 @@ internal static class Completion
         window.Closed += (_, _) => _open = null;
         _open = window;
         window.Show();
+    }
+
+    /// <summary>A fence language: inserts it, the body line and the closing fence.</summary>
+    private sealed class FenceItem(string word, string name, PadView pad) : ICompletionData
+    {
+        public Avalonia.Media.IImage? Image => null;
+        public string Text => word;
+        public object Content => new StackPanel
+        {
+            Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10,
+            Children =
+            {
+                new TextBlock { Text = word, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = 70 },
+                new TextBlock { Text = name, Foreground = new SolidColorBrush(pad.Palette.Muted), FontSize = 12, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center },
+            }
+        };
+        public object Description => name;
+        public double Priority => 0;
+
+        public void Complete(TextArea area, ISegment segment, EventArgs args)
+        {
+            // Capture before replacing: the completion segment moves with the edit.
+            var start = segment.Offset;
+            var line = area.Document.GetLineByOffset(start);
+            var indent = new string(' ', area.Document.GetText(line).Length - area.Document.GetText(line).TrimStart().Length);
+            area.Document.Replace(segment, word + "\n" + indent + "\n" + indent + "```");
+            area.Caret.Offset = Math.Min(area.Document.TextLength, start + word.Length + 1 + indent.Length);
+        }
     }
 
     private sealed class Item(string text, string summary, PadView pad, Command? command, string? insert = null) : ICompletionData

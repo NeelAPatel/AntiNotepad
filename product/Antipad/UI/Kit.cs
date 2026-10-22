@@ -21,7 +21,7 @@ internal static class Glyph
 /// drawn with four extra copies nudged by <c>weight</c> px around it (faux bold); with grayscale antialiasing
 /// that reads as a cleanly thicker stroke.
 /// </summary>
-internal sealed class GlyphIcon(string glyph, Color color, double size = 13, double weight = 0.3) : Control
+internal sealed class GlyphIcon(string glyph, Color color, double size = 13, double weight = 0.15) : Control
 {
     private static readonly Typeface Face = new(Glyph.Font);
 
@@ -45,7 +45,8 @@ internal static class Kit
     public static Button IconButton(string glyph, string name, Palette p, Action click, double size = 28, bool filled = false, Color? color = null)
     {
         // A filled pin is its own glyph in Segoe Fluent Icons.
-        var icon = new GlyphIcon(filled && glyph == Glyph.Pin ? Glyph.PinFilled : glyph, color ?? p.Muted)
+        // Ink at 86 %, like Windows' own caption glyphs (muted grey read a weight lighter than native).
+        var icon = new GlyphIcon(filled && glyph == Glyph.Pin ? Glyph.PinFilled : glyph, color ?? Color.FromArgb(220, p.Ink.R, p.Ink.G, p.Ink.B))
         {
             HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center
         };
@@ -99,6 +100,30 @@ internal static class Kit
             var chosen = value;
             button.Click += (_, _) => pick(chosen);
             Avalonia.Automation.AutomationProperties.SetName(button, label);
+            row.Children.Add(button);
+        }
+        return row;
+    }
+
+    /// <summary>Independent on/off pills (several can be on), same shape as Segmented.</summary>
+    public static Control Toggles(Palette p, IReadOnlyList<(string Value, string Label)> options, Func<string, bool> isOn, Action<string> toggle)
+    {
+        var row = new WrapPanel { Orientation = Orientation.Horizontal };
+        foreach (var (value, label) in options)
+        {
+            var on = isOn(value);
+            var text = Text(label, on ? p.Ink : p.Faint, 12.5, on ? FontWeight.SemiBold : FontWeight.Normal);
+            text.Margin = new Thickness(10, 4);
+            var button = Plain(text, p, radius: 8);
+            button.Margin = new Thickness(0, 0, 4, 4);
+            if (on && button.Content is Border b)
+            {
+                b.Background = new SolidColorBrush(p.Accent, p.Dark ? .22 : .18);
+                button.PointerExited += (_, _) => b.Background = new SolidColorBrush(p.Accent, p.Dark ? .22 : .18);
+            }
+            var chosen = value;
+            button.Click += (_, _) => toggle(chosen);
+            Avalonia.Automation.AutomationProperties.SetName(button, label + (on ? ", on" : ", off"));
             row.Children.Add(button);
         }
         return row;

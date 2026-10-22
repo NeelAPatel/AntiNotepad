@@ -98,6 +98,7 @@ public sealed class Settings
     public bool CleanMarkdown { get; set; } = true;
     public bool IndentGuides { get; set; } = true;
     public bool Folding { get; set; } = true;
+    public List<string> DisabledLanguages { get; set; } = [];
     public bool Pinned { get; set; }
     public double Width { get; set; } = 460;
     public double Height { get; set; } = 560;

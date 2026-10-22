@@ -1,6 +1,7 @@
 using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
 using AvaloniaEdit.Rendering;
 using Antipad.Model;
 
@@ -12,6 +13,33 @@ namespace Antipad.Editor;
 /// </summary>
 internal sealed class PaperLayer(PadView pad) : Avalonia.Controls.Control
 {
+    /// <summary>
+    /// Fenced blocks get a rounded panel reaching 10 px past the text on both sides. It lives here, behind the
+    /// editor, because the text view clips at the text's own left edge.
+    /// </summary>
+    private void DrawCodePanels(DrawingContext dc, TextView view, Point origin)
+    {
+        if (pad.Structure is not { } s || s.Fences.Count == 0 || !view.VisualLinesValid || pad.Mode == Model.NoteMode.Code) return;
+        var p = pad.Palette;
+        var fill = new SolidColorBrush(p.Ink, p.Dark ? 0.06 : 0.045);
+        using var clip = dc.PushClip(new Rect(0, origin.Y, Bounds.Width, view.Bounds.Height));
+        foreach (var fence in s.Fences)
+        {
+            double top = double.NaN, bottom = 0;
+            foreach (var v in view.VisualLines)
+            {
+                var n = v.FirstDocumentLine.LineNumber;
+                if (n < fence.Open || n > fence.Close) continue;
+                var y = origin.Y + v.VisualTop - view.VerticalOffset;
+                if (double.IsNaN(top)) top = y;
+                bottom = y + v.Height;
+            }
+            if (double.IsNaN(top)) continue;
+            var left = origin.X - 10;
+            dc.DrawRectangle(fill, null, new Rect(left, top - 2, Bounds.Width - 2 * left, bottom - top + 4), 9, 9);
+        }
+    }
+
     private static double LastColumn(double left, double right, double step) => left + Math.Floor((right + step / 2 - left) / step) * step;
 
     public PaperLayer Init() { IsHitTestVisible = false; return this; }
@@ -19,10 +47,11 @@ internal sealed class PaperLayer(PadView pad) : Avalonia.Controls.Control
     public override void Render(DrawingContext dc)
     {
         var kind = pad.Settings.Paper;
-        if (kind == "blank") return;
         var view = pad.Editor.TextArea.TextView;
         var h = view.DefaultLineHeight;
         if (h <= 0 || view.TranslatePoint(new Point(0, 0), this) is not { } origin) return;
+        DrawCodePanels(dc, view, origin);
+        if (kind == "blank") return;
         var alpha = pad.Settings.PaperStrength switch { 0 => 0.55, 2 => 1.9, _ => 1.0 };
         var color = pad.Palette.Paper;
         var pen = new Pen(new SolidColorBrush(color, Math.Min(1, alpha)), 1);
@@ -73,31 +102,46 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
     {
         Chips.Clear();
         if (!view.VisualLinesValid || view.Document is null) return;
-        var p = pad.Palette;
         var typeface = new Typeface(new FontFamily(pad.Settings.Font + ", Cascadia Mono, Consolas"), FontStyle.Normal, FontWeight.SemiBold);
         var size = pad.Settings.FontSize * 0.93;
+        // Pass 1: every visible chip with its line geometry.
+        var items = new List<(int Line, string Text, string Kind, Color Color, string Value, FormattedText Ft, double TextEnd, double RowTop, TextLine Row)>();
         foreach (var visual in view.VisualLines)
         {
-            var docLine = visual.LastDocumentLine;
-            var n = docLine.LineNumber;
-            var chip = pad.ChipFor(n);
-            if (chip is null) continue;
-            var (text, kind, color, value) = chip.Value;
-            var ft = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeface, size, new SolidColorBrush(color));
-            var lastRow = visual.TextLines[^1];
-            var rowTop = visual.VisualTop + visual.Height - lastRow.Height - view.VerticalOffset;
-            var textEnd = lastRow.WidthIncludingTrailingWhitespace;
-            // Sit right after the "=" (or the line's end), so answers stay close at any window width.
-            var icon = kind.StartsWith("timer:") ? kind[6..] : null;
-            var iconWidth = icon is null ? 0 : ft.Height * 0.62 + 6;
-            var x = Math.Min(textEnd + 14, Math.Max(textEnd + 8, view.Bounds.Width - ft.Width - iconWidth - 6));
-            var y = rowTop + (lastRow.Height - ft.Height) / 2;
-            var rect = new Rect(x - 7, y - 1, ft.Width + iconWidth + 14, ft.Height + 2);
-            dc.DrawRectangle(new SolidColorBrush(color, pad.Palette.Dark ? 0.14 : 0.10), null, rect, 7, 7);
-            if (icon is not null) DrawTimerIcon(dc, icon, new Rect(x, y, ft.Height * 0.62, ft.Height), color);
-            dc.DrawText(ft, new Point(x + iconWidth, y));
-            Chips.Add(new Chip(rect, n, kind, value));
+            var n = visual.LastDocumentLine.LineNumber;
+            if (pad.ChipFor(n) is not { } chip) continue;
+            var ft = new FormattedText(chip.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeface, size, new SolidColorBrush(chip.Color));
+            var row = visual.TextLines[^1];
+            var rowTop = visual.VisualTop + visual.Height - row.Height - view.VerticalOffset;
+            items.Add((n, chip.Text, chip.Kind, chip.Color, chip.Value, ft, row.WidthIncludingTrailingWhitespace, rowTop, row));
         }
+        // Pass 2: consecutive answer lines share one column, just past the longest line in their block.
+        var i = 0;
+        while (i < items.Count)
+        {
+            var j = i;
+            while (j + 1 < items.Count && items[j + 1].Line == items[j].Line + 1) j++;
+            var column = items.Skip(i).Take(j - i + 1).Max(x => x.TextEnd) + 14;
+            for (var k = i; k <= j; k++) DrawChip(view, dc, items[k], column);
+            i = j + 1;
+        }
+    }
+
+    private void DrawChip(TextView view, DrawingContext dc, (int Line, string Text, string Kind, Color Color, string Value, FormattedText Ft, double TextEnd, double RowTop, TextLine Row) c, double column)
+    {
+        var ft = c.Ft;
+        var icon = c.Kind.StartsWith("timer:") ? c.Kind[6..] : null;
+        var iconWidth = icon is null ? 0 : ft.Height * 0.62 + 6;
+        var width = ft.Width + iconWidth;
+        // The block's column, pulled left only if the window is too narrow, never onto the text.
+        var x = Math.Max(c.TextEnd + 10, Math.Min(column, view.Bounds.Width - width - 8));
+        // Baseline-aligned with the line's text (the row is taller than the glyphs because of line spacing).
+        var y = c.RowTop + c.Row.Baseline - ft.Baseline;
+        var rect = new Rect(x - 7, y - 2, width + 14, ft.Height + 4);
+        dc.DrawRectangle(new SolidColorBrush(c.Color, pad.Palette.Dark ? 0.14 : 0.10), null, rect, 7, 7);
+        if (icon is not null) DrawTimerIcon(dc, icon, new Rect(x, y, ft.Height * 0.62, ft.Height), c.Color);
+        dc.DrawText(ft, new Point(x + iconWidth, y));
+        Chips.Add(new Chip(rect, c.Line, c.Kind, c.Value));
     }
 
     /// <summary>Play, pause, running dot and done check, drawn so they match the text weight in any font.</summary>

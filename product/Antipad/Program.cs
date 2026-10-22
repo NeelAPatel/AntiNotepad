@@ -24,6 +24,8 @@ internal static class Program
     public static int Main(string[] args)
     {
         Environment.SetEnvironmentVariable("AVALONIA_TELEMETRY_OPTOUT", "1");
+        // Any crash leaves its stack in the data folder's antipad.log.
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => Log("crash " + e.ExceptionObject);
         if (args is ["--selftest"]) return SelfTest.Run();
         if (args is ["--quit"]) return SingleInstanceService.RequestQuit();
         DataFolder = Environment.GetEnvironmentVariable("ANTIPAD_DATA")

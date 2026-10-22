@@ -84,7 +84,6 @@ internal sealed class PadView : Grid
         Editor.Options.LineHeightFactor = 1.32;
         Avalonia.Automation.AutomationProperties.SetName(Editor, "Note text");
         var view = Editor.TextArea.TextView;
-        view.BackgroundRenderers.Add(new CodeBlockRenderer(this));
         view.BackgroundRenderers.Add(new IndentGuideRenderer(this));
         _results = new ResultRenderer(this);
         view.BackgroundRenderers.Add(_results);

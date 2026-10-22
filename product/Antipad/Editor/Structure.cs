@@ -12,7 +12,7 @@ namespace Antipad.Editor;
 /// <summary>A note's block structure, computed once per edit: fenced code blocks, indent levels and fold ranges.</summary>
 internal sealed class NoteStructure
 {
-    public sealed record Fence(int Open, int Close, string? Language);   // 1-based line numbers; Close = last line if unclosed
+    public sealed record Fence(int Open, int Close, string? Language, bool Closed = true);   // 1-based; an unclosed fence runs to the last line
 
     public List<Fence> Fences { get; } = [];
     public int[] Indent { get; private set; } = [];                       // per line (1-based), in spaces; blank lines inherit
@@ -33,7 +33,7 @@ internal sealed class NoteStructure
             }
             s.InFence[i + 1] = openLine != 0 || t.StartsWith("```");
         }
-        if (openLine != 0) s.Fences.Add(new Fence(openLine, lines.Length, lang));
+        if (openLine != 0) s.Fences.Add(new Fence(openLine, lines.Length, lang, Closed: false));
         // Indent: real for text lines; blank lines take the smaller of their neighbours so guides run through gaps.
         var raw = lines.Select(l => l.Trim().Length == 0 ? -1 : l.Length - l.TrimStart(' ', '\t').Length + l.TakeWhile(c => c is ' ' or '\t').Count(c => c == '\t') * 3).ToArray();
         for (var i = 0; i < raw.Length; i++)
@@ -97,13 +97,33 @@ internal sealed class NoteStructure
 /// <summary>Palette-mapped AvaloniaEdit highlighting definitions, shared by code notes and fenced blocks.</summary>
 internal static class CodeColors
 {
-    public static string Extension(string? language) => language switch
-    {
-        "py" or "python" => ".py", "js" or "javascript" or "ts" or "typescript" or "jsx" or "tsx" => ".js", "cs" or "csharp" or "c#" => ".cs",
-        "json" => ".json", "html" or "htm" => ".html", "xml" or "xaml" or "axaml" => ".xml", "css" => ".css", "sql" => ".sql",
-        "ps1" or "powershell" or "pwsh" => ".ps1", "java" => ".java", "cpp" or "c" or "c++" or "h" or "hpp" => ".cpp",
-        "md" or "markdown" => ".md", "php" => ".php", "vb" => ".vb", _ => ""
-    };
+    /// <summary>The languages AvaloniaEdit ships definitions for, with the words that select them.</summary>
+    public static readonly (string Id, string Name, string Extension, string[] Aliases)[] Languages =
+    [
+        ("python", "Python", ".py", ["py", "python"]),
+        ("javascript", "JavaScript", ".js", ["js", "javascript", "ts", "typescript", "jsx", "tsx"]),
+        ("csharp", "C#", ".cs", ["cs", "csharp", "c#"]),
+        ("json", "JSON", ".json", ["json"]),
+        ("html", "HTML", ".html", ["html", "htm"]),
+        ("xml", "XML", ".xml", ["xml", "xaml", "axaml"]),
+        ("css", "CSS", ".css", ["css"]),
+        ("sql", "SQL", ".sql", ["sql", "tsql"]),
+        ("powershell", "PowerShell", ".ps1", ["ps1", "powershell", "pwsh"]),
+        ("java", "Java", ".java", ["java"]),
+        ("cpp", "C / C++", ".cpp", ["cpp", "c", "c++", "h", "hpp"]),
+        ("markdown", "Markdown", ".md", ["md", "markdown"]),
+        ("php", "PHP", ".php", ["php"]),
+        ("vb", "Visual Basic", ".vb", ["vb"]),
+    ];
+
+    /// <summary>Ids switched off in Settings: never highlighted, never offered, never loaded.</summary>
+    public static HashSet<string> Disabled { get; set; } = [];
+
+    public static (string Id, string Name, string Extension, string[] Aliases)? Find(string? word) =>
+        word is null ? null : Languages.Cast<(string Id, string Name, string Extension, string[] Aliases)?>()
+            .FirstOrDefault(l => l!.Value.Aliases.Contains(word) || l.Value.Id == word);
+
+    public static string Extension(string? language) => Find(language) is { } l && !Disabled.Contains(l.Id) ? l.Extension : "";
 
     private static Palette? _mappedFor;
 
@@ -130,11 +150,14 @@ internal static class CodeColors
                 : n.Contains("method") || n.Contains("function") ? p.Identifier
                 : n.Contains("keyword") || n.Contains("modifier") || n.Contains("type") || n.Contains("visibility") || n.Contains("namespace")
                   || n.Contains("statement") || n.Contains("access") || n.Contains("reference") || n.Contains("operator") || n.Contains("tag") ? p.Keyword
-                : n.Contains("attribute") || n.Contains("property") ? p.Identifier
+                : n.Contains("attribute") || n.Contains("property") || n.Contains("field") || n.Contains("key") || n.Contains("name") ? p.Identifier
+                : n.Contains("punctuation") || n.Contains("bracket") || n.Contains("separator") ? p.Muted
+                : n.Contains("bool") || n.Contains("null") || n.Contains("constant") ? p.Keyword
                 : null;
             if (c is { } value) color.Foreground = new SimpleHighlightingBrush(value);
             color.Background = null;
             color.FontWeight = null;
+            if (!n.Contains("comment")) color.FontStyle = null;   // only comments stay italic
         }
     }
 }
@@ -145,7 +168,7 @@ internal static class CodeColors
 /// </summary>
 internal sealed class FenceColorizer(PadView pad) : DocumentColorizingTransformer
 {
-    private sealed class Cache { public required string Text; public required TextDocument Doc; public required DocumentHighlighter Highlighter; public required Palette Palette; }
+    private sealed class Cache { public required string Text; public required string? Language; public required TextDocument Doc; public required DocumentHighlighter Highlighter; public required Palette Palette; }
     private readonly Dictionary<int, Cache> _cache = [];   // by fence open line
 
     public void Reset() => _cache.Clear();
@@ -174,46 +197,19 @@ internal sealed class FenceColorizer(PadView pad) : DocumentColorizingTransforme
     private Cache? Get(NoteStructure.Fence fence)
     {
         var doc = CurrentContext.Document;
-        var last = Math.Min(fence.Close - 1, doc.LineCount);
+        // The body ends before the closing fence, or at the last line while the fence is still open.
+        var last = Math.Min(fence.Closed ? fence.Close - 1 : fence.Close, doc.LineCount);
         if (last <= fence.Open) return null;
         var from = doc.GetLineByNumber(fence.Open + 1).Offset;
         var to = doc.GetLineByNumber(last).EndOffset;
         var text = doc.GetText(from, to - from);
-        if (_cache.TryGetValue(fence.Open, out var c) && c.Text == text && ReferenceEquals(c.Palette, pad.Palette)) return c;
+        if (_cache.TryGetValue(fence.Open, out var c) && c.Text == text && c.Language == fence.Language && ReferenceEquals(c.Palette, pad.Palette)) return c;
         var definition = CodeColors.Definition(fence.Language, pad.Palette);
         if (definition is null) return null;
         var inner = new TextDocument(text);
-        var cache = new Cache { Text = text, Doc = inner, Highlighter = new DocumentHighlighter(inner, definition), Palette = pad.Palette };
+        var cache = new Cache { Text = text, Language = fence.Language, Doc = inner, Highlighter = new DocumentHighlighter(inner, definition), Palette = pad.Palette };
         _cache[fence.Open] = cache;
         return cache;
-    }
-}
-
-/// <summary>A soft rounded panel behind each fenced block, with its language named at the top right.</summary>
-internal sealed class CodeBlockRenderer(PadView pad) : IBackgroundRenderer
-{
-    public KnownLayer Layer => KnownLayer.Background;
-
-    public void Draw(TextView view, DrawingContext dc)
-    {
-        if (pad.Structure is not { } s || s.Fences.Count == 0 || !view.VisualLinesValid || pad.Mode == NoteMode.Code) return;
-        var p = pad.Palette;
-        var fill = new SolidColorBrush(p.Ink, p.Dark ? 0.06 : 0.045);
-        foreach (var fence in s.Fences)
-        {
-            double top = double.NaN, bottom = 0;
-            foreach (var v in view.VisualLines)
-            {
-                var n = v.FirstDocumentLine.LineNumber;
-                if (n < fence.Open || n > fence.Close) continue;
-                var y = v.VisualTop - view.VerticalOffset;
-                if (double.IsNaN(top)) top = y;
-                bottom = y + v.Height;
-            }
-            if (double.IsNaN(top)) continue;
-            var rect = new Rect(-8, top - 1, view.Bounds.Width + 8, bottom - top + 2);
-            dc.DrawRectangle(fill, null, rect, 8, 8);
-        }
     }
 }
 
