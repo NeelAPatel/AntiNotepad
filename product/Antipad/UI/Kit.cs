@@ -16,19 +16,40 @@ internal static class Glyph
     public static readonly FontFamily Font = new("Segoe Fluent Icons, Segoe MDL2 Assets");
 }
 
+/// <summary>
+/// A Segoe Fluent Icons glyph drawn one weight heavier. The font ships a single light weight, so the glyph is
+/// drawn with four extra copies nudged by <c>weight</c> px around it (faux bold); with grayscale antialiasing
+/// that reads as a cleanly thicker stroke.
+/// </summary>
+internal sealed class GlyphIcon(string glyph, Color color, double size = 13, double weight = 0.3) : Control
+{
+    private static readonly Typeface Face = new(Glyph.Font);
+
+    private FormattedText Text(IBrush brush) =>
+        new(glyph, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight, Face, size, brush);
+
+    protected override Size MeasureOverride(Size availableSize) => new(size + 2, size + 2);
+
+    public override void Render(DrawingContext context)
+    {
+        var t = Text(new SolidColorBrush(color));
+        var origin = new Point((Bounds.Width - t.Width) / 2, (Bounds.Height - t.Height) / 2);
+        foreach (var (dx, dy) in new[] { (-weight, 0.0), (weight, 0.0), (0.0, -weight), (0.0, weight), (0.0, 0.0) })
+            context.DrawText(t, new Point(origin.X + dx, origin.Y + dy));
+    }
+}
+
 /// <summary>Small hand-built controls so the chrome follows the palette exactly (no Fluent theme chrome).</summary>
 internal static class Kit
 {
     public static Button IconButton(string glyph, string name, Palette p, Action click, double size = 28, bool filled = false, Color? color = null)
     {
-        var text = new TextBlock
+        // A filled pin is its own glyph in Segoe Fluent Icons.
+        var icon = new GlyphIcon(filled && glyph == Glyph.Pin ? Glyph.PinFilled : glyph, color ?? p.Muted)
         {
-            // A filled pin is its own glyph in Segoe Fluent Icons.
-            Text = filled && glyph == Glyph.Pin ? Glyph.PinFilled : glyph,
-            FontFamily = Glyph.Font, FontSize = 13, Foreground = new SolidColorBrush(color ?? p.Muted),
             HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center
         };
-        var button = Plain(text, p, size, size, radius: 7);
+        var button = Plain(icon, p, size, size, radius: 7);
         button.Click += (_, _) => click();
         Avalonia.Automation.AutomationProperties.SetName(button, name);
         ToolTip.SetTip(button, name);

@@ -51,6 +51,8 @@ internal sealed partial class PadWindow : Window
         Topmost = Settings.Pinned;
         Background = Brushes.Transparent;
         FontFamily = new FontFamily("Segoe UI Variable Text, Segoe UI");
+        // Grayscale antialiasing: ClearType fringes and smears small text over a translucent, blurred backdrop.
+        TextOptions.SetTextRenderingMode(this, TextRenderingMode.Antialias);
         BuildLayout();
         ApplyAppearance();
         BindPanes(arrive: 0);
