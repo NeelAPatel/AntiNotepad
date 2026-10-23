@@ -280,6 +280,12 @@ internal sealed class SmoothCaret : IBackgroundRenderer
 
     private void Invalidate() => _editor.TextArea.TextView.InvalidateLayer(KnownLayer.Selection);
 
+    /// <summary>
+    /// Stops blinking for good (the editor is going away). A running timer is held by the dispatcher, and through its
+    /// handler it would keep this caret, its editor and the whole window alive.
+    /// </summary>
+    public void Stop() { _blink.Stop(); _animating = false; }
+
     public void Draw(TextView view, DrawingContext dc)
     {
         if (!_editor.TextArea.IsFocused || !_on && !_animating) return;

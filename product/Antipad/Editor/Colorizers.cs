@@ -10,9 +10,11 @@ namespace Antipad.Editor;
 /// <summary>Plain-note styling: headings, emphasis, inline code, fences, comments, quotes, done tasks, mode keyword.</summary>
 internal sealed class NoteColorizer(PadView pad) : DocumentColorizingTransformer
 {
-    internal static readonly Regex Bold = new(@"(\*\*|__)(?=\S)(.+?)(?<=\S)\1", RegexOptions.Compiled);
+    internal static readonly Regex Bold = new(@"\*\*(?=\S)(.+?)(?<=\S)\*\*", RegexOptions.Compiled);
     internal static readonly Regex Italic = new(@"(?<![*\w])\*(?=\S)([^*]+?)(?<=\S)\*(?![*\w])|(?<![_\w])_(?=\S)([^_]+?)(?<=\S)_(?![_\w])", RegexOptions.Compiled);
-    internal static readonly Regex Underline = new(@"(?<!\+)\+\+(?=\S)(.+?)(?<=\S)\+\+", RegexOptions.Compiled);
+    internal static readonly Regex Underline = new(@"(?<![+_])(\+\+|__)(?=\S)(.+?)(?<=\S)\1", RegexOptions.Compiled);
+    /// <summary>A line of three or more -, * or _ and nothing else: drawn as a rule across the note.</summary>
+    internal static readonly Regex Divider = new(@"^\s*(?:-{3,}|\*{3,}|_{3,})\s*$", RegexOptions.Compiled);
     internal static readonly Regex Strike = new(@"~~(?=\S)(.+?)(?<=\S)~~", RegexOptions.Compiled);
     internal static readonly Regex InlineCode = new(@"`[^`\n]+`", RegexOptions.Compiled);
     private static readonly Regex Tag = new(@"(?<=^|\s)#[A-Za-z][\w-]*", RegexOptions.Compiled);
@@ -31,26 +33,28 @@ internal sealed class NoteColorizer(PadView pad) : DocumentColorizingTransformer
         if (pad.Mode is NoteMode.Code or NoteMode.Math) return; // their own colourizers own these notes
         if (pad.InFence(line.LineNumber))
         {
-            // Fence markers recede; the body is ink, and FenceColorizer adds syntax colours when the language is known.
-            Mono(o, line.EndOffset, text.TrimStart().StartsWith("```") ? p.Marker : p.Ink);
+            // Fence markers recede (muted, still readable on the darker panel); the body is ink, and FenceColorizer adds
+            // syntax colours when the language is known.
+            Mono(o, line.EndOffset, text.TrimStart().StartsWith("```") ? p.Muted : p.Ink);
             return;
         }
         var trimmed = text.TrimStart();
         if (trimmed.StartsWith("//")) { Paint(o, line.EndOffset, p.Comment, style: FontStyle.Italic); return; }
         if (trimmed.StartsWith('>')) Paint(o, line.EndOffset, p.Muted, style: FontStyle.Italic);
+        if (Divider.IsMatch(text)) { Paint(o, line.EndOffset, p.Faint); return; }
         var heading = HeadingLevel(trimmed);
         if (heading > 0)
         {
             var lead = text.Length - trimmed.Length;
-            // Hierarchy by colour and size: H1 accent and largest, H2 keyword colour, H3 identifier colour, deeper levels muted.
-            var (color, size, weight) = heading switch
+            // Hierarchy by colour (a rainbow, H1 red to H6 violet) and by size for the top three.
+            var (size, weight) = heading switch
             {
-                1 => (p.Accent, 1.32, FontWeight.Bold),
-                2 => (p.Keyword, 1.16, FontWeight.Bold),
-                3 => (p.Identifier, 1.06, FontWeight.SemiBold),
-                _ => (p.Muted, 1.0, FontWeight.SemiBold),
+                1 => (1.32, FontWeight.Bold),
+                2 => (1.16, FontWeight.Bold),
+                3 => (1.06, FontWeight.SemiBold),
+                _ => (1.0, FontWeight.SemiBold),
             };
-            Paint(o, line.EndOffset, color, weight);
+            Paint(o, line.EndOffset, HeadingColor(p, heading), weight);
             Paint(o + lead, o + lead + heading, p.Faint);
             if (size > 1) ChangeLinePart(o, line.EndOffset, e => e.TextRunProperties.SetFontRenderingEmSize(e.TextRunProperties.FontRenderingEmSize * size));
             return;
@@ -85,6 +89,13 @@ internal sealed class NoteColorizer(PadView pad) : DocumentColorizingTransformer
             if (eq >= 0) Paint(o + eq, o + eq + 1, p.Result);
         }
     }
+
+    // Rainbow hues per level, tuned to read on light paper and on dark glass.
+    private static readonly Color[] RainbowLight = [C(0xC6, 0x3A, 0x33), C(0xC4, 0x66, 0x14), C(0x9C, 0x7C, 0x0C), C(0x2F, 0x8A, 0x4A), C(0x2A, 0x6C, 0xB8), C(0x80, 0x4C, 0xB8)];
+    private static readonly Color[] RainbowDark = [C(0xF0, 0x7A, 0x70), C(0xF0, 0xA0, 0x5A), C(0xE6, 0xCC, 0x60), C(0x7C, 0xCF, 0x8C), C(0x76, 0xB0, 0xF0), C(0xC2, 0x96, 0xF0)];
+    private static Color C(byte r, byte g, byte b) => Color.FromRgb(r, g, b);
+
+    internal static Color HeadingColor(Theme.Palette p, int level) => (p.Dark ? RainbowDark : RainbowLight)[Math.Clamp(level, 1, 6) - 1];
 
     internal static int HeadingLevel(string trimmed)
     {
@@ -128,7 +139,14 @@ internal sealed class NoteColorizer(PadView pad) : DocumentColorizingTransformer
     private void Decorate(int start, int end, TextDecorationCollection decorations)
     {
         if (end <= start) return;
-        ChangeLinePart(start, end, e => e.TextRunProperties.SetTextDecorations(decorations));
+        // Adds to what is there, so __~~both~~__ is underlined and struck through.
+        ChangeLinePart(start, end, e =>
+        {
+            var merged = new TextDecorationCollection();
+            if (e.TextRunProperties.TextDecorations is { } existing) foreach (var d in existing) merged.Add(d);
+            foreach (var d in decorations) merged.Add(d);
+            e.TextRunProperties.SetTextDecorations(merged);
+        });
     }
 
     private void Mono(int start, int end, Color color)

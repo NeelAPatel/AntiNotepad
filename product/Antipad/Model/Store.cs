@@ -107,6 +107,10 @@ public sealed class Settings
     public string Swipe { get; set; } = "detent";         // between notes: detent (decide when input stops) | progress (width-independent, fires mid-swipe)
     public string Chrome { get; set; } = "fade";           // fade | always
     public int FadeAfterMs { get; set; } = 1600;          // how long the controls stay after the mouse stops
+    public string Bars { get; set; } = "docked";          // docked (top bar row, pager below the text) | overlay (both slide in over the note at the edges)
+    public bool EdgeFade { get; set; } = true;            // text fades into the top/bottom edge where there is more to scroll
+    public bool MenuActionRow { get; set; } = true;
+    public bool MenuColorIcons { get; set; }
     public string CaretStyle { get; set; } = "bar";        // bar | block
     public bool CaretBlink { get; set; } = true;
     public bool CaretGlide { get; set; } = true;

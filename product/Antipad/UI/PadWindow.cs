@@ -62,7 +62,7 @@ internal sealed partial class PadWindow : Window
         Completion.OcrRequested += pad => _ = RunOcr(pad);
         AddHandler(KeyDownEvent, OnWindowKeyDown, RoutingStrategies.Tunnel);
         AddHandler(PointerWheelChangedEvent, OnWheel, RoutingStrategies.Tunnel, handledEventsToo: true);
-        PointerMoved += (_, _) => WakeChrome();
+        PointerMoved += (_, e) => { WakeChrome(); OverlayPointer(e); };
         PointerExited += (_, _) => SleepChrome(soon: true);
         Deactivated += (_, _) =>
         {
@@ -74,7 +74,7 @@ internal sealed partial class PadWindow : Window
         };
         Activated += (_, _) => { WakeChrome(); FadeWindow(1); };
         Closing += (_, e) => { if (!_quitting) { e.Cancel = true; HideResident(); } };
-        Opened += (_, _) => FocusActive();
+        Opened += (_, _) => { FocusActive(); CycleSettingsForDev(); };
         PositionChanged += (_, _) => RememberBounds();
         SizeChanged += (_, _) => RememberBounds();
         if (Application.Current?.PlatformSettings is { } ps) ps.ColorValuesChanged += (_, _) => Dispatcher.UIThread.Post(ApplyAppearance);
@@ -347,6 +347,7 @@ internal sealed partial class PadWindow : Window
         if (_right is not null) _right.Background = Settings.SplitPalette == "same" ? null : new SolidColorBrush(SplitPalette().Canvas, Settings.Material == "solid" ? 1 : Math.Clamp(Settings.Tint + .08, 0, 1));
         if (!Equals(_stylesPalette, _palette)) { Kit.InputStyles(Styles, _palette); _stylesPalette = _palette; }
         RebuildChrome();
+        ApplyBars();
         if (_overlay is { } current) ReopenOverlay(current);
         _settingsWindow?.SyncLook();
     }

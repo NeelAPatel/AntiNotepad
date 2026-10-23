@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Route one headless Codex run: model tier, usage cap, failover, log + ledger.
 # Usage: .coord/tools/codex-run.sh <director|worker|backup> <task-id> <task-file> [extra codex args]
-# Env:   CODEX_BUDGET_TAG  budget bucket (default: today). CODEX_MAX_DIRECTOR (3), CODEX_MAX_WORKER (2), CODEX_MAX_BACKUP (1)
+# Env:   CODEX_BUDGET_TAG  budget bucket (default: today). CODEX_MAX_DIRECTOR (20), CODEX_MAX_WORKER (10), CODEX_MAX_BACKUP (5)
 #        CODEX_TIMEOUT_MIN per-run wall limit (default 45). CODEX_WORKDIR (default: repo root). CODEX_DRY=1 prints the plan only.
 set -u
 ROOT="$(cd "$(dirname "$0")/../.." && pwd -W)"
@@ -11,9 +11,9 @@ WORKDIR="${CODEX_WORKDIR:-$ROOT}"; TAG="${CODEX_BUDGET_TAG:-$(date +%F)}"; TMIN=
 LEDGER="$ROOT/.coord/logs/usage.tsv"; mkdir -p "$ROOT/.coord/logs" "$ROOT/.coord/reports"; touch "$LEDGER"
 
 tier() { case "$1" in
-  director) echo "gpt-6.1-sol medium ${CODEX_MAX_DIRECTOR:-3}";;
-  worker)   echo "gpt-6-luna high ${CODEX_MAX_WORKER:-2}";;
-  backup)   echo "gpt-5.6-luna xhigh ${CODEX_MAX_BACKUP:-1}";;
+  director) echo "gpt-6.1-sol medium ${CODEX_MAX_DIRECTOR:-20}";;
+  worker)   echo "gpt-6-luna high ${CODEX_MAX_WORKER:-10}";;
+  backup)   echo "gpt-5.6-luna xhigh ${CODEX_MAX_BACKUP:-5}";;
   *) echo "unknown role $1" >&2; return 1;; esac; }
 next() { case "$1" in director) echo worker;; worker) echo backup;; *) echo "";; esac; }  # failover chain
 

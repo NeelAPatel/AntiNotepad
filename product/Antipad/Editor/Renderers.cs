@@ -21,7 +21,7 @@ internal sealed class PaperLayer(PadView pad) : Avalonia.Controls.Control
     {
         if (pad.Structure is not { } s || s.Fences.Count == 0 || !view.VisualLinesValid || pad.Mode == Model.NoteMode.Code) return;
         var p = pad.Palette;
-        var fill = new SolidColorBrush(p.Ink, p.Dark ? 0.06 : 0.045);
+        var fill = new SolidColorBrush(p.Ink, p.Dark ? 0.085 : 0.075);
         using var clip = dc.PushClip(new Rect(0, origin.Y, Bounds.Width, view.Bounds.Height));
         foreach (var fence in s.Fences)
         {
@@ -111,6 +111,7 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
         var items = new List<(int Line, string Text, string Kind, Color Color, string Value, FormattedText Ft, double TextEnd, double Baseline)>();
         foreach (var visual in view.VisualLines)
         {
+            if (visual.FirstDocumentLine != visual.LastDocumentLine) continue; // folded: its answers are hidden with it
             var n = visual.LastDocumentLine.LineNumber;
             if (pad.ChipFor(n) is not { } chip) continue;
             var ft = new FormattedText(chip.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeface, size, new SolidColorBrush(chip.Color));
@@ -194,6 +195,26 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
                     dc.DrawGeometry(null, pen, g);
                     break;
                 }
+        }
+    }
+}
+
+/// <summary>A `---` line becomes a thin rule across the note (the dashes stay faint, or hide with clean markdown).</summary>
+internal sealed class DividerRenderer(PadView pad) : IBackgroundRenderer
+{
+    public KnownLayer Layer => KnownLayer.Background;
+
+    public void Draw(TextView view, DrawingContext dc)
+    {
+        if (!view.VisualLinesValid || view.Document is null || !pad.Decorate || pad.Mode is NoteMode.Code or NoteMode.Math) return;
+        Pen? pen = null;
+        foreach (var visual in view.VisualLines)
+        {
+            var line = visual.FirstDocumentLine;
+            if (pad.InFence(line.LineNumber) || !NoteColorizer.Divider.IsMatch(view.Document.GetText(line))) continue;
+            pen ??= new Pen(new SolidColorBrush(pad.Palette.Marker, .55), 1);
+            var y = Math.Round(visual.VisualTop + visual.Height / 2 - view.VerticalOffset) + 0.5;
+            dc.DrawLine(pen, new Point(0, y), new Point(view.Bounds.Width, y));
         }
     }
 }

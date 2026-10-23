@@ -9,6 +9,10 @@ namespace Antipad.Platform;
 internal static class Native
 {
     private const uint WmClipboardUpdate = 0x031D;
+    private const uint DwmwaWindowCornerPreference = 33;
+    private const uint DwmwaBorderColor = 34;
+    private const uint DwmwcpDonotround = 1;
+    private const uint DwmwaColorNone = 0xFFFFFFFE;
 
     /// <summary>Raises <paramref name="changed"/> on every clipboard update while the window handle lives.</summary>
     public static IDisposable ListenClipboard(Window window, Action changed)
@@ -56,6 +60,22 @@ internal static class Native
 
     public static void Chime() { try { MessageBeep(0x40); } catch { } }
 
+    /// <summary>Removes Windows 11's automatic popup rounding and border from a transparent popup host.</summary>
+    public static void ConfigurePopupWindow(TopLevel popup)
+    {
+        var hwnd = popup.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
+        if (hwnd == IntPtr.Zero) return;
+        try
+        {
+            SetDwmWindowAttribute(hwnd, DwmwaWindowCornerPreference, DwmwcpDonotround);
+            SetDwmWindowAttribute(hwnd, DwmwaBorderColor, DwmwaColorNone);
+        }
+        catch
+        {
+            // DWM attributes are cosmetic; unsupported or unavailable DWM must not affect the menu.
+        }
+    }
+
     public static void Flash(Window window)
     {
         var hwnd = window.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
@@ -97,6 +117,10 @@ internal static class Native
     [DllImport("kernel32.dll")] private static extern IntPtr GlobalLock(IntPtr handle);
     [DllImport("kernel32.dll")] private static extern bool GlobalUnlock(IntPtr handle);
     [DllImport("user32.dll")] private static extern bool FlashWindowEx(ref FlashInfo info);
+    [DllImport("dwmapi.dll")] private static extern int DwmSetWindowAttribute(IntPtr hwnd, uint attribute, ref uint value, int valueSize);
+
+    private static void SetDwmWindowAttribute(IntPtr hwnd, uint attribute, uint value) =>
+        _ = DwmSetWindowAttribute(hwnd, attribute, ref value, sizeof(uint));
 }
 
 /// <summary>HKCU Run entry for Antipad only (never the AntiQuickPad value).</summary>

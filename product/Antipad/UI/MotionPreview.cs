@@ -82,7 +82,10 @@ internal sealed class MotionPreview : StackPanel
     private readonly Trace _trace;
     private readonly StackPanel _legend = new() { Orientation = Orientation.Horizontal, Spacing = 14 };
     private readonly NoteSwipe _swipe;
-    private readonly DispatcherTimer _sampler = new() { Interval = TimeSpan.FromMilliseconds(16) };
+    private bool _sampling;      // sampling once per displayed frame, only while something is moving
+    private bool _attached;
+    private long _movedAt;       // when scroll or note position last changed (ms, high-resolution clock)
+    private double _lastV = double.NaN, _lastH = double.NaN;
     private Palette _p;
     private Settings _s;
     private bool _feel;
@@ -111,8 +114,9 @@ internal sealed class MotionPreview : StackPanel
             Index = (Index + direction + Samples.Length) % Samples.Length;
             _pad.Bind(Samples[Index]);
             _pad.Arrive(direction);
+            Wake();
         });
-        _swipe.Moved += share => _pull = share;
+        _swipe.Moved += share => { _pull = share; Wake(); };
         // Same input rule as the pad: horizontal deltas, or Shift + wheel, switch notes; the vertical wheel scrolls.
         _frame.AddHandler(PointerWheelChangedEvent, (_, e) =>
         {
@@ -129,20 +133,55 @@ internal sealed class MotionPreview : StackPanel
         Children.Add(_legend);
         ApplyLook(palette, settings);
 
-        _sampler.Tick += (_, _) =>
+        // Scrolling (wheel, keys, dragging the bar, typing past the edge) is what wakes the trace.
+        _pad.Editor.TextArea.TextView.ScrollOffsetChanged += (_, _) => Wake();
+        AttachedToVisualTree += (_, _) => { _attached = true; Wake(); };
+        DetachedFromVisualTree += (_, _) => { _attached = false; _sampling = false; };
+    }
+
+    /// <summary>Something moved: run the trace until its whole two-second window has gone still again.</summary>
+    private void Wake()
+    {
+        _movedAt = Trace.Now;
+        if (_attached) StartSampling();
+    }
+
+    /// <summary>
+    /// One sample per displayed frame (the display's own rate, 60 to 120 Hz or more), so the trace moves as smoothly
+    /// as the scroll it shows. Once nothing has moved for the whole two-second window the line is flat end to end,
+    /// so sampling stops entirely: an idle preview costs no frames and no memory.
+    /// </summary>
+    private void StartSampling()
+    {
+        if (_sampling) return;
+        _sampling = true;
+        Frame();
+    }
+
+    private void Frame()
+    {
+        if (!_sampling || TopLevel.GetTopLevel(this) is not { } top) { _sampling = false; return; }
+        top.RequestAnimationFrame(_ =>
         {
+            if (!_sampling) return;
             var line = Math.Max(1, _pad.Editor.TextArea.TextView.DefaultLineHeight);
             // Pulling right shows the previous note, so the note position moves against the pull.
-            _trace.Add(_pad.Editor.VerticalOffset / line, Index - _pull);
-        };
-        AttachedToVisualTree += (_, _) => _sampler.Start();
-        DetachedFromVisualTree += (_, _) => _sampler.Stop();
+            var v = _pad.Editor.VerticalOffset / line;
+            var h = Index - _pull;
+            if (v != _lastV || h != _lastH) { _movedAt = Trace.Now; _lastV = v; _lastH = h; }
+            _trace.Add(v, h);
+            if (Trace.Now - _movedAt > Trace.Span + 100) { _sampling = false; return; }
+            Frame();
+        });
     }
+
+    /// <summary>Dev tooling: put the caret in the preview, as a click would.</summary>
+    public void FocusEditor() => _pad.FocusText();
 
     /// <summary>The Settings window closed: stop sampling and let go of the editor's documents.</summary>
     public void Release()
     {
-        _sampler.Stop();
+        _sampling = false;
         _pad.Release();
     }
 
@@ -182,47 +221,75 @@ internal sealed class MotionPreview : StackPanel
         }
     };
 
-    /// <summary>Both axes over the last two seconds, each scaled to its own range (scroll in lines, note in whole notes).</summary>
+    /// <summary>
+    /// Both axes over the last two seconds, each scaled to its own range (scroll in lines, note in whole notes).
+    /// Samples live in a fixed ring and the pens are made once per palette, so drawing a frame allocates nothing.
+    /// </summary>
     private sealed class Trace(Palette p) : Control
     {
-        private const double Span = 2000;
-        private readonly List<(long T, double V, double H)> _points = [];
-        public Palette Palette { get; set; } = p;
+        public const double Span = 2000;
+        // Milliseconds from a high-resolution clock (TickCount64 moves in ~16 ms steps).
+        public static long Now => System.Diagnostics.Stopwatch.GetTimestamp() * 1000 / System.Diagnostics.Stopwatch.Frequency;
+
+        // Two seconds at up to 500 frames a second; past that the oldest samples are simply overwritten.
+        private readonly long[] _t = new long[1024];
+        private readonly double[] _v = new double[1024], _h = new double[1024];
+        private int _head, _count;
+        private Palette _palette = p;
+        private IBrush _well = null!;
+        private Pen _scrollPen = null!, _notePen = null!;
+
+        public Palette Palette
+        {
+            get => _palette;
+            set { _palette = value; _well = null!; }
+        }
 
         public void Add(double v, double h)
         {
-            var now = Environment.TickCount64;
-            _points.Add((now, v, h));
-            _points.RemoveAll(x => now - x.T > Span);
+            var now = Now;
+            var i = (_head + _count) % _t.Length;
+            if (_count == _t.Length) _head = (_head + 1) % _t.Length; else _count++;
+            _t[i] = now; _v[i] = v; _h[i] = h;
+            // Drop what has scrolled out of the window.
+            while (_count > 1 && now - _t[_head] > Span) { _head = (_head + 1) % _t.Length; _count--; }
             InvalidateVisual();
         }
 
         public override void Render(DrawingContext dc)
         {
+            if (_well is null)
+            {
+                _well = new SolidColorBrush(_palette.Ink, _palette.Dark ? .06 : .045);
+                _scrollPen = new Pen(new SolidColorBrush(_palette.Accent), 1.8, lineCap: PenLineCap.Round);
+                _notePen = new Pen(new SolidColorBrush(_palette.Number), 1.8, lineCap: PenLineCap.Round);
+            }
             var w = Bounds.Width; var h = Bounds.Height;
-            dc.DrawRectangle(new SolidColorBrush(Palette.Ink, Palette.Dark ? .06 : .045), null, new Rect(0, 0, w, h), 8, 8);
-            if (_points.Count == 0 || w <= 0) return;
-            var now = Environment.TickCount64;
+            dc.DrawRectangle(_well, null, new Rect(0, 0, w, h), 8, 8);
+            if (_count == 0 || w <= 0) return;
+            var now = Now;
             // At rest each line keeps its own lane (scroll high, note low) so one never hides the other.
-            Line(dc, x => x.V, 6, 0.3, Palette.Accent, now, w, h);
-            Line(dc, x => x.H, 1, 0.7, Palette.Number, now, w, h);
+            Line(dc, _v, 6, 0.3, _scrollPen, now, w, h);
+            Line(dc, _h, 1, 0.7, _notePen, now, w, h);
         }
 
-        private void Line(DrawingContext dc, Func<(long T, double V, double H), double> pick, double minSpan, double lane, Color color, long now, double w, double h)
+        private void Line(DrawingContext dc, double[] values, double minSpan, double lane, Pen pen, long now, double w, double h)
         {
-            var lo = _points.Min(pick); var hi = _points.Max(pick);
+            double lo = double.MaxValue, hi = double.MinValue;
+            for (var k = 0; k < _count; k++) { var v = values[(_head + k) % _t.Length]; if (v < lo) lo = v; if (v > hi) hi = v; }
             if (hi - lo < minSpan) { var mid = (hi + lo) / 2; lo = mid - (1 - lane) * minSpan; hi = lo + minSpan; }
             const double pad = 6;
             double Y(double v) => pad + (1 - (v - lo) / (hi - lo)) * (h - 2 * pad);
-            var geometry = new StreamGeometry();
-            using (var c = geometry.Open())
+            // Always from the left edge: before the first sample the value was what it first reads; and on to the right edge.
+            var previous = new Point(0, Y(values[_head]));
+            for (var k = 0; k < _count; k++)
             {
-                // Always from the left edge: before the first sample the value was what it first reads.
-                c.BeginFigure(new Point(0, Y(pick(_points[0]))), false);
-                foreach (var point in _points) c.LineTo(new Point((1 - (now - point.T) / Span) * w, Y(pick(point))));
-                c.LineTo(new Point(w, Y(pick(_points[^1]))));
+                var i = (_head + k) % _t.Length;
+                var point = new Point((1 - (now - _t[i]) / Span) * w, Y(values[i]));
+                dc.DrawLine(pen, previous, point);
+                previous = point;
             }
-            dc.DrawGeometry(null, new Pen(new SolidColorBrush(color), 1.8, lineJoin: PenLineJoin.Round), geometry);
+            dc.DrawLine(pen, previous, new Point(w, previous.Y));
         }
     }
 }

@@ -31,6 +31,7 @@ internal sealed class PadView : Grid
     private readonly Timers _timers;
     private readonly TextBlock _hint;
     private readonly ResultRenderer _results;
+    private readonly SmoothCaret _caret;
     private IReadOnlyList<LineEval?> _math = [];
     private readonly Dictionary<int, CalcResult> _inline = [];
     private FoldingManager? _folding;
@@ -59,6 +60,8 @@ internal sealed class PadView : Grid
     public event Action? FocusedPane;
     /// <summary>Copies go through the window so clipboard-capture notes don't record Antipad's own copies.</summary>
     public event Action<string>? Copy;
+    /// <summary>The pad's own items for the right-click menu (new note, search, pin...), added below the editing ones.</summary>
+    public Func<IEnumerable<MenuEntry>>? AppMenu { get; set; }
 
     public PadView(Palette palette, Settings settings, Timers timers)
     {
@@ -87,7 +90,9 @@ internal sealed class PadView : Grid
         _results = new ResultRenderer(this);
         view.BackgroundRenderers.Add(_results);
         view.BackgroundRenderers.Add(new CheckboxRenderer(this));
-        view.BackgroundRenderers.Add(new SmoothCaret(this));
+        view.BackgroundRenderers.Add(new DividerRenderer(this));
+        _caret = new SmoothCaret(this);
+        view.BackgroundRenderers.Add(_caret);
         _ = new SmoothScroll(Editor, () => Settings);
         view.LineTransformers.Add(new NoteColorizer(this));
         view.LineTransformers.Add(new MathColorizer(this));
@@ -96,6 +101,7 @@ internal sealed class PadView : Grid
         view.ElementGenerators.Add(new CheckboxGenerator(this));
         view.ElementGenerators.Add(new BulletGenerator(this));
         view.ElementGenerators.Add(new LinkGenerator(this));
+        view.ElementGenerators.Add(new TopGapGenerator(this));
         view.ElementGenerators.Add(new MarkerGenerator(this));
         _hint = new TextBlock
         {
@@ -108,12 +114,18 @@ internal sealed class PadView : Grid
         view.ScrollOffsetChanged += (_, _) => _paper.InvalidateVisual();
         view.VisualLinesChanged += (_, _) => _paper.InvalidateVisual();
         Children.Add(_hint);
+        view.ScrollOffsetChanged += (_, _) => UpdateEdgeFade();
+        view.DocumentChanged += (_, _) => UpdateEdgeFade();
+        // After a note loads or text reflows, the amount left to scroll changes without a scroll.
+        view.VisualLinesChanged += (_, _) => UpdateEdgeFade();
+        Editor.SizeChanged += (_, _) => UpdateEdgeFade();
         SizeChanged += (_, e) => { if (Math.Abs(e.NewSize.Width - e.PreviousSize.Width) > 0.5) ApplyMargins(); };
         Editor.TextArea.AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
         Editor.TextArea.TextEntered += OnTextEntered;
         Editor.TextArea.Caret.PositionChanged += (_, _) => OnCaretMoved();
         Editor.TextArea.GotFocus += (_, _) => FocusedPane?.Invoke();
         view.AddHandler(PointerPressedEvent, OnViewPressed, RoutingStrategies.Tunnel);
+        Editor.TextArea.ContextRequested += (_, e) => { ShowMenu(); e.Handled = true; };
         view.PointerMoved += OnViewMoved;
         // Fold chevrons show while the pointer is over the note.
         PointerEntered += (_, _) => { if (_gutter is not null) _gutter.ShowAll = true; };
@@ -248,11 +260,41 @@ internal sealed class PadView : Grid
         Dispatcher.UIThread.Post(() => { if (token == _bindToken) SmoothScroll.SetOffset(Editor, scroll); }, DispatcherPriority.Loaded);
     }
 
+    /// <summary>
+    /// Text fades into the top or bottom edge, but only where there is more to scroll: the first and last lines are never
+    /// dimmed, and the fade grows in over the first few pixels of scroll.
+    /// </summary>
+    private void UpdateEdgeFade()
+    {
+        var h = Editor.Bounds.Height;
+        if (!Settings.EdgeFade || h < 60) { if (Editor.OpacityMask is not null) Editor.OpacityMask = null; return; }
+        const double band = 40;
+        var view = Editor.TextArea.TextView;
+        var offset = view.VerticalOffset;
+        var more = Math.Max(0, view.DocumentHeight - (offset + view.Bounds.Height));
+        var top = Math.Clamp(offset / band, 0, 1);
+        var bottom = Math.Clamp(more / band, 0, 1);
+        if (top == 0 && bottom == 0) { if (Editor.OpacityMask is not null) Editor.OpacityMask = null; return; }
+        var b = band / h;
+        Editor.OpacityMask = new LinearGradientBrush
+        {
+            StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative), EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+            GradientStops =
+            {
+                new GradientStop(Color.FromArgb((byte)(255 * (1 - top)), 0, 0, 0), 0),
+                new GradientStop(Colors.Black, b),
+                new GradientStop(Colors.Black, 1 - b),
+                new GradientStop(Color.FromArgb((byte)(255 * (1 - bottom)), 0, 0, 0), 1),
+            },
+        };
+    }
+
     /// <summary>Lets go of the document (a preview being closed), so nothing it was listening to keeps it alive.</summary>
     public void Release()
     {
         if (Editor.Document is { } doc) doc.Changed -= OnDocumentChanged;
         _analyse.Stop();
+        _caret.Stop();
         _private.Clear();
     }
 
@@ -458,12 +500,15 @@ internal sealed class PadView : Grid
         }
         if (e.Key == Key.Enter && !ctrl && !shift && e.KeyModifiers == KeyModifiers.None && Editor.TextArea.Selection.IsEmpty)
         {
-            if (ContinueList()) { e.Handled = true; return; }
+            bool continued;
+            using (Editor.Document.RunUpdate()) { continued = ContinueList(); if (continued) Renumber(CaretLine); }
+            if (continued) { e.Handled = true; return; }
             if (Mode == NoteMode.Timer) StartTimerOnLine(CaretLine);
         }
         if (e.Key == Key.Tab && Editor.TextArea.Selection.IsEmpty && IsListLine(CaretLine))
         {
-            e.Handled = true; Indent(CaretLine, !shift);
+            e.Handled = true;
+            using (Editor.Document.RunUpdate()) { Indent(CaretLine, !shift); Renumber(CaretLine, fresh: !shift); }
         }
     }
 
@@ -485,6 +530,30 @@ internal sealed class PadView : Grid
         }
     }
 
+    /// <summary>Right-click: the standard editing commands, then the pad's own.</summary>
+    private void ShowMenu()
+    {
+        var area = Editor.TextArea;
+        var hasSelection = !area.Selection.IsEmpty;
+        var items = new List<MenuEntry>
+        {
+            new("Undo", "Ctrl+Z", PadMenu.Undo, () => Editor.Undo(), Editor.CanUndo),
+            new("Redo", "Ctrl+Y", PadMenu.Redo, () => Editor.Redo(), Editor.CanRedo),
+            new("Select all", "Ctrl+A", PadMenu.SelectAll, () => Editor.SelectAll()),
+            MenuEntry.Separator,
+            new("Cut", "Ctrl+X", PadMenu.Cut, () => Editor.Cut(), hasSelection),
+            new("Copy", "Ctrl+C", PadMenu.Copy, () => Editor.Copy(), hasSelection),
+            new("Paste", "Ctrl+V", PadMenu.Paste, () => Editor.Paste()),
+            new("Delete", "Delete", PadMenu.Delete, () => area.Selection.ReplaceSelectionWithText(string.Empty), hasSelection),
+        };
+        if (AppMenu?.Invoke() is { } extra)
+        {
+            items.Add(MenuEntry.Separator);
+            items.AddRange(extra);
+        }
+        PadMenu.Show(Editor, items, Palette, Settings);
+    }
+
     private bool IsListLine(int lineNumber) =>
         ListPrefix.IsMatch(Editor.Document.GetText(Editor.Document.GetLineByNumber(lineNumber)));
 
@@ -498,6 +567,36 @@ internal sealed class PadView : Grid
             var text = doc.GetText(line);
             var n = text.Length - text.TrimStart(' ').Length;
             if (n > 0) doc.Remove(line.Offset, Math.Min(2, n));
+        }
+    }
+
+    /// <summary>
+    /// Numbers each level of the list around a line in order: 1. / two nested items / then 2. again, not 4.
+    /// A level keeps the number its first item starts at (a list may start at 5), except a line just indented to
+    /// open a new level (<paramref name="fresh"/>), which starts at 1. Only runs on Return and Tab, never on typing.
+    /// </summary>
+    private void Renumber(int lineNumber, bool fresh = false)
+    {
+        var doc = Editor.Document;
+        string Text(int n) => doc.GetText(doc.GetLineByNumber(n));
+        // A list block: list items and their indented text, up to a blank or unindented non-list line.
+        bool InBlock(int n) { var t = Text(n); return t.Trim().Length > 0 && (ListPrefix.IsMatch(t) || t.StartsWith(' ')); }
+        if (lineNumber < 1 || lineNumber > doc.LineCount || !InBlock(lineNumber)) return;
+        int first = lineNumber, last = lineNumber;
+        while (first > 1 && InBlock(first - 1)) first--;
+        while (last < doc.LineCount && InBlock(last + 1)) last++;
+        var counts = new Dictionary<int, int>();
+        for (var n = first; n <= last; n++)
+        {
+            var m = ListPrefix.Match(Text(n));
+            if (!m.Success) continue;
+            var indent = m.Groups[1].Length;
+            foreach (var deeper in counts.Keys.Where(k => k > indent).ToList()) counts.Remove(deeper);
+            if (!m.Groups[3].Success) { counts.Remove(indent); continue; }
+            var own = int.Parse(m.Groups[3].Value);
+            var want = counts.TryGetValue(indent, out var before) ? before + 1 : fresh && n == lineNumber ? 1 : own;
+            counts[indent] = want;
+            if (want != own) doc.Replace(doc.GetLineByNumber(n).Offset + m.Groups[3].Index, m.Groups[3].Length, want.ToString());
         }
     }
 
@@ -523,7 +622,7 @@ internal sealed class PadView : Grid
         if (text.Trim() == prefix.Trim())
         {
             // Empty item: end the list (or outdent one level first).
-            if (indent.Length >= 2) { doc.Remove(line.Offset, 2); return true; }
+            if (indent.Length >= 2) { doc.Remove(line.Offset, 2); Renumber(line.LineNumber); return true; }
             doc.Replace(line.Offset, line.Length, "");
             if (Mode == NoteMode.List) return true;
             return true;
@@ -574,8 +673,13 @@ internal sealed class PadView : Grid
             var spare = Bounds.Width - left - right - (glyph.WidthIncludingTrailingWhitespace * Settings.TextWidth + 15);
             if (spare > 0) { left += spare / 2; right += spare / 2; }
         }
-        // The pad keeps 40 px clear for its pager; a Settings preview has no pager, so its text runs to the bottom.
-        Editor.Margin = new Thickness(_gutter is not null ? left - 16 : left, 4, right, Private ? 6 : 40);
+        // Docked: the text stops above the pager with the same 10 px gap above it as below it (10 + ~32 pill + 10).
+        // Overlay bars and Settings previews have nothing to keep clear, so the text runs nearly to the edge.
+        // Docked: 8 px under a ~24 px pill and the same 8 px above it.
+        var bottom = Private ? 6 : Settings.Bars is "overlay" or "float" ? 10 : 40;
+        Editor.Margin = new Thickness(_gutter is not null ? left - 16 : left, 4, right, bottom);
+        Editor.TextArea.TextView.Redraw(); // the first line's top gap depends on the bar style
+        UpdateEdgeFade();
         _hint.Margin = new Thickness(left + 1, 7, right, 0);
     }
 

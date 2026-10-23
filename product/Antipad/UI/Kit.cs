@@ -33,10 +33,20 @@ internal sealed class GlyphIcon(string glyph, Color color, double size = 13, dou
 
     protected override Size MeasureOverride(Size availableSize) => new(size + 2, size + 2);
 
+    /// <summary>Dev (icon lab): place the glyph on whole device pixels, as Windows does, instead of wherever centring lands.</summary>
+    public static bool Snap = true;
+
     public override void Render(DrawingContext context)
     {
         var t = Text(new SolidColorBrush(color));
         var origin = new Point((Bounds.Width - t.Width) / 2, (Bounds.Height - t.Height) / 2);
+        if (Snap)
+        {
+            var scale = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
+            origin = new Point(Math.Round(origin.X * scale) / scale, Math.Round(origin.Y * scale) / scale);
+        }
+        // Natural weight: one copy. (Five copies on the same spot stack their antialiased edges into a fuzzy outline.)
+        if (weight <= 0) { context.DrawText(t, origin); return; }
         foreach (var (dx, dy) in new[] { (-weight, 0.0), (weight, 0.0), (0.0, -weight), (0.0, weight), (0.0, 0.0) })
             context.DrawText(t, new Point(origin.X + dx, origin.Y + dy));
     }
@@ -45,15 +55,18 @@ internal sealed class GlyphIcon(string glyph, Color color, double size = 13, dou
 /// <summary>Small hand-built controls so the chrome follows the palette exactly (no Fluent theme chrome).</summary>
 internal static class Kit
 {
-    public static Button IconButton(string glyph, string name, Palette p, Action click, double size = 28, bool filled = false, Color? color = null)
+    public static Button IconButton(string glyph, string name, Palette p, Action click, double size = 32, bool filled = false, Color? color = null)
     {
-        // A filled pin is its own glyph in Segoe Fluent Icons.
-        // Ink at 86 %, like Windows' own caption glyphs (muted grey read a weight lighter than native).
-        var icon = new GlyphIcon(filled && glyph == Glyph.Pin ? Glyph.PinFilled : glyph, color ?? Color.FromArgb(220, p.Ink.R, p.Ink.G, p.Ink.B))
-        {
-            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center
-        };
-        var button = Plain(icon, p, size, size, radius: 7);
+        var ink = color ?? p.Ink;
+        Control icon = new GlyphIcon(glyph, ink, 16, 0) { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        // Filled: a soft fill under the outline glyph, so the shape still reads (a solid fill alone is a blob).
+        if (filled && glyph == Glyph.Pin)
+            icon = new Panel
+            {
+                HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+                Children = { new GlyphIcon(Glyph.PinFilled, Color.FromArgb(110, ink.R, ink.G, ink.B), 16, 0), icon },
+            };
+        var button = Plain(icon, p, size, size, radius: 4);
         button.Click += (_, _) => click();
         Avalonia.Automation.AutomationProperties.SetName(button, name);
         ToolTip.SetTip(button, name);

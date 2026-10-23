@@ -19,9 +19,9 @@ Limits: write a checkpoint to STATUS.md after every milestone. On a limit stop w
 
 | Tier | Model / effort | Default cap per budget tag |
 |---|---|---|
-| director | gpt-6.1-sol medium | 3 |
-| worker | gpt-6-luna high | 2 |
-| backup | gpt-5.6-luna xhigh | 1 |
+| director | gpt-6.1-sol medium | 20 |
+| worker | gpt-6-luna high | 10 |
+| backup | gpt-5.6-luna xhigh | 5 |
 
 - Failover chain on cap reached or a usage/rate-limit error: director -> worker -> backup -> STOP (write HANDOFF.md; never loop). Any other failure is not retried; revert or fix by hand.
 - Budget tag defaults to today's date (`CODEX_BUDGET_TAG`); caps via `CODEX_MAX_DIRECTOR|WORKER|BACKUP`; per-run wall limit `CODEX_TIMEOUT_MIN` (45); `CODEX_WORKDIR` (repo root); `CODEX_DRY=1` prints the plan only.

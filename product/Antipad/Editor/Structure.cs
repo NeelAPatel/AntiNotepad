@@ -47,7 +47,10 @@ internal sealed class NoteStructure
         return s;
     }
 
-    /// <summary>Fold ranges: headings to the next heading of the same or higher level, fenced blocks, and indented children.</summary>
+    /// <summary>
+    /// Fold ranges: headings to the next heading of the same or higher level or the first gap of two blank lines
+    /// (whichever comes first), fenced blocks, and indented children.
+    /// </summary>
     public IEnumerable<NewFolding> Folds(TextDocument doc, string[] lines, bool codeNote)
     {
         var folds = new List<NewFolding>();
@@ -67,6 +70,8 @@ internal sealed class NoteStructure
                     if (InFence[j + 1]) continue;
                     var l = NoteColorizer.HeadingLevel(lines[j].TrimStart());
                     if (l > 0 && l <= level) { end = j; break; }
+                    // Two blank lines in a row close the section, so a heading never swallows the rest of the note.
+                    if (j > i + 1 && lines[j].Trim().Length == 0 && lines[j - 1].Trim().Length == 0) { end = j; break; }
                 }
                 end = LastContent(i + 1, end);
                 if (end > i + 1) folds.Add(new NewFolding(EndOf(i + 1), EndOf(end)) { Name = " … " });

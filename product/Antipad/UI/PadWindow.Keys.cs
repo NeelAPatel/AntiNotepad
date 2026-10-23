@@ -1,5 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Threading;
+using Antipad.Platform;
 
 namespace Antipad.UI;
 
@@ -159,11 +161,71 @@ internal sealed partial class PadWindow
         if (_settingsWindow is { } open) { open.Activate(); return; }
         var window = new SettingsWindow(this);
         _settingsWindow = window;
-        window.Closed += (_, _) => { if (ReferenceEquals(_settingsWindow, window)) _settingsWindow = null; };
+        _settingsGone = new WeakReference(window);
+        window.Closed += (_, _) =>
+        {
+            if (ReferenceEquals(_settingsWindow, window)) _settingsWindow = null;
+            // Hand the closed window's memory back now; the hidden-pad trim would wait until the pad hides.
+            _settingsTrim.Stop(); _settingsTrim.Start();
+        };
         window.Show();
     }
 
     internal void CloseSettings() => _settingsWindow?.Close();
+
+    private WeakReference? _settingsGone;
+    private DispatcherTimer? _settingsTrimTimer;
+    private DispatcherTimer _settingsTrim => _settingsTrimTimer ??= NewSettingsTrim();
+
+    /// <summary>
+    /// 1.5 s after Settings closes: collect the window, its preview editor and their caches, compact the heap and give
+    /// unused pages back to Windows, so memory returns to where it was before Settings opened.
+    /// </summary>
+    private DispatcherTimer NewSettingsTrim()
+    {
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.5) };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            if (_settingsWindow is not null) return;
+            System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
+            GC.WaitForPendingFinalizers();
+            GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
+            Native.TrimWorkingSet();
+            if (Program.IsDev)
+            {
+                using var self = System.Diagnostics.Process.GetCurrentProcess();
+                Program.Log($"settings closed: freed={!(_settingsGone?.IsAlive ?? false)} managed={GC.GetTotalMemory(false) / 1048576.0:F1}MB private={self.PrivateMemorySize64 / 1048576.0:F0}MB ws={self.WorkingSet64 / 1048576.0:F0}MB threads={self.Threads.Count}");
+            }
+        };
+        return timer;
+    }
+
+    /// <summary>Dev only (ANTIPAD_DEBUG_SETTINGS_CYCLES=n): opens and closes Settings n times, logging memory, to catch leaks.</summary>
+    internal async void CycleSettingsForDev()
+    {
+        if (!Program.IsDev || !int.TryParse(Environment.GetEnvironmentVariable("ANTIPAD_DEBUG_SETTINGS_CYCLES"), out var cycles)) return;
+        await Task.Delay(1500);
+        void Mem(string when)
+        {
+            using var self = System.Diagnostics.Process.GetCurrentProcess();
+            Program.Log($"cycle {when}: private={self.PrivateMemorySize64 / 1048576.0:F0}MB ws={self.WorkingSet64 / 1048576.0:F0}MB threads={self.Threads.Count} managed={GC.GetTotalMemory(false) / 1048576.0:F1}MB");
+        }
+        Mem("start");
+        for (var i = 0; i < cycles; i++)
+        {
+            OpenSettings();
+            _settingsWindow?.ShowSection("feel");
+            await Task.Delay(300);
+            _settingsWindow?.FocusPreview();
+            // Idle on the page with the live trace: memory should go flat once the trace stops (2 s after the last motion).
+            for (var s = 1; s <= 6; s++) { await Task.Delay(1000); Mem($"{i + 1} open {s}s"); }
+            CloseSettings();
+            await Task.Delay(2500);
+            Mem($"{i + 1} closed+trim");
+        }
+    }
 
     /// <summary>
     /// Settings lost focus or closed. Moving from the pad into Settings skipped the click-away rule; if focus has now gone

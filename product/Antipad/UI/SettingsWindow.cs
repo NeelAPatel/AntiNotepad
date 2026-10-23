@@ -90,6 +90,12 @@ internal sealed partial class SettingsWindow : Window
         Restyle();
     }
 
+    /// <summary>Dev tooling: open a given section without a click.</summary>
+    internal void ShowSection(string id) => Show(id, animate: false);
+
+    /// <summary>Dev tooling: click into the preview (starts its caret blink, the path that once leaked the window).</summary>
+    internal void FocusPreview() => _preview.FocusEditor();
+
     /// <summary>Settings were replaced wholesale (restore defaults, undo): rebuild what's on screen.</summary>
     public void Refresh()
     {
@@ -310,6 +316,16 @@ internal sealed partial class SettingsWindow : Window
                 SubRow("Show", Seg([("fade", "Fade while typing"), ("always", "Always visible")], S.Chrome, v => Set(() => S.Chrome = v, rows: true))),
                 S.Chrome != "fade" ? null : SubRow("Fade after",
                     Dropdown([("800", "0.8 seconds"), ("1600", "1.6 seconds"), ("3000", "3 seconds"), ("6000", "6 seconds")], Closest(S.FadeAfterMs, 800, 1600, 3000, 6000), v => Set(() => S.FadeAfterMs = int.Parse(v))))),
+            Row(null, "Bar style", S.Bars switch
+                {
+                    "overlay" => "Both bars slide in over the note when the pointer reaches the top or bottom edge",
+                    "float" => "The top bar slides in at the top; the pager floats just below the window from the bottom edge",
+                    _ => "A top bar above the note and the pager below it",
+                },
+                Seg([("docked", "Docked"), ("overlay", "Overlay"), ("float", "Float below")], S.Bars, v => Set(() => S.Bars = v, rows: true))),
+            Row(null, "Edge fade", "Text fades into the top and bottom edges where there is more to scroll", Toggle(S.EdgeFade, v => Set(() => S.EdgeFade = v), "Edge fade")),
+            Row(null, "Menu action row", "Cut, copy, paste and delete as buttons across the top", Toggle(S.MenuActionRow, v => Set(() => S.MenuActionRow = v), "Menu action row")),
+            Row(null, "Colored menu icons", "Tint a few menu icons with your accent", Toggle(S.MenuColorIcons, v => Set(() => S.MenuColorIcons = v), "Colored menu icons")),
             Row(null, "Dim when pinned", "A pinned pad fades back while you work elsewhere", Toggle(S.DimWhenPinned, v => Set(() => S.DimWhenPinned = v), "Dim when pinned")),
         ]));
     }
