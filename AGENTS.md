@@ -2,8 +2,8 @@
 
 Windows 11 hotkey-summoned, chrome-free translucent scratchpad: a recreation of AntiNote (its functionality and feel, not a 1:1
 copy). Avalonia 12 + AvaloniaEdit 12 on .NET 10, in `product/AntiNotepad`. Speed of show/hide is the priority. US spelling in UI text.
-The earlier AntiQuickPad project (spikes A/B, `src/AntiQuickPad`) is retired and kept read-only in `archive/`; nothing in the
-product may depend on it.
+The earlier AntiQuickPad project (spikes A/B, `src/AntiQuickPad`) is retired and removed; it lives only in git history and the
+tags `v0.1`, `antipad-v*` and `baseline/m8c-v1-compact`.
 
 ## Rules
 - Local git only. Branches: `main` (tagged releases only, on user say-so) > `dev` (integration) > `feat/<ID-slug>` (one per task,

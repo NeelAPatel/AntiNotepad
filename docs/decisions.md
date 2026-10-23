@@ -1,10 +1,13 @@
 # Decisions (locked unless the user reopens them)
 
-Newest first. History before 2026-10-23 is in `archive/` (overnight build log and write-up).
+Newest first. History before 2026-10-23 (overnight build log and write-up) is in git history and the tags `v0.1`,
+`antipad-v*` and `baseline/m8c-v1-compact`.
 
 ## 2026-10-23
+- **Archive removed** (C1-remove-archive): the `archive/` folder (old AntiQuickPad project, Antipad spike notes) is deleted
+  from the tree; reach it through git history or the tags above.
 - **Project**: AntiNotepad replaces AntiQuickPad. The old app, spikes A/B, demos, UI-audit kit and old docs moved to
-  `archive/antiquickpad/` (read-only; nothing depends on it).
+  `archive/antiquickpad/` (since removed, see above).
 - **Icons**: Segoe Fluent Icons, 16 px, palette Ink, drawn once (no faux-bold), snapped to whole pixels. Toolbar and pager
   buttons 32 px square with a 4 px rounded hover. The newer Fluent UI System Icons font stays bundled for Settings icons.
 - **Right-click menu**: AntiNotepad's own popup in Windows 11 style (designed in the Icon Lab): 8 px rounded panel, 4 px insets,

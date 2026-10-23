@@ -27,7 +27,7 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
 - First transition: save and exit any old Antipad/AntiQuickPad or repo-built real-data copy through its own tray menu before
   installing. The old identity cannot be controlled by the new executable. Retire its old shortcuts/autostart entries and
   remove obsolete binary folders (such as `build/antipad` or `build/antinotepad`) manually after verifying the installed copy.
-  Preserve real data, archive sources and the repo dev copy. Do not launch old binaries against real notes again.
+  Preserve real data and the repo dev copy. Do not launch old binaries against real notes again.
 
 ## Dev copy
 - `pwsh -NoProfile -File tools/dev.ps1 [-Fresh]` or `bash tools/dev.sh [--fresh]` builds Debug into `build/dev` and launches that

@@ -1,5 +1,0 @@
-error: no matching package named `gpui-pre` found
-location searched: crates.io index
-required by package `antiquickpad-spike-b v0.1.0 (F:\LocalVSProj\Visual Studio Apps\AntiQuickPad\spikes\B)`
-note: offline mode (via `--offline`) can sometimes cause surprising resolution failures
-help: if this error is too confusing you may wish to retry without `--offline`

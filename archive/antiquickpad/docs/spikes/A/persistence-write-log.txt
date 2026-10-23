@@ -1,8 +1,0 @@
-2026-10-17T06:02:55.8224068+00:00 +532.0ms visible=True focused=False opened os=Microsoft Windows 10.0.26340 framework=.NET 10.0.13 dpi=96 restoredNotes=1 processToOpened=927.8ms
-2026-10-17T06:02:55.8246204+00:00 +534.0ms visible=True focused=False hotkey-register result=False error=1409
-2026-10-17T06:02:56.0133757+00:00 +722.7ms visible=True focused=True autosave notes=1 path=C:\Users\Neel\AppData\Local\Temp\aqp-feedback-757973e1503b44289ad7ee69655465d5.json
-2026-10-17T06:02:56.0134170+00:00 +722.8ms visible=True focused=True text-changed note=0 chars=412 focused=True
-2026-10-17T06:02:56.0150572+00:00 +724.4ms visible=True focused=True autosave notes=1 path=C:\Users\Neel\AppData\Local\Temp\aqp-feedback-757973e1503b44289ad7ee69655465d5.json
-2026-10-17T06:02:56.0190091+00:00 +728.4ms visible=True focused=True persistence-write PASS markerChars=48 notes=1 path=C:\Users\Neel\AppData\Local\Temp\aqp-feedback-757973e1503b44289ad7ee69655465d5.json; actual document edit and autosave
-2026-10-17T06:02:56.0254320+00:00 +734.8ms visible=False focused=False autosave notes=1 path=C:\Users\Neel\AppData\Local\Temp\aqp-feedback-757973e1503b44289ad7ee69655465d5.json
-2026-10-17T06:02:56.0340257+00:00 +743.4ms visible=False focused=False autosave notes=1 path=C:\Users\Neel\AppData\Local\Temp\aqp-feedback-757973e1503b44289ad7ee69655465d5.json
