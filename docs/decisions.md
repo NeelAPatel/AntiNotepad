@@ -4,6 +4,9 @@ Newest first. History before 2026-10-23 (overnight build log and write-up) is in
 `antipad-v*` and `baseline/m8c-v1-compact`.
 
 ## 2026-10-23
+- **Branches** (C2-stale-branch-cleanup): only `main` and `dev` are kept long-term; old spike, lab and feature branches are
+  deleted. The Icon Lab (`--iconlab`) is gone with its branch and gets remade if needed; the N3 release plan is kept as tag
+  `proposal/N3-release-plan`.
 - **Archive removed** (C1-remove-archive): the `archive/` folder (old AntiQuickPad project, Antipad spike notes) is deleted
   from the tree; reach it through git history or the tags above.
 - **Project**: AntiNotepad replaces AntiQuickPad. The old app, spikes A/B, demos, UI-audit kit and old docs moved to

@@ -41,7 +41,6 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
   the separate instance and bypasses real-data/registry migration, but has no badge. Merely inheriting `CLAUDECODE` does nothing.
 - Headless Codex must not run these launch scripts; build to `build/<task>-check` and use `--selftest` only.
 - `pwsh tools/press-hotkey.ps1 -Key D` presses the dev hotkey (the first press after launch may only prewarm).
-- Icon Lab (design spike): run the dev build with the dev environment above and `--iconlab`.
 - Dev-only switches: `ANTINOTEPAD_DEBUG_SETTINGS_CYCLES=n` opens/closes Settings n times and logs memory; F12 / Shift+F12 /
   Ctrl+F12 write captures to `ANTINOTEPAD_SHOTS` (captures miss the Acrylic backdrop).
 - App log: `<data>/antinotepad.log` (hotkey timings, memory lines, crashes as `crash ...`).

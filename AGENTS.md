@@ -9,8 +9,8 @@ tags `v0.1`, `antipad-v*` and `baseline/m8c-v1-compact`.
 - Local git only. Branches: `main` (tagged releases only, on user say-so) > `dev` (integration) > `feat/<ID-slug>` (one per task,
   off dev, merged back with --no-ff). Commit per completed task. Tags: `antinotepad-vN`.
 - Name items and tasks `<ID>-<short-slug>` everywhere (chat, briefs, commits, reports). Never a bare ID.
-- Design changes go lab-first: show them in a spike or the Icon Lab (`AntiNotepad.exe --iconlab`), wait for the user's approval,
-  then implement.
+- Design changes go lab-first: show them in a spike or lab build first, wait for the user's approval, then
+  implement.
 - The user's installed copy (`%LOCALAPPDATA%\Programs\AntiNotepad`, real data) is never typed into or stopped during dev work.
   Upgrade only on user request with `tools/install.ps1`; see `docs/dev-loop.md`. Dev work uses `tools/dev.ps1` or `tools/dev.sh`.
 - Tests are small `--selftest` checks of capability, not full coverage.
