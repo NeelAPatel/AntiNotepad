@@ -2,7 +2,7 @@
 # Kill (only the dev instance this script started), rebuild, relaunch Antipad against throwaway test data.
 # Never touches an Antipad the user launched: dev builds go to build/dev, run as instance "Antipad-dev"
 # with hotkey Ctrl+Alt+Shift+D, and only the PID in build/dev.pid is ever killed.
-# Usage: spike-notes/dev.sh [--fresh]   (--fresh wipes build/testdata first)
+# Usage: tools/dev.sh [--fresh]   (--fresh wipes build/testdata first)
 # HEADLESS RUNS: do not use this script. Build to build/headless and verify with --selftest only.
 cd "$(dirname "$0")/.."
 if [ -f build/dev.pid ]; then taskkill //PID "$(cat build/dev.pid)" //F >/dev/null 2>&1; rm -f build/dev.pid; sleep 0.5; fi

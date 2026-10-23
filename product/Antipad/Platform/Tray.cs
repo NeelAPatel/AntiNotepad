@@ -47,6 +47,6 @@ internal sealed class Tray : IDisposable
 
     public void Dispose() { _tray.IsVisible = false; _tray.Dispose(); }
 
-    // Same multi-size icon as the exe (spike-notes/make-icon.ps1), so Windows picks the sharp 16/32 px frame.
+    // Same multi-size icon as the exe (tools/make-icon.ps1), so Windows picks the sharp 16/32 px frame.
     private static WindowIcon CreateIcon() => new(Avalonia.Platform.AssetLoader.Open(new Uri("avares://Antipad/antipad.ico")));
 }

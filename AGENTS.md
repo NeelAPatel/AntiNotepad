@@ -1,26 +1,31 @@
-# AntiQuickPad
+# Antipad
 
-Windows 11 hotkey-summoned, chrome-free translucent scratchpad, inspired by AntiNote (functionality, not a 1:1 copy). Speed of show/hide is the priority. Stack is undecided: spikes A (Avalonia + AvaloniaEdit) and B (GPUI + GPUI Kit) are being compared; C (Tauri + CodeMirror 6) is backup only.
+Windows 11 hotkey-summoned, chrome-free translucent scratchpad: a recreation of AntiNote (its functionality and feel, not a 1:1
+copy). Avalonia 12 + AvaloniaEdit 12 on .NET 10, in `product/Antipad`. Speed of show/hide is the priority. US spelling in UI text.
+The earlier AntiQuickPad project (spikes A/B, `src/AntiQuickPad`) is retired and kept read-only in `archive/`; nothing in the
+product may depend on it.
 
 ## Rules
-- Local git only. No GitHub. Branches: `main` (tagged releases only) > `dev` (integration) > `feat/<name>` (one per task, branched off dev, merged back to dev with --no-ff). Commit per completed task on its feat branch. Merge dev into main only at a release tag, on user say-so.
-- One writer per folder: `spikes/A`, `spikes/B`, `docs/`, `.coord/`.
-- Keep this file minimal. Put detail in linked docs.
-- Name items and tasks as `<ID>-<short-slug>` everywhere (chat, briefs, commits, reports), e.g. `F26-quiet-footer-count-alignment`, `T-015-alignment-fixes`. Never a bare ID.
-- Tests are small smoke checks of capability, not app coverage. Disposable.
-- First-party libraries first; other stacks/libraries only on a concrete need, and only if maintained and documented.
-- Update `.coord/STATUS.md` at every dispatch, milestone and completion. Never rely on chat memory.
-- Function vs UI split: function tasks never touch layouts or tokens; UI tasks never touch Core, ViewModels or the controller. Which files are which: `docs/function-contract.md` (Ownership).
+- Local git only. Branches: `main` (tagged releases only, on user say-so) > `dev` (integration) > `feat/<ID-slug>` (one per task,
+  off dev, merged back with --no-ff). Commit per completed task. Tags: `antipad-vN`.
+- Name items and tasks `<ID>-<short-slug>` everywhere (chat, briefs, commits, reports). Never a bare ID.
+- Design changes go lab-first: show them in a spike or the Icon Lab (`Antipad.exe --iconlab`), wait for the user's approval,
+  then implement.
+- The user's own copy (`build/antipad`, real data) is never typed into, killed or rebuilt without the swap routine in
+  `docs/dev-loop.md`. Dev work runs on the separate dev instance.
+- Tests are small `--selftest` checks of capability, not full coverage.
+- First-party libraries first; others only on a concrete need, and only if maintained and documented.
+- Update `.coord/STATUS.md` at every dispatch, milestone and completion. Keep this file minimal; detail goes in linked docs.
 
-## Roles (Codex usage first, Claude manages)
-- CEO / manager: whichever Claude session is driving (currently Sonnet 5.5 medium; Opus 5.5 is the intended final reviewer when available). Directors: Codex `gpt-6.1-sol` medium. Workers: Codex `gpt-6-luna` high (backup `gpt-5.6-luna` xhigh). Junior reviewer: Claude Sonnet 5.5 medium (visible session).
+## Roles
+- Implementation: Codex. Director `gpt-6.1-sol` medium, workers `gpt-6-luna` xhigh. Launch and routing: `docs/agents.md`.
+- Manager: the driving Claude session. Writes briefs, gates results (build, selftest, a look in the dev copy), commits (Codex
+  cannot write to .git), relays to the user. Keeps its own implementation to tiny gate fixes.
 
 ## Read when
-- Starting or resuming any work: `.coord/STATUS.md`, then `.coord/HANDOFF.md`.
-- Launching or messaging agents: `docs/agents.md`.
-- Building or judging a spike: `docs/spike-spec.md`.
-- Why something was chosen: `docs/decisions-log.md`.
-- User feedback status: `docs/feedback/TRACKER.md` is the single live list. Update it in the same step as ANY change (new item, status, priority), never only in STATUS or chat. Keep the `| # | ... | Status | Priority | ... |` table shape. Live board: https://claude.ai/artifact/Q4k56bd74Y4bmtCMLwoG5X (source docs/tracker-board.html). After every TRACKER.md change run `python .coord/tools/tracker-sync.py` (refreshes the board's embedded snapshot), then the Claude manager writes the printed JSON to the board's db doc `tracker/current` (ArtifactData get for its version, then set with file_path + if_version). Codex agents skip the db write; the manager syncs after their run.
-- Adding or changing a function, or building/restyling a shell: `docs/function-contract.md` (command IDs, owners, ownership by folder).
-- Code layout and dependency rule: `docs/architecture.md` (Views -> ViewModels -> Core).
-- Your task: `.coord/tasks/<id>.md`; write your result to `.coord/reports/<id>.md`.
+- Starting or resuming work: `.coord/STATUS.md`.
+- Building, running, swapping the user's copy, dev instance, hotkeys, data folders: `docs/dev-loop.md`.
+- Launching or briefing Codex: `docs/agents.md`. Briefs go in `.coord/tasks/<ID-slug>.md`, reports in `.coord/reports/`.
+- Why something is the way it is (locked choices): `docs/decisions.md`.
+- Code layout: `product/Antipad` — `Model/` (store, settings, notes), `Editor/` (PadView, colorizers, renderers, motion),
+  `UI/` (windows, Settings, menu, Kit controls), `Calc/` (math mode), `Theme/` (palettes), `Platform/` (Win32, tray, hotkey).

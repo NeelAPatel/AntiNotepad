@@ -3,4 +3,4 @@
 build/
 product/**/bin/
 product/**/obj/
-spike-notes/watchdog.log
+archive/antiquickpad/spike-notes/watchdog.log
