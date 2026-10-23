@@ -10,7 +10,7 @@ Headless, in the background; the process exit wakes the manager:
 | Tier | Model / effort | Runs per day (local counter) |
 |---|---|---|
 | director | gpt-6.1-sol medium (delegates to gpt-6-luna xhigh subagents) | 20 |
-| worker | gpt-6-luna high | 10 |
+| worker | gpt-6-luna xhigh | 10 |
 | backup | gpt-5.6-luna xhigh | 5 |
 
 - The wrapper adds the only working sandbox route on this machine (`-c 'windows.sandbox="unelevated"'` with

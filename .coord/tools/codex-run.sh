@@ -12,7 +12,7 @@ LEDGER="$ROOT/.coord/logs/usage.tsv"; mkdir -p "$ROOT/.coord/logs" "$ROOT/.coord
 
 tier() { case "$1" in
   director) echo "gpt-6.1-sol medium ${CODEX_MAX_DIRECTOR:-20}";;
-  worker)   echo "gpt-6-luna high ${CODEX_MAX_WORKER:-10}";;
+  worker)   echo "gpt-6-luna xhigh ${CODEX_MAX_WORKER:-10}";;
   backup)   echo "gpt-5.6-luna xhigh ${CODEX_MAX_BACKUP:-5}";;
   *) echo "unknown role $1" >&2; return 1;; esac; }
 next() { case "$1" in director) echo worker;; worker) echo backup;; *) echo "";; esac; }  # failover chain

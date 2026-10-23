@@ -227,7 +227,7 @@ internal sealed class SmoothCaret : IBackgroundRenderer
     {
         _pad = pad; _editor = pad.Editor;
         _editor.TextArea.Caret.PositionChanged += (_, _) => Moved();
-        _editor.TextArea.GotFocus += (_, _) => { _on = true; _blink.Start(); Invalidate(); };
+        _editor.TextArea.GotFocus += (_, _) => { _on = true; UpdateBlink(); Invalidate(); };
         _editor.TextArea.LostFocus += (_, _) => { _blink.Stop(); Invalidate(); };
         _blink.Tick += (_, _) =>
         {
@@ -235,6 +235,18 @@ internal sealed class SmoothCaret : IBackgroundRenderer
             if (!_pad.Settings.CaretBlink || (DateTime.Now - _movedAt).TotalMilliseconds < 600) { if (!_on) { _on = true; Invalidate(); } return; }
             _on = !_on; Invalidate();
         };
+    }
+
+    public void SettingsChanged()
+    {
+        UpdateBlink();
+        Invalidate();
+    }
+
+    private void UpdateBlink()
+    {
+        if (_editor.TextArea.IsFocused && _pad.Settings.CaretBlink) _blink.Start();
+        else { _blink.Stop(); _on = true; }
     }
 
     private Rect? Target()

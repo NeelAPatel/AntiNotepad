@@ -13,6 +13,8 @@ namespace AntiNotepad.Editor;
 /// <summary>Caret-side completion: mode keywords on line 1, and `/commands` anywhere (AntiNote's extensions, built in).</summary>
 internal static class Completion
 {
+    private static readonly JsonSerializerOptions PrettyJsonOptions = new() { WriteIndented = true };
+
     public sealed record Command(string Name, string Summary, Func<PadView, string?, string?> Run);
 
     public static event Action<PadView>? OcrRequested;
@@ -177,7 +179,7 @@ internal static class Completion
         try
         {
             using var json = JsonDocument.Parse(pad.Editor.Document.Text.Trim());
-            pad.Editor.Document.Text = JsonSerializer.Serialize(json.RootElement, new JsonSerializerOptions { WriteIndented = true });
+            pad.Editor.Document.Text = JsonSerializer.Serialize(json.RootElement, PrettyJsonOptions);
         }
         catch (JsonException ex) { pad.RaiseToast("Not valid JSON · " + ex.Message.Split('.')[0]); }
     }

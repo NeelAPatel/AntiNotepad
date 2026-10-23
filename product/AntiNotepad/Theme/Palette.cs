@@ -102,7 +102,4 @@ public sealed record Palette(
     public static IEnumerable<Palette> For(bool dark) => All.Where(p => p.Dark == dark);
 
     private static Color C(string hex) => Color.Parse(hex);
-
-    public IBrush B(Color c) => new SolidColorBrush(c);
-    public IBrush Brush(Color c, double alpha) => new SolidColorBrush(c, alpha);
 }

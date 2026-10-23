@@ -29,7 +29,6 @@ public sealed class Note
     public NoteMode ModeCache { get; set; }
 
     [JsonIgnore] public bool Dirty { get; set; }
-    [JsonIgnore] public bool IsLoaded => _text is not null || _live is not null;
 
     [JsonIgnore]
     public string Text
@@ -170,8 +169,6 @@ public sealed class Store
         Directory.CreateDirectory(_bodies);
         Note.LoadBody = ReadBody;
     }
-
-    public string Folder => Path.GetDirectoryName(_index)!;
 
     private string BodyPath(string id) => Path.Combine(_bodies, id + ".md");
 

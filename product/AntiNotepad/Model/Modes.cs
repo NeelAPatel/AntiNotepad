@@ -17,8 +17,6 @@ public static class Modes
         new("clipboard", NoteMode.Clipboard, "Collects everything you copy while it exists", "(copy something)"),
     ];
 
-    public static readonly string[] CodeLanguages = ["py", "js", "ts", "cs", "json", "html", "xml", "css", "sql", "ps1", "sh", "java", "cpp", "c", "rs", "go", "md"];
-
     /// <summary>Mode of a note from its first line, plus the keyword's length and an optional argument (code language).</summary>
     public static (NoteMode Mode, int KeywordLength, string? Argument) Detect(string text)
     {

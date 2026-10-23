@@ -4,7 +4,12 @@ Updated: 2026-10-23
 Product: AntiNotepad (`product/AntiNotepad`).
 
 ## Now
-- A1-codebase-audit done (2026-10-23) on `feat/A1-codebase-audit`, not merged (waits for the user): `docs/audit/A1-codebase-audit.md`,
+- A2-dead-code-tidy, A3-runtime-tidy, A4-tooling-tidy merged into `feat/A1-codebase-audit` (2026-10-23) after manager review.
+  They cover the 7 safe A1 fixes (A1-18, 21, 22, 23, 24, 25, 26). The merged branch builds with 0 warnings and passes SELFTEST.
+  Its worktrees are removed. Dev-copy check passed: the caret stays solid with blinking off (6/6 captures; the blinking-on
+  control was dark in 2/6), and the user confirmed the tray slot menu (a slot titled "empty" is enabled).
+  Merged into dev with the audit.
+- A1-codebase-audit merged into dev (2026-10-23): `docs/audit/A1-codebase-audit.md`,
   27 findings (6 High, 13 Medium, 8 Low). No fixes made. Next: the user picks the findings that become follow-up tasks.
 - C1-remove-archive merged into dev (2026-10-23): `archive/` deleted; old AntiQuickPad and spike notes live in git history
   and the tags `v0.1`, `antipad-v*`, `baseline/m8c-v1-compact`.

@@ -21,7 +21,6 @@ public sealed class SingleInstanceService : IDisposable
     private bool _disposed;
 
     public bool IsPrimary { get; }
-    public bool WasAbandoned { get; }
 
     public SingleInstanceService(Action onSecondLaunch, string? applicationId = null, Action? onQuit = null)
     {
@@ -40,7 +39,7 @@ public sealed class SingleInstanceService : IDisposable
         try
         {
             try { IsPrimary = _mutex.WaitOne(0); }
-            catch (AbandonedMutexException) { IsPrimary = true; WasAbandoned = true; }
+            catch (AbandonedMutexException) { IsPrimary = true; }
 
             if (IsPrimary)
             {

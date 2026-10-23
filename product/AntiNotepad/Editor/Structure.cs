@@ -21,14 +21,13 @@ internal sealed class NoteStructure
     public static NoteStructure Build(string[] lines)
     {
         var s = new NoteStructure { Indent = new int[lines.Length + 2], InFence = new bool[lines.Length + 2] };
-        Fence? open = null;
         int openLine = 0; string? lang = null;
         for (var i = 0; i < lines.Length; i++)
         {
             var t = lines[i].TrimStart();
             if (t.StartsWith("```"))
             {
-                if (open is null && openLine == 0) { openLine = i + 1; lang = t[3..].Trim().ToLowerInvariant(); if (lang.Length == 0) lang = null; }
+                if (openLine == 0) { openLine = i + 1; lang = t[3..].Trim().ToLowerInvariant(); if (lang.Length == 0) lang = null; }
                 else { s.Fences.Add(new Fence(openLine, i + 1, lang)); openLine = 0; lang = null; }
             }
             s.InFence[i + 1] = openLine != 0 || t.StartsWith("```");

@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Threading;
 
 namespace AntiNotepad.UI;
 
@@ -31,11 +30,4 @@ internal static class Anim
     }
 
     public static double EaseOut(double t) => 1 - Math.Pow(1 - t, 3);
-
-    public static void After(double ms, Action action)
-    {
-        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(ms) };
-        timer.Tick += (_, _) => { timer.Stop(); action(); };
-        timer.Start();
-    }
 }

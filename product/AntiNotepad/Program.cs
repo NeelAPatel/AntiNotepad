@@ -113,7 +113,7 @@ public sealed class App : Application
             var window = new PadWindow(store);
             window.QuitRequested = () => { _tray?.Dispose(); desktop.Shutdown(); };
             _tray = new Tray(window.ShowResident, () => { window.ShowResident(); window.NewNote(); }, window.OpenSettings, window.Quit,
-                () => store.Data.Slots.Select(n => n.IsEmpty ? "empty" : n.Title).ToList(),
+                () => store.Data.Slots.Select(n => (n.Title, !n.IsEmpty)).ToList(),
                 slot => { window.ShowResident(); if (store.Data.ViewSlot != slot) window.OpenSlot(slot); });
             window.HotkeyStatusChanged += status => _tray.Tooltip = $"{AppInfo.Name} · {status}";
             window.InstallHooks();

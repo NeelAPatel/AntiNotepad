@@ -153,6 +153,7 @@ internal sealed class PadView : Grid
     public void ApplyLook(Palette palette, Settings settings)
     {
         Palette = palette; Settings = settings;
+        _caret.SettingsChanged();
         _paper?.InvalidateVisual();
         Editor.FontFamily = new FontFamily($"{settings.Font}, Cascadia Mono, Consolas, monospace");
         Editor.FontSize = settings.FontSize;

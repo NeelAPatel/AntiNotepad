@@ -9,7 +9,7 @@ internal sealed class Tray : IDisposable
 {
     private readonly TrayIcon _tray;
 
-    public Tray(Action show, Action newNote, Action settings, Action quit, Func<IReadOnlyList<string>>? slotTitles = null, Action<int>? openSlot = null)
+    public Tray(Action show, Action newNote, Action settings, Action quit, Func<IReadOnlyList<(string Title, bool Occupied)>>? slotTitles = null, Action<int>? openSlot = null)
     {
         var menu = new NativeMenu();
         void Add(string label, Action action) { var item = new NativeMenuItem(label); item.Click += (_, _) => action(); menu.Items.Add(item); }
@@ -28,7 +28,8 @@ internal sealed class Tray : IDisposable
                 for (var i = 0; i < titles.Count; i++)
                 {
                     var n = i + 1;
-                    var item = new NativeMenuItem($"{n}  {titles[i]}") { IsEnabled = titles[i] != "empty" };
+                    var slot = titles[i];
+                    var item = new NativeMenuItem($"{n}  {(slot.Occupied ? slot.Title : "empty")}") { IsEnabled = slot.Occupied };
                     item.Click += (_, _) => openSlot(n);
                     slots.Items.Add(item);
                 }

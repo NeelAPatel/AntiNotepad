@@ -21,9 +21,7 @@ internal static class Glyph
 }
 
 /// <summary>
-/// A Segoe Fluent Icons glyph drawn one weight heavier. The font ships a single light weight, so the glyph is
-/// drawn with four extra copies nudged by <c>weight</c> px around it (faux bold); with grayscale antialiasing
-/// that reads as a cleanly thicker stroke.
+/// A Segoe Fluent Icons glyph. Weight 0 draws it once; positive weights add four offset copies for faux bold.
 /// </summary>
 internal sealed class GlyphIcon(string glyph, Color color, double size = 13, double weight = 0.15, FontFamily? font = null) : Control
 {
@@ -34,18 +32,13 @@ internal sealed class GlyphIcon(string glyph, Color color, double size = 13, dou
 
     protected override Size MeasureOverride(Size availableSize) => new(size + 2, size + 2);
 
-    /// <summary>Dev (icon lab): place the glyph on whole device pixels, as Windows does, instead of wherever centring lands.</summary>
-    public static bool Snap = true;
-
     public override void Render(DrawingContext context)
     {
         var t = Text(new SolidColorBrush(color));
         var origin = new Point((Bounds.Width - t.Width) / 2, (Bounds.Height - t.Height) / 2);
-        if (Snap)
-        {
-            var scale = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
-            origin = new Point(Math.Round(origin.X * scale) / scale, Math.Round(origin.Y * scale) / scale);
-        }
+        // Snap the centered glyph to whole device pixels for crisp Windows rendering.
+        var scale = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
+        origin = new Point(Math.Round(origin.X * scale) / scale, Math.Round(origin.Y * scale) / scale);
         // Natural weight: one copy. (Five copies on the same spot stack their antialiased edges into a fuzzy outline.)
         if (weight <= 0) { context.DrawText(t, origin); return; }
         foreach (var (dx, dy) in new[] { (-weight, 0.0), (weight, 0.0), (0.0, -weight), (0.0, weight), (0.0, 0.0) })
@@ -98,31 +91,7 @@ internal static class Kit
     public static TextBlock Text(string text, Color color, double size = 13, FontWeight weight = FontWeight.Normal) =>
         new() { Text = text, Foreground = new SolidColorBrush(color), FontSize = size, FontWeight = weight, VerticalAlignment = VerticalAlignment.Center };
 
-    /// <summary>A row of mutually exclusive pills. Calls <paramref name="pick"/> with the chosen value.</summary>
-    public static Control Segmented(Palette p, IReadOnlyList<(string Value, string Label)> options, string current, Action<string> pick)
-    {
-        var row = new WrapPanel { Orientation = Orientation.Horizontal };
-        foreach (var (value, label) in options)
-        {
-            var selected = value == current;
-            var text = Text(label, selected ? p.Ink : p.Muted, 12.5, selected ? FontWeight.SemiBold : FontWeight.Normal);
-            text.Margin = new Thickness(10, 4);
-            var button = Plain(text, p, radius: 8);
-            button.Margin = new Thickness(0, 0, 4, 4);
-            if (selected && button.Content is Border b)
-            {
-                b.Background = new SolidColorBrush(p.Accent, p.Dark ? .22 : .18);
-                button.PointerExited += (_, _) => b.Background = new SolidColorBrush(p.Accent, p.Dark ? .22 : .18);
-            }
-            var chosen = value;
-            button.Click += (_, _) => pick(chosen);
-            Avalonia.Automation.AutomationProperties.SetName(button, label);
-            row.Children.Add(button);
-        }
-        return row;
-    }
-
-    /// <summary>Independent on/off pills (several can be on), same shape as Segmented.</summary>
+    /// <summary>Independent on/off pills (several can be on).</summary>
     public static Control Toggles(Palette p, IReadOnlyList<(string Value, string Label)> options, Func<string, bool> isOn, Action<string> toggle)
     {
         var row = new WrapPanel { Orientation = Orientation.Horizontal };
@@ -144,23 +113,6 @@ internal static class Kit
             row.Children.Add(button);
         }
         return row;
-    }
-
-    public static Control Switch(Palette p, string label, bool on, Action<bool> set, string? hint = null)
-    {
-        var knob = new Border { Width = 14, Height = 14, CornerRadius = new CornerRadius(7), Background = new SolidColorBrush(on ? p.Surface : p.Muted), HorizontalAlignment = on ? HorizontalAlignment.Right : HorizontalAlignment.Left, Margin = new Thickness(3, 0) };
-        var track = new Border { Width = 36, Height = 20, CornerRadius = new CornerRadius(10), Background = on ? new SolidColorBrush(p.Accent) : new SolidColorBrush(p.Ink, .12), Child = knob, VerticalAlignment = VerticalAlignment.Center };
-        var labels = new StackPanel { Spacing = 1, VerticalAlignment = VerticalAlignment.Center };
-        labels.Children.Add(Text(label, p.Ink, 13));
-        if (hint is not null) labels.Children.Add(Text(hint, p.Muted, 11.5));
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,12,Auto"), Margin = new Thickness(8, 5) };
-        grid.Children.Add(labels);
-        Grid.SetColumn(track, 2); grid.Children.Add(track);
-        var button = Plain(grid, p, radius: 8);
-        button.HorizontalAlignment = HorizontalAlignment.Stretch;
-        button.Click += (_, _) => set(!on);
-        Avalonia.Automation.AutomationProperties.SetName(button, label);
-        return button;
     }
 
     /// <summary>Panel title with a close button at the right (Esc does the same).</summary>
