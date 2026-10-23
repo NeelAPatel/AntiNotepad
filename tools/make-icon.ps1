@@ -1,4 +1,4 @@
-# Builds product/Antipad/antipad.ico (PNG-compressed entries 256/64/48/32/16): an amber rounded page with ink lines.
+# Builds product/AntiNotepad/antinotepad.ico (PNG-compressed entries 256/64/48/32/16): an amber rounded page with ink lines.
 Add-Type -AssemblyName System.Drawing
 $sizes = 256, 64, 48, 32, 16
 $pngs = foreach ($s in $sizes) {
@@ -32,5 +32,5 @@ for ($i = 0; $i -lt $sizes.Count; $i++) {
     $wr.Write([uint32]$len); $wr.Write([uint32]$offset); $offset += $len
 }
 foreach ($p in $pngs) { $wr.Write($p) }
-[System.IO.File]::WriteAllBytes((Join-Path $PSScriptRoot '..\product\Antipad\antipad.ico'), $out.ToArray())
+[System.IO.File]::WriteAllBytes((Join-Path $PSScriptRoot '..\product\AntiNotepad\antinotepad.ico'), $out.ToArray())
 "ico written"

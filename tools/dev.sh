@@ -1,17 +1,29 @@
 #!/usr/bin/env bash
-# Kill (only the dev instance this script started), rebuild, relaunch Antipad against throwaway test data.
-# Never touches an Antipad the user launched: dev builds go to build/dev, run as instance "Antipad-dev"
-# with hotkey Ctrl+Alt+Shift+D, and only the PID in build/dev.pid is ever killed.
-# Usage: tools/dev.sh [--fresh]   (--fresh wipes build/testdata first)
-# HEADLESS RUNS: do not use this script. Build to build/headless and verify with --selftest only.
-cd "$(dirname "$0")/.."
-if [ -f build/dev.pid ]; then taskkill //PID "$(cat build/dev.pid)" //F >/dev/null 2>&1; rm -f build/dev.pid; sleep 0.5; fi
-[ "$1" = "--fresh" ] && rm -rf build/testdata
-out=$(dotnet build product/Antipad -c Debug -o build/dev 2>&1)
-echo "$out" | grep -oE "[A-Za-z.]+\.cs\([0-9,]+\): (error|warning) [^[]*" | sort -u
-echo "$out" | grep -q "0 Error(s)" || { echo BUILD FAILED; exit 1; }
-mkdir -p build/testdata build/shots
-ANTIPAD_HOTKEY="Ctrl+Alt+Shift+D" ANTIPAD_DATA="$(cygpath -w "$PWD/build/testdata")" ANTIPAD_SHOTS="$(cygpath -w "$PWD/build/shots")" ./build/dev/Antipad.exe > build/run.log 2>&1 &
-sleep 3
-pid=$(pwsh -NoProfile -Command "(Get-Process Antipad -ErrorAction SilentlyContinue | Where-Object { \$_.Path -like '*\dev\Antipad.exe' } | Select-Object -First 1).Id")
-[ -n "$pid" ] && echo "$pid" > build/dev.pid && echo "RUNNING pid=$pid" || { echo NOT RUNNING; cat build/run.log; }
+# N2-canonical-install-and-dev-badge: keep the shell entry point on the same
+# PID-safe implementation as the PowerShell entry point.
+set -euo pipefail
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)"
+fresh_args=()
+case "$#" in
+  0) ;;
+  1)
+    if [[ "$1" == "--fresh" ]]; then
+      fresh_args=(-Fresh)
+    else
+      printf 'Usage: %s [--fresh]\n' "$0" >&2
+      exit 2
+    fi
+    ;;
+  *)
+    printf 'Usage: %s [--fresh]\n' "$0" >&2
+    exit 2
+    ;;
+esac
+
+if ! command -v pwsh >/dev/null 2>&1; then
+  printf 'pwsh is required to run tools/dev.ps1.\n' >&2
+  exit 127
+fi
+
+exec pwsh -NoLogo -NoProfile -File "$script_dir/dev.ps1" "${fresh_args[@]}"

@@ -25,7 +25,7 @@ Headless, in the background; the process exit wakes the manager:
 - One file per task in `.coord/tasks/<ID-slug>.md`: role line, branch, the exact files in scope, the goal, and "Done means".
 - Codex cannot write to `.git` in its sandbox: it never commits; the manager reviews and commits.
 - Codex cannot see the screen: the manager does the visual check in the dev copy.
-- Codex never launches or kills Antipad; it builds into `build/<task>-check`, runs `--selftest` there, then deletes that folder.
+- Codex never launches or kills AntiNotepad; it builds into `build/<task>-check`, runs `--selftest` there, then deletes that folder.
 - Builds need `AVALONIA_TELEMETRY_OPTOUT=1` inside the sandbox.
 
 ## Reporting to the user

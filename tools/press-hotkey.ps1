@@ -1,5 +1,5 @@
 param([string]$Key = 'D')  # D = dev instance (Ctrl+Alt+Shift+D); S = the real one
-# Presses Ctrl+Alt+Shift+<Key> system-wide (dev aid for testing the Antipad hotkey while it is hidden).
+# Presses Ctrl+Alt+Shift+<Key> system-wide (dev aid for testing the AntiNotepad hotkey while it is hidden).
 Add-Type @"
 using System.Runtime.InteropServices;
 public static class K { [DllImport("user32.dll")] public static extern void keybd_event(byte vk, byte scan, uint flags, System.UIntPtr extra); }

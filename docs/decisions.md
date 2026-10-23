@@ -1,15 +1,15 @@
 # Decisions (locked unless the user reopens them)
 
-Newest first. History before 2026-10-23 is in `archive/antipad-spike/` (overnight build log and write-up).
+Newest first. History before 2026-10-23 is in `archive/` (overnight build log and write-up).
 
 ## 2026-10-23
-- **Project**: Antipad replaces AntiQuickPad. The old app, spikes A/B, demos, UI-audit kit and old docs moved to
+- **Project**: AntiNotepad replaces AntiQuickPad. The old app, spikes A/B, demos, UI-audit kit and old docs moved to
   `archive/antiquickpad/` (read-only; nothing depends on it).
 - **Icons**: Segoe Fluent Icons, 16 px, palette Ink, drawn once (no faux-bold), snapped to whole pixels. Toolbar and pager
   buttons 32 px square with a 4 px rounded hover. The newer Fluent UI System Icons font stays bundled for Settings icons.
-- **Right-click menu**: Antipad's own popup in Windows 11 style (designed in the Icon Lab): 8 px rounded panel, 4 px insets,
+- **Right-click menu**: AntiNotepad's own popup in Windows 11 style (designed in the Icon Lab): 8 px rounded panel, 4 px insets,
   32 px rows, icon column, dimmed shortcuts, content width. Order: Undo, Redo, Select all | New note, Search notes, Split view,
-  Keep on top | Settings, Hide Antipad; Cut, Copy, Paste, Delete as an action row on top. Settings: Menu action row (on),
+  Keep on top | Settings, Hide AntiNotepad; Cut, Copy, Paste, Delete as an action row on top. Settings: Menu action row (on),
   Colored menu icons (off). The popup window has no system rounding, border or shadow (DWM attributes).
 - **Codex does the implementation**; the Claude manager briefs, gates, commits and relays.
 

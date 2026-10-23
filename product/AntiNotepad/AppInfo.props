@@ -1,0 +1,21 @@
+<Project>
+  <PropertyGroup>
+    <AppName>AntiNotepad</AppName>
+    <AppVersion>0.5.0</AppVersion>
+    <AppVersionLabel>pre-release</AppVersionLabel>
+    <AppDescription>A quick scratchpad for Windows</AppDescription>
+    <AppCopyright>Copyright © 2026</AppCopyright>
+
+    <AssemblyName>$(AppName)</AssemblyName>
+    <RootNamespace>$(AppName)</RootNamespace>
+    <Product>$(AppName)</Product>
+    <AssemblyTitle>$(AppName)</AssemblyTitle>
+    <Version>$(AppVersion)</Version>
+    <AssemblyVersion>$(AppVersion).0</AssemblyVersion>
+    <FileVersion>$(AppVersion).0</FileVersion>
+    <InformationalVersion>$(AppVersion)-$(AppVersionLabel)</InformationalVersion>
+    <Description>$(AppDescription)</Description>
+    <Copyright>$(AppCopyright)</Copyright>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+</Project>
