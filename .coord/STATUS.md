@@ -10,7 +10,7 @@ Product: AntiNotepad (`product/AntiNotepad`).
   control was dark in 2/6), and the user confirmed the tray slot menu (a slot titled "empty" is enabled).
   Merged into dev with the audit.
 - A1-codebase-audit merged into dev (2026-10-23): `docs/audit/A1-codebase-audit.md`,
-  27 findings (6 High, 13 Medium, 8 Low). No fixes made. Next: the user picks the findings that become follow-up tasks.
+  27 findings (6 High, 13 Medium, 8 Low). The 7 safe fixes are done; the user picks which of the other 20 become follow-up tasks.
 - C1-remove-archive merged into dev (2026-10-23): `archive/` deleted; old AntiQuickPad and spike notes live in git history
   and the tags `v0.1`, `antipad-v*`, `baseline/m8c-v1-compact`.
 - C2-stale-branch-cleanup merged into dev (2026-10-23): only `main` and `dev` remain. Icon Lab (`claude/icon-lab`) and the
