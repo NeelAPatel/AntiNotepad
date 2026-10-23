@@ -2,6 +2,7 @@ using Avalonia.Controls.Chrome;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -50,9 +51,16 @@ internal sealed partial class PadWindow
     private Action? _toastAction;
     /// <summary>Ctrl+Z undoes the toast's action (a delete) until the user types something.</summary>
     private bool _undoArmed;
+    private Control? _saveFailureOverlay;
+    private Border? _saveFailureCard;
+    private TextBlock? _saveFailureReason;
+    private Button? _saveFailureRetryButton, _saveFailureQuitButton;
+    private Action? _saveFailureRetryAction;
 
     private void BuildLayout()
     {
+        AddHandler(KeyDownEvent, OnSaveFailureKeyDown, RoutingStrategies.Tunnel);
+        AddHandler(PointerPressedEvent, OnSaveFailurePointerPressed, RoutingStrategies.Tunnel);
         var drag = new Border { Background = Brushes.Transparent };
         WindowDecorationProperties.SetElementRole(drag, WindowDecorationsElementRole.TitleBar);
         Grid.SetColumnSpan(drag, 3);
@@ -396,6 +404,88 @@ internal sealed partial class PadWindow
     {
         _toastAction = null; _undoArmed = false;
         Anim.Run(_toast, 160, t => _toast.Opacity = 1 - t, () => _toast.IsVisible = false);
+    }
+
+    private void ShowSaveFailurePrompt(string? reason, Action retry, Action quitAnyway)
+    {
+        var message = string.IsNullOrWhiteSpace(reason) ? "The notes could not be written to disk." : reason;
+        if (_saveFailureOverlay is { } current && IsOverlay(current))
+        {
+            _saveFailureReason!.Text = message;
+            _saveFailureRetryAction = retry;
+            return;
+        }
+
+        var p = _palette;
+        var title = Kit.Text("Couldn't save your notes", p.Ink, 17, FontWeight.SemiBold);
+        Avalonia.Automation.AutomationProperties.SetName(title, "Couldn't save your notes");
+        var detail = new TextBlock
+        {
+            Text = message, Foreground = new SolidColorBrush(p.Muted), FontSize = 12.5,
+            TextWrapping = TextWrapping.Wrap, MaxWidth = 380,
+        };
+        Avalonia.Automation.AutomationProperties.SetName(detail, "Save error reason");
+
+        var retryButton = Kit.Plain(Kit.Text("Retry", p.Accent, 12.5, FontWeight.SemiBold), p, 88, 34);
+        Avalonia.Automation.AutomationProperties.SetName(retryButton, "Retry");
+        retryButton.Click += (_, _) => retry();
+        var quitButton = Kit.Plain(Kit.Text("Quit anyway", p.Muted, 12.5), p, 104, 34);
+        Avalonia.Automation.AutomationProperties.SetName(quitButton, "Quit anyway");
+        quitButton.Click += (_, _) => quitAnyway();
+        var buttons = new StackPanel
+        {
+            Orientation = Orientation.Horizontal, Spacing = 6, HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, 6, 0, 0), Children = { retryButton, quitButton },
+        };
+        var content = new StackPanel { Spacing = 9, Children = { title, detail, buttons } };
+        var card = new Border
+        {
+            Child = content, MaxWidth = 420, MinWidth = 240, Margin = new Thickness(12), Padding = new Thickness(18),
+            CornerRadius = new CornerRadius(12), Background = new SolidColorBrush(p.Surface),
+            BorderBrush = new SolidColorBrush(p.Faint, .45), BorderThickness = new Thickness(1), BoxShadow = _pill.BoxShadow,
+            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+        };
+        Avalonia.Automation.AutomationProperties.SetName(card, "Save failure prompt");
+        var overlay = new Grid { Background = Brushes.Transparent, Children = { card } };
+        Avalonia.Automation.AutomationProperties.SetName(overlay, "Save failure prompt");
+        _saveFailureOverlay = overlay;
+        _saveFailureCard = card;
+        _saveFailureReason = detail;
+        _saveFailureRetryButton = retryButton;
+        _saveFailureQuitButton = quitButton;
+        _saveFailureRetryAction = retry;
+        ShowOverlay(overlay);
+        Dispatcher.UIThread.Post(() => { if (IsOverlay(overlay)) retryButton.Focus(); });
+    }
+
+    private void OnSaveFailureKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (_saveFailureOverlay is not { } overlay || !IsOverlay(overlay)) return;
+        if (e.Key == Key.Escape) return;
+        if (e.Key == Key.Enter)
+        {
+            e.Handled = true;
+            _saveFailureRetryAction?.Invoke();
+            return;
+        }
+        if (e.Key == Key.Tab)
+        {
+            e.Handled = true;
+            if (_saveFailureRetryButton?.IsFocused == true) _saveFailureQuitButton?.Focus();
+            else _saveFailureRetryButton?.Focus();
+            return;
+        }
+        if (e.Key is Key.Space or Key.LeftShift or Key.RightShift or Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt) return;
+        e.Handled = true;
+    }
+
+    private void OnSaveFailurePointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (_saveFailureOverlay is not { } overlay || !IsOverlay(overlay) || _saveFailureCard is not { } card) return;
+        var at = e.GetPosition(card);
+        if (at.X >= 0 && at.Y >= 0 && at.X < card.Bounds.Width && at.Y < card.Bounds.Height) return;
+        CloseOverlay();
+        e.Handled = true;
     }
 
     /// <summary>A tiny shake: there is nothing further in that direction.</summary>

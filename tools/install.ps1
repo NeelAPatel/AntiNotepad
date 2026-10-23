@@ -27,7 +27,7 @@ if ($DryRun) {
         InstallDirectory = $installDirectory
         DataDirectory = $dataDirectory
         StartMenuShortcut = $shortcutPath
-        Publish = "dotnet publish product/AntiNotepad/$appName.csproj -c Release -o build/<unique-install-stage> --self-contained false"
+        Publish = "dotnet publish product/AntiNotepad/$appName.csproj -c Release -o build/<unique-install-stage> -r win-x64 --self-contained false"
         Plan = 'Publish to a repository staging directory; on upgrade request a graceful quit from the installed executable; copy staged files; run the installed --selftest; create the Start menu shortcut; retarget the Run entry only when it was enabled; launch the installed app. Preserve the separate data directory.'
         FirstTransition = 'Before first transition, save and exit any legacy Antipad or repo copy through its tray menu. This installer controls only the canonical installed AntiNotepad copy. DryRun does not inspect processes or the registry.'
     }
@@ -106,7 +106,7 @@ try {
     $previousTelemetry = [Environment]::GetEnvironmentVariable('AVALONIA_TELEMETRY_OPTOUT', 'Process')
     [Environment]::SetEnvironmentVariable('AVALONIA_TELEMETRY_OPTOUT', '1', 'Process')
     try {
-        & dotnet publish (Join-Path $repoRoot "product\AntiNotepad\$appName.csproj") -c Release -o $stageDirectory --self-contained false
+        & dotnet publish (Join-Path $repoRoot "product\AntiNotepad\$appName.csproj") -c Release -o $stageDirectory -r win-x64 --self-contained false
         $publishExitCode = $LASTEXITCODE
     }
     finally { [Environment]::SetEnvironmentVariable('AVALONIA_TELEMETRY_OPTOUT', $previousTelemetry, 'Process') }

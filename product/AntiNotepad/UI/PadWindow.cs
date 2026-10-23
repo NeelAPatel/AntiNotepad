@@ -68,6 +68,7 @@ internal sealed partial class PadWindow : Window
         Deactivated += (_, _) =>
         {
             Save();
+            if (_saveFailureOverlay is { } prompt && IsOverlay(prompt)) CloseOverlay();
             // Moving into the Settings window is not "clicking away": the pad stays up, undimmed, to show each change.
             if (_settingsWindow is not null) return;
             if (Settings.HideOnBlur && !Topmost && !_overlayOpen && IsVisible) HideResident();
@@ -173,7 +174,26 @@ internal sealed partial class PadWindow : Window
 
     public void Quit()
     {
-        Save();
+        if (!Save(showFailureToast: false))
+        {
+            if (!IsVisible) ShowResident();
+            ShowSaveFailurePrompt(_store.LastError, RetryQuit, QuitAnyway);
+            return;
+        }
+
+        CompleteQuit();
+    }
+
+    private void RetryQuit()
+    {
+        if (Save(showFailureToast: false)) CompleteQuit();
+        else ShowSaveFailurePrompt(_store.LastError, RetryQuit, QuitAnyway);
+    }
+
+    private void QuitAnyway() => CompleteQuit();
+
+    private void CompleteQuit()
+    {
         _quitting = true;
         CloseSettings();
         _hotkey?.Dispose();
@@ -214,12 +234,19 @@ internal sealed partial class PadWindow : Window
         SleepChrome(soon: false);
     }
 
-    internal void Save()
+    internal bool Save() => Save(showFailureToast: true);
+
+    private bool Save(bool showFailureToast)
     {
         _left.Flush(); _right.Flush();
-        if (!_store.Save()) { Toast("Couldn't save · " + _store.LastError); return; }
+        if (!_store.Save())
+        {
+            if (showFailureToast) Toast("Couldn't save · " + _store.LastError);
+            return false;
+        }
         // Keep editor documents (and undo) for the few notes you swipe between; older ones go back to disk.
         PadView.Evict(KeepDocuments, [_left.Note, _right.Note]);
+        return true;
     }
 
     private const int KeepDocuments = 6;

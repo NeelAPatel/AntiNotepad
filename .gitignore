@@ -3,3 +3,4 @@
 build/
 product/**/bin/
 product/**/obj/
+.claude/atlas/

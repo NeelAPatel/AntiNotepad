@@ -4,6 +4,13 @@ Updated: 2026-10-23
 Product: AntiNotepad (`product/AntiNotepad`).
 
 ## Now
+- A6-audit-decisions in progress (2026-10-23) on `feat/A6-audit-decisions` (off `feat/A5-audit-refresh`): it applies the user's
+  8 audit decisions. A1-27 is done here (atlas untracked). Four luna xhigh workers run in `../AntiQuickPad-wt/`:
+  A7-notes-folder-and-recovery, A8-save-failure-quit-and-x64, A9-input-limits-and-timers, A10-ocr-repeat-and-target.
+  The manager reviews each and merges it into A6; the new UI is shown in the dev copy before anything reaches dev.
+- A5-audit-refresh done (2026-10-23) on `feat/A5-audit-refresh`, not merged (waits for the user). It re-audits the tree and
+  rewrites `docs/audit/A1-codebase-audit.md` as a plain-language document. 25 findings open (7 High, 14 Medium, 4 Low), 7 fixed,
+  5 new (A5-1 to A5-5). The doc lists 8 decisions with recommendations. Next: the user answers them.
 - A2-dead-code-tidy, A3-runtime-tidy, A4-tooling-tidy merged into `feat/A1-codebase-audit` (2026-10-23) after manager review.
   They cover the 7 safe A1 fixes (A1-18, 21, 22, 23, 24, 25, 26). The merged branch builds with 0 warnings and passes SELFTEST.
   Its worktrees are removed. Dev-copy check passed: the caret stays solid with blinking off (6/6 captures; the blinking-on
