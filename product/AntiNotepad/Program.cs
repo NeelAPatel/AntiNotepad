@@ -22,7 +22,7 @@ internal static class Program
     public static Store Store { get; private set; } = null!;
     private static long GpuCacheBytes => long.TryParse(Environment.GetEnvironmentVariable(AppInfo.Env("GPU_CACHE_MB")), out var mb) ? mb * 1048576 : 8 * 1048576;
     private static PadWindow? _window;
-    private static int _pendingShow;
+    private static readonly StartupRequestLatch _pendingRequests = new();
 
     [STAThread]
     public static int Main(string[] args)
@@ -99,13 +99,20 @@ internal static class Program
 
     private static void RequestShow()
     {
-        if (_window is { } w) Dispatcher.UIThread.Post(w.ShowResident);
-        else Interlocked.Exchange(ref _pendingShow, 1);
+        _pendingRequests.RequestShow(() =>
+        {
+            var window = _window ?? throw new InvalidOperationException("The window must be attached before dispatching a show request.");
+            Dispatcher.UIThread.Post(window.ShowResident);
+        });
     }
 
     private static void RequestQuit()
     {
-        if (_window is { } w) Dispatcher.UIThread.Post(w.Quit);
+        _pendingRequests.RequestQuit(() =>
+        {
+            var window = _window ?? throw new InvalidOperationException("The window must be attached before dispatching a quit request.");
+            Dispatcher.UIThread.Post(window.Quit);
+        });
     }
 
     public static void Log(string line)
@@ -143,7 +150,52 @@ internal static class Program
     public static void Attach(PadWindow window)
     {
         _window = window;
-        if (Interlocked.Exchange(ref _pendingShow, 0) != 0) Dispatcher.UIThread.Post(window.ShowResident);
+        _pendingRequests.Attach(
+            () => Dispatcher.UIThread.Post(window.ShowResident),
+            () => Dispatcher.UIThread.Post(window.Quit));
+    }
+}
+
+/// <summary>Queues show and quit requests until the resident window is ready.</summary>
+internal sealed class StartupRequestLatch
+{
+    private readonly object _gate = new();
+    private bool _ready;
+    private bool _pendingShow;
+    private bool _pendingQuit;
+
+    public void RequestShow(Action dispatch) => Request(ref _pendingShow, dispatch);
+
+    public void RequestQuit(Action dispatch) => Request(ref _pendingQuit, dispatch);
+
+    private void Request(ref bool pending, Action dispatch)
+    {
+        ArgumentNullException.ThrowIfNull(dispatch);
+        lock (_gate)
+        {
+            if (!_ready) pending = true;
+            else dispatch();
+        }
+    }
+
+    public void Attach(Action dispatchShow, Action dispatchQuit)
+    {
+        ArgumentNullException.ThrowIfNull(dispatchShow);
+        ArgumentNullException.ThrowIfNull(dispatchQuit);
+        lock (_gate)
+        {
+            _ready = true;
+            if (_pendingShow)
+            {
+                _pendingShow = false;
+                dispatchShow();
+            }
+            if (_pendingQuit)
+            {
+                _pendingQuit = false;
+                dispatchQuit();
+            }
+        }
     }
 }
 

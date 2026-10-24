@@ -48,6 +48,7 @@ internal static class SelfTest
         Check(DefaultDataMigrationSelfTest(out var migrationReport), "default data folder migration: " + migrationReport);
         Check(InputLimitChecks(out var inputReport), "input limits: " + inputReport);
         Check(NotesLocationChecks(out var notesReport), "notes location and recovery: " + notesReport);
+        Check(StartupRequestLatchChecks(out var startupRequestReport), "startup request latch: " + startupRequestReport);
 
         Console.WriteLine(failures.Count == 0 ? "SELFTEST PASS" : "SELFTEST FAIL\n" + string.Join("\n", failures));
         return failures.Count == 0 ? 0 : 1;
@@ -394,5 +395,31 @@ internal static class SelfTest
             return false;
         }
         finally { try { if (Directory.Exists(root)) Directory.Delete(root, true); } catch { } }
+    }
+
+    private static bool StartupRequestLatchChecks(out string report)
+    {
+        var requests = new StartupRequestLatch();
+        var shows = 0;
+        var quits = 0;
+        Action dispatchShow = () => shows++;
+        Action dispatchQuit = () => quits++;
+
+        requests.RequestShow(dispatchShow);
+        requests.RequestQuit(dispatchQuit);
+        var heldUntilReady = shows == 0 && quits == 0;
+        requests.Attach(dispatchShow, dispatchQuit);
+        var pendingConsumed = shows == 1 && quits == 1;
+        requests.Attach(dispatchShow, dispatchQuit);
+        var consumedOnce = shows == 1 && quits == 1;
+
+        requests.RequestShow(dispatchShow);
+        requests.RequestQuit(dispatchQuit);
+        var readyRequestsDispatched = shows == 2 && quits == 2;
+
+        report = heldUntilReady && pendingConsumed && consumedOnce && readyRequestsDispatched
+            ? "early show and quit wait for attach, pending requests dispatch once, and ready requests dispatch directly"
+            : $"early={heldUntilReady}, consumed={pendingConsumed}, once={consumedOnce}, ready={readyRequestsDispatched}";
+        return heldUntilReady && pendingConsumed && consumedOnce && readyRequestsDispatched;
     }
 }
