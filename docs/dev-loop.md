@@ -16,6 +16,10 @@ The installed copy is the user's working copy. Never type into or stop it during
 asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below. There are no prod or Claude badges.
 
 ## Install, upgrade and uninstall
+- **Run install, uninstall and any prod-data step from a normal Windows Terminal, never from a shell inside the Claude
+  desktop app.** That app is MSIX-packaged: its shells (and the apps they launch) have writes under `%LOCALAPPDATA%` and
+  `%APPDATA%` redirected into `%LOCALAPPDATA%\Packages\Claude_*\LocalCache`. A "moved" folder ends up only there, and a prod
+  copy launched from there can save notes where Explorer and the real app never see them. Dev work under `build/` is unaffected.
 - Preview safely: `pwsh -NoProfile -File tools/install.ps1 -DryRun`. This prints the plan without building, writing files,
   inspecting processes, accessing the registry or launching the app.
 - Install or upgrade: `pwsh -NoProfile -File tools/install.ps1`. It publishes Release, requests the installed copy to save and
