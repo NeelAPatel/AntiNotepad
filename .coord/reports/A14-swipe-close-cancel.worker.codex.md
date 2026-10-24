@@ -1,0 +1,5 @@
+Implemented **A14-swipe-close-cancel**. `NoteSwipe.Cancel()` stops its timers and spring-back animation, clears pending motion, invalidates queued frame work, and resets an attached pane. The progress settle timer now gives up after 1 second without motion. `MotionPreview` cancels on release and detachment.
+
+Build completed with **0 warnings and 0 errors** using `-p:NuGetAudit=false`; selftest printed `SELFTEST PASS`, and `git diff --check` passed. The report is [A14-swipe-close-cancel.md](F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad-wt/A14-swipe-close-cancel/.coord/reports/A14-swipe-close-cancel.md).
+
+**Needs a live check:** close Settings during a progress swipe and confirm the pane resets and the normal swipe feel is unchanged. I did not launch the GUI. Automatic policy blocked recursive deletion of `build/a14-check`, so that output folder remains. No commit was made.
