@@ -306,6 +306,7 @@ public sealed class Settings
     public bool Folding { get; set; } = true;
     public List<string> DisabledLanguages { get; set; } = [];
     public bool Pinned { get; set; }
+    public string Taskbar { get; set; } = "never";          // visible | always | never
     public double Width { get; set; } = 460;
     public double Height { get; set; } = 560;
     public int? X { get; set; }

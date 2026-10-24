@@ -3,6 +3,9 @@
 Newest first. History before 2026-10-23 (overnight build log and write-up) is in git history and the tags `v0.1`,
 `antipad-v*` and `baseline/m8c-v1-compact`.
 
+## 2026-10-24
+- **Taskbar icon** (A20-taskbar-icon-setting): Defaults to Never; Settings offers While visible, Always and Never. The tray icon stays available while the pad is hidden.
+
 ## 2026-10-23
 - **Notes location and recovery** (A7-notes-folder-and-recovery, decision 1): app home remains `%LOCALAPPDATA%\AntiNotepad`
   for the log and `location.json`; notes live in the user-visible folder `Documents\AntiNotepad` by default, using

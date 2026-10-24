@@ -14,7 +14,7 @@ using AntiNotepad.Theme;
 
 namespace AntiNotepad.UI;
 
-/// <summary>The one resident window. Hidden, never closed, until Quit.</summary>
+/// <summary>The resident pad window. Hidden, never closed, until Quit.</summary>
 internal sealed partial class PadWindow : Window
 {
     private readonly Store _store;
@@ -25,6 +25,8 @@ internal sealed partial class PadWindow : Window
     private DateTime _hiddenAt = DateTime.Now;
     private IDisposable? _clipboardHook;
     private GlobalHotkey? _hotkey, _newNoteHotkey;
+    private TaskbarItem? _taskbarItem;
+    private TaskbarProxy? _taskbarProxy;
     private PadView _left = null!, _right = null!;
     private PadView _active = null!;
 
@@ -85,6 +87,9 @@ internal sealed partial class PadWindow : Window
     /// <summary>Hotkey and clipboard hooks need only the native handle, so `--hidden` startup works without ever showing.</summary>
     internal void InstallHooks()
     {
+        _taskbarItem = new TaskbarItem(this, HideResident);
+        if (Settings.Taskbar != "never") _taskbarItem.Prepare();
+        if (Settings.Taskbar == "always") EnsureTaskbarProxy();
         RegisterHotkey(Settings.Hotkey);
         RegisterNewNoteHotkey(Settings.NewNoteHotkey);        _clipboardHook = Native.ListenClipboard(this, () => Dispatcher.UIThread.Post(() => _ = OnClipboardChanged()));
     }
@@ -101,6 +106,7 @@ internal sealed partial class PadWindow : Window
         if (!IsVisible && Settings.FreshNoteAfterMinutes > 0 && away.TotalMinutes >= Settings.FreshNoteAfterMinutes) OpenFreshNote();
         var wasVisible = IsVisible;
         var drop = wasVisible ? null : PlaceForOpen();
+        _taskbarProxy?.Hide();
         WindowState = WindowState.Normal;
         Show();
         Activate();
@@ -114,6 +120,7 @@ internal sealed partial class PadWindow : Window
             if (Interlocked.Exchange(ref _hotkeyPressed, 0) is var t && t != 0)
                 Program.Log($"hotkey-to-focus ms={System.Diagnostics.Stopwatch.GetElapsedTime(t).TotalMilliseconds:F1} sync={sync:F1} focused={_active.Editor.TextArea.IsFocused} open-at={Settings.OpenAt}");
         }, DispatcherPriority.Input);
+        Dispatcher.UIThread.Post(ApplyTaskbarSetting, DispatcherPriority.Background);
         if (drop is { } target)
         {
             // Drop-down presentation: the pad slides down from the top edge, Quake-console style.
@@ -151,16 +158,23 @@ internal sealed partial class PadWindow : Window
     {
         Opacity = 0; ShowActivated = false;
         Show();
-        Dispatcher.UIThread.Post(() => { Hide(); Opacity = 1; ShowActivated = true; _hiddenAt = DateTime.Now; _trim.Start(); }, DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(() =>
+        {
+            Hide();
+            Opacity = 1; ShowActivated = true; _hiddenAt = DateTime.Now; _trim.Start();
+            ApplyTaskbarSetting();
+        }, DispatcherPriority.Background);
     }
 
     /// <summary>Appear without taking focus (finished timers): the user's current app keeps the keyboard.</summary>
     internal void ShowQuietly()
     {
         if (IsVisible) return;
+        _taskbarProxy?.Hide();
         ShowActivated = false;
         Show();
         ShowActivated = true;
+        ApplyTaskbarSetting();
     }
 
     public void HideResident()
@@ -168,8 +182,10 @@ internal sealed partial class PadWindow : Window
         CloseOverlay();
         Save();
         _hiddenAt = DateTime.Now;
+        _taskbarItem?.Apply(false);
         Hide();
         _trim.Stop(); _trim.Start();
+        ApplyTaskbarSetting();
     }
 
     public void Quit()
@@ -199,6 +215,8 @@ internal sealed partial class PadWindow : Window
         _hotkey?.Dispose();
         _newNoteHotkey?.Dispose();
         _clipboardHook?.Dispose();
+        _taskbarItem?.Dispose(); _taskbarItem = null;
+        _taskbarProxy?.Dispose(); _taskbarProxy = null;
         Close();
         QuitRequested?.Invoke();
     }
@@ -224,6 +242,26 @@ internal sealed partial class PadWindow : Window
     }
 
     private void FocusActive() { if (IsVisible && !_overlayOpen) _active.FocusText(); }
+
+    /// <summary>Applies the user's taskbar choice after a settings change or a pad show/hide.</summary>
+    internal void ApplyTaskbarSetting()
+    {
+        var visible = IsVisible;
+        var shouldShow = TaskbarPresence.ShouldShow(Settings.Taskbar, visible);
+        if (!visible && Settings.Taskbar == "always")
+        {
+            _taskbarItem?.Apply(false);
+            EnsureTaskbarProxy();
+            _taskbarProxy!.ShowMinimized();
+            return;
+        }
+
+        _taskbarProxy?.Hide();
+        _taskbarItem?.Apply(shouldShow);
+    }
+
+    private void EnsureTaskbarProxy() =>
+        _taskbarProxy ??= new TaskbarProxy(AppInfo.DisplayName, Icon, ToggleResident);
 
     // ---------- persistence ----------
 

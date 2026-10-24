@@ -264,6 +264,9 @@ internal sealed partial class PadWindow
     internal void SettingsChanged()
     {
         Topmost = Settings.Pinned;
+        if (Settings.Taskbar != "never") _taskbarItem?.Prepare();
+        if (Settings.Taskbar == "always") EnsureTaskbarProxy();
+        ApplyTaskbarSetting();
         ApplyAppearance();
         Edited();
     }

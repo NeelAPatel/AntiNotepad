@@ -53,6 +53,7 @@ internal static class SelfTest
         Check(NoteSwipeChecks(out var swipeReport), "note swipe: " + swipeReport);
         Check(WelcomeSlotsSelfTest(out var welcomeReport), "welcome slots: " + welcomeReport);
         Check(SearchSpeedChecks(out var searchReport), "search speed: " + searchReport);
+        Check(TaskbarChecks(out var taskbarReport), "taskbar: " + taskbarReport);
 
         Console.WriteLine(failures.Count == 0 ? "SELFTEST PASS" : "SELFTEST FAIL\n" + string.Join("\n", failures));
         return failures.Count == 0 ? 0 : 1;
@@ -630,5 +631,28 @@ internal static class SelfTest
             report = ex.Message;
             return false;
         }
+    }
+
+    private static bool TaskbarChecks(out string report)
+    {
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+        CheckCase(new Settings().Taskbar == "never", "new settings default to never");
+        CheckCase(System.Text.Json.JsonSerializer.Deserialize<Settings>("{}")?.Taskbar == "never", "old JSON defaults to never");
+        foreach (var setting in new[] { "never", "visible", "always" })
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(new StoreData { Settings = new Settings { Taskbar = setting } });
+            CheckCase(System.Text.Json.JsonSerializer.Deserialize<StoreData>(json)?.Settings.Taskbar == setting, $"{setting} JSON round trip");
+        }
+        (string Setting, bool Visible, bool Expected)[] cases =
+        [
+            ("never", false, false), ("never", true, false),
+            ("visible", false, false), ("visible", true, true),
+            ("always", false, true), ("always", true, true),
+        ];
+        foreach (var test in cases)
+            CheckCase(TaskbarPresence.ShouldShow(test.Setting, test.Visible) == test.Expected, $"{test.Setting}, visible={test.Visible}");
+        report = failures.Count == 0 ? "Never default, old JSON default, three JSON round trips, and all six visibility combinations" : string.Join("; ", failures);
+        return failures.Count == 0;
     }
 }
