@@ -14,7 +14,8 @@ if ($appName -notmatch '^[A-Za-z0-9][A-Za-z0-9.-]*$') { throw "Unsafe AppName in
 $envPrefix = $appName.ToUpperInvariant() + '_'
 $localAppData = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
 if ([string]::IsNullOrWhiteSpace($localAppData)) { throw 'Windows did not provide a Local AppData path.' }
-$installDirectory = Join-Path (Join-Path $localAppData 'Programs') $appName
+$installParent = Join-Path $localAppData 'Programs'
+$installDirectory = Join-Path $installParent $appName
 $installedExe = Join-Path $installDirectory "$appName.exe"
 $dataDirectory = Join-Path $localAppData $appName
 $programsDirectory = [Environment]::GetFolderPath([Environment+SpecialFolder]::Programs)
@@ -26,12 +27,13 @@ if ($DryRun) {
         Task = 'Uninstall'
         Product = $appName
         InstallDirectory = $installDirectory
+        PreviousInstallBackups = (Join-Path $installParent "$appName.previous-*")
         StartMenuShortcut = $shortcutPath
         RemoveRunValue = $appName
         RemoveData = [bool]$RemoveData
         DataDirectory = if ($RemoveData) { $dataDirectory } else { '(preserved)' }
         NotesFolder = '(read from location.json during uninstall)'
-        Plan = 'Request a graceful quit from the installed executable and wait with a timeout; remove the install folder, Start menu shortcut, and product Run value. -RemoveData removes app home only; the notes folder is kept.'
+        Plan = 'Request a graceful quit from the installed executable and wait with a timeout; remove timestamped previous-install backups, the install folder, Start menu shortcut, and product Run value. -RemoveData removes app home only; the notes folder is kept.'
     }
 }
 
@@ -70,6 +72,26 @@ if ($RemoveData -and (($pointerExists -and -not $notesDirectory) -or $notesAreIn
     throw "Cannot remove app home safely: its notes folder is not recorded outside app home. Notes may be present in $dataDirectory.$detail"
 }
 if ($notesAreInsideInstall) { throw "Cannot uninstall safely: the notes folder is inside the install folder and would be removed: $notesDirectory" }
+
+$previousInstallBackups = @()
+if (Test-Path -LiteralPath $installParent -PathType Container) {
+    foreach ($backup in @(Get-ChildItem -LiteralPath $installParent -Directory -Filter "$appName.previous-*" -Force)) {
+        $backupLeaf = [IO.Path]::GetFileName($backup.FullName)
+        Assert-DirectChildPath $backup.FullName $installParent $backupLeaf
+        Assert-PlainDirectory $backup.FullName 'previous install backup'
+        if ($notesDirectory) {
+            $backupFullPath = [IO.Path]::GetFullPath($backup.FullName).TrimEnd('\', '/')
+            $notesInsideBackup = [string]::Equals($backupFullPath, $notesFullPath, [StringComparison]::OrdinalIgnoreCase) -or
+                $notesFullPath.StartsWith($backupFullPath + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or
+                $notesFullPath.StartsWith($backupFullPath + [IO.Path]::AltDirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)
+            if ($notesInsideBackup) { throw "Cannot uninstall safely: the notes folder is inside a previous install backup and would be removed: $notesDirectory" }
+        }
+        elseif ($pointerExists -and $pointerReadError) {
+            throw "Cannot uninstall safely: the notes folder pointer is unreadable and a previous install backup would be removed. Pointer read error: $pointerReadError"
+        }
+        $previousInstallBackups += $backup.FullName
+    }
+}
 
 function New-CleanAppProcessInfo([string]$Executable, [string[]]$Arguments) {
     $info = [System.Diagnostics.ProcessStartInfo]::new()
@@ -142,6 +164,12 @@ try {
             throw "The install folder exists but $appName.exe is missing. Close any resident copy manually before removing files."
         }
         Invoke-InstalledQuit $installedExe 15
+    }
+
+    foreach ($backup in $previousInstallBackups) {
+        Assert-DirectChildPath $backup $installParent ([IO.Path]::GetFileName($backup))
+        Assert-PlainDirectory $backup 'previous install backup'
+        Remove-Item -LiteralPath $backup -Recurse -Force
     }
 
     Remove-ProductRunValue

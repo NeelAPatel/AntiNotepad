@@ -17,14 +17,23 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
 - Preview safely: `pwsh -NoProfile -File tools/install.ps1 -DryRun`. This prints the plan without building, writing files,
   inspecting processes, accessing the registry or launching the app.
 - Install or upgrade: `pwsh -NoProfile -File tools/install.ps1`. It publishes Release, requests the installed copy to save and
-  quit with `--quit`, waits for exit before replacing files, updates the Start menu shortcut `AntiNotepad`, preserves whether
-  start with Windows is enabled while pointing an enabled entry at the installed exe, runs the installed `--selftest`, and
-  starts it. A quit timeout aborts replacement; no force kill.
+  quit with `--quit`, waits for exit, and moves the old install to a timestamped sibling backup before copying new files.
+  It runs the installed `--selftest`, updates the Start menu shortcut `AntiNotepad`, preserves whether start with Windows is
+  enabled while pointing an enabled entry at the installed exe, and starts the app. Any failure after the swap restores the
+  old files; the old app is relaunched only if it was running before the upgrade. A failed first install removes its partial
+  files. A successful upgrade keeps only the latest previous-version backup beside the install. A quit timeout aborts
+  replacement; no force kill. The success message prints the notes folder from `%LOCALAPPDATA%\AntiNotepad\location.json`,
+  falling back to app home if the pointer cannot be read.
+- Installer rollback check: `pwsh -NoProfile -File tools/install.ps1 -InstallRoot <repo-build-folder> -TestFailSelfTest` runs
+  the publish and copy flow against a direct `build/A16-staged-upgrade-rollback-<suffix>` child, injects a selftest failure,
+  and must restore the fixture's old files. With `-InstallRoot`, the installer skips installed-process checks and `--quit`,
+  all Start menu shortcut and Run key access or changes, and app launch. This mode accepts no path outside that named build
+  child. It is for disposable repo fixtures only.
 - Publishing is framework-dependent to avoid shipping a duplicate runtime. The machine needs .NET 10; building needs the
   .NET 10 SDK. The installed exe and the Settings toggle always use the canonical install path for start with Windows.
-- Uninstall: `pwsh -NoProfile -File tools/uninstall.ps1`. It quits the installed copy, removes installed files, shortcut and
-  Run-at-login entry. It reads `location.json`, prints the notes folder, and keeps it. `-RemoveData` removes only the app home
-  (`%LOCALAPPDATA%\AntiNotepad`), never the notes folder.
+- Uninstall: `pwsh -NoProfile -File tools/uninstall.ps1`. It quits the installed copy, removes previous-install backups,
+  installed files, shortcut and Run-at-login entry. It reads `location.json`, prints the notes folder, and keeps it.
+  `-RemoveData` removes only the app home (`%LOCALAPPDATA%\AntiNotepad`), never the notes folder.
 - The first normal startup keeps the existing `DefaultDataFolderMigration` as its first step, then moves any app-home notes to
   `Documents\AntiNotepad`. The pointer in app home selects the notes folder; the product log always stays in app home.
   `Documents` is resolved with `SpecialFolder.MyDocuments`, including OneDrive redirection. If a pointer's target is unavailable,
