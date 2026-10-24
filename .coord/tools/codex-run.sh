@@ -7,6 +7,10 @@ set -u
 ROOT="$(cd "$(dirname "$0")/../.." && pwd -W)"
 role="${1:?role: director|worker|backup}"; task="${2:?task id, e.g. M9-function-contract-separation}"; file="${3:?task file}"; shift 3
 EXTRA=("$@")
+if [[ ! "$task" =~ ^[A-Z][A-Za-z0-9]*(-[a-z0-9]+)+$ ]]; then
+  echo "invalid task name '$task': expected <ID>-<slug> using ASCII letters, digits, and hyphens (slug lowercase)" >&2
+  exit 2
+fi
 WORKDIR="${CODEX_WORKDIR:-$ROOT}"; TAG="${CODEX_BUDGET_TAG:-$(date +%F)}"; TMIN="${CODEX_TIMEOUT_MIN:-45}"
 LEDGER="$ROOT/.coord/logs/usage.tsv"; mkdir -p "$ROOT/.coord/logs" "$ROOT/.coord/reports"; touch "$LEDGER"
 
