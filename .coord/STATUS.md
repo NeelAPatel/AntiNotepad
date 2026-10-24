@@ -4,6 +4,14 @@ Updated: 2026-10-24
 Product: AntiNotepad (`product/AntiNotepad`).
 
 ## Now
+- Dispatched 2026-10-24 (worktrees in `../AntiQuickPad-wt/<ID-slug>`, off dev 1ede661), manager reviews each before merging:
+  - Batch 1 (luna workers): A14-swipe-close-cancel (A1-13), A15-startup-quit-pending (A1-15), A16-staged-upgrade-rollback
+    (A1-17), A17-tool-script-checks (A5-4, A5-5).
+  - Batch 2 (Sol director with luna subagents): A18-search-speed (A1-11, A1-12).
+  - A19-demo-slot-notes (luna): five demo notes in slots 1-5 (welcome note in slot 5) and new feel defaults (Rate-matched
+    scrolling, Progress swipe).
+  - No Computer Use this round: live checks are listed as "needs Computer Use" for the user.
+  - After merge (user approved): reset the installed copy's data (dated backups) and upgrade it so the demo notes seed there.
 - A6-audit-decisions merged into dev (2026-10-24), together with A5-audit-refresh. It applies the user's 8 audit decisions
   through A7-notes-folder-and-recovery, A8-save-failure-quit-and-x64, A9-input-limits-and-timers and
   A10-ocr-repeat-and-target, plus test feedback via A11-storage-settings-tab, A12-ocr-always-snip-and-lists and
