@@ -16,15 +16,19 @@ Product: AntiNotepad (`product/AntiNotepad`).
   - A21-dev-identity (Sol): dev builds are "AntiNotepad (dev)" with a blue icon; installed builds unchanged.
   - Needs Computer Use: swipe/scroll feel, demo notes on screen, Ctrl+F and Settings search typing, all three taskbar modes,
     dev vs prod icons/names in the taskbar and Task Manager, and the new installer's first real run.
-  - Next (user's go): back up and reset the installed copy's data, then upgrade it with tools/install.ps1 so the demo notes
-    seed there. Open audit items: A1-7, A1-8, A1-9, A1-10, A1-14 (batch 3, timing baseline first) and A1-12's proper fix.
+- Version 0.6.0 "untested" (V06-untested-version): dev merged into `main`, tag `antinotepad-v0.6.0-untested` (2026-10-24).
+  - Dev copy relaunched on fresh data (0.6.0-untested, "AntiNotepad (dev)", blue icon); demo notes seeded, opens slot 5.
+    The previous dev copy stopped unexplained when prod was quit (no crash or exit logged); watch for it.
+  - Prod is STOPPED (quit for the upgrade) and still 0.5.0; its real notes in `%LOCALAPPDATA%\AntiNotepad` are untouched.
+    The upgrade was not run: this session's shells have AppData writes redirected into the Claude package store
+    (`docs/dev-loop.md`). The user runs the backup and `tools/install.ps1` from a normal Windows Terminal.
+  - Backups made from Claude sessions exist only in `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\`:
+    `AntiNotepad-backup-20261024-155646` (stale Oct 22-23 data) and `Antipad-backup-2026-10-23`. Kept; don't delete.
 - A6-audit-decisions merged into dev (2026-10-24), together with A5-audit-refresh. It applies the user's 8 audit decisions
   through A7-notes-folder-and-recovery, A8-save-failure-quit-and-x64, A9-input-limits-and-timers and
   A10-ocr-repeat-and-target, plus test feedback via A11-storage-settings-tab, A12-ocr-always-snip-and-lists and
   A13-timer-max-and-currency-error. The user approved it in the dev copy. Dev builds with 0 warnings and passes SELFTEST.
   See `docs/audit/A1-codebase-audit.md`.
-- The installed copy is still 0.5.0. Upgrading it with tools/install.ps1 moves the real notes from `%LOCALAPPDATA%\AntiNotepad` to
-  `Documents\AntiNotepad` (with a backup left in app home). Recommend a manual copy of `%LOCALAPPDATA%\AntiNotepad` first.
 - A2-dead-code-tidy, A3-runtime-tidy, A4-tooling-tidy merged into `feat/A1-codebase-audit` (2026-10-23) after manager review.
   They cover the 7 safe A1 fixes (A1-18, 21, 22, 23, 24, 25, 26). The merged branch builds with 0 warnings and passes SELFTEST.
   Its worktrees are removed. Dev-copy check passed: the caret stays solid with blinking off (6/6 captures; the blinking-on
@@ -37,8 +41,8 @@ Product: AntiNotepad (`product/AntiNotepad`).
 - C2-stale-branch-cleanup merged into dev (2026-10-23): only `main` and `dev` remain. Icon Lab (`claude/icon-lab`) and the
   old UI auditor were deleted untagged (labs get remade if needed).
 - N1-antinotepad-identity and N2-canonical-install-and-dev-badge merged into dev (2026-10-23). AntiNotepad 0.5.0 installed at
-  `%LOCALAPPDATA%\Programs\AntiNotepad` via tools/install.ps1; notes migrated to `%LOCALAPPDATA%\AntiNotepad` (backup
-  `%LOCALAPPDATA%\Antipad-backup-2026-10-23`); old Antipad builds removed.
+  `%LOCALAPPDATA%\Programs\AntiNotepad` via tools/install.ps1; notes migrated to `%LOCALAPPDATA%\AntiNotepad` (backup made from a Claude shell, so it lives only in
+  the Claude package store; see above); old Antipad builds removed.
 - N3-release-and-update-plan: proposal kept as tag `proposal/N3-release-plan` (docs/release-plan.md), not merged. On hold (user): publishing,
   GitHub repo, license, signing, portable data defaults, Inno Setup terms.
 
