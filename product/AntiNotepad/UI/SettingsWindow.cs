@@ -168,11 +168,16 @@ internal sealed partial class SettingsWindow : Window
             InnerLeftContent = new GlyphIcon(char.ConvertFromUtf32(0xf68f), _p.Muted, 15, 0, Glyph.Fluent) { Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center },
         };
         Avalonia.Automation.AutomationProperties.SetName(_find, "Find a setting");
+        // Results rebuild every section's rows, so they wait for a pause in typing; clearing the box is instant.
+        var findPause = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
+        findPause.Tick += (_, _) => { findPause.Stop(); if (!string.IsNullOrWhiteSpace(_find.Text)) ShowResults(_find.Text); };
         _find.TextChanged += (_, _) =>
         {
+            findPause.Stop();
             if (string.IsNullOrWhiteSpace(_find.Text)) Show(_section, animate: false);
-            else ShowResults(_find.Text);
+            else findPause.Start();
         };
+        Closed += (_, _) => findPause.Stop();
         railHost.Children.Add(_find);
         // The rail and the scroller outlive a rebuild (theme change): take them off the old frame first.
         if (_rail.Parent is Panel oldRail) oldRail.Children.Remove(_rail);

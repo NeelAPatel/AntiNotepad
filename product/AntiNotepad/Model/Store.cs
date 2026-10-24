@@ -7,6 +7,121 @@ internal enum BodyReadStatus { Available, Missing, Unreadable }
 
 internal readonly record struct BodyReadResult(string? Text, BodyReadStatus Status);
 
+internal sealed record SearchNoteSnapshot(string Id, string Title, bool TitleKnown, DateTime Modified, long Revision, string? InMemoryText, bool BodyUnavailable);
+
+internal sealed record SearchMatchResult(string Id, string Title, string Snippet, NoteMode Mode, string? ModeArgument, BodyReadStatus BodyStatus);
+
+internal sealed class SearchContext
+{
+    internal SearchNoteSnapshot[] Notes { get; }
+    internal string BodyFolder { get; }
+    internal SearchBodyCache Cache { get; }
+    internal long CacheEpoch { get; }
+
+    internal SearchContext(SearchNoteSnapshot[] notes, string bodyFolder, SearchBodyCache cache, long cacheEpoch)
+    {
+        Notes = notes;
+        BodyFolder = bodyFolder;
+        Cache = cache;
+        CacheEpoch = cacheEpoch;
+    }
+}
+
+internal sealed class SearchBodyCache
+{
+    internal readonly object Gate = new();
+    internal readonly Dictionary<string, SearchBodyCacheEntry> Entries = new(StringComparer.Ordinal);
+    internal int ReadCount;
+    internal long Epoch;
+}
+
+internal readonly record struct SearchBodyCacheEntry(DateTime Modified, long Revision, string Text);
+
+/// <summary>Current-query guard shared by the overlay and headless stale-result checks.</summary>
+internal sealed class SearchGeneration : IDisposable
+{
+    private readonly object _gate = new();
+    private long _generation;
+    private CancellationTokenSource? _current;
+    private bool _disposed;
+
+    internal SearchRequest Begin()
+    {
+        lock (_gate)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            _current?.Cancel();
+            var source = new CancellationTokenSource();
+            _current = source;
+            return new SearchRequest(this, ++_generation, source);
+        }
+    }
+
+    internal void Cancel()
+    {
+        lock (_gate)
+        {
+            if (_disposed) return;
+            _generation++;
+            _current?.Cancel();
+            _current = null;
+        }
+    }
+
+    internal bool IsCurrent(SearchRequest request)
+    {
+        lock (_gate) return !_disposed && _generation == request.Generation && ReferenceEquals(_current, request.Source) && !request.Token.IsCancellationRequested;
+    }
+
+    internal void Release(SearchRequest request)
+    {
+        lock (_gate)
+        {
+            if (ReferenceEquals(_current, request.Source))
+            {
+                _current = null;
+                _generation++;
+            }
+            request.Source.Dispose();
+        }
+    }
+
+    public void Dispose()
+    {
+        lock (_gate)
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _generation++;
+            _current?.Cancel();
+            _current = null;
+        }
+    }
+}
+
+internal sealed class SearchRequest : IDisposable
+{
+    private bool _disposed;
+    internal SearchGeneration Owner { get; }
+    internal long Generation { get; }
+    internal CancellationTokenSource Source { get; }
+    internal CancellationToken Token => Source.Token;
+
+    internal SearchRequest(SearchGeneration owner, long generation, CancellationTokenSource source)
+    {
+        Owner = owner;
+        Generation = generation;
+        Source = source;
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        Owner.Release(this);
+    }
+}
+
 /// <summary>
 /// A note. Its body lives in its own file and is loaded only when needed; while a note is open in an editor,
 /// <see cref="Text"/> reads the live document instead of keeping a copy.
@@ -19,6 +134,10 @@ public sealed class Note
 
     private string? _text;
     private Func<string>? _live;
+    private long _searchRevision;
+
+    /// <summary>Set by Store so search-only body cache entries expire immediately on edits and saves.</summary>
+    internal static Action<string>? InvalidateSearchBody;
 
     public string Id { get; set; } = Guid.NewGuid().ToString("N")[..12];
     public DateTime Created { get; set; } = DateTime.Now;
@@ -49,6 +168,7 @@ public sealed class Note
         set
         {
             if (_live is null && _text is null && ReadBody().Status != BodyReadStatus.Available) return;
+            InvalidateSearchCache();
             _text = value; _live = null; Dirty = true; Blank = string.IsNullOrWhiteSpace(value); ModeCache = Modes.Detect(value).Mode; TitleCache = null;
         }
     }
@@ -75,11 +195,27 @@ public sealed class Note
         return result;
     }
 
+    internal bool TryGetSearchText(out string? text)
+    {
+        if (_live is not null) { text = _live(); return true; }
+        text = _text;
+        return text is not null;
+    }
+
+    internal long SearchRevision => _searchRevision;
+
+    internal void InvalidateSearchCache()
+    {
+        unchecked { _searchRevision++; }
+        InvalidateSearchBody?.Invoke(Id);
+    }
+
     /// <summary>An editor now owns the text; edits arrive through <see cref="Touched"/>.</summary>
     public void Attach(Func<string> live) { _live = live; _text = null; }
 
     internal void SetMigratedText(string value)
     {
+        InvalidateSearchCache();
         _text = value; _live = null; Dirty = true; Blank = string.IsNullOrWhiteSpace(value); ModeCache = Modes.Detect(value).Mode; TitleCache = null;
     }
 
@@ -87,6 +223,7 @@ public sealed class Note
     public void Touched(bool blank, NoteMode mode)
     {
         if (BodyUnavailable) return;
+        InvalidateSearchCache();
         Dirty = true; Blank = blank; ModeCache = mode; Modified = DateTime.Now; TitleCache = null;
     }
 
@@ -104,7 +241,12 @@ public sealed class Note
 
     internal static string MakeTitle(string text)
     {
-        var skip = Modes.Detect(text).KeywordLength > 0 ? 1 : 0;
+        return MakeTitle(text, Modes.Detect(text).KeywordLength);
+    }
+
+    internal static string MakeTitle(string text, int keywordLength)
+    {
+        var skip = keywordLength > 0 ? 1 : 0;
         foreach (var raw in text.Split('\n').Skip(skip).Take(40))
         {
             var line = raw.Trim().TrimStart('#', '-', '*', '>', ' ').Replace("[ ]", "").Replace("[x]", "").Trim();
@@ -205,6 +347,7 @@ public sealed class Store
     private bool _preserveBackupOnce = true;
     private bool _forcedUnavailable;
     private bool _indexReadUnavailable;
+    private readonly SearchBodyCache _searchBodyCache = new();
     public StoreData Data { get; private set; } = new();
     public string? LastError { get; private set; }
     public bool IsAvailable { get; private set; } = true;
@@ -221,6 +364,127 @@ public sealed class Store
         if (createDirectories) Directory.CreateDirectory(_bodies);
         IsAvailable = createDirectories || Directory.Exists(_folder);
         Note.LoadBody = ReadBody;
+        Note.InvalidateSearchBody = InvalidateSearchBody;
+    }
+
+    /// <summary>Captures only note metadata and text already in memory; this method never reads a body file.</summary>
+    internal SearchNoteSnapshot[] CreateSearchSnapshot(IEnumerable<Note> notes)
+    {
+        var snapshot = new List<SearchNoteSnapshot>();
+        foreach (var note in notes)
+        {
+            string? text = null;
+            var hasText = !note.BodyUnavailable && note.TryGetSearchText(out text);
+            var knownTitle = note.TitleCache is not null || hasText;
+            var title = note.TitleCache ?? (hasText ? Note.MakeTitle(text!) : "");
+            snapshot.Add(new SearchNoteSnapshot(note.Id, title, knownTitle, note.Modified, note.SearchRevision,
+                hasText ? text : null, note.BodyUnavailable));
+        }
+        return snapshot.ToArray();
+    }
+
+    /// <summary>Captures the immutable body-folder path and search cache on the caller thread before background work begins.</summary>
+    internal SearchContext CreateSearchContext(IReadOnlyList<SearchNoteSnapshot> notes)
+    {
+        lock (_searchBodyCache.Gate) return new(notes.ToArray(), _bodies, _searchBodyCache, _searchBodyCache.Epoch);
+    }
+
+    /// <summary>Searches from one body read per note at most; snippets and matching share that same text.</summary>
+    internal static SearchMatchResult[] MatchSearch(SearchContext context, string query, CancellationToken cancellationToken)
+    {
+        var terms = query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var matches = new List<SearchMatchResult>();
+        foreach (var note in context.Notes)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            string? text = note.InMemoryText;
+            var status = text is null ? BodyReadStatus.Unreadable : BodyReadStatus.Available;
+            if (text is not null) CacheSearchBody(context.Cache, context.CacheEpoch, note, text);
+            else
+            {
+                var body = ReadSearchBody(context.BodyFolder, context.Cache, context.CacheEpoch, note, cancellationToken);
+                status = body.Status;
+                text = body.Text;
+            }
+
+            var (mode, keywordLength, modeArgument) = status == BodyReadStatus.Available ? Modes.Detect(text ?? "") : (NoteMode.Plain, 0, (string?)null);
+            var title = note.TitleKnown ? note.Title : status == BodyReadStatus.Available ? Note.MakeTitle(text ?? "", keywordLength) : "Note text unavailable";
+            var matchesQuery = terms.Length == 0 || terms.All(term =>
+                title.Contains(term, StringComparison.CurrentCultureIgnoreCase) ||
+                status == BodyReadStatus.Available && (text ?? "").Contains(term, StringComparison.CurrentCultureIgnoreCase));
+            if (!matchesQuery) continue;
+
+            var snippet = status == BodyReadStatus.Available ? MakeSearchSnippet(text ?? "", terms, keywordLength) : "Note text unavailable";
+            matches.Add(new SearchMatchResult(note.Id, title, snippet, mode, modeArgument, status));
+        }
+        return matches.ToArray();
+    }
+
+    internal int SearchBodyReadCount => Volatile.Read(ref _searchBodyCache.ReadCount);
+
+    internal void ResetSearchBodyReadCount() => Interlocked.Exchange(ref _searchBodyCache.ReadCount, 0);
+
+    private void InvalidateSearchBody(string id)
+    {
+        lock (_searchBodyCache.Gate) _searchBodyCache.Entries.Remove(id);
+    }
+
+    private static void CacheSearchBody(SearchBodyCache cache, long epoch, SearchNoteSnapshot note, string text)
+    {
+        lock (cache.Gate)
+        {
+            if (cache.Epoch != epoch) return;
+            if (cache.Entries.TryGetValue(note.Id, out var existing) &&
+                (existing.Revision > note.Revision || existing.Revision == note.Revision && existing.Modified > note.Modified)) return;
+            cache.Entries[note.Id] = new SearchBodyCacheEntry(note.Modified, note.Revision, text);
+        }
+    }
+
+    private static BodyReadResult ReadSearchBody(string folder, SearchBodyCache cache, long epoch, SearchNoteSnapshot note, CancellationToken cancellationToken)
+    {
+        lock (cache.Gate)
+            if (cache.Epoch == epoch && cache.Entries.TryGetValue(note.Id, out var cached) && cached.Modified == note.Modified && cached.Revision == note.Revision)
+                return new(cached.Text, BodyReadStatus.Available);
+
+        cancellationToken.ThrowIfCancellationRequested();
+        Interlocked.Increment(ref cache.ReadCount);
+        BodyReadResult result;
+        try { result = new(File.ReadAllText(SearchBodyPath(folder, note.Id)), BodyReadStatus.Available); }
+        catch (FileNotFoundException) { result = new(null, BodyReadStatus.Missing); }
+        catch (DirectoryNotFoundException) { result = new(null, BodyReadStatus.Missing); }
+        catch { result = new(null, BodyReadStatus.Unreadable); }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        if (result.Status == BodyReadStatus.Available) CacheSearchBody(cache, epoch, note, result.Text ?? "");
+        return result;
+    }
+
+    private static string SearchBodyPath(string folder, string id)
+    {
+        if (string.IsNullOrWhiteSpace(id) || !string.Equals(Path.GetFileName(id), id, StringComparison.Ordinal) || id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            throw new InvalidDataException("The note has an invalid id.");
+        return Path.Combine(folder, id + ".md");
+    }
+
+    private static string MakeSearchSnippet(string text, string[] terms, int keywordLength)
+    {
+        var lines = text.Replace("\r", "").Split('\n').Take(400)
+            .Skip(keywordLength > 0 ? 2 : 1).Where(line => line.Trim().Length > 0).ToList();
+        if (terms.Length > 0)
+        {
+            var hit = lines.FindIndex(line => line.Contains(terms[0], StringComparison.CurrentCultureIgnoreCase));
+            if (hit > 0) lines = lines.Skip(hit).ToList();
+        }
+        return string.Join("  ·  ", lines.Take(6).Select(line => line.Trim().Replace("[ ]", "☐").Replace("[x]", "☑")));
+    }
+
+    private void ClearSearchBodyCache()
+    {
+        lock (_searchBodyCache.Gate)
+        {
+            _searchBodyCache.Epoch++;
+            _searchBodyCache.Entries.Clear();
+        }
     }
 
     private string BodyPath(string id)
@@ -241,6 +505,7 @@ public sealed class Store
     public void Load()
     {
         if (_forcedUnavailable) return;
+        ClearSearchBodyCache();
         if (!Directory.Exists(_folder))
         {
             IsAvailable = false;
@@ -364,6 +629,7 @@ public sealed class Store
             foreach (var note in Data.All.Where(n => n.Dirty).ToList())
             {
                 if (note.BodyUnavailable) continue;
+                note.InvalidateSearchCache();
                 var text = note.Text;
                 note.TitleCache = Note.MakeTitle(text);
                 note.ModeCache = Modes.Detect(text).Mode;
@@ -402,6 +668,8 @@ public sealed class Store
         _forcedUnavailable = false;
         IsAvailable = Directory.Exists(_folder);
         Note.LoadBody = ReadBody;
+        Note.InvalidateSearchBody = InvalidateSearchBody;
+        ClearSearchBodyCache();
     }
 
     public void MarkUnavailable(string reason)

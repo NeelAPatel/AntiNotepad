@@ -51,6 +51,7 @@ internal static class SelfTest
         Check(StartupRequestLatchChecks(out var startupRequestReport), "startup request latch: " + startupRequestReport);
         Check(NoteSwipeChecks(out var swipeReport), "note swipe: " + swipeReport);
         Check(WelcomeSlotsSelfTest(out var welcomeReport), "welcome slots: " + welcomeReport);
+        Check(SearchSpeedChecks(out var searchReport), "search speed: " + searchReport);
 
         Console.WriteLine(failures.Count == 0 ? "SELFTEST PASS" : "SELFTEST FAIL\n" + string.Join("\n", failures));
         return failures.Count == 0 ? 0 : 1;
@@ -491,5 +492,107 @@ internal static class SelfTest
 
         report = "slots 1-5 seeded, 6-9 empty, stack empty, opens slot 5; occupied slot preserved; second call unchanged; five timers parse; rate/progress defaults";
         return seeded && timersParse && preserved && secondCallNoOp && defaults;
+    }
+
+    private static bool SearchSpeedChecks(out string report)
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"antinotepad-search-selftest-{Guid.NewGuid():N}");
+        var failures = new List<string>();
+        var originalLoader = Note.LoadBody;
+        var originalInvalidator = Note.InvalidateSearchBody;
+        void CheckCase(bool ok, string name) { if (!ok) failures.Add(name); }
+        try
+        {
+            var store = new Store(root);
+            store.Load();
+            store.Data.Stack.Clear();
+            for (var i = 0; i < 200; i++)
+                store.Data.Stack.Add(new Note { Text = $"Fixture {i}\nneedle shared " + new string('x', i % 3 == 0 ? 32768 : i % 3 == 1 ? 4096 : 128) });
+            CheckCase(store.Save(), "fixture saves");
+            store = new Store(root);
+            store.Load();
+            var notes = store.Data.Stack.ToArray();
+            for (var i = 0; i < notes.Length; i += 2) _ = notes[i].Text;
+            var terms = new[] { "needle", "shared" };
+            var timer = System.Diagnostics.Stopwatch.StartNew();
+            var beforeMatches = notes.Count(n => terms.All(t => n.PeekText().Contains(t, StringComparison.CurrentCultureIgnoreCase)));
+            timer.Stop();
+            var beforeMs = timer.Elapsed.TotalMilliseconds;
+            store.ResetSearchBodyReadCount();
+            timer.Restart();
+            var snapshot = store.CreateSearchSnapshot(notes);
+            var context = store.CreateSearchContext(snapshot);
+            timer.Stop();
+            var afterMs = timer.Elapsed.TotalMilliseconds;
+            CheckCase(store.SearchBodyReadCount == 0, "snapshot performs no disk reads");
+            timer.Restart();
+            var matches = Task.Run(() => Store.MatchSearch(context, "needle shared", CancellationToken.None)).GetAwaiter().GetResult();
+            timer.Stop();
+            var coldMs = timer.Elapsed.TotalMilliseconds;
+            CheckCase(beforeMatches == 200 && matches.Length == 200 && matches.Any(m => m.Id == notes[0].Id) && matches.Any(m => m.Id == notes[1].Id), "loaded and unloaded matches");
+            CheckCase(store.SearchBodyReadCount == 100, "one read per unloaded body for multi-term query and snippets");
+            _ = Task.Run(() => Store.MatchSearch(context, "shared", CancellationToken.None)).GetAwaiter().GetResult();
+            CheckCase(store.SearchBodyReadCount == 100, "unchanged query reuses body cache");
+
+            notes[1].Text = "edited body\nreplacement";
+            var edited = store.CreateSearchContext(store.CreateSearchSnapshot(notes));
+            CheckCase(Store.MatchSearch(edited, "replacement", CancellationToken.None).Any(m => m.Id == notes[1].Id)
+                && Store.MatchSearch(edited, "needle", CancellationToken.None).All(m => m.Id != notes[1].Id), "in-memory edit invalidates cached text");
+            CheckCase(store.Save(), "edited fixture saves");
+            notes[1].Detach();
+            var saved = store.CreateSearchContext(store.CreateSearchSnapshot(notes));
+            CheckCase(Store.MatchSearch(saved, "replacement", CancellationToken.None).Any(m => m.Id == notes[1].Id), "saved edit replaces cached text");
+
+            var lost = notes[3];
+            var bodyPath = Path.Combine(root, "notes", lost.Id + ".md");
+            File.Delete(bodyPath);
+            // A fresh store has no search cache and leaves the unavailable body unloaded.
+            store = new Store(root); store.Load();
+            lost = store.Data.Stack.Single(n => n.Id == lost.Id);
+            var unavailable = store.CreateSearchContext(store.CreateSearchSnapshot([lost]));
+            var missing = Store.MatchSearch(unavailable, "Fixture 3", CancellationToken.None);
+            var reads = store.SearchBodyReadCount;
+            _ = Store.MatchSearch(unavailable, "Fixture 3", CancellationToken.None);
+            CheckCase(missing.Length == 1 && missing[0].BodyStatus == BodyReadStatus.Missing && store.SearchBodyReadCount == reads + 1,
+                "missing body matches title, retains status, and is not cached as empty");
+            CheckCase(!lost.Dirty && store.Save() && !File.Exists(bodyPath), "search does not dirty or save missing body");
+
+            var locked = store.Data.Stack[5];
+            var lockedPath = Path.Combine(root, "notes", locked.Id + ".md");
+            var originalBody = File.ReadAllText(lockedPath);
+            using (var held = new FileStream(lockedPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+                var blocked = store.CreateSearchContext(store.CreateSearchSnapshot([locked]));
+                var unreadable = Task.Run(() => Store.MatchSearch(blocked, "Fixture 5", CancellationToken.None)).GetAwaiter().GetResult();
+                CheckCase(unreadable.Length == 1 && unreadable[0].BodyStatus == BodyReadStatus.Unreadable && !locked.Dirty && store.Save(), "unreadable body remains distinct and unsaved");
+            }
+            CheckCase(File.ReadAllText(lockedPath) == originalBody, "unreadable body preserved byte for byte");
+
+            using (var generation = new SearchGeneration())
+            using (var first = generation.Begin())
+            {
+                var oldResults = Store.MatchSearch(saved, "needle", first.Token);
+                using var second = generation.Begin();
+                var published = Store.MatchSearch(saved, "replacement", second.Token);
+                var cancellationObserved = false;
+                try { _ = Store.MatchSearch(saved, "needle", first.Token); }
+                catch (OperationCanceledException) { cancellationObserved = true; }
+                if (generation.IsCurrent(first)) published = oldResults;
+                CheckCase(cancellationObserved && !generation.IsCurrent(first) && generation.IsCurrent(second)
+                    && published.Length == 1 && published[0].Id == notes[1].Id, "cancelled stale query cannot replace newer results");
+                generation.Cancel();
+                CheckCase(!generation.IsCurrent(second), "closing invalidates pending publication");
+            }
+            Console.WriteLine($"A18-search-speed timing: 200 notes (100 unloaded), old UI filter {beforeMs:F3} ms; snapshot/context {afterMs:F3} ms, 0 disk reads; cold background query {coldMs:F3} ms, 100 disk reads.");
+            report = failures.Count == 0 ? "loaded/unloaded, read count, cache edit/save, unavailable bodies" : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+        catch (Exception ex) { report = string.Join("; ", failures.Append(ex.ToString())); return false; }
+        finally
+        {
+            Note.LoadBody = originalLoader;
+            Note.InvalidateSearchBody = originalInvalidator;
+            try { if (Directory.Exists(root)) Directory.Delete(root, true); } catch { }
+        }
     }
 }
