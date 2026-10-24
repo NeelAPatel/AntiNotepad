@@ -30,9 +30,46 @@ if ($DryRun) {
         RemoveRunValue = $appName
         RemoveData = [bool]$RemoveData
         DataDirectory = if ($RemoveData) { $dataDirectory } else { '(preserved)' }
-        Plan = 'Request a graceful quit from the installed executable and wait with a timeout; remove the install folder, Start menu shortcut, and product Run value.'
+        NotesFolder = '(read from location.json during uninstall)'
+        Plan = 'Request a graceful quit from the installed executable and wait with a timeout; remove the install folder, Start menu shortcut, and product Run value. -RemoveData removes app home only; the notes folder is kept.'
     }
 }
+
+$locationPointer = Join-Path $dataDirectory 'location.json'
+$notesDirectory = $null
+$pointerReadError = $null
+$pointerExists = Test-Path -LiteralPath $locationPointer -PathType Leaf
+if ($pointerExists) {
+    try {
+        $location = [System.IO.File]::ReadAllText($locationPointer) | ConvertFrom-Json
+        $candidate = [string]$location.NotesFolder
+        if (-not [string]::IsNullOrWhiteSpace($candidate) -and [IO.Path]::IsPathFullyQualified($candidate)) {
+            $notesDirectory = [IO.Path]::GetFullPath($candidate)
+        }
+    }
+    catch { $pointerReadError = $_.Exception.Message }
+}
+
+$appHomeFullPath = [IO.Path]::GetFullPath($dataDirectory).TrimEnd('\', '/')
+$installFullPath = [IO.Path]::GetFullPath($installDirectory).TrimEnd('\', '/')
+$notesAreInsideAppHome = $false
+$notesAreInsideInstall = $false
+if ($notesDirectory) {
+    $notesFullPath = [IO.Path]::GetFullPath($notesDirectory).TrimEnd('\', '/')
+    $notesAreInsideAppHome = [string]::Equals($appHomeFullPath, $notesFullPath, [StringComparison]::OrdinalIgnoreCase) -or
+        $notesFullPath.StartsWith($appHomeFullPath + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or
+        $notesFullPath.StartsWith($appHomeFullPath + [IO.Path]::AltDirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)
+    $notesAreInsideInstall = [string]::Equals($installFullPath, $notesFullPath, [StringComparison]::OrdinalIgnoreCase) -or
+        $notesFullPath.StartsWith($installFullPath + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or
+        $notesFullPath.StartsWith($installFullPath + [IO.Path]::AltDirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)
+}
+$appHomeHasNotes = (Test-Path -LiteralPath (Join-Path $dataDirectory 'index.json') -PathType Leaf) -or
+    (Test-Path -LiteralPath (Join-Path $dataDirectory 'notes') -PathType Container)
+if ($RemoveData -and (($pointerExists -and -not $notesDirectory) -or $notesAreInsideAppHome -or (-not $pointerExists -and $appHomeHasNotes))) {
+    $detail = if ($pointerReadError) { " Pointer read error: $pointerReadError." } else { '' }
+    throw "Cannot remove app home safely: its notes folder is not recorded outside app home. Notes may be present in $dataDirectory.$detail"
+}
+if ($notesAreInsideInstall) { throw "Cannot uninstall safely: the notes folder is inside the install folder and would be removed: $notesDirectory" }
 
 function New-CleanAppProcessInfo([string]$Executable, [string[]]$Arguments) {
     $info = [System.Diagnostics.ProcessStartInfo]::new()
@@ -118,10 +155,11 @@ try {
         Assert-DirectChildPath $dataDirectory $localAppData $appName
         Assert-PlainDirectory $dataDirectory 'data folder'
         Remove-Item -LiteralPath $dataDirectory -Recurse -Force
-        Write-Output "$appName uninstalled; application data was removed from $dataDirectory."
+        Write-Output "$appName uninstalled; app home was removed from $dataDirectory. Notes were kept at $notesDirectory."
     }
     else {
-        Write-Output "$appName uninstalled; application data remains at $dataDirectory."
+        $keptNotes = if ($notesDirectory) { "Notes were kept at $notesDirectory." } else { 'The notes folder location is not recorded; no notes were removed.' }
+        Write-Output "$appName uninstalled; app home remains at $dataDirectory. $keptNotes"
     }
 }
 catch {

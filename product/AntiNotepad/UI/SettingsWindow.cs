@@ -6,6 +6,8 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Avalonia.Platform.Storage;
+using System.Diagnostics;
 using AntiNotepad;
 using AntiNotepad.Platform;
 using AntiNotepad.Theme;
@@ -22,9 +24,9 @@ internal sealed partial class SettingsWindow : Window
 {
     private static readonly (string Id, string Name, int Icon)[] Sections =
     [
-        // Fluent UI System Icons: color, paint_brush, document_edit, tap_single (a finger touching), desktop, info.
+        // Fluent UI System Icons: color, paint_brush, document_edit, tap_single (a finger touching), desktop, folder, info.
         ("theme", "Theme", 0xf2f5), ("ui", "UI", 0xf592), ("editor", "Editor", 0xf386),
-        ("feel", "Feel", 0xec8d), ("system", "System", 0xf359), ("about", "About", 0xf4a3),
+        ("feel", "Feel", 0xec8d), ("system", "System", 0xf359), ("storage", "Storage", 0xf418), ("about", "About", 0xf4a3),
     ];
     // Remembered while AntiNotepad runs: the last section, and which expanders are open (these start open).
     private static string _section = "theme";
@@ -38,6 +40,10 @@ internal sealed partial class SettingsWindow : Window
     private TextBox _find = null!;
     private Border _tint = null!;
     private string? _appliedMaterial;
+    private string? _pendingNotesFolder;
+    private string? _notesError;
+    private string? _notesSuccess;
+    private string? _notesNotice;
     private Palette? _stylesPalette;
     private Model.Settings S => _pad.Settings;
 
@@ -239,6 +245,7 @@ internal sealed partial class SettingsWindow : Window
             case "editor": EditorPage(page, withPreview); break;
             case "feel": FeelPage(page, withPreview); break;
             case "system": SystemPage(page); break;
+            case "storage": StoragePage(page); break;
             default: AboutPage(page); break;
         }
         return page;
@@ -524,9 +531,185 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Group(AppInfo.Name));
         page.Children.Add(Card(
             Row(Fl(0xf4a3), $"{AppInfo.Name} {AppInfo.Version} ({AppInfo.Label})", $"{AppInfo.Description}\n{AppInfo.Copyright}", null),
-            Row(Fl(0xf418), "Notes folder", Program.DataFolder + "\nSaved as you type, one file per note", null),
             Row(Fl(0xf4b8), "Keyboard shortcuts", "Every shortcut on one page", TextButton("Show", () => { _pad.ShowResident(); _pad.OpenHelp(); })),
             Row(Fl(0xf19f), "Restore default settings", "Undo it from the pad's notice", TextButton("Restore", _pad.ResetSettings))));
+    }
+
+    private void StoragePage(StackPanel page)
+    {
+        page.Children.Add(Group("Notes folder"));
+        var details = new StackPanel { Spacing = 8 };
+        details.Children.Add(ReadOnlyPath(Program.DataFolder));
+
+        if (_pendingNotesFolder is { } target)
+        {
+            var pending = Kit.Text($"New location: {target}", _p.Muted, 12);
+            pending.TextWrapping = TextWrapping.Wrap;
+            details.Children.Add(pending);
+        }
+
+        var error = _notesError ?? Program.NotesLocationError;
+        if (!string.IsNullOrWhiteSpace(error)) details.Children.Add(InlineNote(error, _p.Error));
+        if (!string.IsNullOrWhiteSpace(_notesSuccess)) details.Children.Add(InlineNote(_notesSuccess, _p.Confirm));
+        if (!string.IsNullOrWhiteSpace(_notesNotice)) details.Children.Add(InlineNote(_notesNotice, _p.Muted));
+
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+        if (_pendingNotesFolder is { } destination)
+        {
+            // The pending move: Cancel, then the accent Migrate button at the right edge.
+            actions.HorizontalAlignment = HorizontalAlignment.Right;
+            actions.Children.Add(TextButton("Cancel", () => { _pendingNotesFolder = null; _notesError = null; _notesNotice = null; Refresh(); }));
+            actions.Children.Add(TextButton("Migrate notes", () => MoveNotes(destination), primary: true));
+        }
+        else
+        {
+            if (Program.NotesLocationError is null) actions.Children.Add(TextButton("Open", OpenNotesFolder));
+            actions.Children.Add(TextButton(Program.NotesLocationError is null ? "Change location…" : "Choose folder", ChooseNotesFolder));
+        }
+        details.Children.Add(actions);
+
+        var fields = SubRow(null, details, wide: true);
+        fields.Tag = "sub Notes folder location and move notes";
+        page.Children.Add(Card(Row(Fl(0xf418), "Notes folder", "Your notes are plain files here, saved as you type.", null), fields));
+
+        page.Children.Add(Group("Other locations"));
+        var recovered = Path.Combine(Program.DataFolder, "recovered");
+        var recoveredCount = RecoveredFileCount(recovered);
+        var recoveredDescription = $"{recovered}\n{(recoveredCount is null ? "Unavailable" : recoveredCount == 0 ? "Empty" : $"{recoveredCount} {(recoveredCount == 1 ? "file" : "files")}")}\nNote files the app couldn't place. Open them in any text editor.";
+        page.Children.Add(Card(
+            Row(Fl(0xf418), "Recovered notes", recoveredDescription,
+                recoveredCount is > 0 ? TextButton("Open", () => OpenFolder(recovered)) : null),
+            Row(Fl(0xf359), "App data", $"{Program.AppHome}\nLog file and the pointer to your notes folder.",
+                TextButton("Open", () => OpenFolder(Program.AppHome)))));
+    }
+
+    private Control InlineNote(string text, Color color)
+    {
+        var label = new TextBlock { Text = text, FontSize = 12, Foreground = new SolidColorBrush(color), TextWrapping = TextWrapping.Wrap };
+        return label;
+    }
+
+    private async void ChooseNotesFolder()
+    {
+        try
+        {
+            var selected = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Choose notes folder", AllowMultiple = false });
+            var folder = selected.FirstOrDefault()?.Path.LocalPath;
+            if (string.IsNullOrWhiteSpace(folder)) return;
+            folder = Path.GetFullPath(folder);
+            if (SamePath(folder, Program.DataFolder)) return;
+            _pendingNotesFolder = folder;
+            _notesError = null;
+            _notesSuccess = null;
+            _notesNotice = null;
+            Refresh();
+        }
+        catch (Exception ex) { _notesError = "Couldn't choose a notes folder · " + ex.Message; Refresh(); }
+    }
+
+    private void MoveNotes(string target)
+    {
+        _pad.Save();
+        if (Program.Store.LastError is { } saveError)
+        {
+            _notesError = "Couldn't save notes · " + saveError;
+            Refresh();
+            return;
+        }
+
+        var oldFolder = Program.DataFolder;
+        var appHome = Program.AppHome;
+        var fileCount = NotesFileCount(oldFolder);
+        var backupRoot = SamePath(oldFolder, appHome) ? appHome : Path.GetDirectoryName(oldFolder)!;
+        var before = DirectorySet(backupRoot);
+        if (!Program.MoveNotes(target, out var message))
+        {
+            _notesError = message;
+            _notesNotice = null;
+            Refresh();
+            return;
+        }
+
+        var backup = NewBackupDirectory(backupRoot, before, oldFolder, target, appHome);
+        _pendingNotesFolder = null;
+        _notesError = null;
+        _notesSuccess = $"Moved {fileCount} {(fileCount == 1 ? "file" : "files")}. The old folder was kept as {backup ?? Path.GetFileName(oldFolder)}.";
+        _notesNotice = message.StartsWith("Notes moved to ", StringComparison.OrdinalIgnoreCase) ? null : message;
+        Refresh();
+    }
+
+    private static int? RecoveredFileCount(string folder)
+    {
+        try { return Directory.Exists(folder) ? Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories).Count() : 0; }
+        catch { return null; }
+    }
+
+    private static int NotesFileCount(string folder)
+    {
+        var count = 0;
+        foreach (var name in new[] { "index.json", "index.json.bak" })
+            if (File.Exists(Path.Combine(folder, name))) count++;
+        foreach (var name in new[] { "notes", "recovered" })
+        {
+            var directory = Path.Combine(folder, name);
+            if (Directory.Exists(directory)) count += Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories).Count();
+        }
+        return count;
+    }
+
+    private static HashSet<string> DirectorySet(string folder)
+    {
+        try { return Directory.Exists(folder) ? Directory.GetDirectories(folder).ToHashSet(StringComparer.OrdinalIgnoreCase) : []; }
+        catch { return []; }
+    }
+
+    private static string? NewBackupDirectory(string root, HashSet<string> before, string oldFolder, string target, string appHome)
+    {
+        try
+        {
+            var prefix = SamePath(oldFolder, appHome)
+                ? "backup-before-move-"
+                : Path.GetFileName(oldFolder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) + " (moved ";
+            return Directory.GetDirectories(root)
+                .Where(path => !before.Contains(path)
+                    && Path.GetFileName(path).StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                    && !IsSameOrNestedPath(path, target)
+                    && !IsSameOrNestedPath(target, path))
+                .Select(Path.GetFileName)
+                .FirstOrDefault();
+        }
+        catch { return null; }
+    }
+
+    private static bool SamePath(string left, string right) => string.Equals(
+        Path.GetFullPath(left).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+        Path.GetFullPath(right).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+        StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsSameOrNestedPath(string parent, string candidate)
+    {
+        try
+        {
+            parent = Path.GetFullPath(parent).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            candidate = Path.GetFullPath(candidate).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return string.Equals(parent, candidate, StringComparison.OrdinalIgnoreCase)
+                || candidate.StartsWith(parent + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+        }
+        catch { return false; }
+    }
+
+    private void OpenNotesFolder() => OpenFolder(Program.DataFolder);
+
+    private void OpenFolder(string path)
+    {
+        try
+        {
+            if (!Directory.Exists(path)) { _pad.Toast($"Folder is unavailable · {path}"); return; }
+            var start = new ProcessStartInfo("explorer.exe") { UseShellExecute = true };
+            start.ArgumentList.Add(path);
+            Process.Start(start);
+        }
+        catch (Exception ex) { _pad.Toast("Couldn't open folder · " + ex.Message); }
     }
 
     /// <summary>The one preview, moved to whichever page shows it, so its trace and scroll survive tab changes.</summary>

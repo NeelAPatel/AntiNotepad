@@ -46,6 +46,8 @@ internal static class SelfTest
         finally { try { Directory.Delete(dir, true); } catch { } }
 
         Check(DefaultDataMigrationSelfTest(out var migrationReport), "default data folder migration: " + migrationReport);
+        Check(InputLimitChecks(out var inputReport), "input limits: " + inputReport);
+        Check(NotesLocationChecks(out var notesReport), "notes location and recovery: " + notesReport);
 
         Console.WriteLine(failures.Count == 0 ? "SELFTEST PASS" : "SELFTEST FAIL\n" + string.Join("\n", failures));
         return failures.Count == 0 ? 0 : 1;
@@ -195,5 +197,202 @@ internal static class SelfTest
             report = ex.Message;
             return false;
         }
+    }
+
+    private static bool InputLimitChecks(out string report)
+    {
+        var failures = new List<string>();
+        void Check(bool ok, string what) { if (!ok) failures.Add(what); }
+
+        try
+        {
+            Check(!Editor.PadView.TryListNumber("123456789012. item", out _), "12-digit list marker is not continued or renumbered");
+
+            Check(!Timers.TryParse("999999999999999999999h", out _, out _), "oversized timer is rejected");
+            Check(!Timers.TryParse("\u0665m", out _, out _), "non-ASCII timer digits are rejected");
+            Check(!Timers.TryParse("1000h", out _, out _), "1000-hour timer is rejected");
+            Check(!Timers.TryParse("1000:00:00", out _, out _), "1000-hour clock timer is rejected");
+            Check(!Timers.TryParse("999h60m", out _, out _), "timer beyond the maximum is rejected");
+            Check(Timers.TryParse("999h59m59s", out var maxParts, out _) && maxParts == TimeSpan.FromSeconds(3_599_999), "999h59m59s timer is accepted");
+            Check(Timers.TryParse("999:59:59", out var maxClock, out _) && maxClock == TimeSpan.FromSeconds(3_599_999), "999:59:59 clock timer is accepted");
+            Check(Timers.Format(TimeSpan.FromSeconds(3_599_999)) == "999:59:59", "long timer formatting preserves three-digit hours");
+
+            var deep = new string('(', 65) + "1" + new string(')', 65);
+            Check(Calc.Calculator.EvaluateNote(["math", deep])[1]?.Result is null, "65-deep parentheses are invalid");
+            Check(Calc.Calculator.EvaluateNote(["math", new string('(', 64) + "1" + new string(')', 64)])[1]?.Result?.Value == 1, "64-deep parentheses remain valid");
+            Check(Calc.Calculator.EvaluateNote(["math", new string('-', 65) + "1"])[1]?.Result is null, "65 chained unary signs are invalid");
+
+            Calc.CalcResult? One(string expression) => Calc.Calculator.EvaluateNote(["math", expression])[1]?.Result;
+            Calc.LineEval? OneLine(string expression) => Calc.Calculator.EvaluateNote(["math", expression])[1];
+            Check(One("$5 + €3") is null, "mixed-currency addition is invalid");
+            Check(OneLine("$5 + €3")?.ErrorReason == Calc.CalcErrorReason.MixedCurrencies, "mixed-currency addition has an explicit error reason");
+            Check(Calc.Calculator.EvaluateInlineLine("$5 + €3 =")?.ErrorReason == Calc.CalcErrorReason.MixedCurrencies, "inline mixed-currency addition has an explicit error reason");
+            Check(One("$5 + $3")?.Display == "$8", "same-currency addition is preserved");
+            Check(One("$5 + 3")?.Display == "$8", "plain number plus money keeps its currency");
+            Check(One("$5 + €3%") is null, "mixed-currency percent addition is invalid");
+            Check(One("min($5, €3)") is null && One("sum($5, €3)") is null, "mixed-currency comparisons and aggregates are invalid");
+            Check(Calc.Calculator.EvaluateNote(["math", "$5", "€3", "sum"])[3]?.Result is null, "mixed-currency note aggregate is invalid");
+
+            bool parsedFirst = Timers.TryParse("5m tea", out var firstDuration, out var firstLabel, out var firstText);
+            bool parsedSecond = Timers.TryParse("5m coffee", out var secondDuration, out var secondLabel, out var secondText);
+            var firstKey = Editor.PadView.TimerKey("selftest", firstText, 1);
+            var secondKey = Editor.PadView.TimerKey("selftest", secondText, 1);
+            Check(parsedFirst && parsedSecond && firstDuration == secondDuration && firstLabel != secondLabel && firstKey == secondKey,
+                "timer key survives a label edit");
+
+            var timers = new Timers(id => id == "live");
+            var removed = timers.Ensure(firstKey, firstDuration, firstLabel, "live");
+            removed.EndsAt = DateTime.Now.AddMinutes(5);
+            Check(timers.Reconcile("live", Array.Empty<string>()) == 1 && timers.Get(firstKey) is null && timers.EntryCount == 0 && !removed.Running,
+                "removed timer line stops and drops its entry");
+            timers.Ensure("deleted:5m:1", firstDuration, firstLabel, "deleted");
+            timers.Reconcile("live", Array.Empty<string>());
+            Check(timers.Get("deleted:5m:1") is null, "deleted note timer is pruned");
+            Check(!Timers.TryEndAt(DateTime.MaxValue, TimeSpan.FromSeconds(1), out _), "timer end overflow is rejected");
+
+            report = failures.Count == 0 ? "list limits, timer bounds and identity, calculator depth and currencies, timer pruning and end overflow" : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+        catch (Exception ex)
+        {
+            report = "unexpected exception: " + ex.Message;
+            return false;
+        }
+    }
+
+    private static bool NotesLocationChecks(out string report)
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"{AppInfo.Name.ToLowerInvariant()}-notes-location-selftest-{Guid.NewGuid():N}");
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+        try
+        {
+            var freshHome = Path.Combine(root, "fresh-home");
+            var freshDocuments = Path.Combine(root, "fresh-documents");
+            var fresh = NotesLocation.Resolve(freshHome, freshDocuments);
+            var freshExpected = Path.Combine(freshDocuments, AppInfo.DataFolderName);
+            CheckCase(fresh.Error is null && fresh.NotesFolder == freshExpected && Directory.Exists(freshExpected)
+                && NotesLocation.ReadPointer(freshHome) == freshExpected, "fresh install writes the Documents pointer");
+
+            var moveHome = Path.Combine(root, "move-home");
+            var moveDocuments = Path.Combine(root, "move-documents");
+            var moveTarget = Path.Combine(moveDocuments, AppInfo.DataFolderName);
+            Directory.CreateDirectory(Path.Combine(moveHome, "notes"));
+            Directory.CreateDirectory(Path.Combine(moveHome, "recovered"));
+            File.WriteAllText(Path.Combine(moveHome, "index.json"), "index bytes");
+            File.WriteAllText(Path.Combine(moveHome, "index.json.bak"), "backup bytes");
+            File.WriteAllText(Path.Combine(moveHome, "notes", "note1.md"), "a note body");
+            File.WriteAllText(Path.Combine(moveHome, "recovered", "orphan.md"), "recovered body");
+            File.WriteAllText(Path.Combine(moveHome, AppInfo.LogFileName), "the app log stays home");
+            var moved = NotesLocation.Resolve(moveHome, moveDocuments);
+            var homeBackup = Directory.EnumerateDirectories(moveHome, "backup-before-move-*").SingleOrDefault();
+            CheckCase(moved.Error is null && moved.NotesFolder == moveTarget && moved.Notice is null
+                && NotesLocation.ReadPointer(moveHome) == moveTarget
+                && File.ReadAllText(Path.Combine(moveTarget, "index.json")) == "index bytes"
+                && File.ReadAllText(Path.Combine(moveTarget, "index.json.bak")) == "backup bytes"
+                && File.ReadAllText(Path.Combine(moveTarget, "notes", "note1.md")) == "a note body"
+                && File.ReadAllText(Path.Combine(moveTarget, "recovered", "orphan.md")) == "recovered body"
+                && File.Exists(Path.Combine(moveHome, AppInfo.LogFileName))
+                && homeBackup is not null && File.Exists(Path.Combine(homeBackup, "index.json")), "first-run move verifies copies and leaves an app-home backup");
+
+            var occupiedHome = Path.Combine(root, "occupied-home");
+            var occupiedDocuments = Path.Combine(root, "occupied-documents");
+            var occupiedTarget = Path.Combine(occupiedDocuments, AppInfo.DataFolderName);
+            Directory.CreateDirectory(Path.Combine(occupiedHome, "notes"));
+            Directory.CreateDirectory(occupiedTarget);
+            File.WriteAllText(Path.Combine(occupiedHome, "index.json"), "keep old");
+            File.WriteAllText(Path.Combine(occupiedTarget, "index.json"), "keep target");
+            var occupied = NotesLocation.Resolve(occupiedHome, occupiedDocuments);
+            CheckCase(occupied.NotesFolder == occupiedHome && occupied.Notice is not null && NotesLocation.ReadPointer(occupiedHome) is null
+                && File.ReadAllText(Path.Combine(occupiedHome, "index.json")) == "keep old"
+                && File.ReadAllText(Path.Combine(occupiedTarget, "index.json")) == "keep target", "existing target index is refused");
+
+            var missingHome = Path.Combine(root, "missing-home");
+            var missingTarget = Path.Combine(root, "missing-target");
+            Directory.CreateDirectory(missingHome);
+            File.WriteAllText(Path.Combine(missingHome, NotesLocation.PointerFileName), System.Text.Json.JsonSerializer.Serialize(new { NotesFolder = missingTarget }));
+            var missing = NotesLocation.Resolve(missingHome, Path.Combine(root, "unused-documents"));
+            CheckCase(missing.Error is not null && missing.NotesFolder == missingTarget && !Directory.Exists(missingTarget), "missing pointer target is not created");
+
+            var recoveryFolder = Path.Combine(root, "unknown-body");
+            var unknownStore = new Store(recoveryFolder);
+            unknownStore.Load();
+            unknownStore.Data.Stack[0].Text = "kept note";
+            CheckCase(unknownStore.Save(), "fixture note saves for orphan recovery");
+            var unknownBody = Path.Combine(recoveryFolder, "notes", "unknown.md");
+            File.WriteAllText(unknownBody, "unknown body survives");
+            var recoveryStore = new Store(recoveryFolder);
+            recoveryStore.Load();
+            var recoveredBody = Path.Combine(recoveryFolder, "recovered", "unknown.md");
+            CheckCase(!File.Exists(unknownBody) && File.ReadAllText(recoveredBody) == "unknown body survives", "unknown body moves to recovered");
+
+            var deleteFolder = Path.Combine(root, "delete-forever");
+            var deleteStore = new Store(deleteFolder);
+            deleteStore.Load();
+            var deleted = deleteStore.Data.Stack[0];
+            deleted.Text = "delete forever body";
+            CheckCase(deleteStore.Save(), "fixture note saves for delete-forever");
+            var deletedBody = Path.Combine(deleteFolder, "notes", deleted.Id + ".md");
+            deleteStore.Data.Stack.Remove(deleted);
+            deleted.Deleted = DateTime.Now;
+            deleteStore.Data.Trash.Add(deleted);
+            CheckCase(deleteStore.Save() && File.Exists(deletedBody), "trash entry keeps its body");
+            deleteStore.Data.Trash.Remove(deleted);
+            CheckCase(deleteStore.Save() && !File.Exists(deletedBody), "delete-forever removes its own body");
+
+            var fallbackFolder = Path.Combine(root, "invalid-index");
+            var fallbackStore = new Store(fallbackFolder);
+            fallbackStore.Load();
+            fallbackStore.Data.Stack[0].Text = "valid backup";
+            fallbackStore.Save();
+            fallbackStore.Save();
+            File.WriteAllText(Path.Combine(fallbackFolder, "index.json"), "{\"Settings\":null}");
+            var fallback = new Store(fallbackFolder);
+            fallback.Load();
+            CheckCase(fallback.Data.Settings is not null && fallback.Data.Stack[0].Text == "valid backup", "null Settings falls back to index backup");
+
+            var missingBodyFolder = Path.Combine(root, "missing-body");
+            var missingBodyStore = new Store(missingBodyFolder);
+            missingBodyStore.Load();
+            var missingNote = missingBodyStore.Data.Stack[0];
+            missingNote.Text = "nonblank note";
+            missingBodyStore.Save();
+            var bodyPath = Path.Combine(missingBodyFolder, "notes", missingNote.Id + ".md");
+            File.Delete(bodyPath);
+            var missingBodyReload = new Store(missingBodyFolder);
+            missingBodyReload.Load();
+            var lostText = missingBodyReload.Data.Stack[0];
+            var preview = lostText.PeekText();
+            lostText.Text = "must not overwrite";
+            lostText.Touched(blank: false, NoteMode.Plain);
+            CheckCase(preview.Length > 0 && lostText.BodyUnavailable && !lostText.Dirty
+                && missingBodyReload.Save() && !File.Exists(bodyPath), "missing nonblank body stays unavailable and is not saved");
+
+            var bypassHome = Path.Combine(root, "bypass-home");
+            var bypassDocuments = Path.Combine(root, "bypass-documents");
+            var custom = Path.Combine(root, "custom-data");
+            Directory.CreateDirectory(bypassHome);
+            File.WriteAllText(Path.Combine(bypassHome, "index.json"), "must not inspect");
+            var bypass = NotesLocation.Resolve(bypassHome, bypassDocuments, custom);
+            CheckCase(bypass.Custom && bypass.AppHome == custom && bypass.NotesFolder == custom
+                && !Directory.Exists(custom) && !Directory.Exists(bypassDocuments)
+                && File.ReadAllText(Path.Combine(bypassHome, "index.json")) == "must not inspect", "ANTINOTEPAD_DATA bypasses Documents and first-run movement");
+
+            var movedDev = Path.Combine(root, "custom-moved");
+            Directory.CreateDirectory(custom); Directory.CreateDirectory(movedDev);
+            File.WriteAllText(Path.Combine(custom, NotesLocation.PointerFileName), System.Text.Json.JsonSerializer.Serialize(new { NotesFolder = movedDev }));
+            var followed = NotesLocation.Resolve(bypassHome, bypassDocuments, custom);
+            CheckCase(followed.Custom && followed.AppHome == custom && followed.NotesFolder == movedDev && followed.Error is null
+                && !Directory.Exists(bypassDocuments), "ANTINOTEPAD_DATA follows its own pointer after an in-app move");
+
+            report = failures.Count == 0 ? "fresh location, verified move and backup, collision refusal, missing pointer, recovered unknown, direct deletion, invalid-index fallback, unavailable body, and custom-path bypass" : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+        catch (Exception ex)
+        {
+            report = string.Join("; ", failures.Append(ex.Message));
+            return false;
+        }
+        finally { try { if (Directory.Exists(root)) Directory.Delete(root, true); } catch { } }
     }
 }

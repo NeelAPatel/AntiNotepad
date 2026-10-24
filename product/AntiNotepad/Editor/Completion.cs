@@ -42,7 +42,7 @@ internal static class Completion
         new("json", "Pretty-print the note as JSON", (pad, _) => { PrettyJson(pad); return null; }),
         new("count", "Count words, lines and characters", (pad, _) => { Count(pad); return null; }),
         new("clear", "Clear done checklist items", (pad, _) => { Transform(pad, TextCommands.ClearDone, keepBlank: true); return null; }),
-        new("ocr", "Read text from a screen snip (or the copied image)", (pad, _) => { OcrRequested?.Invoke(pad); return null; }),
+        new("ocr", "Read text from a screen snip", (pad, _) => { OcrRequested?.Invoke(pad); return null; }),
         new("showcase", "Insert the feature showcase page", (_, _) => Showcase.Text),
         new("lorem", "Insert placeholder text", (_, _) => "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."),
     ];

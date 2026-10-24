@@ -223,16 +223,43 @@ internal sealed partial class SettingsWindow
         return new Panel { Children = { button, popup } };
     }
 
-    /// <summary>A small text button (Change, Restore, Show).</summary>
-    private Button TextButton(string text, System.Action click)
+    /// <summary>A small text button (Change, Restore, Show). <paramref name="primary"/> fills it with the accent for the one action that changes something.</summary>
+    private Button TextButton(string text, System.Action click, bool primary = false)
     {
-        var label = Kit.Text(text, _p.Ink, 13);
+        // Dark text on a light accent, white on a dark one.
+        var a = _p.Accent;
+        var onAccent = 0.2126 * a.R + 0.7152 * a.G + 0.0722 * a.B > 150 ? Color.FromRgb(0x1A, 0x1A, 0x1A) : Colors.White;
+        var label = Kit.Text(text, primary ? onAccent : _p.Ink, 13, primary ? FontWeight.SemiBold : FontWeight.Normal);
         label.Margin = new Thickness(12, 5);
-        var face = new Border { BorderBrush = Line, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(7), Child = label };
+        var face = primary
+            ? new Border { Background = new SolidColorBrush(a), CornerRadius = new CornerRadius(7), Child = label }
+            : new Border { BorderBrush = Line, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(7), Child = label };
         var button = Kit.Plain(face, _p, radius: 7);
+        if (primary)
+        {
+            // The filled face hides Plain's hover tint, so it lightens a little instead.
+            button.PointerEntered += (_, _) => face.Opacity = 0.86;
+            button.PointerExited += (_, _) => face.Opacity = 1;
+        }
         button.Click += (_, _) => click();
         return button;
     }
+
+    /// <summary>A palette-styled, selectable path field that cannot be edited.</summary>
+    private TextBox ReadOnlyPath(string path) => new()
+    {
+        Text = path,
+        IsReadOnly = true,
+        AcceptsReturn = true,
+        TextWrapping = TextWrapping.Wrap,
+        MinHeight = 38,
+        MaxHeight = 68,
+        FontSize = 13,
+        Padding = new Thickness(10, 7),
+        Foreground = new SolidColorBrush(_p.Ink),
+        CaretBrush = new SolidColorBrush(_p.Caret),
+        CornerRadius = new CornerRadius(7),
+    };
 
     // ---------- pictures ----------
 

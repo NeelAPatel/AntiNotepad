@@ -9,9 +9,12 @@ public readonly record struct CalcToken(int Start, int Length, TokenKind Kind);
 /// <summary>Value is the number in the displayed unit. For percentages Unit is "%" and Value is the percentage (25 for "25%").</summary>
 public sealed record CalcResult(string Display, double Value, string? Unit);
 
+public enum CalcErrorReason { None, MixedCurrencies }
+
 public sealed class LineEval
 {
-    public CalcResult? Result { get; init; }          // null = no result to show (blank, comment, heading, error, incomplete)
+    public CalcResult? Result { get; init; }          // null = no numeric result; ErrorReason may request an error chip
+    public CalcErrorReason ErrorReason { get; init; }
     public IReadOnlyList<CalcToken> Tokens { get; init; } = [];  // for syntax colouring, offsets within the line
     public string? AssignedName { get; init; }        // set for `name = expr`
 }
@@ -277,6 +280,7 @@ public static class Calculator
 
     // Date: V is an OLE automation date (U, Cur, Pct unused)
     private readonly record struct Q(double V, UnitDef? U = null, string? Cur = null, bool Pct = false, bool Date = false);
+    private readonly record struct ContextResult(Q? Value, CalcErrorReason ErrorReason = CalcErrorReason.None);
 
     private static bool TryConvert(Q q, UnitDef to, out Q r)
     {
@@ -292,6 +296,7 @@ public static class Calculator
     {
         res = default;
         if (l.Date || r.Date) return TryDateAdd(l, r, sign, out res);
+        if (l.Cur != null && r.Cur != null && l.Cur != r.Cur) return false;
         if (l.U != null && r.U != null && !TryConvert(r, l.U, out r)) return false;
         res = new Q(l.V + sign * r.V, l.U ?? r.U, l.Cur ?? r.Cur, l.Pct && r.Pct);
         return true;
@@ -545,18 +550,27 @@ public static class Calculator
     // ===================================================================== parser
 
     private sealed class Parser(List<Tok> toks, int start, int end, TokenKind?[] kinds,
-                                Dictionary<string, Q> vars, Func<string, Q?>? ctx)
+                                Dictionary<string, Q> vars, Func<string, ContextResult>? ctx)
     {
         private static readonly Tok EndTok = new(RT.End, 0, 0);
+        private const int MaxDepth = 64;
         public int P = start;
         public bool Fail;
+        public CalcErrorReason ErrorReason { get; private set; }
         public bool SawOp;   // any binary operator, function, percent or conversion (for EvaluateInline)
+        private int _depth;
 
         private Tok Cur => P < end ? toks[P] : EndTok;
         private Tok Peek(int k) => P + k < end ? toks[P + k] : EndTok;
         private void Mark(TokenKind k) { if (P < end) kinds[P] = k; }
         private void Take(TokenKind k) { Mark(k); P++; }
-        private Q Bad() { Fail = true; return default; }
+        private Q Bad(CalcErrorReason reason = CalcErrorReason.None)
+        {
+            Fail = true;
+            if (ErrorReason == CalcErrorReason.None) ErrorReason = reason;
+            return default;
+        }
+        private bool EnterDepth() { if (_depth >= MaxDepth) { Fail = true; return false; } _depth++; return true; }
 
         private bool IsWord(Tok t, string w) => t.T == RT.Ident && t.Text == w;
         private bool IsOp(Tok t, char c) => t.T == RT.Op && t.Op == c;
@@ -624,6 +638,7 @@ public static class Calculator
                 SawOp = true;
                 var r = ParseTerm();
                 if (Fail) break;
+                if (l.Cur != null && r.Cur != null && l.Cur != r.Cur) return Bad(CalcErrorReason.MixedCurrencies);
                 if (r.Pct && !l.Pct && !l.Date) l = l with { V = l.V * (1 + sign * r.V) };   // 50 + 10% = 55
                 else if (!TryAdd(l, r, sign, out l)) return Bad();
             }
@@ -679,8 +694,20 @@ public static class Calculator
 
         private Q ParseUnary()
         {
-            if (IsOp(Cur, '-')) { Take(TokenKind.Operator); var q = ParseUnary(); return q.Date ? Bad() : q with { V = -q.V }; }
-            if (IsOp(Cur, '+')) { Take(TokenKind.Operator); return ParseUnary(); }
+            if (IsOp(Cur, '-') || IsOp(Cur, '+'))
+            {
+                if (!EnterDepth()) return default;
+                try
+                {
+                    bool negative = IsOp(Cur, '-');
+                    Take(TokenKind.Operator);
+                    var q = ParseUnary();
+                    if (Fail) return default;
+                    if (!negative) return q;
+                    return q.Date ? Bad() : q with { V = -q.V };
+                }
+                finally { _depth--; }
+            }
             return ParsePower();
         }
 
@@ -690,7 +717,10 @@ public static class Calculator
             if (Fail || !IsOp(Cur, '^')) return b;
             Take(TokenKind.Operator);
             SawOp = true;
-            var e = ParseUnary();   // right-associative; -3^2 = -9 since unary sits above
+            if (!EnterDepth()) return default;
+            Q e;
+            try { e = ParseUnary(); }   // right-associative; -3^2 = -9 since unary sits above
+            finally { _depth--; }
             if (Fail) return default;
             if (b.U != null || e.U != null || b.Date || e.Date) return Bad();
             return new Q(Math.Pow(b.V, e.V), null, b.Cur);
@@ -731,12 +761,17 @@ public static class Calculator
                     return new Q(t.Num, Date: true);
                 case RT.LParen:
                 {
-                    Take(TokenKind.Operator);
-                    var q = ParseExpr();
-                    if (Fail) return default;
-                    if (Cur.T != RT.RParen) return Bad();
-                    Take(TokenKind.Operator);
-                    return UnitSuffix(q);
+                    if (!EnterDepth()) return default;
+                    try
+                    {
+                        Take(TokenKind.Operator);
+                        var q = ParseExpr();
+                        if (Fail) return default;
+                        if (Cur.T != RT.RParen) return Bad();
+                        Take(TokenKind.Operator);
+                        return UnitSuffix(q);
+                    }
+                    finally { _depth--; }
                 }
                 case RT.Ident:
                 {
@@ -748,8 +783,8 @@ public static class Calculator
                     if (ContextWords.Contains(name))
                     {
                         Take(TokenKind.Keyword);
-                        var cv = ctx?.Invoke(name);
-                        return cv ?? Bad();
+                        var cv = ctx?.Invoke(name) ?? default;
+                        return cv.Value ?? Bad(cv.ErrorReason);
                     }
                     if (TryDateWord(name, out var dw)) { Take(TokenKind.Keyword); return dw; }
                     if (Months.TryGetValue(name, out int month) && IsDayNum(Peek(1)))
@@ -820,6 +855,13 @@ public static class Calculator
 
         private Q ParseFunction(string name)
         {
+            if (!EnterDepth()) return default;
+            try { return ParseFunctionCore(name); }
+            finally { _depth--; }
+        }
+
+        private Q ParseFunctionCore(string name)
+        {
             Take(TokenKind.Function);
             Take(TokenKind.Operator); // (
             SawOp = true;
@@ -857,9 +899,12 @@ public static class Calculator
                 case "min": case "max": case "avg": case "average": case "sum":
                 {
                     double acc = a.V;
+                    string? currency = a.Cur;
                     for (int i = 1; i < args.Count; i++)
                     {
                         var b = args[i];
+                        if (currency != null && b.Cur != null && currency != b.Cur) return Bad(CalcErrorReason.MixedCurrencies);
+                        currency ??= b.Cur;
                         if (a.U != null || b.U != null)
                         {
                             if (a.U == null || b.U == null || !TryConvert(b, a.U, out b)) return Bad();
@@ -928,7 +973,7 @@ public static class Calculator
         }
     }
 
-    private static LineEval EvalLine(string line, Dictionary<string, Q> vars, Func<string, Q?>? ctx,
+    private static LineEval EvalLine(string line, Dictionary<string, Q> vars, Func<string, ContextResult>? ctx,
                                      out Q? value, out LineClass cls)
     {
         value = null;
@@ -971,10 +1016,12 @@ public static class Calculator
         }
 
         CalcResult? result = null;
+        var errorReason = CalcErrorReason.None;
         if (first < count)
         {
             var parser = new Parser(raw, first, count, kinds, vars, ctx);
             var q = parser.ParseExpr();
+            errorReason = parser.ErrorReason;
             if (!parser.Fail && parser.P == count && double.IsFinite(q.V))
             {
                 result = ToResult(q);
@@ -993,7 +1040,7 @@ public static class Calculator
         }
         if (end < n) tokens.Add(new CalcToken(end, n - end, TokenKind.Comment));
 
-        return new LineEval { Result = result, Tokens = tokens, AssignedName = result != null ? assign : null };
+        return new LineEval { Result = result, ErrorReason = errorReason, Tokens = tokens, AssignedName = result != null ? assign : null };
     }
 
     private static bool IsAssignableName(string name)
@@ -1006,13 +1053,13 @@ public static class Calculator
 
     // prev/ans: nearest result above (within the block). sum/total/avg: results of the contiguous block above,
     // stopping at a blank or heading/comment line; prose lines without a result are skipped.
-    private static Q? Context(string kw, int index, Q?[] vals, LineClass[] cls)
+    private static ContextResult Context(string kw, int index, Q?[] vals, LineClass[] cls)
     {
         if (kw is "prev" or "ans")
         {
             for (int j = index - 1; j >= 1 && cls[j] == LineClass.Normal; j--)
-                if (vals[j] is { } v) return v;
-            return null;
+                if (vals[j] is { } v) return new ContextResult(v);
+            return default;
         }
         Q? acc = null;
         int count = 0;
@@ -1021,13 +1068,15 @@ public static class Calculator
             if (vals[j] is not { } v) continue;
             v = v with { Pct = false };
             if (acc is not { } a) acc = v;
+            else if (a.Cur != null && v.Cur != null && a.Cur != v.Cur)
+                return new ContextResult(null, CalcErrorReason.MixedCurrencies);
             else if (TryAdd(v, a, 1, out var sumQ)) acc = sumQ;   // topmost line's unit wins
-            else return null;
+            else return default;
             count++;
         }
-        if (kw is "sum" or "total") return acc ?? new Q(0);
-        if (acc is not { } total || count == 0) return null;
-        return total with { V = total.V / count };
+        if (kw is "sum" or "total") return new ContextResult(acc ?? new Q(0));
+        if (acc is not { } total || count == 0) return default;
+        return new ContextResult(total with { V = total.V / count });
     }
 
     public static IReadOnlyList<LineEval?> EvaluateNote(IReadOnlyList<string> lines)
@@ -1056,7 +1105,9 @@ public static class Calculator
         return res;
     }
 
-    public static CalcResult? EvaluateInline(string line)
+    public static CalcResult? EvaluateInline(string line) => EvaluateInlineLine(line)?.Result;
+
+    public static LineEval? EvaluateInlineLine(string line)
     {
         if (string.IsNullOrEmpty(line)) return null;
         int end = line.Length;
@@ -1070,8 +1121,12 @@ public static class Calculator
             if (raw.Count == 0) return null;
             var parser = new Parser(raw, 0, raw.Count, new TokenKind?[raw.Count], NoVars, null);
             var q = parser.ParseExpr();
-            if (parser.Fail || parser.P != raw.Count || !parser.SawOp) return null;
-            return ToResult(q);
+            if (parser.Fail || parser.P != raw.Count || !parser.SawOp)
+                return parser.ErrorReason == CalcErrorReason.MixedCurrencies
+                    ? new LineEval { ErrorReason = parser.ErrorReason }
+                    : null;
+            var result = ToResult(q);
+            return result is null ? null : new LineEval { Result = result };
         }
         catch (Exception)
         {

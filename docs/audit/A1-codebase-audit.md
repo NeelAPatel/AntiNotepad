@@ -1,6 +1,10 @@
 # AntiNotepad code audit
 
-A1-codebase-audit, re-audited by A5-audit-refresh · 2026-10-23 · `dev` at `5e581b7` · all 91 tracked files
+A1-codebase-audit, re-audited by A5-audit-refresh, decisions applied by A6-audit-decisions · 2026-10-23 · all 91 tracked files
+
+> **Update (A6-audit-decisions):** your 8 decisions are applied on `feat/A6-audit-decisions` (not yet in dev). 13 findings
+> are fixed there, plus the `/ocr` repeat bug. **12 remain open**, all medium or low; none needs a decision. See
+> "Fixed in A6" below. The rest of this document is the A5 audit as written.
 
 ## In short
 
@@ -188,7 +192,8 @@ Paths are under `product/AntiNotepad/` unless they start with `tools/` or `.coor
 
 ## Fixed since A1
 
-All seven were checked again in the re-audit and in the dev copy; none introduced a new problem.
+All seven were checked again in the re-audit, and A1-24 and A1-25 were also checked in the dev copy. None introduced a new
+problem.
 
 | ID | What changed |
 |---|---|
@@ -199,6 +204,26 @@ All seven were checked again in the re-audit and in the dev copy; none introduce
 | A1-24-disabled-caret-still-ticks | With blinking off, the caret timer stops; confirmed solid in 6 of 6 dev captures |
 | A1-25-tray-empty-title-sentinel | Tray slots use an explicit "occupied" flag; you confirmed a note titled "empty" is clickable |
 | A1-26-worker-effort-mismatch | Codex workers run luna xhigh everywhere, matching AGENTS.md |
+
+## Fixed in A6 (your decisions)
+
+| ID | What changed | Task |
+|---|---|---|
+| A1-1-recovery-deletes-bodies | Unknown note files move to `recovered\` and are never deleted. Removed notes delete only their own file. A load from the backup list deletes nothing. | A7 |
+| A5-1-body-read-failure-overwrite | A missing or unreadable note opens read-only with a hint pointing to the recovered folder, and is never saved over | A7 |
+| A5-2-invalid-index-bypasses-backup | An incomplete `index.json` falls back to `index.json.bak` | A7 |
+| Decision 1: notes folder | Notes live in `Documents\AntiNotepad` by default. Settings › About shows the folder with Open, Change… (a verified move that keeps a backup) and Open recovered. Log and folder pointer stay in `%LOCALAPPDATA%\AntiNotepad`. | A7 |
+| A1-2-quit-after-save-failure | A failed save on quit shows "Couldn't save your notes" with Retry and Quit anyway. `--quit` does not exit. | A8 |
+| A1-20-cross-platform-payload | The installer publishes `win-x64`: no Linux or macOS files | A8 |
+| A1-4, A1-5, A1-6 | List numbers above 9 digits stop auto-numbering; timers above 99 days or with non-ASCII digits aren't timers; calculations deeper than 64 levels are invalid instead of crashing | A9 |
+| A1-19-mixed-currency-addition | `$5 + €3` is an error | A9 |
+| A1-3, A1-16 | Settings preview timers stop on close. Editing a timer's label keeps it running. Deleting its line or note stops it. | A9 |
+| A5-3 and the `/ocr` repeat bug | A second `/ocr` starts a new snip. The text lands in the note you started from. | A10 |
+| A1-27-tracked-session-snapshots | `.claude/atlas/` untracked and ignored | A6 |
+
+Checked: the merged branch builds with 0 warnings and passes the selftest (two new check groups: notes location and recovery,
+input limits). In the dev copy: unknown file moved to `recovered\`; the unreadable-note hint shows; a read-only `index.json`
+plus `--quit` showed the save prompt and the app stayed open.
 
 ## Evidence
 

@@ -1,16 +1,17 @@
 # STATUS
 
-Updated: 2026-10-23
+Updated: 2026-10-24
 Product: AntiNotepad (`product/AntiNotepad`).
 
 ## Now
-- A6-audit-decisions in progress (2026-10-23) on `feat/A6-audit-decisions` (off `feat/A5-audit-refresh`): it applies the user's
-  8 audit decisions. A1-27 is done here (atlas untracked). Four luna xhigh workers run in `../AntiQuickPad-wt/`:
-  A7-notes-folder-and-recovery, A8-save-failure-quit-and-x64, A9-input-limits-and-timers, A10-ocr-repeat-and-target.
-  The manager reviews each and merges it into A6; the new UI is shown in the dev copy before anything reaches dev.
-- A5-audit-refresh done (2026-10-23) on `feat/A5-audit-refresh`, not merged (waits for the user). It re-audits the tree and
-  rewrites `docs/audit/A1-codebase-audit.md` as a plain-language document. 25 findings open (7 High, 14 Medium, 4 Low), 7 fixed,
-  5 new (A5-1 to A5-5). The doc lists 8 decisions with recommendations. Next: the user answers them.
+- A6-audit-decisions merged into dev (2026-10-24), together with A5-audit-refresh. It applies the user's 8 audit decisions
+  through A7-notes-folder-and-recovery, A8-save-failure-quit-and-x64, A9-input-limits-and-timers and
+  A10-ocr-repeat-and-target, plus test feedback via A11-storage-settings-tab, A12-ocr-always-snip-and-lists and
+  A13-timer-max-and-currency-error. The user approved it in the dev copy. Dev builds with 0 warnings and passes SELFTEST.
+  13 audit findings are fixed and 12 remain open (medium and low, no decisions needed): see `docs/audit/A1-codebase-audit.md`.
+  Next: re-check the audit list with the user.
+- The installed copy is still 0.5.0. Upgrading it with tools/install.ps1 moves the real notes from `%LOCALAPPDATA%\AntiNotepad` to
+  `Documents\AntiNotepad` (with a backup left in app home). Recommend a manual copy of `%LOCALAPPDATA%\AntiNotepad` first.
 - A2-dead-code-tidy, A3-runtime-tidy, A4-tooling-tidy merged into `feat/A1-codebase-audit` (2026-10-23) after manager review.
   They cover the 7 safe A1 fixes (A1-18, 21, 22, 23, 24, 25, 26). The merged branch builds with 0 warnings and passes SELFTEST.
   Its worktrees are removed. Dev-copy check passed: the caret stays solid with blinking off (6/6 captures; the blinking-on
@@ -29,7 +30,6 @@ Product: AntiNotepad (`product/AntiNotepad`).
   GitHub repo, license, signing, portable data defaults, Inno Setup terms.
 
 ## Open
-- Settings window retention: A1 measured `freed=True` in 5 of 5 plain cycles, with private memory flat at about 157 MB (a one-time
-  native cost of about 35 MB). `freed=False` likely needs a trigger: A1-3-preview-timer-retains-settings or
-  A1-13-progress-swipe-close-retention.
+- Settings window retention: A1 measured `freed=True` in 5 of 5 plain cycles (private memory flat at about 157 MB). A1-3's preview
+  timer path is fixed in A9; A1-13-progress-swipe-close-retention is still open.
 - Optional: choose final bar styles and scroll/swipe modes.

@@ -4,6 +4,11 @@ Newest first. History before 2026-10-23 (overnight build log and write-up) is in
 `antipad-v*` and `baseline/m8c-v1-compact`.
 
 ## 2026-10-23
+- **Notes location and recovery** (A7-notes-folder-and-recovery, decision 1): app home remains `%LOCALAPPDATA%\AntiNotepad`
+  for the log and `location.json`; notes live in the user-visible folder `Documents\AntiNotepad` by default, using
+  `SpecialFolder.MyDocuments` so OneDrive redirection is followed. Settings can move notes to another folder. Moves copy and
+  verify the index, backup index, note bodies and recovered files before updating the pointer, then retain the previous copy.
+  Unknown Markdown bodies are moved to `recovered\`; uninstall keeps the notes folder even when app home is removed.
 - **Branches** (C2-stale-branch-cleanup): only `main` and `dev` are kept long-term; old spike, lab and feature branches are
   deleted. The Icon Lab (`--iconlab`) is gone with its branch and gets remade if needed; the N3 release plan is kept as tag
   `proposal/N3-release-plan`.

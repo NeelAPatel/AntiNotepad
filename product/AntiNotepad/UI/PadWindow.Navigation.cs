@@ -327,25 +327,74 @@ internal sealed partial class PadWindow
 
     // ---------- OCR ----------
 
+    private sealed record OcrTarget(Note Note, AvaloniaEdit.Document.TextDocument Document, int CaretOffset);
+
     private DateTime? _awaitingSnip;
     private PadView? _snipPane;
+    private OcrTarget? _snipTarget;
 
-    private async Task RunOcr(PadView pad)
+    private Task RunOcr(PadView pad)
     {
-        if (await Ocr.ClipboardHasImage()) { await OcrIntoPane(pad); return; }
+        _snipTarget = CaptureOcrTarget(pad);
         _awaitingSnip = DateTime.Now; _snipPane = pad;
         Toast("Snip an area · the text lands here");
         Native.StartScreenSnip();
+        return Task.CompletedTask;
     }
 
     private async Task OcrIntoPane(PadView pad)
     {
+        var target = _snipTarget ?? CaptureOcrTarget(pad);
+        _snipTarget = null;
+        await OcrIntoTarget(target);
+    }
+
+    private static OcrTarget CaptureOcrTarget(PadView pad)
+    {
+        var note = pad.Note!;
+        var document = pad.Editor.Document;
+        return new OcrTarget(note, document, Math.Clamp(pad.Editor.CaretOffset, 0, document.TextLength));
+    }
+
+    private async Task OcrIntoTarget(OcrTarget target)
+    {
         var (text, error) = await Ocr.ReadClipboardImage();
         if (!IsVisible) ShowResident(); else Activate();
+        var note = target.Note;
+        if (!Data.Stack.Contains(note) && !Data.Slots.Contains(note))
+        {
+            Toast("Target note was deleted · text not added");
+            return;
+        }
         if (text is null) { Toast(error ?? "No text found"); return; }
-        var doc = pad.Editor.Document;
-        doc.Insert(pad.Editor.CaretOffset, text.Trim());
+
+        var pane = ReferenceEquals(_left.Note, note) && ReferenceEquals(_left.Editor.Document, target.Document)
+            ? _left
+            : Settings.Split && ReferenceEquals(_right.Note, note) && ReferenceEquals(_right.Editor.Document, target.Document)
+                ? _right
+                : null;
+        var recognized = text.Trim();
+        if (pane is null)
+        {
+            var title = note.Title;
+            var current = note.Text;
+            var separator = current.Length == 0 || current.EndsWith('\n') ? "" : "\n";
+            // Keep any cached document in sync, then snapshot the appended text through the note model.
+            var document = PadView.DocumentFor(note);
+            document.Insert(document.TextLength, separator + recognized);
+            note.Text = document.Text;
+            note.Attach(() => document.Text);
+            Edited();
+            Toast($"Text added to {title}");
+            return;
+        }
+
+        var offset = Math.Clamp(target.CaretOffset, 0, target.Document.TextLength);
+        target.Document.Insert(offset, recognized);
+        pane.Editor.CaretOffset = Math.Clamp(offset + recognized.Length, 0, target.Document.TextLength);
+        _active = pane;
+        UpdateChrome();
         Toast($"Read {text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length} words from the image");
-        pad.FocusText();
+        pane.FocusText();
     }
 }

@@ -3,6 +3,10 @@ using System.Text.Json.Serialization;
 
 namespace AntiNotepad.Model;
 
+internal enum BodyReadStatus { Available, Missing, Unreadable }
+
+internal readonly record struct BodyReadResult(string? Text, BodyReadStatus Status);
+
 /// <summary>
 /// A note. Its body lives in its own file and is loaded only when needed; while a note is open in an editor,
 /// <see cref="Text"/> reads the live document instead of keeping a copy.
@@ -11,7 +15,7 @@ namespace AntiNotepad.Model;
 public sealed class Note
 {
     /// <summary>Set by the store: reads a note body from disk by id.</summary>
-    internal static Func<string, string>? LoadBody;
+    internal static Func<string, BodyReadResult>? LoadBody;
 
     private string? _text;
     private Func<string>? _live;
@@ -29,22 +33,62 @@ public sealed class Note
     public NoteMode ModeCache { get; set; }
 
     [JsonIgnore] public bool Dirty { get; set; }
+    [JsonIgnore] public bool BodyUnavailable { get; private set; }
 
     [JsonIgnore]
     public string Text
     {
-        get => _live?.Invoke() ?? (_text ??= LoadBody?.Invoke(Id) ?? "");
-        set { _text = value; _live = null; Dirty = true; Blank = string.IsNullOrWhiteSpace(value); ModeCache = Modes.Detect(value).Mode; TitleCache = null; }
+        get
+        {
+            if (_live is not null) return _live();
+            if (_text is not null) return _text;
+            var result = ReadBody();
+            if (result.Status != BodyReadStatus.Available) return "";
+            return _text = result.Text ?? "";
+        }
+        set
+        {
+            if (_live is null && _text is null && ReadBody().Status != BodyReadStatus.Available) return;
+            _text = value; _live = null; Dirty = true; Blank = string.IsNullOrWhiteSpace(value); ModeCache = Modes.Detect(value).Mode; TitleCache = null;
+        }
     }
 
     /// <summary>The body without pulling it into memory for good (search, snippets).</summary>
-    public string PeekText() => _live?.Invoke() ?? _text ?? LoadBody?.Invoke(Id) ?? "";
+    public string PeekText()
+    {
+        if (_live is not null) return _live();
+        if (_text is not null) return _text;
+        var result = ReadBody();
+        return result.Status == BodyReadStatus.Available ? result.Text ?? "" : "[Note text unavailable]";
+    }
+
+    private BodyReadResult ReadBody()
+    {
+        if (LoadBody is null) { BodyUnavailable = false; return new("", BodyReadStatus.Available); }
+        var result = LoadBody(Id);
+        BodyUnavailable = result.Status != BodyReadStatus.Available;
+        if (result.Status == BodyReadStatus.Missing && Blank)
+        {
+            BodyUnavailable = false;
+            return new("", BodyReadStatus.Available);
+        }
+        return result;
+    }
 
     /// <summary>An editor now owns the text; edits arrive through <see cref="Touched"/>.</summary>
     public void Attach(Func<string> live) { _live = live; _text = null; }
 
+    internal void SetMigratedText(string value)
+    {
+        _text = value; _live = null; Dirty = true; Blank = string.IsNullOrWhiteSpace(value); ModeCache = Modes.Detect(value).Mode; TitleCache = null;
+    }
+
     /// <summary>Called by the editor on every edit, with cheap facts about the document.</summary>
-    public void Touched(bool blank, NoteMode mode) { Dirty = true; Blank = blank; ModeCache = mode; Modified = DateTime.Now; TitleCache = null; }
+    public void Touched(bool blank, NoteMode mode)
+    {
+        if (BodyUnavailable) return;
+        Dirty = true; Blank = blank; ModeCache = mode; Modified = DateTime.Now; TitleCache = null;
+    }
 
     /// <summary>The editor released this note: keep nothing in memory unless it still needs saving.</summary>
     public void Detach()
@@ -56,7 +100,7 @@ public sealed class Note
 
     [JsonIgnore] public bool IsEmpty => Blank;
 
-    [JsonIgnore] public string Title => TitleCache ??= MakeTitle(PeekText());
+    [JsonIgnore] public string Title => BodyUnavailable ? "Note text unavailable" : TitleCache ??= MakeTitle(PeekText());
 
     internal static string MakeTitle(string text)
     {
@@ -155,68 +199,122 @@ public sealed class Store
     {
         WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, Converters = { new JsonStringEnumConverter() }
     };
-    private readonly string _index, _bodies, _legacy;
+    private string _folder, _index, _bodies, _legacy;
+    private HashSet<string> _knownIds = [];
+    private bool _recoveryMode = true;
+    private bool _preserveBackupOnce = true;
+    private bool _forcedUnavailable;
+    private bool _indexReadUnavailable;
     public StoreData Data { get; private set; } = new();
     public string? LastError { get; private set; }
+    public bool IsAvailable { get; private set; } = true;
+    public string Folder => _folder;
 
-    public Store(string directory)
+    public Store(string directory, bool createDirectories = true)
     {
-        Directory.CreateDirectory(directory);
-        _index = Path.Combine(directory, "index.json");
+        _folder = Path.GetFullPath(directory);
+        if (createDirectories) Directory.CreateDirectory(_folder);
+        _index = Path.Combine(_folder, "index.json");
         // Intentional legacy compatibility: v1 used this on-disk name; keep it so existing notes can migrate.
-        _legacy = Path.Combine(directory, "antipad.json");
-        _bodies = Path.Combine(directory, "notes");
-        Directory.CreateDirectory(_bodies);
+        _legacy = Path.Combine(_folder, "antipad.json");
+        _bodies = Path.Combine(_folder, "notes");
+        if (createDirectories) Directory.CreateDirectory(_bodies);
+        IsAvailable = createDirectories || Directory.Exists(_folder);
         Note.LoadBody = ReadBody;
     }
 
-    private string BodyPath(string id) => Path.Combine(_bodies, id + ".md");
-
-    private string ReadBody(string id)
+    private string BodyPath(string id)
     {
-        try { var path = BodyPath(id); return File.Exists(path) ? File.ReadAllText(path) : ""; }
-        catch (Exception ex) { LastError = $"read {id}: {ex.Message}"; return ""; }
+        if (string.IsNullOrWhiteSpace(id) || !string.Equals(Path.GetFileName(id), id, StringComparison.Ordinal) || id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            throw new InvalidDataException("The note has an invalid id.");
+        return Path.Combine(_bodies, id + ".md");
+    }
+
+    private BodyReadResult ReadBody(string id)
+    {
+        try { return new(File.ReadAllText(BodyPath(id)), BodyReadStatus.Available); }
+        catch (FileNotFoundException) { return new(null, BodyReadStatus.Missing); }
+        catch (DirectoryNotFoundException) { return new(null, BodyReadStatus.Missing); }
+        catch (Exception ex) { LastError = $"read {id}: {ex.Message}"; return new(null, BodyReadStatus.Unreadable); }
     }
 
     public void Load()
     {
+        if (_forcedUnavailable) return;
+        if (!Directory.Exists(_folder))
+        {
+            IsAvailable = false;
+            LastError = $"Notes folder is unavailable: {_folder}";
+            return;
+        }
+        IsAvailable = true;
+        _recoveryMode = true;
         var loaded = false;
+        _indexReadUnavailable = false;
         foreach (var candidate in new[] { _index, _index + ".bak" })
         {
             try
             {
                 if (!File.Exists(candidate)) continue;
-                if (JsonSerializer.Deserialize<StoreData>(File.ReadAllText(candidate), Json) is not { } data) continue;
-                Data = data; loaded = true; break;
+                if (JsonSerializer.Deserialize<StoreData>(File.ReadAllText(candidate), Json) is not { } data || !IsComplete(data)) continue;
+                Data = data;
+                _recoveryMode = !string.Equals(candidate, _index, StringComparison.OrdinalIgnoreCase);
+                loaded = true;
+                break;
             }
-            catch (Exception ex) { LastError = $"load {Path.GetFileName(candidate)}: {ex.Message}"; }
+            catch (Exception ex)
+            {
+                LastError = $"load {Path.GetFileName(candidate)}: {ex.Message}";
+                if (IsIoFailure(ex)) _indexReadUnavailable = true;
+            }
         }
-        if (!loaded && File.Exists(_legacy)) MigrateV1();
-        Normalize();
+        var migratedLegacy = !loaded && File.Exists(_legacy) && MigrateV1();
+        loaded |= migratedLegacy;
+        if (!loaded && _indexReadUnavailable)
+        {
+            IsAvailable = false;
+            return;
+        }
+        if (!loaded) { Data = new StoreData(); _recoveryMode = true; }
+        _preserveBackupOnce = _recoveryMode;
+        var expired = Normalize();
+        _knownIds = Data.All.Select(note => note.Id).ToHashSet(StringComparer.Ordinal);
+        if (!_recoveryMode) foreach (var id in expired) DeleteOwnBody(id);
         RemoveOrphans();
+        _recoveryMode = false;
+        if (migratedLegacy) _ = Save();
     }
 
+    private static bool IsComplete(StoreData data) => data.Settings is not null && data.Stack is not null && data.Slots is not null && data.Trash is not null
+        && data.Stack.All(note => note is not null) && data.Slots.All(note => note is not null) && data.Trash.All(note => note is not null);
+
     /// <summary>Intentional legacy migration: v1 kept bodies inside antipad.json. Read it once, write v2, keep the old file as a backup.</summary>
-    private void MigrateV1()
+    private bool MigrateV1()
     {
         try
         {
             var json = File.ReadAllText(_legacy);
-            if (JsonSerializer.Deserialize<StoreData>(json, Json) is not { } data) return;
+            if (JsonSerializer.Deserialize<StoreData>(json, Json) is not { } data || !IsComplete(data)) return false;
             var root = System.Text.Json.Nodes.JsonNode.Parse(json)!;
             var texts = new Dictionary<string, string>();
             foreach (var list in new[] { "Stack", "Slots", "Trash" })
                 foreach (var n in root[list]?.AsArray() ?? [])
                     if (n?["Id"]?.GetValue<string>() is { } id) texts[id] = n["Text"]?.GetValue<string>() ?? "";
-            foreach (var note in data.All) note.Text = texts.GetValueOrDefault(note.Id, "");
+            foreach (var note in data.All) note.SetMigratedText(texts.GetValueOrDefault(note.Id, ""));
             Data = data;
+            _recoveryMode = true;
             Normalize();
-            if (Save()) File.Move(_legacy, _legacy + ".v1-backup", overwrite: true);
+            return true;
         }
-        catch (Exception ex) { LastError = "migrate: " + ex.Message; }
+        catch (Exception ex)
+        {
+            LastError = "migrate: " + ex.Message;
+            if (IsIoFailure(ex)) _indexReadUnavailable = true;
+            return false;
+        }
     }
 
-    private void Normalize()
+    private List<string> Normalize()
     {
         var d = Data;
         d.Version = 2;
@@ -230,37 +328,87 @@ public sealed class Store
         d.ViewSlot = Math.Clamp(d.ViewSlot, 0, 9);
         d.Settings.SplitSlot = Math.Clamp(d.Settings.SplitSlot, 1, 9);
         // Trash keeps 30 days.
+        var expired = d.Trash.Where(n => n.Deleted is { } when && (DateTime.Now - when).TotalDays > 30).Select(n => n.Id).ToList();
         d.Trash.RemoveAll(n => n.Deleted is { } when && (DateTime.Now - when).TotalDays > 30);
+        return expired;
     }
 
-    /// <summary>Body files whose note is gone (deleted forever, expired, dropped while empty).</summary>
+    /// <summary>Moves unknown Markdown bodies aside. Note lifecycle deletions are handled from the saved model, not by this sweep.</summary>
     public void RemoveOrphans()
     {
         try
         {
+            if (!Directory.Exists(_bodies)) return;
             var live = Data.All.Select(n => n.Id).ToHashSet();
-            foreach (var file in Directory.EnumerateFiles(_bodies, "*.md"))
-                if (!live.Contains(Path.GetFileNameWithoutExtension(file))) File.Delete(file);
+            var recovered = Path.Combine(_folder, "recovered");
+            foreach (var file in Directory.EnumerateFiles(_bodies, "*.md", SearchOption.AllDirectories).ToList())
+            {
+                if (live.Contains(Path.GetFileNameWithoutExtension(file))) continue;
+                Directory.CreateDirectory(recovered);
+                var name = Path.GetFileName(file);
+                var destination = Path.Combine(recovered, name);
+                for (var suffix = 1; File.Exists(destination) || Directory.Exists(destination); suffix++)
+                    destination = Path.Combine(recovered, $"{Path.GetFileNameWithoutExtension(name)} (recovered {suffix}).md");
+                File.Move(file, destination);
+            }
         }
         catch (Exception ex) { LastError = "tidy: " + ex.Message; }
     }
 
     public bool Save()
     {
+        if (!IsAvailable || !Directory.Exists(_folder)) { LastError = $"Notes folder is unavailable: {_folder}"; return true; }
         try
         {
+            if (Data.All.Any(note => note.Dirty && !note.BodyUnavailable)) Directory.CreateDirectory(_bodies);
             foreach (var note in Data.All.Where(n => n.Dirty).ToList())
             {
+                if (note.BodyUnavailable) continue;
                 var text = note.Text;
                 note.TitleCache = Note.MakeTitle(text);
                 note.ModeCache = Modes.Detect(text).Mode;
                 Atomic(BodyPath(note.Id), text, backup: false);
                 note.Dirty = false;
             }
-            Atomic(_index, JsonSerializer.Serialize(Data, Json), backup: true);
+            Atomic(_index, JsonSerializer.Serialize(Data, Json), backup: !_preserveBackupOnce);
+            _preserveBackupOnce = false;
+            var current = Data.All.Select(note => note.Id).ToHashSet(StringComparer.Ordinal);
+            var failedDeletes = new List<string>();
+            if (!_recoveryMode)
+                foreach (var removed in _knownIds.Except(current, StringComparer.Ordinal))
+                    if (!DeleteOwnBody(removed)) failedDeletes.Add(removed);
+            _knownIds = current;
+            _knownIds.UnionWith(failedDeletes);
+            if (failedDeletes.Count > 0) return false;
             LastError = null; return true;
         }
         catch (Exception ex) { LastError = ex.Message; return false; }
+    }
+
+    private bool DeleteOwnBody(string id)
+    {
+        try { File.Delete(BodyPath(id)); return true; }
+        catch (Exception ex) { LastError = $"delete {id}: {ex.Message}"; return false; }
+    }
+
+    private static bool IsIoFailure(Exception ex) => ex is IOException or UnauthorizedAccessException or System.Security.SecurityException;
+
+    public void SwitchFolder(string folder)
+    {
+        _folder = Path.GetFullPath(folder);
+        _index = Path.Combine(_folder, "index.json");
+        _legacy = Path.Combine(_folder, "antipad.json");
+        _bodies = Path.Combine(_folder, "notes");
+        _forcedUnavailable = false;
+        IsAvailable = Directory.Exists(_folder);
+        Note.LoadBody = ReadBody;
+    }
+
+    public void MarkUnavailable(string reason)
+    {
+        _forcedUnavailable = true;
+        IsAvailable = false;
+        LastError = reason;
     }
 
     private static void Atomic(string path, string content, bool backup)

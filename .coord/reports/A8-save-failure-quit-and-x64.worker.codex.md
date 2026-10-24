@@ -1,0 +1,8 @@
+Implemented **A8-save-failure-quit-and-x64** in [PadWindow.cs](</F:/LocalVSProj/Visual Studio Apps/AntiQuickPad-wt/A8-save-failure-quit-and-x64/product/AntiNotepad/UI/PadWindow.cs>), [PadWindow.Layout.cs](</F:/LocalVSProj/Visual Studio Apps/AntiQuickPad-wt/A8-save-failure-quit-and-x64/product/AntiNotepad/UI/PadWindow.Layout.cs>), and [install.ps1](</F:/LocalVSProj/Visual Studio Apps/AntiQuickPad-wt/A8-save-failure-quit-and-x64/tools/install.ps1>). The prompt shows the save error in a palette-styled card, focuses Retry, supports Enter/Tab/Esc and click-away dismissal, and keeps failed retries in the same prompt with the updated reason.
+
+The hotkey, tray Quit, and `--quit` now stay resident after a failed save; hidden tray and `--quit` requests show the pad. The in-pad menu has a **Hide** item, not a Quit item; that action still hides the resident app and uses the ordinary save-failure toast.
+
+The x64 publish has no `runtimes` folder or `.so`/`.dylib` files. `Microsoft.Windows.SDK.NET.dll` and `WinRT.Runtime.dll` are present. The Release build passed with **0 warnings and 0 errors**, and both build and publish selftests passed. NuGet’s vulnerability endpoint was unavailable, so the clean build used restored assets with NuGet auditing disabled. The GUI was not launched; visible appearance and live focus behavior remain for the manager’s dev-copy gate.
+
+The full route and publish details are in the [A8 report](</F:/LocalVSProj/Visual Studio Apps/AntiQuickPad-wt/A8-save-failure-quit-and-x64/.coord/reports/A8-save-failure-quit-and-x64.md>). Cleanup of `build/a8-check` and `build/a8-publish` was rejected by the shell safety policy, so both remain.
+

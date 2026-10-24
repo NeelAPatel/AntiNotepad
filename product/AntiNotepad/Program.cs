@@ -10,8 +10,12 @@ namespace AntiNotepad;
 
 internal static class Program
 {
-    /// <summary>The resolved product data directory, including a custom dev/test path when configured.</summary>
+    /// <summary>The resolved user-visible notes directory.</summary>
     public static string DataFolder { get; private set; } = "";
+    /// <summary>The per-user app directory for logs and the notes-folder pointer.</summary>
+    public static string AppHome { get; private set; } = "";
+    public static string? NotesLocationError { get; private set; }
+    public static string? StartupNotice { get; private set; }
     public static bool StartHidden { get; private set; }
     public static bool IsDev { get; private set; }
     public static bool SoftwareRendering { get; private set; }
@@ -45,15 +49,45 @@ internal static class Program
         // The new identity lock is held before moving the default folder, so two new launches cannot race.
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         var dataFolder = DefaultDataFolderMigration.Resolve(localAppData, customDataFolder);
-        DataFolder = dataFolder.Folder;
+        AppHome = dataFolder.Folder;
         if (dataFolder.Error is { } migrationError) Log(migrationError);
         if (!usesCustomData) Startup.MigrateLegacy(Log);
 
+        var documents = usesCustomData ? "" : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        NotesLocationResolution notes;
+        try
+        {
+            if (usesCustomData) notes = NotesLocation.Resolve(AppHome, documents, customDataFolder);
+            else if (string.IsNullOrWhiteSpace(documents)) notes = new(AppHome, AppHome, "Windows did not provide a Documents folder path.");
+            else notes = NotesLocation.Resolve(AppHome, documents);
+        }
+        catch (Exception ex) { notes = new(AppHome, AppHome, $"Could not resolve the notes folder: {ex.Message}"); }
+        AppHome = notes.AppHome;
+        DataFolder = notes.NotesFolder;
+        NotesLocationError = notes.Error;
+        StartupNotice = notes.Notice;
+        if (notes.Error is { } locationError) Log(locationError);
+        if (notes.Notice is { } notice) Log(notice);
+
         // The store is plain files, so it loads before Avalonia: the renderer depends on a setting.
-        Store = new Store(DataFolder);
+        try { Store = new Store(DataFolder, createDirectories: usesCustomData && notes.Error is null); }
+        catch (Exception ex)
+        {
+            Store = new Store(DataFolder, createDirectories: false);
+            notes = notes with { Error = $"The notes folder is unavailable: {DataFolder}. {ex.Message}" };
+            NotesLocationError = notes.Error;
+            StartupNotice = notes.Notice;
+            Store.MarkUnavailable(notes.Error);
+        }
+        if (notes.Error is { } unavailable) Store.MarkUnavailable(unavailable);
         Store.Load();
-        Welcome.SeedIfNew(Store.Data);
-        Showcase.EnsureInDev(Store.Data, IsDev);
+        if (!Store.IsAvailable && NotesLocationError is null) NotesLocationError = Store.LastError ?? $"The notes folder is unavailable: {DataFolder}";
+        if (Store.IsAvailable)
+        {
+            Welcome.SeedIfNew(Store.Data);
+            Showcase.EnsureInDev(Store.Data, IsDev);
+        }
+        if (Store.LastError is { } storeError) Log(storeError);
         var builder = AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace()
             // A scratchpad redraws little: a small GPU resource cache instead of Skia's default.
             .With(new Avalonia.SkiaOptions { MaxGpuResourceSizeBytes = GpuCacheBytes });
@@ -78,13 +112,32 @@ internal static class Program
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(DataFolder)) return;
-            var path = Path.Combine(DataFolder, AppInfo.LogFileName);
+            if (string.IsNullOrWhiteSpace(AppHome)) return;
+            Directory.CreateDirectory(AppHome);
+            var path = Path.Combine(AppHome, AppInfo.LogFileName);
             // Kept tiny: a timing line per hotkey press, reset once it passes 64 KB.
             if (File.Exists(path) && new FileInfo(path).Length > 64 * 1024) File.Delete(path);
             File.AppendAllText(path, $"{DateTime.Now:s} {line}{Environment.NewLine}");
         }
         catch { }
+    }
+
+    public static bool MoveNotes(string target, out string message)
+    {
+        if (Store is null || !Store.IsAvailable || NotesLocationError is not null)
+        {
+            message = NotesLocationError ?? $"The current notes folder is unavailable: {DataFolder}";
+            return false;
+        }
+        var result = NotesLocation.Move(AppHome, DataFolder, target);
+        if (!result.Success) { message = result.Error ?? "The notes folder could not be changed."; return false; }
+        Store.SwitchFolder(result.Folder);
+        DataFolder = result.Folder;
+        var unavailable = $"The notes folder is unavailable: {result.Folder}";
+        NotesLocationError = Store.IsAvailable ? null : unavailable;
+        message = result.Warning ?? (Store.IsAvailable ? $"Notes moved to {result.Folder}." : unavailable);
+        if (result.Warning is { } warning) Log(warning);
+        return true;
     }
 
     public static void Attach(PadWindow window)
@@ -120,6 +173,7 @@ public sealed class App : Application
             Program.Attach(window);
             if (!Program.StartHidden) window.ShowResident();
             else window.Prewarm();
+            if (Program.StartupNotice is { } notice) window.Toast(notice);
         }
         base.OnFrameworkInitializationCompleted();
     }

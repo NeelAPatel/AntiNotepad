@@ -18,7 +18,7 @@ namespace AntiNotepad.UI;
 internal sealed partial class PadWindow : Window
 {
     private readonly Store _store;
-    private readonly Timers _timers = new();
+    private readonly Timers _timers = new(id => Program.Store.Data.Stack.Any(n => n.Id == id) || Program.Store.Data.Slots.Any(n => n.Id == id));
     private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(400) };
     private Palette _palette;
     private bool _quitting;

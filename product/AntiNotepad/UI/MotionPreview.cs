@@ -77,6 +77,7 @@ internal sealed class MotionPreview : StackPanel
     private static Note[]? _editorSamples, _feelSamples;
     private static int _editorIndex, _feelIndex;
 
+    private readonly Timers _timers;
     private readonly PadView _pad;
     private readonly Border _frame;
     private readonly Trace _trace;
@@ -105,7 +106,8 @@ internal sealed class MotionPreview : StackPanel
         Spacing = 6;
         Margin = new Thickness(0, 0, 0, 4);
         // Same size and place on both pages, so switching tabs never moves it.
-        _pad = new PadView(palette, settings, new Timers()) { Height = 220, ClipToBounds = true, Private = true };
+        _timers = new Timers();
+        _pad = new PadView(palette, settings, _timers) { Height = 220, ClipToBounds = true, Private = true };
         _frame = new Border { Child = _pad, CornerRadius = new CornerRadius(10), ClipToBounds = true, BorderThickness = new Thickness(1) };
         Children.Add(_frame);
 
@@ -183,6 +185,7 @@ internal sealed class MotionPreview : StackPanel
     {
         _sampling = false;
         _pad.Release();
+        _timers.Stop();
     }
 
     /// <summary>Editor samples (what you write) or Feel samples (long reading to scroll, notes to switch).</summary>

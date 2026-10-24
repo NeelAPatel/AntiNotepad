@@ -5,7 +5,8 @@
 |---|---|---|
 | Build | `%LOCALAPPDATA%\Programs\AntiNotepad` (Release publish) | `build/dev` (Debug) |
 | Instance id | `AntiNotepad` | `AntiNotepad-dev` |
-| Data | `%LOCALAPPDATA%\AntiNotepad` (real notes) | `build/testdata` (throwaway) |
+| App home | `%LOCALAPPDATA%\AntiNotepad` (log and `location.json`) | `build/testdata` (throwaway log and pointer) |
+| Notes folder | `Documents\AntiNotepad` by default; selected path is recorded in app home's `location.json` | `build/testdata` (`ANTINOTEPAD_DATA` bypasses Documents and the pointer) |
 | Hotkey | Ctrl+Alt+Shift+S (default; configurable in Settings) | Ctrl+Alt+Shift+D |
 | Badge in the top bar | None | dev |
 
@@ -22,8 +23,12 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
 - Publishing is framework-dependent to avoid shipping a duplicate runtime. The machine needs .NET 10; building needs the
   .NET 10 SDK. The installed exe and the Settings toggle always use the canonical install path for start with Windows.
 - Uninstall: `pwsh -NoProfile -File tools/uninstall.ps1`. It quits the installed copy, removes installed files, shortcut and
-  Run-at-login entry. Notes remain. Add `-RemoveData` only when intentionally deleting `%LOCALAPPDATA%\AntiNotepad` too.
-- Installation never copies, removes or merges the data folder. Normal app startup retains the existing legacy data migration.
+  Run-at-login entry. It reads `location.json`, prints the notes folder, and keeps it. `-RemoveData` removes only the app home
+  (`%LOCALAPPDATA%\AntiNotepad`), never the notes folder.
+- The first normal startup keeps the existing `DefaultDataFolderMigration` as its first step, then moves any app-home notes to
+  `Documents\AntiNotepad`. The pointer in app home selects the notes folder; the product log always stays in app home.
+  `Documents` is resolved with `SpecialFolder.MyDocuments`, including OneDrive redirection. If a pointer's target is unavailable,
+  the app does not create it or save into it. `ANTINOTEPAD_DATA` bypasses this startup resolution for dev and selftest fixtures.
 - First transition: save and exit any old Antipad/AntiQuickPad or repo-built real-data copy through its own tray menu before
   installing. The old identity cannot be controlled by the new executable. Retire its old shortcuts/autostart entries and
   remove obsolete binary folders (such as `build/antipad` or `build/antinotepad`) manually after verifying the installed copy.
@@ -43,7 +48,7 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
 - `pwsh tools/press-hotkey.ps1 -Key D` presses the dev hotkey (the first press after launch may only prewarm).
 - Dev-only switches: `ANTINOTEPAD_DEBUG_SETTINGS_CYCLES=n` opens/closes Settings n times and logs memory; F12 / Shift+F12 /
   Ctrl+F12 write captures to `ANTINOTEPAD_SHOTS` (captures miss the Acrylic backdrop).
-- App log: `<data>/antinotepad.log` (hotkey timings, memory lines, crashes as `crash ...`).
+- App log: `<app home>/antinotepad.log` (hotkey timings, memory lines, crashes as `crash ...`).
 
 ## Checks
 - `AVALONIA_TELEMETRY_OPTOUT=1 dotnet build product/AntiNotepad -c Debug -o build/<task>-check`: 0 errors, 0 warnings.

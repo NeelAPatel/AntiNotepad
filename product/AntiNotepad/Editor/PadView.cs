@@ -1,4 +1,5 @@
 using Avalonia.Input.Platform;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
@@ -15,6 +16,7 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Folding;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Rendering;
+using AntiNotepad;
 using AntiNotepad.Calc;
 using AntiNotepad.Model;
 using AntiNotepad.Theme;
@@ -26,20 +28,24 @@ namespace AntiNotepad.Editor;
 internal sealed class PadView : Grid
 {
     private static readonly Dictionary<string, TextDocument> Documents = [];
-    private static readonly Regex ListPrefix = new(@"^(\s*)((?:[-*+]\s+)?\[[ xX]\]\s?|[-*+]\s|(\d+)([.)])\s)", RegexOptions.Compiled);
+    private static readonly Regex ListPrefix = new(@"^(\s*)((?:[-*+]\s+)?\[[ xX]\]\s?|[-*+]\s|([0-9]+)([.)])\s)", RegexOptions.Compiled);
 
     private readonly Timers _timers;
+    private readonly Dictionary<int, string> _timerKeys = [];
+    private Action? _timerTick;
     private readonly TextBlock _hint;
     private readonly ResultRenderer _results;
     private readonly SmoothCaret _caret;
     private IReadOnlyList<LineEval?> _math = [];
-    private readonly Dictionary<int, CalcResult> _inline = [];
+    private readonly Dictionary<int, LineEval> _inline = [];
     private FoldingManager? _folding;
     private PaperLayer _paper = null!;
     private ChevronGutter? _gutter;
     private readonly FenceColorizer _fences;
     public NoteStructure? Structure { get; private set; }
     private bool _binding;
+    private string? _loadHint;
+    private bool _loadHintError;
     private Anim.Handle? _arrive;
     private int _bindToken;
     private int _lastCaretLine;
@@ -133,7 +139,8 @@ internal sealed class PadView : Grid
         Editor.TemplateApplied += (_, _) => Dispatcher.UIThread.Post(ClearBackgrounds, DispatcherPriority.Loaded);
         Editor.Loaded += (_, _) => ClearBackgrounds();
         _analyse.Tick += (_, _) => { _analyse.Stop(); Analyse(); };
-        _timers.Tick += () => { if (Mode == NoteMode.Timer) view.InvalidateLayer(KnownLayer.Selection); };
+        _timerTick = () => { if (Mode == NoteMode.Timer) view.InvalidateLayer(KnownLayer.Selection); };
+        _timers.Tick += _timerTick;
         ApplyLook(palette, settings);
     }
 
@@ -165,7 +172,7 @@ internal sealed class PadView : Grid
         // SmoothCaret draws the caret; the built-in one stays (for IME placement) but invisible.
         Editor.TextArea.Caret.CaretBrush = Brushes.Transparent;
         _hint.FontFamily = Editor.FontFamily; _hint.FontSize = settings.FontSize;
-        _hint.Foreground = new SolidColorBrush(palette.Faint);
+        _hint.Foreground = _loadHintError ? new SolidColorBrush(palette.Error, .78) : new SolidColorBrush(palette.Faint);
         if (Math.Abs(Editor.Options.LineHeightFactor - settings.LineSpacing) > 0.001) Editor.Options.LineHeightFactor = settings.LineSpacing;
         ApplyMargins();
         ApplyCodeHighlighting();
@@ -238,7 +245,16 @@ internal sealed class PadView : Grid
         _binding = true;
         if (Editor.Document is { } old) old.Changed -= OnDocumentChanged;
         Note = note;
-        var doc = Private
+        var locationError = Program.NotesLocationError;
+        if (locationError is null) _ = note.PeekText();
+        var unavailable = locationError is not null || note.BodyUnavailable;
+        _loadHintError = unavailable;
+        _loadHint = locationError is not null
+            ? $"Error: Notes folder not found\n\n{Program.DataFolder}\n\nChoose a folder in Settings › Storage"
+            : note.BodyUnavailable ? "Error: Note not found\n\nCheck recovered folder in Settings › Storage" : null;
+        _hint.Foreground = _loadHintError ? new SolidColorBrush(Palette.Error, .78) : new SolidColorBrush(Palette.Faint);
+        Editor.IsReadOnly = unavailable;
+        var doc = unavailable ? new TextDocument() : Private
             ? _private.TryGetValue(note, out var own) ? own : _private[note] = new TextDocument(note.PeekText())
             : DocumentFor(note);
         // Folding state belongs to a document: the old manager must go before the swap (its generator rejects other documents).
@@ -294,6 +310,7 @@ internal sealed class PadView : Grid
     public void Release()
     {
         if (Editor.Document is { } doc) doc.Changed -= OnDocumentChanged;
+        if (_timerTick is { } tick) { _timers.Tick -= tick; _timerTick = null; }
         _analyse.Stop();
         _caret.Stop();
         _private.Clear();
@@ -342,20 +359,38 @@ internal sealed class PadView : Grid
         Mode = mode; CodeLanguage = argument; ModeKeywordLength = keyword;
         var lines = new string[doc.LineCount];
         for (var i = 0; i < lines.Length; i++) lines[i] = doc.GetText(doc.GetLineByNumber(i + 1));
+        _timerKeys.Clear();
         Structure = NoteStructure.Build(lines);
         UpdateFolds(lines);
         _math = mode == NoteMode.Math ? EvaluateMath(lines) : [];
         _inline.Clear();
         if (mode == NoteMode.Plain && Settings.InlineMath)
             for (var i = 0; i < lines.Length; i++)
-                if (lines[i].TrimEnd().EndsWith('=') && (Calculator.EvaluateInline(StripListMarker(lines[i])) ?? Calculator.EvaluateInline(BlankLabel(StripListMarker(lines[i])))) is { } r) _inline[i + 1] = r;
-        if (mode == NoteMode.Timer && Note is not null)
-            for (var i = 1; i < lines.Length; i++)
-                if (Timers.TryParse(lines[i], out var d, out var label)) _timers.Ensure(TimerKey(lines[i]), d, label);
-        _hint.IsVisible = text.Length == 0;
-        _hint.Text = Note is { Slot: > 0 } slot
+                if (lines[i].TrimEnd().EndsWith('=')
+                    && (Calculator.EvaluateInlineLine(StripListMarker(lines[i])) ?? Calculator.EvaluateInlineLine(BlankLabel(StripListMarker(lines[i])))) is { } result
+                    && (result.Result is not null || result.ErrorReason == CalcErrorReason.MixedCurrencies)) _inline[i + 1] = result;
+        if (Note is { } note)
+        {
+            var timerKeys = new HashSet<string>(StringComparer.Ordinal);
+            if (mode == NoteMode.Timer)
+            {
+                // Count position among timers of the same duration, so adding or removing other timers never resets a running one.
+                var ordinals = new Dictionary<string, int>(StringComparer.Ordinal);
+                for (var i = 1; i < lines.Length; i++)
+                {
+                    if (!Timers.TryParse(lines[i], out var d, out var label, out var durationText)) continue;
+                    var key = TimerKey(note.Id, durationText, ordinals[durationText] = ordinals.GetValueOrDefault(durationText) + 1);
+                    _timerKeys[i + 1] = key;
+                    timerKeys.Add(key);
+                    if (!_timers.IsDone(key)) _timers.Ensure(key, d, label, note.Id);
+                }
+            }
+            _timers.Reconcile(note.Id, timerKeys);
+        }
+        _hint.IsVisible = _loadHint is not null || text.Length == 0;
+        _hint.Text = _loadHint ?? (Note is { Slot: > 0 } slot
             ? $"Slot {slot.Slot} is empty.\n\nType here, or press Ctrl+Shift+{slot.Slot}\non any note to keep it in this slot."
-            : "Start typing.\n\nLine 1 can switch modes:\nmath · list · timer · code py · clipboard";
+            : "Start typing.\n\nLine 1 can switch modes:\nmath · list · timer · code py · clipboard");
         if (changed) { ApplyCodeHighlighting(); ModeChanged?.Invoke(); }
         Redraw();
     }
@@ -381,11 +416,14 @@ internal sealed class PadView : Grid
         var merged = new LineEval?[first.Count];
         for (var i = 0; i < merged.Length; i++)
         {
-            if (first[i]?.Result is not null || second[i]?.Result is null) { merged[i] = first[i]; continue; }
+            var retryLine = second[i];
+            if (first[i]?.Result is not null || retryLine is null
+                || (retryLine.Result is null && retryLine.ErrorReason == CalcErrorReason.None))
+            { merged[i] = first[i]; continue; }
             var label = retry[i].Length - retry[i].TrimStart().Length;
             var tokens = new List<CalcToken> { new(0, label, TokenKind.Comment) };
-            tokens.AddRange(second[i]!.Tokens);
-            merged[i] = new LineEval { Result = second[i]!.Result, Tokens = tokens, AssignedName = second[i]!.AssignedName };
+            tokens.AddRange(retryLine.Tokens);
+            merged[i] = new LineEval { Result = retryLine.Result, ErrorReason = retryLine.ErrorReason, Tokens = tokens, AssignedName = retryLine.AssignedName };
         }
         return merged;
     }
@@ -408,8 +446,9 @@ internal sealed class PadView : Grid
 
     public bool InFence(int line) => Structure is { } s && line < s.InFence.Length && s.InFence[line];
     public LineEval? MathLine(int line) => line - 1 < _math.Count ? _math[line - 1] : null;
-    public CalcResult? InlineResult(int line) => _inline.GetValueOrDefault(line);
-    private string TimerKey(string line) => $"{Note?.Id}:{line.Trim()}";
+    public LineEval? InlineLine(int line) => _inline.GetValueOrDefault(line);
+    public CalcResult? InlineResult(int line) => InlineLine(line)?.Result;
+    internal static string TimerKey(string noteId, string durationText, int ordinal) => $"{noteId}:{durationText}:{ordinal}";
 
     /// <summary>The chip to draw at a line's end: text, kind, colour, and the value clicking acts on.</summary>
     public (string Text, string Kind, Color Color, string Value)? ChipFor(int line)
@@ -419,12 +458,17 @@ internal sealed class PadView : Grid
         {
             case NoteMode.Math when MathLine(line)?.Result is { } r:
                 return (r.Display, "result", p.Result, r.Display);
+            case NoteMode.Math when MathLine(line)?.ErrorReason == CalcErrorReason.MixedCurrencies:
+                return ("mixed currencies", "error", p.Error, "");
             case NoteMode.Plain when InlineResult(line) is { } r:
                 return (r.Display, "result", p.Result, r.Display);
+            case NoteMode.Plain when InlineLine(line)?.ErrorReason == CalcErrorReason.MixedCurrencies:
+                return ("mixed currencies", "error", p.Error, "");
             case NoteMode.Timer when line > 1:
                 {
-                    var text = Editor.Document.GetText(Editor.Document.GetLineByNumber(line));
-                    if (!Timers.TryParse(text, out _, out _) || _timers.Get(TimerKey(text)) is not { } t) return null;
+                    if (!_timerKeys.TryGetValue(line, out var key)) return null;
+                    if (_timers.IsDone(key)) return ("done", "timer:done", p.Confirm, key);
+                    if (_timers.Get(key) is not { } t) return null;
                     // The kind carries the icon ResultRenderer draws before the time (drawn, not font glyphs).
                     if (t.Done) return ("done", "timer:done", p.Confirm, t.Key);
                     if (t.Running) return (Timers.Format(t.Remaining), "timer:running", p.Number, t.Key);
@@ -439,10 +483,14 @@ internal sealed class PadView : Grid
     {
         var view = Editor.TextArea.TextView;
         var point = e.GetPosition(view);
-        var chip = _results.Chips.FirstOrDefault(c => c.Bounds.Contains(point));
+        var chip = _results.Chips.FirstOrDefault(c => c.Kind != "error" && c.Bounds.Contains(point));
         if (chip.Bounds.Width <= 0) return;
         e.Handled = true;
-        if (chip.Kind.StartsWith("timer")) { if (_timers.Get(chip.Value) is { } t) _timers.Toggle(t); }
+        if (chip.Kind.StartsWith("timer"))
+        {
+            if (_timers.Get(chip.Value) is { } t) _timers.Toggle(t);
+            else ResetDoneTimer(chip.Value);
+        }
         else { Copy?.Invoke(chip.Value); Toast?.Invoke($"Copied {chip.Value}"); }
         view.InvalidateLayer(KnownLayer.Selection);
     }
@@ -451,7 +499,7 @@ internal sealed class PadView : Grid
     {
         var view = Editor.TextArea.TextView;
         var point = e.GetPosition(view);
-        var over = _results.Chips.Any(c => c.Bounds.Contains(point));
+        var over = _results.Chips.Any(c => c.Kind != "error" && c.Bounds.Contains(point));
         view.Cursor = over ? new Cursor(StandardCursorType.Hand) : new Cursor(StandardCursorType.Ibeam);
         ToolTip.SetTip(view, over ? (Mode == NoteMode.Timer ? "Start / pause" : "Click to copy") : null);
     }
@@ -499,7 +547,7 @@ internal sealed class PadView : Grid
             if (Mode == NoteMode.Timer) ToggleTimerAtCaret(); else ToggleCheckbox(CaretLine);
             return;
         }
-        if (e.Key == Key.Enter && !ctrl && !shift && e.KeyModifiers == KeyModifiers.None && Editor.TextArea.Selection.IsEmpty)
+        if (e.Key == Key.Enter && !ctrl && !shift && e.KeyModifiers == KeyModifiers.None && Editor.TextArea.Selection.IsEmpty && !Completion.IsOpen)
         {
             bool continued;
             using (Editor.Document.RunUpdate()) { continued = ContinueList(); if (continued) Renumber(CaretLine); }
@@ -516,17 +564,32 @@ internal sealed class PadView : Grid
     private void ToggleTimerAtCaret()
     {
         var text = Editor.Document.GetText(Editor.Document.GetLineByNumber(CaretLine));
-        if (Timers.TryParse(text, out var d, out var label)) _timers.Toggle(_timers.Ensure(TimerKey(text), d, label));
+        if (Timers.TryParse(text, out var d, out var label) && _timerKeys.TryGetValue(CaretLine, out var key))
+        {
+            if (!ResetDoneTimer(key)) _timers.Toggle(_timers.Ensure(key, d, label, Note?.Id ?? ""));
+        }
         Editor.TextArea.TextView.InvalidateLayer(KnownLayer.Selection);
+    }
+
+    private bool ResetDoneTimer(string key)
+    {
+        if (!_timers.ClearDone(key)) return false;
+        var line = _timerKeys.FirstOrDefault(pair => pair.Value == key).Key;
+        if (line > 1)
+        {
+            var text = Editor.Document.GetText(Editor.Document.GetLineByNumber(line));
+            if (Timers.TryParse(text, out var duration, out var label)) _timers.Ensure(key, duration, label, Note?.Id ?? "");
+        }
+        return true;
     }
 
     private void StartTimerOnLine(int lineNumber)
     {
         if (lineNumber <= 1) return;
         var text = Editor.Document.GetText(Editor.Document.GetLineByNumber(lineNumber));
-        if (Timers.TryParse(text, out var d, out var label))
+        if (Timers.TryParse(text, out var d, out var label) && _timerKeys.TryGetValue(lineNumber, out var key) && !_timers.IsDone(key))
         {
-            var entry = _timers.Ensure(TimerKey(text), d, label);
+            var entry = _timers.Ensure(key, d, label, Note?.Id ?? "");
             if (entry.EndsAt is null) { _timers.Start(entry); Toast?.Invoke($"Timer started · {Timers.Format(d)}{(label.Length > 0 ? " · " + label : "")}"); }
         }
     }
@@ -555,8 +618,21 @@ internal sealed class PadView : Grid
         PadMenu.Show(Editor, items, Palette, Settings);
     }
 
-    private bool IsListLine(int lineNumber) =>
-        ListPrefix.IsMatch(Editor.Document.GetText(Editor.Document.GetLineByNumber(lineNumber)));
+    private bool IsListLine(int lineNumber)
+    {
+        var m = ListPrefix.Match(Editor.Document.GetText(Editor.Document.GetLineByNumber(lineNumber)));
+        return m.Success && (!m.Groups[3].Success || TryListNumber(m, out _));
+    }
+
+    internal static bool TryListNumber(string line, out int number) => TryListNumber(ListPrefix.Match(line), out number);
+
+    private static bool TryListNumber(Match match, out int number)
+    {
+        number = 0;
+        var digits = match.Groups[3];
+        return digits.Success && digits.Length <= 9
+            && int.TryParse(digits.Value, NumberStyles.None, CultureInfo.InvariantCulture, out number);
+    }
 
     private void Indent(int lineNumber, bool deeper)
     {
@@ -594,10 +670,12 @@ internal sealed class PadView : Grid
             var indent = m.Groups[1].Length;
             foreach (var deeper in counts.Keys.Where(k => k > indent).ToList()) counts.Remove(deeper);
             if (!m.Groups[3].Success) { counts.Remove(indent); continue; }
-            var own = int.Parse(m.Groups[3].Value);
+            if (!TryListNumber(m, out var own)) { counts.Remove(indent); continue; }
+            if (counts.TryGetValue(indent, out var previous) && previous == 999_999_999)
+            { counts.Remove(indent); continue; }
             var want = counts.TryGetValue(indent, out var before) ? before + 1 : fresh && n == lineNumber ? 1 : own;
             counts[indent] = want;
-            if (want != own) doc.Replace(doc.GetLineByNumber(n).Offset + m.Groups[3].Index, m.Groups[3].Length, want.ToString());
+            if (want != own) doc.Replace(doc.GetLineByNumber(n).Offset + m.Groups[3].Index, m.Groups[3].Length, want.ToString(CultureInfo.InvariantCulture));
         }
     }
 
@@ -618,6 +696,7 @@ internal sealed class PadView : Grid
             }
             return false;
         }
+        if (m.Groups[3].Success && (!TryListNumber(m, out var ownNumber) || ownNumber == 999_999_999)) return false;
         var indent = m.Groups[1].Value;
         var prefix = m.Groups[2].Value;
         if (text.Trim() == prefix.Trim())
@@ -629,7 +708,11 @@ internal sealed class PadView : Grid
             return true;
         }
         string next;
-        if (m.Groups[3].Success) next = $"{int.Parse(m.Groups[3].Value) + 1}{m.Groups[4].Value} ";
+        if (m.Groups[3].Success)
+        {
+            TryListNumber(m, out var nextNumber);
+            next = $"{nextNumber + 1}{m.Groups[4].Value} ";
+        }
         else if (prefix.Contains('[')) next = Regex.Replace(prefix, @"\[[ xX]\]", "[ ]");
         else next = prefix;
         if (!next.EndsWith(' ')) next += " ";
