@@ -220,7 +220,7 @@ public sealed class App : Application
             _tray = new Tray(window.ShowResident, () => { window.ShowResident(); window.NewNote(); }, window.OpenSettings, window.Quit,
                 () => store.Data.Slots.Select(n => (n.Title, !n.IsEmpty)).ToList(),
                 slot => { window.ShowResident(); if (store.Data.ViewSlot != slot) window.OpenSlot(slot); });
-            window.HotkeyStatusChanged += status => _tray.Tooltip = $"{AppInfo.Name} · {status}";
+            window.HotkeyStatusChanged += status => _tray.Tooltip = $"{AppInfo.DisplayName} · {status}";
             window.InstallHooks();
             Program.Attach(window);
             if (!Program.StartHidden) window.ShowResident();

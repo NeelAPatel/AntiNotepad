@@ -51,7 +51,7 @@ internal sealed partial class SettingsWindow : Window
     {
         _pad = pad;
         _p = pad.CurrentPalette;
-        Title = $"{AppInfo.Name} Settings";
+        Title = $"{AppInfo.DisplayName} Settings";
         Icon = pad.Icon;
         Width = 900; Height = 720; MinWidth = 640; MinHeight = 460;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;

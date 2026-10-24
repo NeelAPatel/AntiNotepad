@@ -10,8 +10,25 @@
     <!-- A resident tray app: no background GC thread, smaller committed heap. -->
     <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
   </PropertyGroup>
+  <PropertyGroup>
+    <AntiNotepadDev Condition="'$(AntiNotepadDev)' == ''">false</AntiNotepadDev>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(AntiNotepadDev)' == 'true'">
+    <AssemblyTitle>$(AppName) (dev)</AssemblyTitle>
+    <Product>$(AppName) (dev)</Product>
+    <ApplicationIcon>antinotepad-dev.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyMetadata Include="AppName">
+      <Value>$(AppName)</Value>
+    </AssemblyMetadata>
+    <AssemblyMetadata Include="AntiNotepadDev">
+      <Value>$(AntiNotepadDev)</Value>
+    </AssemblyMetadata>
+  </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Include="antinotepad.ico" />
+    <AvaloniaResource Include="antinotepad-dev.ico" />
     <!-- Microsoft's Fluent UI System Icons (MIT): named icons that look the same on every PC. Its licence ships beside the app. -->
     <AvaloniaResource Include="Assets/Fonts/FluentSystemIcons-Regular.ttf" />
     <None Include="Assets/Fonts/FluentSystemIcons-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" Link="Licenses/FluentSystemIcons-LICENSE.txt" />

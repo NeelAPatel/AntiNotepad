@@ -13,7 +13,7 @@ internal sealed class Tray : IDisposable
     {
         var menu = new NativeMenu();
         void Add(string label, Action action) { var item = new NativeMenuItem(label); item.Click += (_, _) => action(); menu.Items.Add(item); }
-        Add($"Show {AppInfo.Name}", show);
+        Add($"Show {AppInfo.DisplayName}", show);
         Add("New note", newNote);
         if (slotTitles is not null && openSlot is not null)
         {
@@ -39,8 +39,8 @@ internal sealed class Tray : IDisposable
         }
         Add("Settings", settings);
         menu.Items.Add(new NativeMenuItemSeparator());
-        Add($"Quit {AppInfo.Name}", quit);
-        _tray = new TrayIcon { ToolTipText = AppInfo.Name, Icon = CreateIcon(), Menu = menu, IsVisible = true };
+        Add($"Quit {AppInfo.DisplayName}", quit);
+        _tray = new TrayIcon { ToolTipText = AppInfo.DisplayName, Icon = CreateIcon(), Menu = menu, IsVisible = true };
         _tray.Clicked += (_, _) => show();
         TrayIcon.SetIcons(Application.Current!, new TrayIcons { _tray });
     }

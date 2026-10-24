@@ -37,7 +37,7 @@ internal sealed partial class PadWindow : Window
     public PadWindow(Store store)
     {
         _store = store;
-        Title = Program.IsDev ? $"{AppInfo.Name} (dev)" : AppInfo.Name;
+        Title = AppInfo.DisplayName;
         Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new Uri(AppInfo.IconUri)));
         Anim.Reduced = Settings.ReduceMotion;
         _palette = ResolvePalette();

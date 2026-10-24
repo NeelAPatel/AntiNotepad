@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # N2-canonical-install-and-dev-badge: keep the shell entry point on the same
-# PID-safe implementation as the PowerShell entry point.
+# PID-safe implementation and compile-time dev identity as the PowerShell entry point.
 set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)"

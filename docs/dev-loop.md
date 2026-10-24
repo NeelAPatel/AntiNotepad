@@ -5,6 +5,8 @@
 |---|---|---|
 | Build | `%LOCALAPPDATA%\Programs\AntiNotepad` (Release publish) | `build/dev` (Debug) |
 | Instance id | `AntiNotepad` | `AntiNotepad-dev` |
+| Display name | `AntiNotepad` | `AntiNotepad (dev)` |
+| Icon | Primary AntiNotepad icon | Distinct dev icon |
 | App home | `%LOCALAPPDATA%\AntiNotepad` (log and `location.json`) | `build/testdata` (throwaway log and pointer) |
 | Notes folder | `Documents\AntiNotepad` by default; selected path is recorded in app home's `location.json` | `build/testdata` (`ANTINOTEPAD_DATA` bypasses Documents and the pointer) |
 | Hotkey | Ctrl+Alt+Shift+S (default; configurable in Settings) | Ctrl+Alt+Shift+D |
@@ -44,9 +46,16 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
   Preserve real data and the repo dev copy. Do not launch old binaries against real notes again.
 
 ## Dev copy
-- `pwsh -NoProfile -File tools/dev.ps1 [-Fresh]` or `bash tools/dev.sh [--fresh]` builds Debug into `build/dev` and launches that
-  executable with `ANTINOTEPAD_DATA=build/testdata` (absolute path), `ANTINOTEPAD_HOTKEY=Ctrl+Alt+Shift+D`,
-  `ANTINOTEPAD_DEV=1` and `ANTINOTEPAD_SHOTS=build/shots`. Both routes share the same implementation.
+- `pwsh -NoProfile -File tools/dev.ps1 [-Fresh]` or `bash tools/dev.sh [--fresh]` builds Debug into `build/dev` with the
+  compile-time property `AntiNotepadDev=true`, then launches that executable with `ANTINOTEPAD_DATA=build/testdata`
+  (absolute path), `ANTINOTEPAD_HOTKEY=Ctrl+Alt+Shift+D`, `ANTINOTEPAD_DEV=1` and `ANTINOTEPAD_SHOTS=build/shots`.
+  Both routes share the same implementation. The dev build displays as `AntiNotepad (dev)` and uses its distinct dev icon.
+- The compile-time dev identity is separate from the runtime dev badge and dev-only UI. `AppInfo.IsDevBuild`,
+  `AppInfo.DisplayName` and the selected `AppInfo.IconUri` follow the compile-time identity; stable `AppInfo.Name` remains
+  `AntiNotepad`, even when the assembly's Product display name is `AntiNotepad (dev)`. The compile-time identity is independent
+  of the runtime `ANTINOTEPAD_DEV=1` marker, which works with a custom data path to gate the dev badge and dev-only UI.
+- The dev script sets `AntiNotepadDev=true`; ordinary Debug/Release builds and the installed Release publish leave it unset
+  and retain the default `AntiNotepad` identity.
 - The scripts stop only their recorded dev PID after checking executable path and process start time; they never stop the
   installed copy. Fresh deletes only repo test data. Logs and PID state live under `build`.
 - On the first use after upgrading these scripts, a legacy numeric-only `build/dev.pid` is rejected. Exit the old dev copy
@@ -66,6 +75,8 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
 
 ## Other tools
 - `tools/make-icon.ps1` rebuilds `product/AntiNotepad/antinotepad.ico`.
+- `tools/make-dev-icon.ps1` derives every size in the distinct dev icon from the primary icon. Rerun it whenever the primary
+  icon changes.
 - Computer use: only act in the dev copy; the installed copy holds real user data.
 
 ## Product identity

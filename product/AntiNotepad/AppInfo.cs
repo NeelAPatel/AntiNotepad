@@ -9,15 +9,21 @@ public static class AppInfo
     private static readonly string _informationalVersion =
         Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
         ?? throw new InvalidOperationException("AppInfo.props must define the informational version.");
+    private static readonly string _name = GetName();
+    private static readonly bool _isDevBuild = bool.TryParse(GetMetadata("AntiNotepadDev"), out var isDevBuild) && isDevBuild;
 
-    public static string Name
+    private static string GetName()
     {
-        get
-        {
-            var name = Assembly.GetCustomAttribute<AssemblyProductAttribute>()?.Product ?? Assembly.GetName().Name;
-            return !string.IsNullOrWhiteSpace(name) ? name : throw new InvalidOperationException("AppInfo.props must define the product name.");
-        }
+        var name = GetMetadata("AppName") ?? Assembly.GetCustomAttribute<AssemblyProductAttribute>()?.Product ?? Assembly.GetName().Name;
+        return !string.IsNullOrWhiteSpace(name) ? name : throw new InvalidOperationException("AppInfo.props must define the product name.");
     }
+
+    private static string? GetMetadata(string key) => Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
+        .FirstOrDefault(attribute => attribute.Key == key)?.Value;
+
+    public static string Name => _name;
+    public static bool IsDevBuild => _isDevBuild;
+    public static string DisplayName => IsDevBuild ? $"{Name} (dev)" : Name;
 
     public static string InformationalVersion => _informationalVersion;
 
@@ -52,7 +58,7 @@ public static class AppInfo
     public static string RunValueName => Name;
     public static string LogFileName => $"{Name.ToLowerInvariant()}.log";
     public static string EnvPrefix => Name.ToUpperInvariant();
-    public static string IconUri => $"avares://{Name}/antinotepad.ico";
+    public static string IconUri => $"avares://{Name}/{(IsDevBuild ? "antinotepad-dev.ico" : "antinotepad.ico")}";
     public static string FontUri => $"avares://{Name}/Assets/Fonts/FluentSystemIcons-Regular.ttf";
     public static string ResourceUri => $"avares://{Name}/";
 

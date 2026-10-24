@@ -25,6 +25,7 @@ internal static class SelfTest
         Check(Editor.LinkGenerator.Shorten("https://learn.microsoft.com/en-us/windows/apps/design/style/acrylic") == "learn.microsoft.com/…/acrylic", "link shorten");
 
         Check(AppInfoSelfTest(out var identityReport), "app identity: " + identityReport);
+        Check(DevIdentitySelfTest(out var devIdentityReport), "dev identity: " + devIdentityReport);
 
         Check(Calc.Calculator.EvaluateInline(Editor.PadView.BlankLabel("spent 12.50 + 8.25 + 3.99 ="))?.Value is > 24.73 and < 24.75, "inline with a label");
         Check(Calc.Calculator.EvaluateInline(Editor.PadView.StripListMarker("- 19.99 * 3 ="))?.Value is > 59.96 and < 59.98, "inline after a bullet");
@@ -167,7 +168,7 @@ internal static class SelfTest
             var copyright = assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyCopyrightAttribute), false)
                 .Cast<System.Reflection.AssemblyCopyrightAttribute>().Single().Copyright;
 
-            if (AppInfo.Name != product || AppInfo.Name != title || assembly.GetName().Name != AppInfo.Name
+            if (AppInfo.DisplayName != product || AppInfo.DisplayName != title || assembly.GetName().Name != AppInfo.Name
                 || AppInfo.InformationalVersion != informationalVersion
                 || !informationalVersion.StartsWith(AppInfo.Version, StringComparison.Ordinal)
                 || assemblyVersion != $"{AppInfo.Version}.0" || fileVersion != $"{AppInfo.Version}.0"
@@ -593,6 +594,41 @@ internal static class SelfTest
             Note.LoadBody = originalLoader;
             Note.InvalidateSearchBody = originalInvalidator;
             try { if (Directory.Exists(root)) Directory.Delete(root, true); } catch { }
+        }
+    }
+
+    private static bool DevIdentitySelfTest(out string report)
+    {
+        try
+        {
+            var expectedName = AppInfo.IsDevBuild ? "AntiNotepad (dev)" : "AntiNotepad";
+            var expectedIcon = AppInfo.IsDevBuild ? "antinotepad-dev.ico" : "antinotepad.ico";
+            if (AppInfo.DisplayName != expectedName || AppInfo.IconUri != $"avares://AntiNotepad/{expectedIcon}"
+                || AppInfo.Name != "AntiNotepad" || AppInfo.InstanceId != "AntiNotepad"
+                || AppInfo.DevInstanceId != "AntiNotepad-dev" || AppInfo.DataFolderName != "AntiNotepad"
+                || AppInfo.RunValueName != "AntiNotepad" || AppInfo.LogFileName != "antinotepad.log"
+                || AppInfo.EnvPrefix != "ANTINOTEPAD" || AppInfo.ResourceUri != "avares://AntiNotepad/")
+            {
+                report = "display identity or stable storage/resource identity differs from the build contract";
+                return false;
+            }
+
+            var assets = new StandardAssetLoader();
+            foreach (var file in new[] { "antinotepad.ico", "antinotepad-dev.ico" })
+            {
+                using var stream = assets.Open(new Uri($"avares://AntiNotepad/{file}"));
+                using var reader = new BinaryReader(stream);
+                if (reader.ReadUInt16() != 0 || reader.ReadUInt16() != 1 || reader.ReadUInt16() == 0)
+                    throw new InvalidOperationException($"Invalid icon: {file}");
+            }
+            report = $"{expectedName}, {AppInfo.IconUri}; both icons load; stable instance/data/resource identities";
+            Console.WriteLine("IDENTITY " + report);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            report = ex.Message;
+            return false;
         }
     }
 }

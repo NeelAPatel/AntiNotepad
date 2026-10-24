@@ -247,6 +247,7 @@ function Invoke-DevBuild {
         'build',
         (Join-Path $repoRoot 'product/AntiNotepad/AntiNotepad.csproj'),
         '-c', 'Debug',
+        '-p:AntiNotepadDev=true',
         '-o', $devBuildPath
     )) {
         [void]$startInfo.ArgumentList.Add([string]$argument)
