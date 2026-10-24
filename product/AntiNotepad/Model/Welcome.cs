@@ -2,41 +2,71 @@ using AntiNotepad;
 
 namespace AntiNotepad.Model;
 
-/// <summary>First-run notes that double as a tour. Swipe through them, then delete them.</summary>
+/// <summary>First-run demo notes in the permanent slots.</summary>
 internal static class Welcome
 {
     public static void SeedIfNew(StoreData data)
     {
         if (data.Settings.Welcomed) return;
         data.Settings.Welcomed = true;
-        if (data.Stack.Any(n => !n.IsEmpty)) return;
-        data.Stack.Clear();
-        data.Stack.Add(new Note { Text = Math });
-        data.Stack.Add(new Note { Text = List });
-        data.Stack.Add(new Note { Text = Tour });
-        data.Current = data.Stack.Count - 1;
+
+        var notes = new[] { Markdown, Math, List, Timers, Guide };
+        for (var i = 0; i < notes.Length; i++)
+            if (data.Slots[i].IsEmpty) data.Slots[i].Text = notes[i].ReplaceLineEndings("\n");  // a CRLF checkout puts \r into the raw strings
+
+        data.ViewSlot = 5;
     }
 
-    private static readonly string Tour = $$"""
-        # Welcome to {{AppInfo.Name}}
-        A scratchpad that is there when you press **Ctrl+Alt+Shift+S** and gone when you press it again (or Esc).
+    private const string Markdown = """"
+        # h1
+        ## h2
+        ### h3
+        #### h4
+        ##### h5
+        ###### h6
 
-        Just type. Everything saves as you go.
 
-        - Swipe sideways (or Ctrl+[ and Ctrl+]) to flip between notes
-        - Going past the last note starts a fresh one; empty notes tidy themselves away
-        - Ctrl+F searches every note · Ctrl+1…9 opens nine permanent slots
-        - Ctrl+\ puts a slot beside the note you're writing
+        **bold**
+        *italic*
+        ~~strikethrough~~
+        __underline__
+        `single quote`
+        __*~~**all at once**~~*__
 
-        Little things that just work:
-        [ ] type [ ] for a checkbox, Ctrl+Enter ticks it
-        [x] long links shrink: https://learn.microsoft.com/en-us/windows/apps/design/style/acrylic
-        - 19.99 * 3 =
-        - type / for commands like /date or /sort
+        divider
+        ---
 
-        Line 1 can switch a note's mode: math, list, timer, code py, clipboard.
-        Press F1 for every shortcut. Delete this note with Ctrl+Shift+Backspace.
-        """;
+        lists:
+        - text
+          - text
+            - text
+        - text
+
+        numbered lists:
+        1. text
+          2. text
+            3. text
+        4. text
+
+        ```py
+        def process_numbers(numbers: list[int]) -> list[int]:
+            results: list[int] = []
+            # This is a comment
+            for number in numbers:
+                if number % 2 == 0:
+                    results.append(number * 2)
+                else:
+                    results.append(number)
+
+            return results
+
+
+        numbers: list[int] = [1, 2, 3, 4, 5]
+        output: list[int] = process_numbers(numbers)
+
+        print("Processed numbers:", output)
+        ```
+        """";
 
     private const string Math = """
         math
@@ -62,5 +92,36 @@ internal static class Welcome
         [ ] flip to the next note
         [ ] try a timer note: line 1 "timer", then "10m tea"
         [ ] pick a palette in Settings (Ctrl+,)
+        """;
+
+    private const string Timers = """
+        timer
+        1m tea
+        30s focus
+        1h30m laundry
+        5:00 eggs
+        2min stretch
+        """;
+
+    private static readonly string Guide = $$"""
+        # Welcome to {{AppInfo.Name}}
+        A quick guide to your hotkey scratchpad.
+        - Press `Ctrl+Alt+Shift+S` to show or hide it; press `Esc` to hide.
+        - It saves as you type. Notes live in Settings > Storage.
+
+        ## Notes and slots
+        - The stack holds temporary notes; swipe or use `Ctrl+[` / `Ctrl+]` to flip through it.
+        - Slots 1–4 hold demos: 1 Markdown, 2 math, 3 checklist, 4 timers.
+        - `Ctrl+1`–`Ctrl+9` opens a permanent slot. `Ctrl+\` opens a slot beside your note in split view.
+
+        ## Modes and tools
+        - Set line 1 to `math`, `list`, `timer`, `code py`, or `clipboard`.
+        - Type `/` for commands such as `/date`, `/todo`, `/sort`, or `/json`.
+        - `Ctrl+F` searches your notes.
+        - [ ] Press `Ctrl+Enter` to check off this example.
+
+        ## Help
+        - `Ctrl+,` opens Settings. `F1` shows all shortcuts.
+        - To clear a demo, open its slot and press `Ctrl+Shift+Backspace`; the note moves to Trash.
         """;
 }

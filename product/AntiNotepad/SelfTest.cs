@@ -50,6 +50,7 @@ internal static class SelfTest
         Check(NotesLocationChecks(out var notesReport), "notes location and recovery: " + notesReport);
         Check(StartupRequestLatchChecks(out var startupRequestReport), "startup request latch: " + startupRequestReport);
         Check(NoteSwipeChecks(out var swipeReport), "note swipe: " + swipeReport);
+        Check(WelcomeSlotsSelfTest(out var welcomeReport), "welcome slots: " + welcomeReport);
 
         Console.WriteLine(failures.Count == 0 ? "SELFTEST PASS" : "SELFTEST FAIL\n" + string.Join("\n", failures));
         return failures.Count == 0 ? 0 : 1;
@@ -461,5 +462,34 @@ internal static class SelfTest
             cancelled.Cancel();
             stalled.Cancel();
         }
+    }
+
+    private static bool WelcomeSlotsSelfTest(out string report)
+    {
+        var fresh = new StoreData();
+        Welcome.SeedIfNew(fresh);
+        var expected = new[] { "# h1", "math", "list", "timer", $"# Welcome to {AppInfo.Name}" };
+        var seeded = expected.Select((line, i) => fresh.Slots[i].Text.Split('\n')[0] == line).All(ok => ok)
+            && fresh.Slots.Take(5).All(note => !note.IsEmpty)
+            && fresh.Slots.Skip(5).All(note => note.IsEmpty)
+            && fresh.Stack.Count == 0
+            && fresh.ViewSlot == 5;
+        var timerLines = fresh.Slots[3].Text.Replace("\r", "").Split('\n');
+        var timersParse = timerLines.Length >= 6
+            && Enumerable.Range(1, 5).All(i => Timers.TryParse(timerLines[i], out _, out _));
+
+        var occupied = new StoreData();
+        occupied.Slots[0].Text = "keep this note\nwith its body";
+        Welcome.SeedIfNew(occupied);
+        var preserved = occupied.Slots[0].Text == "keep this note\nwith its body";
+        var beforeSecondCall = occupied.Slots.Select(note => note.Text).ToArray();
+        var viewBeforeSecondCall = occupied.ViewSlot;
+        Welcome.SeedIfNew(occupied);
+        var secondCallNoOp = occupied.Slots.Select(note => note.Text).SequenceEqual(beforeSecondCall)
+            && occupied.ViewSlot == viewBeforeSecondCall;
+        var defaults = new Settings() is { Scrolling: "rate", Swipe: "progress" };
+
+        report = "slots 1-5 seeded, 6-9 empty, stack empty, opens slot 5; occupied slot preserved; second call unchanged; five timers parse; rate/progress defaults";
+        return seeded && timersParse && preserved && secondCallNoOp && defaults;
     }
 }

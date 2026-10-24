@@ -139,7 +139,7 @@ public sealed class Settings
     public string SplitPalette { get; set; } = "same";     // the split pane's own palette id, or same
     public string OpenAt { get; set; } = "remember";      // remember | center | mouse | tray | dropdown
     public bool ReduceMotion { get; set; }
-    public string Scrolling { get; set; } = "lines";      // lines | free | rate (rate-matched glide) | wheel (wheel-driven sheet)
+    public string Scrolling { get; set; } = "rate";       // lines | free | rate (rate-matched glide) | wheel (wheel-driven sheet)
     // Tuning for the chosen feel (the Scroll Lab sliders, as presets).
     public int LinesPerNotch { get; set; } = 3;           // lines
     public double ScrollDistance { get; set; } = 1;       // free, rate, wheel: distance per click, x the picked default
@@ -147,7 +147,7 @@ public sealed class Settings
     public double FreeFriction { get; set; } = 6;         // free: how quickly a coast stops
     public double SwipeLength { get; set; } = 220;        // progress: px of input for a whole note
     public double SwipeFiresAt { get; set; } = 0.35;      // progress: share of a note where it changes
-    public string Swipe { get; set; } = "detent";         // between notes: detent (decide when input stops) | progress (width-independent, fires mid-swipe)
+    public string Swipe { get; set; } = "progress";       // between notes: detent (decide when input stops) | progress (width-independent, fires mid-swipe)
     public string Chrome { get; set; } = "fade";           // fade | always
     public int FadeAfterMs { get; set; } = 1600;          // how long the controls stay after the mouse stops
     public string Bars { get; set; } = "docked";          // docked (top bar row, pager below the text) | overlay (both slide in over the note at the edges)

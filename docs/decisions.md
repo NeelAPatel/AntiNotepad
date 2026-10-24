@@ -31,5 +31,5 @@ Newest first. History before 2026-10-23 (overnight build log and write-up) is in
 - **Markdown**: `__x__` is underline (`**` bold, `++` also underline); headings h1-h6 in a rainbow; `---`/`***`/`___` draws a
   rule; numbered lists renumber per level on Return/Tab; a heading's fold also ends at two blank lines.
 - **Memory**: Settings' live trace runs only while something moves; closing Settings compacts the heap and trims the working set.
-- **Scrolling** (user's mouse: MX Master 3S, whole clicks only): vertical modes Lines (eased glide), Free, Rate-matched,
-  Wheel-driven; note paging by Detent or Progress swipe (220 px of input = one note, fires at 0.35, re-arms after 110 ms).
+- **Scrolling** (user's mouse: MX Master 3S, whole clicks only): vertical modes Lines (eased glide), Free, Rate-matched (default),
+  Wheel-driven; note paging by Detent or Progress swipe (default; 220 px of input = one note, fires at 0.35, re-arms after 110 ms).
