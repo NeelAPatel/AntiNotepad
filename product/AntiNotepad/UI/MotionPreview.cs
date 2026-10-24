@@ -138,7 +138,7 @@ internal sealed class MotionPreview : StackPanel
         // Scrolling (wheel, keys, dragging the bar, typing past the edge) is what wakes the trace.
         _pad.Editor.TextArea.TextView.ScrollOffsetChanged += (_, _) => Wake();
         AttachedToVisualTree += (_, _) => { _attached = true; Wake(); };
-        DetachedFromVisualTree += (_, _) => { _attached = false; _sampling = false; };
+        DetachedFromVisualTree += (_, _) => { _attached = false; _sampling = false; _swipe.Cancel(); };
     }
 
     /// <summary>Something moved: run the trace until its whole two-second window has gone still again.</summary>
@@ -184,6 +184,7 @@ internal sealed class MotionPreview : StackPanel
     public void Release()
     {
         _sampling = false;
+        _swipe.Cancel();
         _pad.Release();
         _timers.Stop();
     }

@@ -19,17 +19,23 @@ internal sealed class NoteSwipe(Control host, Func<Settings> settings, Func<Cont
     // progress: swipe length (px for a whole note) and the share where it changes come from Settings
     private const double ProgressClickPx = 26, ProgressPxPerUnit = 100;
     private const int ProgressQuietMs = 260, ProgressRearmMs = 110;
+    internal const int ProgressStallMs = 1000;
 
     private readonly List<(DateTime At, double Dx)> _samples = [];
     private double _swipe, _progress, _owed, _gap;
     private DateTime _at;
     private bool _fired, _draining;
-    private long _click, _frameAt;
+    private long _click, _frameAt, _owedChangedAt, _frameGeneration;
     private TimeSpan? _last;
     private Avalonia.Threading.DispatcherTimer? _detentSettle, _progressSettle;
+    private Anim.Handle? _springBack;
 
     /// <summary>How far the note is pulled, as a signed share of its width (for live traces).</summary>
     public event Action<double>? Moved;
+
+    internal bool HasRunningTimer => _detentSettle?.IsEnabled == true || _progressSettle?.IsEnabled == true;
+    internal bool HasPendingProgress => _progress != 0 || _owed != 0;
+    internal double OwedMotion => _owed;
 
     /// <summary>One horizontal wheel or touchpad event, in Avalonia's wheel units.</summary>
     public void Input(double units)
@@ -74,7 +80,11 @@ internal sealed class NoteSwipe(Control host, Func<Settings> settings, Func<Cont
     private void Progress(double units, DateTime now)
     {
         // After a change, a short pause re-arms the next swipe; before one, slow wheel clicks keep adding up for longer.
-        if ((now - _at).TotalMilliseconds > (_fired ? ProgressRearmMs : ProgressQuietMs)) { _progress = 0; _owed = 0; _fired = false; }
+        if ((now - _at).TotalMilliseconds > (_fired ? ProgressRearmMs : ProgressQuietMs))
+        {
+            _progress = 0; _owed = 0; _fired = false;
+            StopFrames();
+        }
         _at = now;
         if (_fired) return;
         var click = Math.Abs(units - Math.Round(units)) < 0.01;
@@ -87,8 +97,14 @@ internal sealed class NoteSwipe(Control host, Func<Settings> settings, Func<Cont
             _gap = gap >= 400 || _gap <= 0 ? Math.Min(gap, 400) : _gap * 0.4 + gap * 0.6;
             var gain = 1 + 2 * Math.Clamp((1000 / _gap - 6) / 24, 0, 1);
             _owed += units * ProgressClickPx * gain;
+            _owedChangedAt = tick;
             // A hidden window gets no frames, so a pay-out cut off by hiding is restarted rather than trusted.
-            if (!_draining || tick - _frameAt > 150) { _draining = true; _last = null; _frameAt = tick; Frame(); }
+            if (!_draining || tick - _frameAt > 150)
+            {
+                StopFrames();
+                _draining = true; _last = null; _frameAt = tick;
+                Frame();
+            }
         }
         _progressSettle ??= ProgressSettle();
         _progressSettle.Stop(); _progressSettle.Start();
@@ -96,19 +112,31 @@ internal sealed class NoteSwipe(Control host, Func<Settings> settings, Func<Cont
 
     private void Frame()
     {
-        if (TopLevel.GetTopLevel(host) is not { } top) { _draining = false; return; }
+        if (!_draining || TopLevel.GetTopLevel(host) is not { } top) { _draining = false; _last = null; return; }
+        var generation = _frameGeneration;
+        var weak = new WeakReference<NoteSwipe>(this);
+        // RequestAnimationFrame has no cancellation handle, so queued callbacks must not retain a released swipe.
         top.RequestAnimationFrame(time =>
         {
-            var dt = _last is { } last ? Math.Clamp((time - last).TotalSeconds, 0, 0.05) : 1 / 60.0;
-            _last = time;
-            _frameAt = Environment.TickCount64;
-            if (_fired || Math.Abs(_owed) < 0.01) { _owed = 0; _draining = false; return; }
-            var part = _owed * (1 - Math.Exp(-22 * dt));
-            if (Math.Abs(_owed - part) < 0.5) part = _owed;
-            _owed -= part;
-            Advance(part);
-            Frame();
+            if (!weak.TryGetTarget(out var swipe) || generation != swipe._frameGeneration || !swipe._draining) return;
+            var dt = swipe._last is { } last ? Math.Clamp((time - last).TotalSeconds, 0, 0.05) : 1 / 60.0;
+            swipe._last = time;
+            swipe._frameAt = Environment.TickCount64;
+            if (swipe._fired || Math.Abs(swipe._owed) < 0.01) { swipe._owed = 0; swipe._draining = false; swipe._last = null; return; }
+            var part = swipe._owed * (1 - Math.Exp(-22 * dt));
+            if (Math.Abs(swipe._owed - part) < 0.5) part = swipe._owed;
+            swipe._owed -= part;
+            swipe._owedChangedAt = Environment.TickCount64;
+            swipe.Advance(part);
+            swipe.Frame();
         });
+    }
+
+    private void StopFrames()
+    {
+        _frameGeneration++;
+        _draining = false;
+        _last = null;
     }
 
     private void Advance(double px)
@@ -126,15 +154,23 @@ internal sealed class NoteSwipe(Control host, Func<Settings> settings, Func<Cont
     private Avalonia.Threading.DispatcherTimer ProgressSettle()
     {
         var timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(ProgressQuietMs) };
-        timer.Tick += (_, _) =>
-        {
-            if (Math.Abs(_owed) > 0.5) return;     // still paying out the last clicks
-            timer.Stop();
-            if (_fired) return;
-            _progress = 0;
-            SpringBack();
-        };
+        timer.Tick += (_, _) => ProgressSettleTick(Environment.TickCount64);
         return timer;
+    }
+
+    internal bool ProgressSettleTick(long now)
+    {
+        if (Math.Abs(_owed) > 0.5)
+        {
+            if (now - _owedChangedAt < ProgressStallMs) return false;
+            _owed = 0;
+            StopFrames();
+        }
+        _progressSettle?.Stop();
+        if (_fired) return true;
+        _progress = 0;
+        SpringBack();
+        return true;
     }
 
     private void Show(double x, double opacity)
@@ -152,21 +188,60 @@ internal sealed class NoteSwipe(Control host, Func<Settings> settings, Func<Cont
         var from = (target.RenderTransform as TranslateTransform)?.X ?? 0;
         var opacity = target.Opacity;
         _swipe = 0;
-        Anim.Run(target, 200, t =>
+        _springBack?.Cancel();
+        var weakTarget = new WeakReference<Control>(target);
+        var weak = new WeakReference<NoteSwipe>(this);
+        var finished = false;
+        var springBack = Anim.Run(target, 200, t =>
         {
-            if (target.RenderTransform is TranslateTransform tt) tt.X = from * (1 - t);
-            target.Opacity = opacity + (1 - opacity) * t;
-            Moved?.Invoke(from * (1 - t) / Math.Max(1, target.Bounds.Width));
-        }, () => { target.RenderTransform = null; target.Opacity = 1; Moved?.Invoke(0); }, decorative: false);
+            if (!weakTarget.TryGetTarget(out var pane)) return;
+            if (pane.RenderTransform is TranslateTransform tt) tt.X = from * (1 - t);
+            pane.Opacity = opacity + (1 - opacity) * t;
+            if (weak.TryGetTarget(out var swipe)) swipe.Moved?.Invoke(from * (1 - t) / Math.Max(1, pane.Bounds.Width));
+        }, () =>
+        {
+            if (weakTarget.TryGetTarget(out var pane)) { pane.RenderTransform = null; pane.Opacity = 1; }
+            if (weak.TryGetTarget(out var swipe)) { swipe.Moved?.Invoke(0); swipe._springBack = null; }
+            finished = true;
+        }, decorative: false);
+        _springBack = finished ? null : springBack;
     }
 
     private void Fire()
     {
         _fired = true;
         _detentSettle?.Stop();
+        _progressSettle?.Stop();
+        StopFrames();
+        _owed = 0;
         var target = pane();
         target.RenderTransform = null; target.Opacity = 1;
         Moved?.Invoke(0);
         navigate(_swipe > 0 ? -1 : 1);
+    }
+
+    /// <summary>Stops pending motion when its host is released and restores the pane if it is still attached.</summary>
+    public void Cancel()
+    {
+        _detentSettle?.Stop();
+        _progressSettle?.Stop();
+        StopFrames();
+        _springBack?.Cancel();
+        _springBack = null;
+        _swipe = _progress = _owed = 0;
+        _samples.Clear();
+        _click = _frameAt = _owedChangedAt = 0;
+        _gap = 0;
+        _fired = false;
+
+        if (TopLevel.GetTopLevel(host) is not null)
+        {
+            var target = pane();
+            if (TopLevel.GetTopLevel(target) is not null)
+            {
+                if (target.RenderTransform is TranslateTransform follow) follow.X = 0;
+                target.Opacity = 1;
+            }
+        }
     }
 }

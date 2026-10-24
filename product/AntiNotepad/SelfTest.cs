@@ -49,6 +49,7 @@ internal static class SelfTest
         Check(InputLimitChecks(out var inputReport), "input limits: " + inputReport);
         Check(NotesLocationChecks(out var notesReport), "notes location and recovery: " + notesReport);
         Check(StartupRequestLatchChecks(out var startupRequestReport), "startup request latch: " + startupRequestReport);
+        Check(NoteSwipeChecks(out var swipeReport), "note swipe: " + swipeReport);
 
         Console.WriteLine(failures.Count == 0 ? "SELFTEST PASS" : "SELFTEST FAIL\n" + string.Join("\n", failures));
         return failures.Count == 0 ? 0 : 1;
@@ -421,5 +422,44 @@ internal static class SelfTest
             ? "early show and quit wait for attach, pending requests dispatch once, and ready requests dispatch directly"
             : $"early={heldUntilReady}, consumed={pendingConsumed}, once={consumedOnce}, ready={readyRequestsDispatched}";
         return heldUntilReady && pendingConsumed && consumedOnce && readyRequestsDispatched;
+    }
+
+    private static bool NoteSwipeChecks(out string report)
+    {
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+        var settings = new Settings { Swipe = "progress" };
+        var pane = new Avalonia.Controls.Control();
+        var cancelled = new UI.NoteSwipe(pane, () => settings, () => pane, _ => { });
+        var stalled = new UI.NoteSwipe(pane, () => settings, () => pane, _ => { });
+        try
+        {
+            cancelled.Input(1);
+            CheckCase(cancelled.OwedMotion > 0.5 && cancelled.HasRunningTimer, "no-frame swipe leaves owed motion and starts settle timer");
+            cancelled.Cancel();
+            CheckCase(!cancelled.HasRunningTimer && !cancelled.HasPendingProgress && cancelled.OwedMotion == 0,
+                "cancel stops settle timer and clears pending progress");
+
+            stalled.Input(1);
+            var now = Environment.TickCount64;
+            var waits = !stalled.ProgressSettleTick(now) && stalled.HasRunningTimer && stalled.OwedMotion > 0.5;
+            CheckCase(waits, "settle waits while owed motion is recent");
+            var gaveUp = stalled.ProgressSettleTick(now + UI.NoteSwipe.ProgressStallMs)
+                && !stalled.HasRunningTimer && !stalled.HasPendingProgress && stalled.OwedMotion == 0;
+            CheckCase(gaveUp, "settle drops stalled owed motion after the bound");
+
+            report = failures.Count == 0 ? "no-frame cancel cleanup and deterministic stalled-settle timeout" : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+        catch (Exception ex)
+        {
+            report = string.Join("; ", failures.Append(ex.Message));
+            return false;
+        }
+        finally
+        {
+            cancelled.Cancel();
+            stalled.Cancel();
+        }
     }
 }
