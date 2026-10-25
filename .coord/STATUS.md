@@ -8,7 +8,8 @@ Product: AntiNotepad (`product/AntiNotepad`).
   create controls lazily, so the page methods stay the single definition (no duplicated catalog). Codex luna xhigh in its own
   worktree; its selftest harness was rejected and removed by A27-settings-search-rework. Merged into dev (0 warnings, SELFTEST
   PASS); the user tested it live in the dev copy and it works. Worktree and branch removed. Codex timing: one search about
-  14 ms -> 1.6 ms. Not yet in main or the installed copy.
+  14 ms -> 1.6 ms. Dev merged into main, tag antinotepad-v0.6.0-untested-r3 (2026-10-25). Prod reinstalled by the user
+  (00:33) with r3 and running.
 - A14 to A21 merged into dev (2026-10-24, HEAD after A17). Dev builds with 0 warnings and passes SELFTEST. Manager reviewed
   each; no live UI check was possible this round (no Computer Use), so every item below still needs one.
   - Audit batch 1: A14-swipe-close-cancel (A1-13), A15-startup-quit-pending (A1-15), A16-staged-upgrade-rollback (A1-17),
