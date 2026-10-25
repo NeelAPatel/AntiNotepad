@@ -131,7 +131,6 @@ internal sealed class TaskbarProxy : IDisposable
             WindowStartupLocation = WindowStartupLocation.Manual,
             Position = new PixelPoint(-32000, -32000),
         };
-        Native.DisableDwmTransitions(_window);
         _window.Closing += (_, e) =>
         {
             if (!SessionEnd.ShouldCancelClose(e.CloseReason, _disposed, SessionEnd.IsEnding)) return;
