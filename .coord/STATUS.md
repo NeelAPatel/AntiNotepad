@@ -16,7 +16,11 @@ Product: AntiNotepad (`product/AntiNotepad`).
   A30 and A31 both touch `UI/PadWindow.cs`; the manager resolves overlap at merge.
   - A31 returned and passed review (DWMWA_TRANSITIONS_FORCEDISABLED on the pad and the taskbar stand-in at creation; 3 small
     edits, no selftest since it isn't checkable headless). Merged into dev (0 warnings, SELFTEST PASS); dev copy relaunched.
-    Waiting on the user's live test. A29 and A30 still running.
+    Waiting on the user's live test.
+  - A29 returned and passed review (line-text cache per document line, structure reused when changed lines keep their
+    signature, full rebuild otherwise; math and timer keys stay global; 19,000 randomized edits matched a full rebuild;
+    1500-line keystroke 0.51 -> 0.08 ms, 5000-line 1.35 -> 0.27 ms). Merged into dev (0 warnings, SELFTEST PASS); dev copy
+    relaunched with A29 + A31. Waiting on the user's live test. A30 still running.
 - A28-editor-render-memory (A1-7, A1-9, A1-10; Sol director + 3 luna workers, worktree `../AntiQuickPad-wt/A28-editor-render-memory`)
   returned 2026-10-25: 0 warnings, SELFTEST PASS. Review accepted the render caches; one bug found: in notes over 1500 lines the
   fence color cache can keep a stale code-block body after an edit (hit by document version alone). A28-fence-cache-bounds-fix
