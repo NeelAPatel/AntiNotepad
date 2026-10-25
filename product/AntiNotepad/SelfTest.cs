@@ -652,7 +652,14 @@ internal static class SelfTest
         ];
         foreach (var test in cases)
             CheckCase(TaskbarPresence.ShouldShow(test.Setting, test.Visible) == test.Expected, $"{test.Setting}, visible={test.Visible}");
-        report = failures.Count == 0 ? "Never default, old JSON default, three JSON round trips, and all six visibility combinations" : string.Join("; ", failures);
+        foreach (var setting in new string?[] { null, "unknown" })
+            foreach (var visible in new[] { false, true })
+                CheckCase(!TaskbarPresence.ShouldShow(setting, visible), "missing/unknown mode has no button");
+        CheckCase(!TaskbarPresence.ShouldHideOnClick(false, false), "hidden inactive pad click shows");
+        CheckCase(!TaskbarPresence.ShouldHideOnClick(false, true), "hidden pad click shows even with stale foreground state");
+        CheckCase(!TaskbarPresence.ShouldHideOnClick(true, false), "visible inactive pad click focuses");
+        CheckCase(TaskbarPresence.ShouldHideOnClick(true, true), "visible foreground pad click hides");
+        report = failures.Count == 0 ? "Never default, old JSON default, three JSON round trips, all six visibility combinations, missing/unknown modes, and all four click states" : string.Join("; ", failures);
         return failures.Count == 0;
     }
 }

@@ -465,7 +465,7 @@ internal sealed partial class SettingsWindow : Window
             tiles.Children.Add(Tile(new ScreenPicture(id, _p) { Height = 62 }, name, S.OpenAt == id, () => Set(() => S.OpenAt = id, rows: true), 104));
         page.Children.Add(Card([
             .. Expander("open-at", Fl(0xee77), "Open at", null, OpenAtName(S.OpenAt), SubRow(null, tiles, wide: true)),
-            Row(null, "Taskbar icon", "The tray icon stays available while the pad is hidden",
+            Row(Fl(0xf359), "Taskbar icon", "The tray icon stays available while the pad is hidden",
                 Seg([("visible", "While visible"), ("always", "Always"), ("never", "Never")], S.Taskbar, v => Set(() => S.Taskbar = v))),
             Row(Fl(0xf2dd), "Fresh note after", "Away this long, the hotkey opens a new page",
                 Dropdown([("0", "Never"), ("5", "5 minutes"), ("15", "15 minutes"), ("30", "30 minutes"), ("120", "2 hours")], S.FreshNoteAfterMinutes.ToString(), v => Set(() => S.FreshNoteAfterMinutes = int.Parse(v)))),

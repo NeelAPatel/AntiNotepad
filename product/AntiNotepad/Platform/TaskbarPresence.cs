@@ -7,7 +7,7 @@ using AntiNotepad;
 
 namespace AntiNotepad.Platform;
 
-/// <summary>Maps the taskbar preference to whether the pad should have a taskbar item.</summary>
+/// <summary>Maps the taskbar preference to whether the taskbar proxy should be present.</summary>
 internal static class TaskbarPresence
 {
     internal static bool ShouldShow(string? setting, bool padVisible) => setting switch
@@ -16,167 +16,40 @@ internal static class TaskbarPresence
         "always" => true,
         _ => false,
     };
+
+    /// <summary>A taskbar click hides only when the visible pad owned the foreground before the click.</summary>
+    internal static bool ShouldHideOnClick(bool padVisible, bool padForeground) => padVisible && padForeground;
 }
 
-/// <summary>Manages a manually registered taskbar item for the resident pad window.</summary>
-internal sealed class TaskbarItem : IDisposable
-{
-    private const uint WmSysCommand = 0x0112;
-    private const long ScMinimize = 0xF020;
-    private readonly Window _window;
-    private readonly Action _minimize;
-    private readonly uint _taskbarCreated = RegisterWindowMessage("TaskbarCreated");
-    private Win32Properties.CustomWndProcHookCallback? _hook;
-    private ITaskbarList? _taskbar;
-    private bool _added;
-    private bool _wanted;
-    private bool _disposed;
-    private string? _lastFailure;
-
-    internal TaskbarItem(Window window, Action minimize)
-    {
-        _window = window;
-        _minimize = minimize;
-        _hook = OnWindowMessage;
-        Win32Properties.AddWndProcHookCallback(window, _hook);
-    }
-
-    internal void Apply(bool shouldShow)
-    {
-        _wanted = shouldShow;
-        if (_disposed || _window.TryGetPlatformHandle()?.Handle is not { } hwnd || hwnd == IntPtr.Zero) return;
-
-        if (shouldShow)
-        {
-            if (_added) return;
-            try
-            {
-                EnsureTaskbar().AddTab(hwnd);
-                _added = true;
-                _lastFailure = null;
-            }
-            catch (Exception ex) { _added = false; ResetTaskbar(); ReportFailure(ex); }
-        }
-        else if (_added)
-        {
-            try
-            {
-                EnsureTaskbar().DeleteTab(hwnd);
-                _added = false;
-                _lastFailure = null;
-            }
-            catch (Exception ex) { ResetTaskbar(); ReportFailure(ex); }
-        }
-    }
-
-    internal void Prepare()
-    {
-        if (_disposed) return;
-        try { _ = EnsureTaskbar(); _lastFailure = null; }
-        catch (Exception ex) { ResetTaskbar(); ReportFailure(ex); }
-    }
-
-    private ITaskbarList EnsureTaskbar()
-    {
-        if (_taskbar is not null) return _taskbar;
-        var type = Type.GetTypeFromCLSID(new Guid("56FDF344-FD6D-11D0-958A-006097C9A090"), throwOnError: true)!;
-        var taskbar = (ITaskbarList)Activator.CreateInstance(type)!;
-        try { taskbar.HrInit(); }
-        catch
-        {
-            try { Marshal.ReleaseComObject(taskbar); } catch { }
-            throw;
-        }
-        _taskbar = taskbar;
-        return taskbar;
-    }
-
-    private IntPtr OnWindowMessage(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam, ref bool handled)
-    {
-        if (_taskbarCreated != 0 && message == _taskbarCreated)
-        {
-            _added = false;
-            ResetTaskbar();
-            if (_wanted) Apply(true);
-            return IntPtr.Zero;
-        }
-
-        if (message == WmSysCommand && (wParam.ToInt64() & 0xFFF0) == ScMinimize && _window.IsVisible && _window.IsActive)
-        {
-            // A focused taskbar button normally asks Windows to minimize its window. Route that through
-            // the pad's normal hide path so it also saves and starts the hidden-document trim timer.
-            handled = true;
-            Dispatcher.UIThread.Post(_minimize, DispatcherPriority.Input);
-        }
-        return IntPtr.Zero;
-    }
-
-    public void Dispose()
-    {
-        if (_disposed) return;
-        _disposed = true;
-        var hwnd = _window.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
-        if (_added && hwnd != IntPtr.Zero)
-        {
-            try { EnsureTaskbar().DeleteTab(hwnd); }
-            catch (Exception ex) { ReportFailure(ex); }
-            _added = false;
-        }
-        if (_hook is { } hook)
-        {
-            Win32Properties.RemoveWndProcHookCallback(_window, hook);
-            _hook = null;
-        }
-        ResetTaskbar();
-    }
-
-    private void ResetTaskbar()
-    {
-        if (_taskbar is null) return;
-        try { Marshal.ReleaseComObject(_taskbar); } catch { }
-        _taskbar = null;
-    }
-
-    private void ReportFailure(Exception ex)
-    {
-        if (_lastFailure == ex.Message) return;
-        _lastFailure = ex.Message;
-        Program.Log("taskbar: " + ex.Message);
-    }
-
-    [ComImport]
-    [Guid("56FDF342-FD6D-11D0-958A-006097C9A090")]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface ITaskbarList
-    {
-        void HrInit();
-        void AddTab(IntPtr hwnd);
-        void DeleteTab(IntPtr hwnd);
-        void ActivateTab(IntPtr hwnd);
-        void SetActiveAlt(IntPtr hwnd);
-    }
-
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    private static extern uint RegisterWindowMessage(string message);
-}
-
-/// <summary>A stable minimized button that stands in for the hidden pad when Always is selected.</summary>
+/// <summary>A stable minimized taskbar button for the resident pad.</summary>
 internal sealed class TaskbarProxy : IDisposable
 {
+    private const uint WmActivate = 0x0006;
     private const uint WmSysCommand = 0x0112;
     private const long ScRestore = 0xF120;
+    private const int WaInactive = 0;
+    private const int WaActive = 1;
+    private const int WaClickActive = 2;
     private const int SwHide = 0;
     private const int SwShowMinNoActive = 7;
+    private readonly Window _pad;
     private readonly Window _window;
-    private readonly Action _activatePad;
+    private readonly Action<bool> _taskbarClick;
+    private readonly uint _taskbarCreated = RegisterWindowMessage("TaskbarCreated");
     private Win32Properties.CustomWndProcHookCallback? _hook;
+    private Win32Properties.CustomWndProcHookCallback? _padHook;
     private bool _disposed;
     private bool _shown;
     private bool _activationPending;
+    private bool _padWasForegroundBeforeProxyActivation;
+    private bool _suppressNextPadDeactivation;
+    private int _focusSnapshotGeneration;
+    private int _presenceGeneration;
 
-    internal TaskbarProxy(string title, WindowIcon? icon, Action activatePad)
+    internal TaskbarProxy(Window pad, string title, WindowIcon? icon, Action<bool> taskbarClick)
     {
-        _activatePad = activatePad;
+        _pad = pad;
+        _taskbarClick = taskbarClick;
         _window = new Window
         {
             Title = title,
@@ -201,30 +74,41 @@ internal sealed class TaskbarProxy : IDisposable
         _window.Activated += (_, _) =>
         {
             if (!_shown || _disposed) return;
+            QueueTaskbarClick(IntPtr.Zero);
             ShowNativeMinimized();
-            QueueActivation();
         };
-        _hook = OnWindowMessage;
+        _hook = OnProxyWindowMessage;
+        _padHook = OnPadWindowMessage;
         Win32Properties.AddWndProcHookCallback(_window, _hook);
+        Win32Properties.AddWndProcHookCallback(_pad, _padHook);
+    }
+
+    internal bool ConsumePadDeactivationToProxy()
+    {
+        var suppress = _suppressNextPadDeactivation;
+        _suppressNextPadDeactivation = false;
+        return suppress;
     }
 
     internal void ShowMinimized()
     {
-        if (_disposed) return;
-        if (_shown) return;
+        if (_disposed || _shown) return;
+        _presenceGeneration++;
         _shown = true;
         ShowNativeMinimized();
     }
 
     internal void Hide()
     {
-        if (_disposed) return;
-        if (!_shown) return;
+        if (_disposed || !_shown) return;
         _shown = false;
-        ShowWindow(Handle, SwHide);
+        _presenceGeneration++;
+        var hwnd = Handle;
+        if (hwnd != IntPtr.Zero) ShowWindow(hwnd, SwHide);
     }
 
     private IntPtr Handle => _window.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
+    private IntPtr PadHandle => _pad.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
 
     private void ShowNativeMinimized()
     {
@@ -233,26 +117,72 @@ internal sealed class TaskbarProxy : IDisposable
         else Program.Log("taskbar: proxy native handle is unavailable");
     }
 
-    private IntPtr OnWindowMessage(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam, ref bool handled)
+    private IntPtr OnPadWindowMessage(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (message == WmSysCommand && (wParam.ToInt64() & 0xFFF0) == ScRestore && _shown)
+        if (message == WmActivate && (wParam.ToInt64() & 0xFFFF) == WaInactive && _shown && lParam == Handle)
         {
-            // Keep the proxy minimized and send the click to the resident pad without showing or focusing
-            // this 1 px helper window.
-            handled = true;
-            QueueActivation();
+            // Capture before Avalonia raises Deactivated and before Windows can make the proxy foreground.
+            _padWasForegroundBeforeProxyActivation = _pad.IsActive || GetForegroundWindow() == hwnd;
+            _suppressNextPadDeactivation = true;
+            var generation = ++_focusSnapshotGeneration;
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (generation != _focusSnapshotGeneration) return;
+                _padWasForegroundBeforeProxyActivation = false;
+                _suppressNextPadDeactivation = false;
+            }, DispatcherPriority.Background);
         }
         return IntPtr.Zero;
     }
 
-    private void QueueActivation()
+    private IntPtr OnProxyWindowMessage(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (_activationPending) return;
+        if (_taskbarCreated != 0 && message == _taskbarCreated)
+        {
+            if (_shown)
+            {
+                ShowWindow(hwnd, SwHide);
+                ShowNativeMinimized();
+            }
+            return IntPtr.Zero;
+        }
+
+        if (message == WmSysCommand && (wParam.ToInt64() & 0xFFF0) == ScRestore && _shown)
+        {
+            // Decide from the foreground snapshot before restore/activation can move it to this helper.
+            handled = true;
+            QueueTaskbarClick(IntPtr.Zero);
+            return IntPtr.Zero;
+        }
+
+        var activation = (int)(wParam.ToInt64() & 0xFFFF);
+        if (message == WmActivate && (activation == WaActive || activation == WaClickActive) && _shown)
+        {
+            QueueTaskbarClick(lParam);
+            ShowNativeMinimized();
+        }
+        return IntPtr.Zero;
+    }
+
+    private void QueueTaskbarClick(IntPtr previousForeground)
+    {
+        if (_activationPending || _disposed || !_shown) return;
+        var padHwnd = PadHandle;
+        var padWasForeground = _padWasForegroundBeforeProxyActivation
+            || (padHwnd != IntPtr.Zero && previousForeground == padHwnd)
+            || (padHwnd != IntPtr.Zero && GetForegroundWindow() == padHwnd)
+            || _pad.IsActive;
+        _padWasForegroundBeforeProxyActivation = false;
+        var hide = TaskbarPresence.ShouldHideOnClick(_pad.IsVisible, padWasForeground);
+        var presenceGeneration = _presenceGeneration;
         _activationPending = true;
         Dispatcher.UIThread.Post(() =>
         {
-            _activationPending = false;
-            if (!_disposed && _shown) _activatePad();
+            try
+            {
+                if (!_disposed && _shown && presenceGeneration == _presenceGeneration) _taskbarClick(hide);
+            }
+            finally { _activationPending = false; }
         }, DispatcherPriority.Input);
     }
 
@@ -267,9 +197,20 @@ internal sealed class TaskbarProxy : IDisposable
             Win32Properties.RemoveWndProcHookCallback(_window, hook);
             _hook = null;
         }
+        if (_padHook is { } padHook)
+        {
+            Win32Properties.RemoveWndProcHookCallback(_pad, padHook);
+            _padHook = null;
+        }
         _window.Close();
     }
 
     [DllImport("user32.dll")]
     private static extern bool ShowWindow(IntPtr hwnd, int command);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern uint RegisterWindowMessage(string message);
 }

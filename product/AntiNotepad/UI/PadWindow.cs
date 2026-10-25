@@ -25,7 +25,6 @@ internal sealed partial class PadWindow : Window
     private DateTime _hiddenAt = DateTime.Now;
     private IDisposable? _clipboardHook;
     private GlobalHotkey? _hotkey, _newNoteHotkey;
-    private TaskbarItem? _taskbarItem;
     private TaskbarProxy? _taskbarProxy;
     private PadView _left = null!, _right = null!;
     private PadView _active = null!;
@@ -71,12 +70,13 @@ internal sealed partial class PadWindow : Window
         {
             Save();
             if (_saveFailureOverlay is { } prompt && IsOverlay(prompt)) CloseOverlay();
+            var taskbarTransfer = _taskbarProxy?.ConsumePadDeactivationToProxy() ?? false;
             // Moving into the Settings window is not "clicking away": the pad stays up, undimmed, to show each change.
             if (_settingsWindow is not null) return;
-            if (Settings.HideOnBlur && !Topmost && !_overlayOpen && IsVisible) HideResident();
+            if (Settings.HideOnBlur && !Topmost && !_overlayOpen && IsVisible && !taskbarTransfer) QueueHideOnBlur();
             else if (Topmost && Settings.DimWhenPinned) FadeWindow(0.72);
         };
-        Activated += (_, _) => { WakeChrome(); FadeWindow(1); };
+        Activated += (_, _) => { CancelQueuedHideOnBlur(); WakeChrome(); FadeWindow(1); };
         Closing += (_, e) => { if (!_quitting) { e.Cancel = true; HideResident(); } };
         Opened += (_, _) => { FocusActive(); CycleSettingsForDev(); };
         PositionChanged += (_, _) => RememberBounds();
@@ -87,40 +87,46 @@ internal sealed partial class PadWindow : Window
     /// <summary>Hotkey and clipboard hooks need only the native handle, so `--hidden` startup works without ever showing.</summary>
     internal void InstallHooks()
     {
-        _taskbarItem = new TaskbarItem(this, HideResident);
-        if (Settings.Taskbar != "never") _taskbarItem.Prepare();
-        if (Settings.Taskbar == "always") EnsureTaskbarProxy();
+        if (Settings.Taskbar != "never") EnsureTaskbarProxy();
         RegisterHotkey(Settings.Hotkey);
         RegisterNewNoteHotkey(Settings.NewNoteHotkey);        _clipboardHook = Native.ListenClipboard(this, () => Dispatcher.UIThread.Post(() => _ = OnClipboardChanged()));
+        ApplyTaskbarSetting();
     }
 
     // ---------- lifecycle ----------
 
-    public void ToggleResident() { if (IsVisible && IsActive) HideResident(); else ShowResident(); }
+    public void ToggleResident() => ToggleResident(hotkeyPressed: 0);
 
-    private long _hotkeyPressed;
-
-    public void ShowResident()
+    private void ToggleResident(long hotkeyPressed)
     {
+        if (IsVisible && IsActive) HideResident();
+        else ShowResident(hotkeyPressed);
+    }
+
+    public void ShowResident() => ShowResident(hotkeyPressed: 0);
+
+    private void ShowResident(long hotkeyPressed)
+    {
+        CancelQueuedHideOnBlur();
         var away = DateTime.Now - _hiddenAt;
         if (!IsVisible && Settings.FreshNoteAfterMinutes > 0 && away.TotalMinutes >= Settings.FreshNoteAfterMinutes) OpenFreshNote();
         var wasVisible = IsVisible;
         var drop = wasVisible ? null : PlaceForOpen();
-        _taskbarProxy?.Hide();
         WindowState = WindowState.Normal;
         Show();
+        ApplyTaskbarSetting();
         Activate();
         FocusActive();
         // sync = keyboard focus set inside this call; ms = when the dispatcher next confirms it after the first frames.
-        var pressed = _hotkeyPressed;
-        var sync = pressed == 0 ? 0 : System.Diagnostics.Stopwatch.GetElapsedTime(pressed).TotalMilliseconds;
+        var sync = hotkeyPressed == 0 ? 0 : System.Diagnostics.Stopwatch.GetElapsedTime(hotkeyPressed).TotalMilliseconds;
         Dispatcher.UIThread.Post(() =>
         {
             FocusActive();
-            if (Interlocked.Exchange(ref _hotkeyPressed, 0) is var t && t != 0)
-                Program.Log($"hotkey-to-focus ms={System.Diagnostics.Stopwatch.GetElapsedTime(t).TotalMilliseconds:F1} sync={sync:F1} focused={_active.Editor.TextArea.IsFocused} open-at={Settings.OpenAt}");
+            if (hotkeyPressed != 0)
+            {
+                Program.Log($"hotkey-to-focus ms={System.Diagnostics.Stopwatch.GetElapsedTime(hotkeyPressed).TotalMilliseconds:F1} sync={sync:F1} focused={_active.Editor.TextArea.IsFocused} open-at={Settings.OpenAt}");
+            }
         }, DispatcherPriority.Input);
-        Dispatcher.UIThread.Post(ApplyTaskbarSetting, DispatcherPriority.Background);
         if (drop is { } target)
         {
             // Drop-down presentation: the pad slides down from the top edge, Quake-console style.
@@ -170,7 +176,7 @@ internal sealed partial class PadWindow : Window
     internal void ShowQuietly()
     {
         if (IsVisible) return;
-        _taskbarProxy?.Hide();
+        CancelQueuedHideOnBlur();
         ShowActivated = false;
         Show();
         ShowActivated = true;
@@ -179,10 +185,10 @@ internal sealed partial class PadWindow : Window
 
     public void HideResident()
     {
+        CancelQueuedHideOnBlur();
         CloseOverlay();
         Save();
         _hiddenAt = DateTime.Now;
-        _taskbarItem?.Apply(false);
         Hide();
         _trim.Stop(); _trim.Start();
         ApplyTaskbarSetting();
@@ -215,7 +221,6 @@ internal sealed partial class PadWindow : Window
         _hotkey?.Dispose();
         _newNoteHotkey?.Dispose();
         _clipboardHook?.Dispose();
-        _taskbarItem?.Dispose(); _taskbarItem = null;
         _taskbarProxy?.Dispose(); _taskbarProxy = null;
         Close();
         QuitRequested?.Invoke();
@@ -248,20 +253,36 @@ internal sealed partial class PadWindow : Window
     {
         var visible = IsVisible;
         var shouldShow = TaskbarPresence.ShouldShow(Settings.Taskbar, visible);
-        if (!visible && Settings.Taskbar == "always")
-        {
-            _taskbarItem?.Apply(false);
-            EnsureTaskbarProxy();
-            _taskbarProxy!.ShowMinimized();
-            return;
-        }
-
-        _taskbarProxy?.Hide();
-        _taskbarItem?.Apply(shouldShow);
+        if (shouldShow) _taskbarProxy?.ShowMinimized();
+        else _taskbarProxy?.Hide();
     }
 
     private void EnsureTaskbarProxy() =>
-        _taskbarProxy ??= new TaskbarProxy(AppInfo.DisplayName, Icon, ToggleResident);
+        _taskbarProxy ??= new TaskbarProxy(this, AppInfo.DisplayName, Icon, OnTaskbarProxyClick);
+
+    private void OnTaskbarProxyClick(bool hide)
+    {
+        CancelQueuedHideOnBlur();
+        if (hide)
+        {
+            if (IsVisible) HideResident();
+        }
+        else ShowResident();
+    }
+
+    private int _blurHideGeneration;
+
+    private void QueueHideOnBlur()
+    {
+        var generation = ++_blurHideGeneration;
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (generation != _blurHideGeneration || IsActive || !IsVisible || _settingsWindow is not null || !Settings.HideOnBlur || Topmost || _overlayOpen) return;
+            HideResident();
+        }, DispatcherPriority.Background);
+    }
+
+    private void CancelQueuedHideOnBlur() => _blurHideGeneration++;
 
     // ---------- persistence ----------
 
@@ -330,7 +351,7 @@ internal sealed partial class PadWindow : Window
             var wanted = gesture ?? (Environment.GetEnvironmentVariable(AppInfo.Env("HOTKEY")) is { Length: > 0 } env ? env : GlobalHotkey.DefaultGesture.Label);
             var label = GlobalHotkey.HotkeyGesture.Parse(wanted).Label;
             var ok = SwapHotkey(ref _hotkey, wanted, label,
-                g => new GlobalHotkey(this, pressed => Dispatcher.UIThread.Post(() => { _hotkeyPressed = pressed; ToggleResident(); }), g), out var error);
+                g => new GlobalHotkey(this, pressed => Dispatcher.UIThread.Post(() => ToggleResident(pressed)), g), out var error);
             HotkeyStatus = _hotkey?.GestureLabel ?? $"{label} unavailable: {error}";
             HotkeyStatusChanged?.Invoke(HotkeyStatus);
             return ok;
