@@ -32,7 +32,7 @@ Product: AntiNotepad (`product/AntiNotepad`).
   - At 23:07:44 the user started a restart/sign-out and both copies vetoed it (event 10001), then exited: prod and dev are not
     running. Cause: the pad's and stand-in's Closing handlers cancel closes. A26-allow-windows-shutdown merged and verified on dev: a dev-only simulated
     WM_QUERYENDSESSION is accepted (reply=1), saves in 1.7 ms including an edit typed just before, and exits; Alt+F4 still hides.
-    Next: user reinstalls prod (tools/install.ps1 from Windows Terminal) so it gets A26; then merge dev into main.
+    Prod reinstalled by the user (23:26) with A26 and running. Dev merged into main, tag antinotepad-v0.6.0-untested-r2.
   - Backups made from Claude sessions exist only in `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\`:
     `AntiNotepad-backup-20261024-155646` (stale Oct 22-23 data) and `Antipad-backup-2026-10-23`. Kept; don't delete.
 - A6-audit-decisions merged into dev (2026-10-24), together with A5-audit-refresh. It applies the user's 8 audit decisions
