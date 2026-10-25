@@ -1,5 +1,6 @@
 using AntiNotepad.Model;
 using AntiNotepad.Platform;
+using AntiNotepad.UI;
 using Avalonia.Platform;
 
 namespace AntiNotepad;
@@ -13,6 +14,19 @@ internal static class SelfTest
         void Check(bool ok, string what) { if (!ok) failures.Add(what); }
 
         Check(Calc.Calculator.SelfTest(out var calcReport), "calculator: " + calcReport);
+        Check(ChromeTokens.PillHeight == 42 && ChromeTokens.PagerStripHeight == 50
+            && ChromeTokens.TopBackdrop.MidpointStop == 46 && ChromeTokens.TopScrollableWhitespace == 40
+            && Editor.ScrollableTopInsetTextArea.VisibleGapFor(ChromeTokens.TopScrollableWhitespace, 0) == 40
+            && Editor.ScrollableTopInsetTextArea.VisibleGapFor(ChromeTokens.TopScrollableWhitespace, 20) == 20
+            && Editor.ScrollableTopInsetTextArea.VisibleGapFor(ChromeTokens.TopScrollableWhitespace, 40) == 0
+            && Editor.ScrollableTopInsetTextArea.DocumentOffsetFor(ChromeTokens.TopScrollableWhitespace, 60) == 20
+            && 480 - ChromeTokens.BarEdgeInset - ChromeTokens.ButtonSize == 444
+            && ChromeTokens.TopBackdrop.MaskAlphaAt(0) == 1
+            && ChromeTokens.TopBackdrop.MaskAlphaAt(40) == 1
+            && ChromeTokens.TopBackdrop.MaskAlphaAt(46) == 0.5
+            && ChromeTokens.TopBackdrop.MaskAlphaAt(52) == 0
+            && ChromeTokens.TopBackdrop.TintAlpha == 0.4,
+            "A35-bar-insets chrome geometry and scrollable top inset mapping");
         Check(Editor.TextCommands.SelfTest(out var textReport), "text commands: " + textReport);
         Check(Modes.Detect("math\n1+1").Mode == NoteMode.Math, "detect math");
         Check(Modes.Detect("code: py\nx").Argument == "py", "detect code py");

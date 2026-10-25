@@ -118,10 +118,12 @@ internal sealed class PaperLayer(PadView pad) : Avalonia.Controls.Control
         // Symmetric frame: the text's left margin, mirrored on the right. Columns start exactly at the text edge;
         // the last one may sit up to half a step past the mirror, so both margins come out within a few pixels.
         var left = origin.X; var right = Bounds.Width - origin.X;
-        var top = origin.Y; var bottom = Bounds.Height - 8;
+        var top = origin.Y;
+        var bottom = !pad.Private && pad.Settings.Bars == "docked" ? pad.Editor.Bounds.Bottom : Bounds.Height - 8;
         if (right <= left) return;
         var step = kind == "biggrid" ? h * 2 : h;
-        // Row phase follows scrolling; the first row boundary is the bottom of the first visible line.
+        // The inset adapter moves the TextView origin while the top whitespace remains; its own offset stays document-local.
+        // Using both coordinates keeps paper rows attached to line boundaries without counting the inset twice.
         var rowPhase = origin.Y - view.VerticalOffset % step;
         double Snap(double v) => Math.Round(v) + 0.5;
         switch (kind)

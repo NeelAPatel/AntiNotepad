@@ -19,14 +19,9 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
-- A35-bar-insets: mockup approved, values locked (`.coord/handoff/A35-bar-insets/approved-values.md`). Dispatched to Codex
-  Sol on `feat/A35-bar-insets` (worktree `.claude/worktrees/A35-bar-insets`): chrome design tokens + new geometry + a dev-only
-  lab comparing pill material Acrylic window / Blur behind / Solid (best to worst; Mica omitted for the pill).
-  Lab round 1 (503696e): Acrylic-window pill and feathered gradient rejected. r2 (7c01071): Solid pill, blur-behind top
-  band, ink-centered glyphs, pill inset 4. r3 (1a09b5c): overlay/float top gap is scrollable whitespace (line 1 normal height
-  in every style). r4 (441dc04): blur band masks editor text, no opaque backing (light-wallpaper strip). All 0 warnings,
-  SELFTEST PASS; lab dev copy running from the worktree; waiting on the user's live check.
-  Watch: geometry-drawn glyphs may look softer than DrawText.
+- A35-bar-insets merged into dev (fad7d61, user-approved live): design tokens + insets, ink-centered glyphs, scrollable
+  top gap, top-bar blur behind; one commit per feature. Lab history kept on branch `backup/A35-bar-insets-lab`.
+  Left over: dev-only Lab row (pill Solid / Blur behind) until the user drops it; installed copy not upgraded.
 - Native-window work (A32/A34) parked; any retry must not change the window's frame styles and
   goes lab-first. A34 (lab) was dropped: thick native border, bars broken in all three styles.
 

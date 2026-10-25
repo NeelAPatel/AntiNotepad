@@ -42,7 +42,9 @@ internal sealed class PadView : Grid
     private ChevronGutter? _gutter;
     private readonly FenceColorizer _fences;
     private IBrush? _edgeFadeMask;
-    private (double BandFraction, byte TopAlpha, byte BottomAlpha)? _edgeFadeKey;
+    private (double Height, double EdgeBand, byte TopAlpha, byte BottomAlpha, double BackdropOffset, byte BackdropOpacity)? _edgeFadeKey;
+    private double _topBackdropOffset;
+    private double _topBackdropOpacity;
     public NoteStructure? Structure { get; private set; }
     private bool _binding;
     private string? _loadHint;
@@ -78,7 +80,7 @@ internal sealed class PadView : Grid
     public PadView(Palette palette, Settings settings, Timers timers)
     {
         Palette = palette; Settings = settings; _timers = timers;
-        Editor = new TextEditor
+        Editor = new ScrollableTopInsetTextEditor
         {
             WordWrap = true,
             ShowLineNumbers = false,
@@ -86,7 +88,7 @@ internal sealed class PadView : Grid
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             Padding = new Thickness(0),
             Background = Brushes.Transparent,
-            Margin = new Thickness(36, 4, 30, 40),
+            Margin = new Thickness(36, 4, 30, ChromeTokens.PagerStripHeight),
         };
         Editor.Options.EnableHyperlinks = false;
         Editor.Options.EnableEmailHyperlinks = false;
@@ -113,7 +115,6 @@ internal sealed class PadView : Grid
         view.ElementGenerators.Add(new CheckboxGenerator(this));
         view.ElementGenerators.Add(new BulletGenerator(this));
         view.ElementGenerators.Add(new LinkGenerator(this));
-        view.ElementGenerators.Add(new TopGapGenerator(this));
         view.ElementGenerators.Add(new MarkerGenerator(this));
         _hint = new TextBlock
         {
@@ -123,10 +124,10 @@ internal sealed class PadView : Grid
         _paper = new PaperLayer(this).Init();
         Children.Add(_paper);
         Children.Add(Editor);
-        view.ScrollOffsetChanged += (_, _) => _paper.InvalidateVisual();
+        ((ScrollableTopInsetTextEditor)Editor).InsetTextArea.ScrollOffsetChanged += (_, _) => _paper.InvalidateVisual();
         view.VisualLinesChanged += (_, _) => _paper.InvalidateVisual();
         Children.Add(_hint);
-        view.ScrollOffsetChanged += (_, _) => UpdateEdgeFade();
+        ((ScrollableTopInsetTextEditor)Editor).InsetTextArea.ScrollOffsetChanged += (_, _) => UpdateEdgeFade();
         view.DocumentChanged += (_, _) => UpdateEdgeFade();
         // After a note loads or text reflows, the amount left to scroll changes without a scroll.
         view.VisualLinesChanged += (_, _) => UpdateEdgeFade();
@@ -249,7 +250,16 @@ internal sealed class PadView : Grid
     /// A preview editor (Settings) keeps its sample documents to itself: out of the shared cache, so samples never push
     /// real notes' documents (and their undo history) out, and nothing static holds on to the preview once it's gone.
     /// </summary>
-    public bool Private { get; init; }
+    private bool _isPrivate;
+    public bool Private
+    {
+        get => _isPrivate;
+        init
+        {
+            _isPrivate = value;
+            if (Editor is ScrollableTopInsetTextEditor insetEditor) UpdateTopInset(insetEditor);
+        }
+    }
     private readonly Dictionary<Note, TextDocument> _private = [];
 
     public void Bind(Note note)
@@ -302,37 +312,101 @@ internal sealed class PadView : Grid
     private void UpdateEdgeFade()
     {
         var h = Editor.Bounds.Height;
-        if (!Settings.EdgeFade || h < 60) { ClearEdgeFade(); return; }
-        const double band = 40;
-        var view = Editor.TextArea.TextView;
-        var offset = view.VerticalOffset;
-        var more = Math.Max(0, view.DocumentHeight - (offset + view.Bounds.Height));
-        var top = Math.Clamp(offset / band, 0, 1);
-        var bottom = Math.Clamp(more / band, 0, 1);
-        if (top == 0 && bottom == 0) { ClearEdgeFade(); return; }
-        var b = band / h;
-        var topAlpha = (byte)(255 * (1 - top));
-        var bottomAlpha = (byte)(255 * (1 - bottom));
-        var key = (b, topAlpha, bottomAlpha);
+        if (h <= 0) { ClearEdgeFade(); return; }
+
+        var edgeFade = Settings.EdgeFade && h >= 60;
+        var band = edgeFade ? ChromeTokens.TextEdgeFadeBand : 0;
+        var topAlpha = byte.MaxValue;
+        var bottomAlpha = byte.MaxValue;
+        if (edgeFade)
+        {
+            var view = Editor.TextArea.TextView;
+            var offset = Editor.VerticalOffset;
+            var more = Math.Max(0, Editor.ExtentHeight - (offset + Editor.ViewportHeight));
+            topAlpha = (byte)(255 * (1 - Math.Clamp(view.VerticalOffset / band, 0, 1)));
+            bottomAlpha = (byte)(255 * (1 - Math.Clamp(more / band, 0, 1)));
+        }
+        var hasEdgeFade = edgeFade && (topAlpha < 255 || bottomAlpha < 255);
+
+        var backdropOpacity = (byte)Math.Round(255 * Math.Clamp(_topBackdropOpacity, 0, 1));
+        var backdropOffset = backdropOpacity == 0 ? 0 : _topBackdropOffset;
+        if (!hasEdgeFade && backdropOpacity == 0) { ClearEdgeFade(); return; }
+
+        var key = (h, hasEdgeFade ? band : 0, topAlpha, bottomAlpha, backdropOffset, backdropOpacity);
         if (_edgeFadeMask is not null && _edgeFadeKey == key)
         {
             if (!ReferenceEquals(Editor.OpacityMask, _edgeFadeMask)) Editor.OpacityMask = _edgeFadeMask;
             return;
         }
+
+        var points = new SortedSet<double> { 0, h };
+        if (hasEdgeFade)
+        {
+            points.Add(band);
+            points.Add(h - band);
+        }
+        if (backdropOpacity > 0)
+        {
+            points.Add(backdropOffset);
+            points.Add(backdropOffset + ChromeTokens.TopBackdrop.DenseStop);
+            points.Add(backdropOffset + ChromeTokens.TopBackdrop.MidpointStop);
+            points.Add(backdropOffset + ChromeTokens.TopBackdrop.ClearStop);
+        }
+        var boundaries = points.Where(y => y >= 0 && y <= h).ToArray();
+        var samples = new List<double>(boundaries.Length + 12);
+        for (var i = 0; i < boundaries.Length; i++)
+        {
+            var start = boundaries[i];
+            samples.Add(start);
+            if (i + 1 == boundaries.Length) continue;
+            var end = boundaries[i + 1];
+            if (EdgeFadeVaries(start, end, band, topAlpha, bottomAlpha, h)
+                && backdropOpacity > 0 && Math.Abs(ChromeTokens.TopBackdrop.MaskAlphaAt(start - backdropOffset)
+                    - ChromeTokens.TopBackdrop.MaskAlphaAt(end - backdropOffset)) > 0.001)
+            {
+                var subdivisions = Math.Max(1, (int)Math.Ceiling(end - start));
+                for (var step = 1; step < subdivisions; step++) samples.Add(start + (end - start) * step / subdivisions);
+            }
+        }
+
         var mask = new LinearGradientBrush
         {
             StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative), EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
-            GradientStops =
-            {
-                new GradientStop(Color.FromArgb(topAlpha, 0, 0, 0), 0),
-                new GradientStop(Colors.Black, b),
-                new GradientStop(Colors.Black, 1 - b),
-                new GradientStop(Color.FromArgb(bottomAlpha, 0, 0, 0), 1),
-            },
-        }.ToImmutable();
-        _edgeFadeMask = mask;
+        };
+        foreach (var y in samples)
+        {
+            var edgeAlpha = EdgeFadeAlphaAt(y, h, band, topAlpha, bottomAlpha);
+            var bandAlpha = backdropOpacity / 255.0 * ChromeTokens.TopBackdrop.MaskAlphaAt(y - backdropOffset);
+            var alpha = (byte)Math.Clamp(Math.Round(255 * edgeAlpha * (1 - bandAlpha)), 0, 255);
+            mask.GradientStops.Add(new GradientStop(Color.FromArgb(alpha, 0, 0, 0), y / h));
+        }
+        var immutableMask = mask.ToImmutable();
+        _edgeFadeMask = immutableMask;
         _edgeFadeKey = key;
-        Editor.OpacityMask = mask;
+        Editor.OpacityMask = immutableMask;
+    }
+
+    private static bool EdgeFadeVaries(double start, double end, double band, byte topAlpha, byte bottomAlpha, double height) =>
+        band > 0 && ((topAlpha < 255 && start < band && end > 0)
+            || (bottomAlpha < 255 && start < height && end > height - band));
+
+    private static double EdgeFadeAlphaAt(double y, double height, double band, byte topAlpha, byte bottomAlpha)
+    {
+        var alpha = 1.0;
+        if (band > 0 && topAlpha < 255 && y < band)
+            alpha *= topAlpha / 255.0 + (1 - topAlpha / 255.0) * Math.Clamp(y / band, 0, 1);
+        if (band > 0 && bottomAlpha < 255 && y > height - band)
+            alpha *= 1 + (bottomAlpha / 255.0 - 1) * Math.Clamp((y - (height - band)) / band, 0, 1);
+        return alpha;
+    }
+
+    internal void SetTopBackdropMask(double editorOffset, double opacity)
+    {
+        var nextOpacity = Math.Clamp(opacity, 0, 1);
+        if (Math.Abs(_topBackdropOffset - editorOffset) < 0.01 && Math.Abs(_topBackdropOpacity - nextOpacity) < 0.005) return;
+        _topBackdropOffset = editorOffset;
+        _topBackdropOpacity = nextOpacity;
+        UpdateEdgeFade();
     }
 
     private void ClearEdgeFade()
@@ -360,7 +434,7 @@ internal sealed class PadView : Grid
     {
         if (Note is null) return;
         Note.Caret = Editor.CaretOffset;
-        Note.Scroll = Editor.TextArea.TextView.VerticalOffset;
+        Note.Scroll = Editor.VerticalOffset;
     }
 
     /// <summary>Note-to-note arrival: slide in from the travel direction while the new text is already editable.</summary>
@@ -819,15 +893,17 @@ internal sealed class PadView : Grid
             var spare = Bounds.Width - left - right - (glyph.WidthIncludingTrailingWhitespace * Settings.TextWidth + 15);
             if (spare > 0) { left += spare / 2; right += spare / 2; }
         }
-        // Docked: the text stops above the pager with the same 10 px gap above it as below it (10 + ~32 pill + 10).
-        // Overlay bars and Settings previews have nothing to keep clear, so the text runs nearly to the edge.
-        // Docked: 8 px under a ~24 px pill and the same 8 px above it.
-        var bottom = Private ? 6 : Settings.Bars is "overlay" or "float" ? 10 : 40;
+        // Docked keeps text above the reserved pager strip; sliding bars and private previews keep their current inset.
+        var bottom = Private ? 6 : Settings.Bars is "overlay" or "float" ? 10 : ChromeTokens.PagerStripHeight;
         Editor.Margin = new Thickness(_gutter is not null ? left - 16 : left, 4, right, bottom);
-        Editor.TextArea.TextView.Redraw(); // the first line's top gap depends on the bar style
+        if (Editor is ScrollableTopInsetTextEditor insetEditor) UpdateTopInset(insetEditor);
         UpdateEdgeFade();
         _hint.Margin = new Thickness(left + 1, 7, right, 0);
     }
+
+    private void UpdateTopInset(ScrollableTopInsetTextEditor editor) =>
+        editor.InsetTextArea.TopInset = !Private && Settings.Bars is "overlay" or "float"
+            ? ChromeTokens.TopScrollableWhitespace : 0;
 
     /// <summary>Ctrl+Shift+[ folds the innermost block around the caret; Ctrl+Shift+] unfolds it.</summary>
     public bool FoldAtCaret(bool fold)

@@ -1,4 +1,5 @@
 using Avalonia.Controls.Chrome;
+using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -17,31 +18,29 @@ internal sealed partial class PadWindow
 {
     private readonly Border _tint = new() { IsHitTestVisible = false };
     private readonly LayoutTransformControl _scaler = new();
-    private readonly Grid _content = new() { RowDefinitions = new RowDefinitions("36,*") };
+    private readonly Grid _content = new() { RowDefinitions = new RowDefinitions($"{ChromeTokens.DockedRowHeight},*") };
     private readonly Grid _top = new() { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto") };
     /// <summary>Which copy this is; fades with the icons.</summary>
-    private readonly StackPanel _badges = new() { Orientation = Orientation.Horizontal, Spacing = 4, Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
+    private readonly StackPanel _badges = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.BadgeSpacing, Margin = new Thickness(0, 0, ChromeTokens.BadgeRightInset, 0), VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
     private TextBlock? _saved;
-    private readonly StackPanel _meta = new() { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(20, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
-    private readonly StackPanel _icons = new() { Orientation = Orientation.Horizontal, Spacing = 3, Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
+    private readonly StackPanel _meta = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.MetaSpacing, Margin = new Thickness(ChromeTokens.FirstItemInset, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
+    private readonly StackPanel _icons = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.IconSpacing, Margin = new Thickness(0, 0, ChromeTokens.BarEdgeInset, 0), VerticalAlignment = VerticalAlignment.Center };
     private readonly Grid _panes = new() { ColumnDefinitions = new ColumnDefinitions("*,0,0") };
-    private readonly Border _divider = new() { Width = 1, Margin = new Thickness(0, 6, 0, 52) };
-    private readonly Border _pill = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 0, 8), CornerRadius = new CornerRadius(12), Padding = new Thickness(5, 1) };
-    private readonly Border _toast = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(16, 0, 16, 48), CornerRadius = new CornerRadius(10), Padding = new Thickness(12, 7), IsVisible = false, MaxWidth = 380 };
+    private readonly Border _divider = new() { Width = ChromeTokens.DividerWidth, Margin = new Thickness(0, ChromeTokens.DividerTopMargin, 0, ChromeTokens.DividerBottomMargin) };
+    private readonly Border _pill = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 0, ChromeTokens.PillBottomInset), CornerRadius = new CornerRadius(ChromeTokens.PillCornerRadius), Padding = new Thickness(ChromeTokens.PillInset) };
+    private readonly Border _toast = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(16, 0, 16, ChromeTokens.ToastBottomMargin), CornerRadius = new CornerRadius(10), Padding = new Thickness(12, 7), IsVisible = false, MaxWidth = 380 };
     private readonly Panel _overlayHost = new() { IsVisible = false };
-    // Overlay bars: each sits on a soft gradient of the paper colour and slides in when the pointer reaches its edge.
-    private readonly Panel _topLayer = new() { VerticalAlignment = VerticalAlignment.Top, Height = 64, IsVisible = false };
-    private readonly Panel _bottomLayer = new() { VerticalAlignment = VerticalAlignment.Bottom, Height = 56, IsVisible = false };
-    private readonly Border _topShade = new() { IsHitTestVisible = false };
-    private readonly Border _bottomShade = new() { IsHitTestVisible = false };
+    // The top bar sits on the sampled Canvas blur when the pointer reaches the edge.
+    private readonly Panel _topLayer = new() { VerticalAlignment = VerticalAlignment.Top, Height = ChromeTokens.TopBackdrop.ClearStop, IsVisible = false };
+    private readonly Panel _bottomLayer = new() { VerticalAlignment = VerticalAlignment.Bottom, Height = ChromeTokens.PagerStripHeight, IsVisible = false };
     private string? _barsMode;
     private bool _topShown, _bottomShown;
     private double _pointerY = double.NaN;
-    private const double TopZone = 20;
     // The float style's pager lives in its own popup just below the window, centred under it.
     private readonly Avalonia.Controls.Primitives.Popup _floatPager = new()
     {
-        Placement = PlacementMode.Bottom, VerticalOffset = 6, IsLightDismissEnabled = false, ShouldUseOverlayLayer = false,
+        Placement = PlacementMode.Bottom, VerticalOffset = ChromeTokens.FloatGap, IsLightDismissEnabled = false,
+        ShouldUseOverlayLayer = false, Topmost = false, PlacementConstraintAdjustment = PopupPositionerConstraintAdjustment.None,
     };
     private readonly DispatcherTimer _barsSleep = new() { Interval = TimeSpan.FromMilliseconds(450) };
     private readonly DispatcherTimer _chromeSleep = new() { Interval = TimeSpan.FromMilliseconds(1600) };
@@ -87,8 +86,7 @@ internal sealed partial class PadWindow
         var root = new Grid();
         root.Children.Add(_tint);
         root.Children.Add(_content);
-        _topLayer.Children.Add(_topShade);
-        _bottomLayer.Children.Add(_bottomShade);
+        InitializeMaterialLabVisuals();
         root.Children.Add(_topLayer);
         root.Children.Add(_bottomLayer);
         root.Children.Add(_toast);
@@ -107,6 +105,7 @@ internal sealed partial class PadWindow
         _top.PointerEntered += (_, _) => WakeChrome(hold: true);
         _chromeSleep.Tick += (_, _) => { _chromeSleep.Stop(); SleepChrome(soon: false); };
         _toastTimer.Tick += (_, _) => { _toastTimer.Stop(); HideToast(); };
+        InitializeMaterialLab();
     }
 
     private PadView NewPane()
@@ -146,10 +145,10 @@ internal sealed partial class PadWindow
             filled: Settings.Pinned, color: Settings.Pinned ? p.Accent : null));
         _icons.Children.Add(Kit.IconButton(Glyph.Settings, "Settings (Ctrl+,)", p, OpenSettings));
         _icons.Children.Add(Kit.IconButton(Glyph.Hide, "Hide (Esc)", p, HideResident));
-        _divider.Background = new SolidColorBrush(p.Faint, .45);
-        _pill.Background = new SolidColorBrush(p.Surface, p.Dark ? .86 : .9);
-        _pill.BorderBrush = new SolidColorBrush(p.Faint, .35); _pill.BorderThickness = new Thickness(1);
-        _pill.BoxShadow = new BoxShadows(new BoxShadow { Blur = 14, OffsetY = 3, Color = Color.FromArgb(p.Dark ? (byte)90 : (byte)28, 0, 0, 0) });
+        _divider.Background = new SolidColorBrush(p.Faint, ChromeTokens.DividerAlpha);
+        _pill.Background = new SolidColorBrush(p.Surface);
+        _pill.BorderBrush = new SolidColorBrush(p.Faint, ChromeTokens.PillBorderAlpha); _pill.BorderThickness = new Thickness(ChromeTokens.PillBorderThickness);
+        _pill.BoxShadow = new BoxShadows(new BoxShadow { Blur = ChromeTokens.PillShadowBlur, OffsetY = ChromeTokens.PillShadowOffsetY, Color = Color.FromArgb(p.Dark ? ChromeTokens.PillShadowDarkAlpha : ChromeTokens.PillShadowLightAlpha, 0, 0, 0) });
         _toast.Background = new SolidColorBrush(p.Ink, .92);
         _toast.BoxShadow = _pill.BoxShadow;
         _overlayHost.Background = new SolidColorBrush(p.Canvas, Settings.Material == "solid" ? 1 : .55);
@@ -165,8 +164,8 @@ internal sealed partial class PadWindow
         if (note.Slot > 0) _meta.Children.Add(Chip($"slot {note.Slot}", p.Accent));
         var label = Modes.Label(_active.Mode, _active.CodeLanguage);
         if (label.Length > 0) _meta.Children.Add(Chip(label, p.Keyword));
-        _meta.Children.Add(_saved = Kit.Text(SavedText(note), p.Muted, 12));
-        if (_timers.AnyRunning && _active.Mode != NoteMode.Timer) _meta.Children.Add(Kit.Text("● timer running", p.Number, 11.5));
+        _meta.Children.Add(_saved = Kit.Text(SavedText(note), p.Muted, ChromeTokens.SavedLabelFontSize));
+        if (_timers.AnyRunning && _active.Mode != NoteMode.Timer) _meta.Children.Add(Kit.Text("● timer running", p.Number, ChromeTokens.RunningTimerFontSize));
         BuildPill();
     }
 
@@ -180,27 +179,30 @@ internal sealed partial class PadWindow
 
     private Border Chip(string text, Color color) => new()
     {
-        Background = new SolidColorBrush(color, _palette.Dark ? .18 : .13), CornerRadius = new CornerRadius(6), Padding = new Thickness(7, 1, 7, 2),
-        Child = Kit.Text(text, color, 11.5, FontWeight.SemiBold), VerticalAlignment = VerticalAlignment.Center
+        Background = new SolidColorBrush(color, _palette.Dark ? ChromeTokens.BadgeDarkFillAlpha : ChromeTokens.BadgeLightFillAlpha),
+        CornerRadius = new CornerRadius(ChromeTokens.BadgeCornerRadius),
+        Padding = new Thickness(ChromeTokens.BadgeHorizontalPadding, ChromeTokens.BadgeTopPadding, ChromeTokens.BadgeHorizontalPadding, ChromeTokens.BadgeBottomPadding),
+        Height = ChromeTokens.BadgeHeight,
+        Child = Kit.Text(text, color, ChromeTokens.BadgeFontSize, FontWeight.SemiBold), VerticalAlignment = VerticalAlignment.Center
     };
 
     private void BuildPill()
     {
         var p = _palette;
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 3, VerticalAlignment = VerticalAlignment.Center };
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.PagerRowSpacing, VerticalAlignment = VerticalAlignment.Center };
         var onStack = Data.ViewSlot == 0;
-        row.Children.Add(Kit.IconButton(Glyph.Back, "Previous note (Ctrl+[)", p, () => Navigate(-1)));
-        var count = Kit.Text(onStack ? $"{Data.Current + 1} / {Data.Stack.Count}" : "stack", onStack ? p.Muted : p.Faint, 11.5, FontWeight.SemiBold);
+        row.Children.Add(Kit.IconButton(Glyph.Back, "Previous note (Ctrl+[)", p, () => Navigate(-1), radius: ChromeTokens.PagerArrowHoverRadius));
+        var count = Kit.Text(onStack ? $"{Data.Current + 1} / {Data.Stack.Count}" : "stack", onStack ? p.Muted : p.Faint, ChromeTokens.PagerCountFontSize, FontWeight.SemiBold);
         // Fixed box, centred both ways, tabular digits: "5 / 5" sits in the middle and doesn't shift as numbers change.
         count.TextAlignment = TextAlignment.Center; count.HorizontalAlignment = HorizontalAlignment.Center; count.VerticalAlignment = VerticalAlignment.Center;
         count.FontFeatures = new FontFeatureCollection { new FontFeature { Tag = "tnum", Value = 1 } };
         var digits = Math.Max(Data.Stack.Count.ToString().Length, 1);
-        var countButton = Kit.Plain(count, p, width: 30 + digits * 14, height: 20);
+        var countButton = Kit.Plain(count, p, width: ChromeTokens.PagerCountBaseWidth + digits * ChromeTokens.PagerCountDigitWidth, height: ChromeTokens.BadgeHeight, radius: ChromeTokens.PagerCountHoverRadius);
         countButton.Click += (_, _) => { if (!onStack) ShowStack(); else OpenSearch(); };
         Avalonia.Automation.AutomationProperties.SetName(countButton, onStack ? $"Note {Data.Current + 1} of {Data.Stack.Count}" : "Back to the stack");
         row.Children.Add(countButton);
-        row.Children.Add(Kit.IconButton(Glyph.Forward, "Next note · past the last one starts a new note (Ctrl+])", p, () => Navigate(1)));
-        row.Children.Add(new Border { Width = 1, Height = 14, Background = new SolidColorBrush(p.Faint, .5), Margin = new Thickness(5, 0) });
+        row.Children.Add(Kit.IconButton(Glyph.Forward, "Next note · past the last one starts a new note (Ctrl+])", p, () => Navigate(1), radius: ChromeTokens.PagerArrowHoverRadius));
+        row.Children.Add(new Border { Width = ChromeTokens.PagerSeparatorWidth, Height = ChromeTokens.PagerSeparatorHeight, Background = new SolidColorBrush(p.Faint, ChromeTokens.PagerSeparatorAlpha), Margin = new Thickness(ChromeTokens.PagerSeparatorMargin, 0) });
         for (var i = 1; i <= 9; i++)
         {
             var slot = i;
@@ -208,26 +210,33 @@ internal sealed partial class PadWindow
             var current = Data.ViewSlot == i || (Settings.Split && Settings.SplitSlot == i);
             var dot = new Border
             {
-                Width = current ? 16 : 7, Height = 7, CornerRadius = new CornerRadius(3.5),
+                Width = current ? ChromeTokens.PagerDotSelectedWidth : ChromeTokens.PagerDotWidth, Height = ChromeTokens.PagerDotHeight, CornerRadius = new CornerRadius(ChromeTokens.PagerDotRadius),
                 Background = current ? new SolidColorBrush(p.Accent) : filled ? new SolidColorBrush(p.Muted) : Brushes.Transparent,
-                BorderBrush = new SolidColorBrush(current ? p.Accent : p.Faint), BorderThickness = new Thickness(filled || current ? 0 : 1.2),
+                BorderBrush = new SolidColorBrush(current ? p.Accent : p.Faint), BorderThickness = new Thickness(filled || current ? 0 : ChromeTokens.PagerDotBorderThickness),
                 HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center
             };
-            var b = Kit.Plain(dot, p, current ? 24 : 16, 18, 6);
+            var b = Kit.Plain(dot, p, current ? ChromeTokens.PagerDotSelectedButtonWidth : ChromeTokens.PagerDotButtonWidth, ChromeTokens.PagerDotButtonHeight, ChromeTokens.PagerDotHoverRadius);
             b.Click += (_, _) => OpenSlot(slot);
             var title = Data.Slots[i - 1].IsEmpty ? "empty" : Data.Slots[i - 1].Title;
             ToolTip.SetTip(b, $"Slot {i} · {title} (Ctrl+{i})");
             Avalonia.Automation.AutomationProperties.SetName(b, $"Slot {i}");
             row.Children.Add(b);
         }
-        _pill.Child = row;
+        if (_labPillVisualHost is { } visualHost && _labPillGroup is { } pillGroup)
+        {
+            visualHost.Children.Clear();
+            visualHost.Children.Add(pillGroup);
+            visualHost.Children.Add(row);
+            _pill.Child = visualHost;
+        }
+        else _pill.Child = row;
     }
 
     // ---------- chrome visibility: present when the mouse moves, gone while typing ----------
 
     // ---------- bar style ----------
     // docked: a top bar row and a pager below the text (they fade while typing).
-    // overlay: both bars sit over the note on a near-solid gradient and slide in when the pointer reaches their edge.
+    // overlay: both bars sit over the note and slide in when the pointer reaches their edge.
     // float: the top bar slides in the same way; the pager floats just below the window, out of the note entirely.
 
     private bool Sliding => Settings.Bars is "overlay" or "float";
@@ -235,57 +244,47 @@ internal sealed partial class PadWindow
     /// <summary>Moves the top bar and the pager to where the current style wants them.</summary>
     private void ApplyBars()
     {
-        var p = _palette;
-        // Near-solid behind the bars themselves, so text under them never competes with the icons; fading only past them.
-        var shade = Settings.Material == "solid" ? 1.0 : Math.Clamp(Settings.Tint + .3, .9, 1);
-        _topShade.Background = Shade(p, shade, top: true);
-        _bottomShade.Background = Shade(p, shade, top: false);
         if (_barsMode == Settings.Bars) return;
         _barsMode = Settings.Bars;
+        var root = (Panel)_scaler.Child!;
         (_top.Parent as Panel)?.Children.Remove(_top);
         (_pill.Parent as Panel)?.Children.Remove(_pill);
-        _floatPager.Child = null;
+        if (ReferenceEquals(_floatPager.Child, _pill)) _floatPager.Child = null;
         _floatPager.IsOpen = false;
-        var root = (Grid)_scaler.Child!;
         _topLayer.IsVisible = _bottomLayer.IsVisible = false;
         ((TranslateTransform)_topLayer.RenderTransform!).Y = 0;
         ((TranslateTransform)_bottomLayer.RenderTransform!).Y = 0;
         _topLayer.Opacity = _bottomLayer.Opacity = 1;
         _icons.Opacity = _pill.Opacity = _badges.Opacity = 1;
         _icons.IsHitTestVisible = _pill.IsHitTestVisible = true;
-        _pill.Margin = new Thickness(0, 0, 0, Settings.Bars == "float" ? 0 : 8);
+        _pill.Margin = new Thickness(0, 0, 0, Settings.Bars == "float" ? 0 : ChromeTokens.PillBottomInset);
+        if (Settings.Bars == "float")
+        {
+            _floatPager.VerticalOffset = ChromeTokens.FloatGap;
+            _floatPager.Child = _pill;
+        }
+        else if (Settings.Bars == "overlay") _bottomLayer.Children.Add(_pill);
+        else root.Children.Add(_pill);
         if (Sliding)
         {
             _content.RowDefinitions[0].Height = new GridLength(0);
-            _top.Height = 36; _top.VerticalAlignment = VerticalAlignment.Top;
+            _top.Height = ChromeTokens.DockedRowHeight; _top.VerticalAlignment = VerticalAlignment.Top;
             _topLayer.Children.Add(_top);
             _topLayer.IsVisible = true;
-            if (Settings.Bars == "overlay") { _bottomLayer.Children.Add(_pill); _bottomLayer.IsVisible = true; }
-            else _floatPager.Child = _pill;
+            if (Settings.Bars == "overlay") _bottomLayer.IsVisible = true;
             _topShown = _bottomShown = true;
             SlideBar(top: true, show: false, instant: true);
             SlideBar(top: false, show: false, instant: true);
         }
         else
         {
-            _content.RowDefinitions[0].Height = new GridLength(36);
+            _content.RowDefinitions[0].Height = new GridLength(ChromeTokens.DockedRowHeight);
             _top.Height = double.NaN;
             Grid.SetRow(_top, 0);
             _content.Children.Insert(0, _top);
-            root.Children.Add(_pill);
         }
+        ApplyLabMaterials();
     }
-
-    private static LinearGradientBrush Shade(Theme.Palette p, double shade, bool top) => new()
-    {
-        StartPoint = new RelativePoint(0, top ? 0 : 1, RelativeUnit.Relative), EndPoint = new RelativePoint(0, top ? 1 : 0, RelativeUnit.Relative),
-        GradientStops =
-        {
-            new GradientStop(Color.FromArgb((byte)(255 * shade), p.Canvas.R, p.Canvas.G, p.Canvas.B), 0),
-            new GradientStop(Color.FromArgb((byte)(250 * shade), p.Canvas.R, p.Canvas.G, p.Canvas.B), .62),
-            new GradientStop(Color.FromArgb(0, p.Canvas.R, p.Canvas.G, p.Canvas.B), 1),
-        },
-    };
 
     /// <summary>Sliding styles: the top bar shows within 20 px of the top edge; the pager within 20 px (overlay) or 8 px (float) of the bottom.</summary>
     private void OverlayPointer(PointerEventArgs e)
@@ -294,14 +293,14 @@ internal sealed partial class PadWindow
         var root = (Control)_scaler.Child!;
         var y = _pointerY = e.GetPosition(root).Y;
         var h = root.Bounds.Height;
-        var nearTop = y < TopZone;
+        var nearTop = y < ChromeTokens.TopRevealZone;
         var nearBottom = y > h - BottomZone;
         if (nearTop) SlideBar(top: true, show: true);
         if (nearBottom) SlideBar(top: false, show: true);
         if ((!nearTop && _topShown) || (!nearBottom && _bottomShown)) { _barsSleep.Stop(); _barsSleep.Start(); }
     }
 
-    private double BottomZone => Settings.Bars == "float" ? 8 : 20;
+    private double BottomZone => Settings.Bars == "float" ? ChromeTokens.FloatPagerRevealZone : ChromeTokens.OverlayPagerRevealZone;
 
     /// <summary>Hides whichever bar the pointer has moved away from, judged by where the cursor really is now.</summary>
     private void BarsSleepTick()
@@ -313,7 +312,7 @@ internal sealed partial class PadWindow
         var inside = window.Contains(Native.CursorPosition());
         // Over the drag area Windows stops sending moves, so "inside but no fresh position" means the top bar.
         var y = inside ? (double.IsNaN(_pointerY) ? 0 : _pointerY) : double.NaN;
-        if (!(y < TopZone) && !_top.IsPointerOver) SlideBar(top: true, show: false);
+        if (!(y < ChromeTokens.TopRevealZone) && !_top.IsPointerOver) SlideBar(top: true, show: false);
         if (!(y > h - BottomZone) && !_pill.IsPointerOver) SlideBar(top: false, show: false);
     }
 

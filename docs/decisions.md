@@ -4,6 +4,16 @@ Newest first. History before 2026-10-23 (overnight build log and write-up) is in
 `antipad-v*` and `baseline/m8c-v1-compact`.
 
 ## 2026-10-25
+- **Bar insets and chrome tokens** (A35-bar-insets; supersedes the 2026-10-22 bar-style gradient/30 px gap and edge fade 40,
+  and the 2026-10-23 4 px icon hover): every top bar and pager measurement lives in `ChromeTokens` (`UI/Chrome.cs`); no
+  per-control numbers. Top bar: Hide 32 px at 4 px from top/right, items centered on y 20, badges 20 tall, leftmost item
+  10 px, docked row 40. Pager pill: 32 px buttons in a 4 px inset and 1 px border (42 tall), solid Surface in every style
+  and material, 4 px from the bottom, float gap 8; docked pager has its own 50 px strip. Hover radii 8 (icons, arrows,
+  count), 9 (dots). Text edge fade 12. Overlay/float top bar sits on a blur of the note text (radius 10, Canvas tint 0.4;
+  text masked out to 40, half at 46, back by 52), never a solid or gradient band; the window material shows through.
+  The overlay/float top gap is 40 px of scrollable whitespace before the document, not part of line 1. Toolbar glyphs
+  are centered by their ink. Rejected in the lab: an Acrylic popup window for the pill (glitchy, wrong corners), the
+  feathered gradient, Mica for the pill. A dev-only Lab row still compares the solid pill with blur behind it.
 - **Native window** (user decision; implementation reverted): the pad is the product and must meet every native Windows 11
   window expectation, while its top stays chrome-free (no title text or caption buttons): Windows-drawn rounded corners,
   shadow, border, resize edges and native open/close/minimize/restore animations; Snap, Maximize, Alt+Tab while open or

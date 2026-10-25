@@ -1,6 +1,5 @@
 using System.Text.RegularExpressions;
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
@@ -8,6 +7,7 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Utils;
 using AvaloniaEdit.Rendering;
 using AntiNotepad.Theme;
+using AntiNotepad.UI;
 
 namespace AntiNotepad.Editor;
 
@@ -102,34 +102,6 @@ internal sealed class BulletGenerator(PadView pad) : VisualLineElementGenerator
         if (!pad.Decorate) return null;
         var text = GlyphElement.Prepare(CurrentContext, "•", new SolidColorBrush(pad.Palette.Muted));
         return new GlyphElement(text, 1);
-    }
-}
-
-/// <summary>
-/// Sliding bars cover the top edge, so the first line gets room above it that scrolls away with the text: an
-/// invisible, zero-width object at the end of line 1, as tall as the gap plus the text's ascent, makes that line taller
-/// above its baseline. At the top of the note the first line sits clear of the bar; scrolled down, nothing changes.
-/// </summary>
-internal sealed class TopGapGenerator(PadView pad) : VisualLineElementGenerator
-{
-    public const double Gap = 30;
-
-    private bool Active => !pad.Private && pad.Settings.Bars is "overlay" or "float";
-
-    public override int GetFirstInterestedOffset(int startOffset)
-    {
-        if (!Active) return -1;
-        var first = CurrentContext.Document.GetLineByNumber(1);
-        return startOffset <= first.EndOffset && CurrentContext.VisualLine.FirstDocumentLine.LineNumber == 1 ? first.EndOffset : -1;
-    }
-
-    public override VisualLineElement? ConstructElement(int offset)
-    {
-        var baseline = CurrentContext.TextView.DefaultBaseline;
-        var spacer = new Border { Width = 0, Height = Gap + baseline, IsHitTestVisible = false };
-        // The run's baseline comes from this attached value (default 0, which would hang the whole gap below the text).
-        TextBlock.SetBaselineOffset(spacer, Gap + baseline);
-        return new InlineObjectElement(0, spacer);
     }
 }
 

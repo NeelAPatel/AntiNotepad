@@ -27,52 +27,78 @@ internal static class Glyph
 internal sealed class GlyphIcon(string glyph, Color color, double size = 13, double weight = 0.15, FontFamily? font = null) : Control
 {
     private readonly Typeface _face = new(font ?? Glyph.Font);
-    private FormattedText? _text;
+    private readonly IBrush _brush = new ImmutableSolidColorBrush(color);
+    private Geometry? _geometry;
+    private Rect _inkBounds;
     private double _textScale = double.NaN;
 
-    private FormattedText Text(double scale)
+    private Geometry Geometry(double scale)
     {
-        if (_text is not null && _textScale.Equals(scale)) return _text;
-        _text = new FormattedText(glyph, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+        if (_geometry is not null && _textScale.Equals(scale)) return _geometry;
+        var text = new FormattedText(glyph, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
             _face, size, new ImmutableSolidColorBrush(color));
+        _geometry = text.BuildGeometry(default)!;
+        _inkBounds = _geometry.Bounds;
         _textScale = scale;
-        return _text;
+        return _geometry;
     }
 
-    protected override Size MeasureOverride(Size availableSize) => new(size + 2, size + 2);
+    protected override Size MeasureOverride(Size availableSize) => new(size + ChromeTokens.GlyphIconBoxExtra, size + ChromeTokens.GlyphIconBoxExtra);
 
     public override void Render(DrawingContext context)
     {
         var scale = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
-        var t = Text(scale);
-        var origin = new Point((Bounds.Width - t.Width) / 2, (Bounds.Height - t.Height) / 2);
-        // Snap the centered glyph to whole device pixels for crisp Windows rendering.
-        origin = new Point(Math.Round(origin.X * scale) / scale, Math.Round(origin.Y * scale) / scale);
+        var geometry = Geometry(scale);
+        var localCenter = new Point(Bounds.Width / 2, Bounds.Height / 2);
+        var inkCenter = DevicePixelCenter(localCenter);
+        var origin = inkCenter - _inkBounds.Center;
+
         // Natural weight: one copy. (Five copies on the same spot stack their antialiased edges into a fuzzy outline.)
-        if (weight <= 0) { context.DrawText(t, origin); return; }
-        context.DrawText(t, new Point(origin.X - weight, origin.Y));
-        context.DrawText(t, new Point(origin.X + weight, origin.Y));
-        context.DrawText(t, new Point(origin.X, origin.Y - weight));
-        context.DrawText(t, new Point(origin.X, origin.Y + weight));
-        context.DrawText(t, origin);
+        if (weight <= 0) { Draw(context, geometry, origin); return; }
+        Draw(context, geometry, new Point(origin.X - weight, origin.Y));
+        Draw(context, geometry, new Point(origin.X + weight, origin.Y));
+        Draw(context, geometry, new Point(origin.X, origin.Y - weight));
+        Draw(context, geometry, new Point(origin.X, origin.Y + weight));
+        Draw(context, geometry, origin);
+    }
+
+    private Point DevicePixelCenter(Point localCenter)
+    {
+        if (TopLevel.GetTopLevel(this) is not { } top) return localCenter;
+
+        // Snap the translated ink center, including the actual client origin. Rounding a local origin is wrong when
+        // this 18 px icon is inset 7 DIP into a 32 px button at 125% scaling.
+        if (this.TranslatePoint(localCenter, top) is not { } rootCenter) return localCenter;
+        var screenOrigin = top.PointToScreen(default);
+        var screenCenter = new PixelPoint(
+            (int)Math.Round(screenOrigin.X + rootCenter.X * top.RenderScaling, MidpointRounding.AwayFromZero),
+            (int)Math.Round(screenOrigin.Y + rootCenter.Y * top.RenderScaling, MidpointRounding.AwayFromZero));
+        var snappedRootCenter = top.PointToClient(screenCenter);
+        return top.TranslatePoint(snappedRootCenter, this) ?? localCenter;
+    }
+
+    private void Draw(DrawingContext context, Geometry geometry, Point origin)
+    {
+        using (context.PushTransform(Matrix.CreateTranslation(origin.X, origin.Y)))
+            context.DrawGeometry(_brush, null, geometry);
     }
 }
 
 /// <summary>Small hand-built controls so the chrome follows the palette exactly (no Fluent theme chrome).</summary>
 internal static class Kit
 {
-    public static Button IconButton(string glyph, string name, Palette p, Action click, double size = 32, bool filled = false, Color? color = null)
+    public static Button IconButton(string glyph, string name, Palette p, Action click, double size = ChromeTokens.ButtonSize, bool filled = false, Color? color = null, double radius = ChromeTokens.TopIconHoverRadius)
     {
         var ink = color ?? p.Ink;
-        Control icon = new GlyphIcon(glyph, ink, 16, 0) { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        Control icon = new GlyphIcon(glyph, ink, ChromeTokens.IconGlyphSize, 0) { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
         // Filled: a soft fill under the outline glyph, so the shape still reads (a solid fill alone is a blob).
         if (filled && glyph == Glyph.Pin)
             icon = new Panel
             {
                 HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
-                Children = { new GlyphIcon(Glyph.PinFilled, Color.FromArgb(110, ink.R, ink.G, ink.B), 16, 0), icon },
+                Children = { new GlyphIcon(Glyph.PinFilled, Color.FromArgb(110, ink.R, ink.G, ink.B), ChromeTokens.IconGlyphSize, 0), icon },
             };
-        var button = Plain(icon, p, size, size, radius: 4);
+        var button = Plain(icon, p, size, size, radius: radius);
         button.Click += (_, _) => click();
         Avalonia.Automation.AutomationProperties.SetName(button, name);
         ToolTip.SetTip(button, name);
