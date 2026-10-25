@@ -17,8 +17,15 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
-- Nothing in flight. A33-taskbar-dead-code (Haiku) merged into dev 2026-10-25: removed the A22-A25 taskbar helpers A32 left
-  without callers and their selftest cases (0 warnings, SELFTEST PASS; no behavior change).
+- A33-taskbar-dead-code (Haiku) merged into dev 2026-10-25 (no behavior change); in r5.
+- A34-native-window-frame (Haiku, own worktree) in flight: A32 lost Windows 11's rounded corners and shadow. Fix that and
+  make the pad a fully native window per the 2026-10-25 "Native window" decision (snap, maximize, snap layouts, Alt+Tab while
+  open; closed stays invisible). Lab copy for the user before merging.
+  Returned (0 warnings, SELFTEST PASS): explicit DWM rounded corners + NC rendering, 1 px DWM frame margin for the shadow on
+  the solid background only (acrylic/mica unverified), maximized state kept across hide/minimize, maximized/snapped sizes not
+  remembered. Snap-layout hover skipped (top-right is the Hide button); Win+Z kept. Risk: a finished timer reopening a
+  maximized pad may take focus. Running as a lab dev copy from `.claude/worktrees/agent-afd62cb5c203eaf28` (branch
+  `worktree-agent-afd62cb5c203eaf28`); not merged. 11:46: no installed copy was running (user likely mid-upgrade).
 
 ## Open (needs the user)
 - Upgrade the installed copy to r5 (`tools/install.ps1` from Windows Terminal).

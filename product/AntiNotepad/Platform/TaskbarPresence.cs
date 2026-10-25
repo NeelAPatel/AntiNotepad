@@ -10,6 +10,8 @@ namespace AntiNotepad.Platform;
 /// <summary>Controls the real pad tab and the closed-state Always stand-in.</summary>
 internal static class TaskbarPresence
 {
+    private static readonly TimeSpan ForegroundLossGracePeriod = TimeSpan.FromMilliseconds(500);
+    private static readonly TimeSpan PostHideFallbackPeriod = TimeSpan.FromSeconds(1);
     private static readonly long TraceStartedAt = Stopwatch.GetTimestamp();
     private const string TaskbarListClassId = "56FDF344-FD6D-11d0-958A-006097C9A090";
     private static long _padActionAt;
@@ -23,6 +25,13 @@ internal static class TaskbarPresence
     private static IntPtr _registeredPadHandle;
     private static bool? _registeredPad;
 
+    internal static bool ShouldShow(string? setting, bool padVisible) => setting switch
+    {
+        "visible" => padVisible,
+        "always" => true,
+        _ => false,
+    };
+
     internal static bool ShouldShowPad(string? setting, PadVisibilityState state) => setting switch
     {
         "visible" => state == PadVisibilityState.Open,
@@ -32,6 +41,21 @@ internal static class TaskbarPresence
 
     internal static bool ShouldShowProxy(string? setting, PadVisibilityState state) =>
         setting == "always" && state == PadVisibilityState.Closed;
+
+    /// <summary>A taskbar click hides only when the visible pad owned the foreground before the click.</summary>
+    internal static bool ShouldHideOnClick(bool padVisible, bool padForeground) => padVisible && padForeground;
+
+    internal static bool ShouldSuppressPostHideActivation(bool decisionConsumed, bool lastDecisionWasHide, bool freshClickStart,
+        bool explicitRestore, long hideDecisionAt, long now) =>
+        decisionConsumed && lastDecisionWasHide && !freshClickStart && !explicitRestore
+        && hideDecisionAt > 0 && now >= hideDecisionAt
+        && Stopwatch.GetElapsedTime(hideDecisionAt, now) <= PostHideFallbackPeriod;
+
+    /// <summary>Retained for the taskbar click policy checks from A22-A25.</summary>
+    internal static bool WasPadRecentlyForeground(long lastForegroundLoss, long now, TaskbarActivationCounterpart counterpart) =>
+        lastForegroundLoss > 0 && now >= lastForegroundLoss
+        && counterpart is TaskbarActivationCounterpart.None or TaskbarActivationCounterpart.Taskbar or TaskbarActivationCounterpart.Proxy
+        && Stopwatch.GetElapsedTime(lastForegroundLoss, now) <= ForegroundLossGracePeriod;
 
     internal static void Initialize(Window pad, Action reconcile)
     {
@@ -190,6 +214,14 @@ internal enum PadVisibilityState
     Closed,
     Minimized,
     Open,
+}
+
+internal enum TaskbarActivationCounterpart
+{
+    Other,
+    None,
+    Taskbar,
+    Proxy,
 }
 
 /// <summary>A transparent minimized button retained only while the closed pad is set to Always.</summary>
