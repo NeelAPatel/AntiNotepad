@@ -4,6 +4,16 @@ Updated: 2026-10-24
 Product: AntiNotepad (`product/AntiNotepad`).
 
 ## Now
+- Computer Use is off until the user's explicit go-ahead (2026-10-25); live checks are done by the user by hand.
+- Dev merged into main, tag antinotepad-v0.6.0-untested-r4 (2026-10-25, A28). Installed copy still on r3 until the user
+  upgrades.
+- Dispatched 2026-10-25, each a Sol director (gpt-6.1-sol medium) with luna xhigh subagents in its own worktree under
+  `../AntiQuickPad-wt/`, branch `feat/<ID-slug>`. Manager reviews, sends fixes back until acceptable, then merges:
+  - A29-incremental-analysis (A1-8): re-analyse only the edited region, identical to a full rebuild.
+  - A30-background-save-and-log (A1-14): saves and log writes on a background writer; shutdown/quit flush, A8 failure prompt.
+  - A31-no-windows-show-animation (user request): Windows' own open/close animation never plays on pad show/hide; the app's
+    own fade and drop-down slide stay.
+  A30 and A31 both touch `UI/PadWindow.cs`; the manager resolves overlap at merge.
 - A28-editor-render-memory (A1-7, A1-9, A1-10; Sol director + 3 luna workers, worktree `../AntiQuickPad-wt/A28-editor-render-memory`)
   returned 2026-10-25: 0 warnings, SELFTEST PASS. Review accepted the render caches; one bug found: in notes over 1500 lines the
   fence color cache can keep a stale code-block body after an edit (hit by document version alone). A28-fence-cache-bounds-fix
