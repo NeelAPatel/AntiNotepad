@@ -7,8 +7,9 @@ Product: AntiNotepad (`product/AntiNotepad`).
 - A28-editor-render-memory (A1-7, A1-9, A1-10; Sol director + 3 luna workers, worktree `../AntiQuickPad-wt/A28-editor-render-memory`)
   returned 2026-10-25: 0 warnings, SELFTEST PASS. Review accepted the render caches; one bug found: in notes over 1500 lines the
   fence color cache can keep a stale code-block body after an edit (hit by document version alone). A28-fence-cache-bounds-fix
-  (luna xhigh) fixed it (hits also require the same body bounds). Merged into dev (2026-10-25, 0 warnings, SELFTEST PASS);
-  dev copy relaunched. Waiting on the user's live test. Worktree kept until it passes.
+  (luna xhigh) fixed it (hits also require the same body bounds). Merged into dev (2026-10-25, 0 warnings, SELFTEST PASS).
+  Done: the user tested it live in the dev copy and it works; A1-7, A1-9, A1-10 marked fixed; worktree and branch removed.
+  Not yet in main or the installed copy.
 - A27-settings-search-build-matches done (2026-10-24): the proper A1-12 fix. Settings search builds only matching rows; rows
   create controls lazily, so the page methods stay the single definition (no duplicated catalog). Codex luna xhigh in its own
   worktree; its selftest harness was rejected and removed by A27-settings-search-rework. Merged into dev (0 warnings, SELFTEST
@@ -67,8 +68,7 @@ Product: AntiNotepad (`product/AntiNotepad`).
   GitHub repo, license, signing, portable data defaults, Inno Setup terms.
 
 ## Open
-- Open audit findings (all Med, speed/memory): A1-7, A1-9, A1-10 (A28, dispatched), A1-8-whole-document-analysis (L),
-  A1-14-synchronous-save-and-log (L).
+- Open audit findings (both Med, speed, effort L): A1-8-whole-document-analysis, A1-14-synchronous-save-and-log.
 - N3 release plan: being discussed in a separate chat ("Production readiness for antinotepad").
 
 ## Backlog (someday, not in the current release plan)

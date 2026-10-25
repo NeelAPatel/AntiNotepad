@@ -205,6 +205,9 @@ problem.
 | A1-25-tray-empty-title-sentinel | Tray slots use an explicit "occupied" flag; you confirmed a note titled "empty" is clickable |
 | A1-26-worker-effort-mismatch | Codex workers run luna xhigh everywhere, matching AGENTS.md |
 | A1-12-settings-search-materializes-all | Settings search builds only matching rows; rows create their controls lazily, so the page methods stay the one definition (A27-settings-search-build-matches, 2026-10-24, user-tested live) |
+| A1-7-stale-fence-cache | The code-block color cache is pruned to current fences after each structure update (A28-editor-render-memory, 2026-10-25, user-tested live) |
+| A1-9-fence-copy-per-colored-line | An unchanged code block's text is copied once, keyed by document version and body bounds (A28) |
+| A1-10-render-path-allocation | Chips, timer icons, chevrons, glyph icons, edge fade, paper, dividers and checkboxes reuse bounded per-view brushes, pens, text and geometry (A28) |
 
 ## Fixed in A6 (your decisions)
 
