@@ -21,7 +21,9 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 ## Now
 - A35-bar-insets merged into dev (fad7d61, user-approved live): design tokens + insets, ink-centered glyphs, scrollable
   top gap, top-bar blur behind; one commit per feature. Lab history kept on branch `backup/A35-bar-insets-lab`.
-  Left over: dev-only Lab row (pill Solid / Blur behind) until the user drops it; installed copy not upgraded.
+  A35 branches and worktree deleted (user). Installed copy not upgraded.
+- A36-drop-pill-lab: dispatched to Codex Luna on `feat/A36-drop-pill-lab` (worktree `.claude/worktrees/A36-drop-pill-lab`):
+  remove the dev-only Lab row and pill blur code; Solid pill ships (user).
 - Native-window work (A32/A34) parked; any retry must not change the window's frame styles and
   goes lab-first. A34 (lab) was dropped: thick native border, bars broken in all three styles.
 
