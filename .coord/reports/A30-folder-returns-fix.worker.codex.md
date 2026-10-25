@@ -1,0 +1,5 @@
+**A30-folder-returns-fix is complete.** The self-test now verifies that a missing folder leaves `IsAvailable` unchanged and dirty text intact, then saves that text after the folder returns. I removed the redundant availability recheck in `Save()` and clarified why `Flush()` rechecks after draining. No other code depended on a save changing `IsAvailable`.
+
+Updated [Store.cs](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad-wt/A30-background-save-and-log/product/AntiNotepad/Model/Store.cs>), [SelfTest.cs](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad-wt/A30-background-save-and-log/product/AntiNotepad/SelfTest.cs>) and the required [A30 report](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad-wt/A30-background-save-and-log/.coord/reports/A30-background-save-and-log.md>).
+
+The Release build completed with **0 warnings and 0 errors**; `--selftest` printed **SELFTEST PASS**; `git diff --check` passed. Cleanup of `build/a30-check` was blocked by policy, so the directory remains. No GUI or installed process was touched; no branch switch or commit was made.

@@ -26,7 +26,9 @@ Product: AntiNotepad (`product/AntiNotepad`).
     out), and a failed save made Flush block Load/RemoveOrphans/SwitchFolder (no way out via Settings > Storage).
     A30-save-unavailable-fix (Sol + luna) fixed both. Review found one more: a save with the folder briefly missing set
     IsAvailable=false for good (OneDrive/drive returning would never save again). Manager removed that line;
-    A30-folder-returns-fix (luna) is updating the selftest that expected it and adding a folder-returns case.
+    A30-folder-returns-fix (luna) updated the selftest and added a folder-returns case. Merged into dev (2026-10-25; SelfTest
+    conflict with A29 resolved by keeping both methods; merged tree 0 warnings, SELFTEST PASS). Dev copy relaunched with
+    A29 + A30 + A31. Waiting on the user's live test of all three.
 - A28-editor-render-memory (A1-7, A1-9, A1-10; Sol director + 3 luna workers, worktree `../AntiQuickPad-wt/A28-editor-render-memory`)
   returned 2026-10-25: 0 warnings, SELFTEST PASS. Review accepted the render caches; one bug found: in notes over 1500 lines the
   fence color cache can keep a stale code-block body after an edit (hit by document version alone). A28-fence-cache-bounds-fix
