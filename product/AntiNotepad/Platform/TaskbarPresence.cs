@@ -36,11 +36,12 @@ internal static class TaskbarPresence
 
     /// <summary>
     /// Windows can activate the taskbar before delivering the stand-in's restore request. Treat a recent loss
-    /// to the taskbar or stand-in as foreground at click time, while ignoring losses to other windows.
+    /// to the taskbar, stand-in, or a null (other-thread) counterpart as foreground at click time,
+    /// while ignoring losses to known unrelated windows.
     /// </summary>
     internal static bool WasPadRecentlyForeground(long lastForegroundLoss, long now, TaskbarActivationCounterpart counterpart) =>
         lastForegroundLoss > 0 && now >= lastForegroundLoss
-        && counterpart is TaskbarActivationCounterpart.Taskbar or TaskbarActivationCounterpart.Proxy
+        && counterpart is TaskbarActivationCounterpart.None or TaskbarActivationCounterpart.Taskbar or TaskbarActivationCounterpart.Proxy
         && Stopwatch.GetElapsedTime(lastForegroundLoss, now) <= ForegroundLossGracePeriod;
 
     internal static void Trace(string message)
@@ -68,6 +69,7 @@ internal static class TaskbarPresence
 internal enum TaskbarActivationCounterpart
 {
     Other,
+    None,
     Taskbar,
     Proxy,
 }
@@ -249,7 +251,7 @@ internal sealed class TaskbarProxy : IDisposable
 
     private TaskbarActivationCounterpart GetCounterpart(IntPtr hwnd)
     {
-        if (hwnd == IntPtr.Zero) return TaskbarActivationCounterpart.Other;
+        if (hwnd == IntPtr.Zero) return TaskbarActivationCounterpart.None;
         if (hwnd == Handle) return TaskbarActivationCounterpart.Proxy;
 
         var className = GetWindowClass(hwnd);
@@ -383,8 +385,7 @@ internal sealed class TaskbarProxy : IDisposable
         _clickSnapshotAvailable = true;
         _clickSnapshotConsumed = false;
         if (Program.IsDev) TaskbarPresence.Trace($"click snapshot source={source} padVisible={padVisible} padActive={padActive} fg={DescribeWindow(foreground)} lossKind={_lastForegroundLossCounterpart} lossAt={LossTimestampText(_lastForegroundLoss)} lossAge={AgeText(foregroundLossAge)} padWasForeground={padWasForeground}");
-        _lastForegroundLoss = 0;
-        _lastForegroundLossCounterpart = TaskbarActivationCounterpart.Other;
+        // Keep the loss available through the decision; only QueueTaskbarClick consumes it.
         _padWasForegroundBeforeProxyActivation = false;
     }
 
