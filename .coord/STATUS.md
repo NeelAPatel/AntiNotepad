@@ -34,7 +34,15 @@ Product: AntiNotepad (`product/AntiNotepad`).
     show and the native close/minimize animation on hide, not the app's own fade and not none. A31's worktree is removed;
     its change stays on dev until A32 reverts it.
   - A32-native-show-hide-animation dispatched (Sol + luna, worktree `../AntiQuickPad-wt/A32-native-show-hide-animation`):
-    revert A31, make Windows animate the pad's show and hide natively, drop the app's own show fade.
+    revert A31, make Windows animate the pad's show and hide natively, drop the app's own show fade. Relaunched on the
+    user's route spec (open/close: start, tray, hotkey; minimize/restore: minimize, taskbar).
+  - A32 returned (0 warnings, SELFTEST PASS): the pad keeps caption/sysmenu/min/max style bits (no visible title bar via
+    Avalonia's extended client area), is a real unowned app window whose taskbar tab is controlled with ITaskbarList, and the
+    stand-in is used only for closed + Always. Big redesign of A22-A25, so it is NOT merged: running as a lab dev copy from
+    the A32 worktree, waiting on the user's approval. Risks to check: title bar/frame look, transient taskbar button, Alt+Tab
+    presence in Never mode.
+  - Incident 2026-10-25: while swapping dev copies the manager ran `build/dev/AntiNotepad.exe --quit` without
+    ANTINOTEPAD_DATA, which targets the installed copy's instance. Prod kept running (still 00:33 start). Rule recorded.
 - A28-editor-render-memory (A1-7, A1-9, A1-10; Sol director + 3 luna workers, worktree `../AntiQuickPad-wt/A28-editor-render-memory`)
   returned 2026-10-25: 0 warnings, SELFTEST PASS. Review accepted the render caches; one bug found: in notes over 1500 lines the
   fence color cache can keep a stale code-block body after an edit (hit by document version alone). A28-fence-cache-bounds-fix
