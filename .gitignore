@@ -4,3 +4,4 @@ build/
 product/**/bin/
 product/**/obj/
 .claude/atlas/
+.claude/worktrees/
