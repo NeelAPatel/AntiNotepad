@@ -28,7 +28,9 @@ Product: AntiNotepad (`product/AntiNotepad`).
   - A22-taskbar-button-fixes merged and retested live: While visible, Always, Never, click-to-show, Settings row icon and the
     timing log pass. Remaining bug: clicking a focused pad's button doesn't hide it. A23 failed live; A24-taskbar-click-diagnose added a dev-only `taskbar:` trace, which showed Windows 11 deactivates the pad
     with no counterpart on a taskbar click. A25-taskbar-click-foreground-loss fixed it: live test passes (focused click hides,
-    hidden click shows, inactive click focuses). Next: user upgrades prod with tools/install.ps1 from Windows Terminal.
+    hidden click shows, inactive click focuses). Prod reinstalled by the user (23:07, has the A22-A25 fixes).
+  - At 23:07:44 the user started a restart/sign-out and both copies vetoed it (event 10001), then exited: prod and dev are not
+    running. Cause: the pad's and stand-in's Closing handlers cancel closes. Dispatched A26-allow-windows-shutdown (Sol).
   - Backups made from Claude sessions exist only in `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\`:
     `AntiNotepad-backup-20261024-155646` (stale Oct 22-23 data) and `Antipad-backup-2026-10-23`. Kept; don't delete.
 - A6-audit-decisions merged into dev (2026-10-24), together with A5-audit-refresh. It applies the user's 8 audit decisions
