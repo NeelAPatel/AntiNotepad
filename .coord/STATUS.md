@@ -26,7 +26,9 @@ Product: AntiNotepad (`product/AntiNotepad`).
     Taskbar setting fails: the real pad never gets a button (While visible = Never; Always only while hidden); the row sits inside
     the Open at expander. Dispatched A22-taskbar-button-fixes (Sol). An elevated Task Manager in front blocks computer-use input.
   - A22-taskbar-button-fixes merged and retested live: While visible, Always, Never, click-to-show, Settings row icon and the
-    timing log pass. Remaining bug: clicking a focused pad's button doesn't hide it. A23-taskbar-click-hides merged into dev (builds, SELFTEST PASS); its live click check is pending (screen was locked).
+    timing log pass. Remaining bug: clicking a focused pad's button doesn't hide it. A23 failed live; A24-taskbar-click-diagnose added a dev-only `taskbar:` trace, which showed Windows 11 deactivates the pad
+    with no counterpart on a taskbar click. A25-taskbar-click-foreground-loss fixed it: live test passes (focused click hides,
+    hidden click shows, inactive click focuses). Next: user upgrades prod with tools/install.ps1 from Windows Terminal.
   - Backups made from Claude sessions exist only in `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\`:
     `AntiNotepad-backup-20261024-155646` (stale Oct 22-23 data) and `Antipad-backup-2026-10-23`. Kept; don't delete.
 - A6-audit-decisions merged into dev (2026-10-24), together with A5-audit-refresh. It applies the user's 8 audit decisions
