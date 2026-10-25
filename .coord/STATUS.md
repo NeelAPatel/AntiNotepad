@@ -7,6 +7,10 @@ Product: AntiNotepad (`product/AntiNotepad`).
 - A27-settings-search-build-matches dispatched (2026-10-24, worker luna xhigh) in worktree
   `../AntiQuickPad-wt/A27-settings-search-build-matches` on `feat/A27-settings-search-build-matches`: the proper A1-12 fix,
   Settings search builds only matching rows, with no duplicated row catalog. Manager reviews the diff; the user tests live.
+  Review: the lazy-row fix is accepted; its selftest harness (Avalonia reflection, test fields in SettingsWindow, a copy of
+  the old search path) was rejected and removed by A27-settings-search-rework (luna xhigh); one small match-rule check kept.
+  Merged into dev (2026-10-24, 0 warnings, SELFTEST PASS); dev copy relaunched. Waiting on the user's live test of Settings
+  search. Codex timing (from the removed harness): one search about 14 ms -> 1.6 ms. Worktree kept until the test passes.
 - A14 to A21 merged into dev (2026-10-24, HEAD after A17). Dev builds with 0 warnings and passes SELFTEST. Manager reviewed
   each; no live UI check was possible this round (no Computer Use), so every item below still needs one.
   - Audit batch 1: A14-swipe-close-cancel (A1-13), A15-startup-quit-pending (A1-15), A16-staged-upgrade-rollback (A1-17),
