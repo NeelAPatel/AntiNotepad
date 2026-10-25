@@ -650,46 +650,7 @@ internal static class SelfTest
             var json = System.Text.Json.JsonSerializer.Serialize(new StoreData { Settings = new Settings { Taskbar = setting } });
             CheckCase(System.Text.Json.JsonSerializer.Deserialize<StoreData>(json)?.Settings.Taskbar == setting, $"{setting} JSON round trip");
         }
-        (string Setting, bool Visible, bool Expected)[] cases =
-        [
-            ("never", false, false), ("never", true, false),
-            ("visible", false, false), ("visible", true, true),
-            ("always", false, true), ("always", true, true),
-        ];
-        foreach (var test in cases)
-            CheckCase(TaskbarPresence.ShouldShow(test.Setting, test.Visible) == test.Expected, $"{test.Setting}, visible={test.Visible}");
-        foreach (var setting in new string?[] { null, "unknown" })
-            foreach (var visible in new[] { false, true })
-                CheckCase(!TaskbarPresence.ShouldShow(setting, visible), "missing/unknown mode has no button");
-        CheckCase(!TaskbarPresence.ShouldHideOnClick(false, false), "hidden inactive pad click shows");
-        CheckCase(!TaskbarPresence.ShouldHideOnClick(false, true), "hidden pad click shows even with stale foreground state");
-        CheckCase(!TaskbarPresence.ShouldHideOnClick(true, false), "visible inactive pad click focuses");
-        CheckCase(TaskbarPresence.ShouldHideOnClick(true, true), "visible foreground pad click hides");
-        var lastLoss = 100L;
-        var withinGrace = lastLoss + System.Diagnostics.Stopwatch.Frequency / 2;
-        var outsideGrace = withinGrace + 1;
-        CheckCase(TaskbarPresence.WasPadRecentlyForeground(lastLoss, withinGrace, TaskbarActivationCounterpart.Taskbar), "recent loss to taskbar counts as foreground");
-        CheckCase(TaskbarPresence.WasPadRecentlyForeground(lastLoss, withinGrace, TaskbarActivationCounterpart.Proxy), "recent loss to proxy counts as foreground");
-        CheckCase(TaskbarPresence.WasPadRecentlyForeground(lastLoss, withinGrace, TaskbarActivationCounterpart.None), "null counterpart counts through 500 ms");
-        CheckCase(!TaskbarPresence.WasPadRecentlyForeground(lastLoss, withinGrace, TaskbarActivationCounterpart.Other), "recent loss to another window does not count");
-        CheckCase(!TaskbarPresence.WasPadRecentlyForeground(lastLoss, outsideGrace, TaskbarActivationCounterpart.Taskbar), "taskbar loss expires after 500 ms");
-        CheckCase(!TaskbarPresence.WasPadRecentlyForeground(withinGrace, lastLoss, TaskbarActivationCounterpart.Taskbar), "future foreground-loss time is rejected");
-        var firstProxyMessage = lastLoss + System.Diagnostics.Stopwatch.Frequency * 17 / 1000;
-        var snapshotPadWasForeground = TaskbarPresence.WasPadRecentlyForeground(lastLoss, firstProxyMessage, TaskbarActivationCounterpart.None);
-        CheckCase(TaskbarPresence.ShouldHideOnClick(true, snapshotPadWasForeground), "null counterpart loss 17 ms before first proxy message hides visible pad");
-        CheckCase(!TaskbarPresence.ShouldHideOnClick(false, snapshotPadWasForeground), "hidden pad still shows after recent null counterpart loss");
-        var oldNullLoss = TaskbarPresence.WasPadRecentlyForeground(lastLoss, outsideGrace, TaskbarActivationCounterpart.None);
-        CheckCase(!TaskbarPresence.ShouldHideOnClick(true, oldNullLoss), "old null counterpart loss leaves visible inactive pad to focus");
-        CheckCase(!TaskbarPresence.ShouldHideOnClick(false, oldNullLoss), "old null counterpart loss leaves hidden pad to show");
-        var hideDecision = 200L;
-        var withinHideFallback = hideDecision + System.Diagnostics.Stopwatch.Frequency;
-        var afterHideFallback = withinHideFallback + 1;
-        CheckCase(TaskbarPresence.ShouldSuppressPostHideActivation(true, true, false, false, hideDecision, withinHideFallback), "post-hide activation fallback is suppressed");
-        CheckCase(!TaskbarPresence.ShouldSuppressPostHideActivation(true, true, true, false, hideDecision, withinHideFallback), "fresh click start permits a new hidden-pad click");
-        CheckCase(!TaskbarPresence.ShouldSuppressPostHideActivation(true, true, false, true, hideDecision, withinHideFallback), "explicit restore permits a new hidden-pad click");
-        CheckCase(!TaskbarPresence.ShouldSuppressPostHideActivation(true, true, false, false, hideDecision, afterHideFallback), "post-hide suppression expires after one second");
-        CheckCase(!TaskbarPresence.ShouldSuppressPostHideActivation(true, false, false, false, hideDecision, withinHideFallback), "focus decision does not suppress a later click");
-        report = failures.Count == 0 ? "Never default, old JSON default, three JSON round trips, all six visibility combinations, missing/unknown modes, all four click states, recent foreground-loss attribution including null counterpart at 17 ms and expiry, and post-hide activation-fallback suppression" : string.Join("; ", failures);
+        report = failures.Count == 0 ? "Never default, old JSON default, and three JSON round trips" : string.Join("; ", failures);
         return failures.Count == 0;
     }
 

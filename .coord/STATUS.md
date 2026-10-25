@@ -17,7 +17,8 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
-- A33-taskbar-dead-code (Haiku): remove the A22-A25 taskbar helpers A32 left without callers, and their selftests.
+- Nothing in flight. A33-taskbar-dead-code (Haiku) merged into dev 2026-10-25: removed the A22-A25 taskbar helpers A32 left
+  without callers and their selftest cases (0 warnings, SELFTEST PASS; no behavior change).
 
 ## Open (needs the user)
 - Release dev to `main` as r5 and upgrade the installed copy (`tools/install.ps1` from Windows Terminal).
