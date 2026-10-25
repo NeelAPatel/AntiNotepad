@@ -204,6 +204,7 @@ problem.
 | A1-24-disabled-caret-still-ticks | With blinking off, the caret timer stops; confirmed solid in 6 of 6 dev captures |
 | A1-25-tray-empty-title-sentinel | Tray slots use an explicit "occupied" flag; you confirmed a note titled "empty" is clickable |
 | A1-26-worker-effort-mismatch | Codex workers run luna xhigh everywhere, matching AGENTS.md |
+| A1-12-settings-search-materializes-all | Settings search builds only matching rows; rows create their controls lazily, so the page methods stay the one definition (A27-settings-search-build-matches, 2026-10-24, user-tested live) |
 
 ## Fixed in A6 (your decisions)
 
