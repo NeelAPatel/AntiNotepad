@@ -4,13 +4,12 @@ using AntiNotepad;
 
 namespace AntiNotepad.Platform;
 
-/// <summary>Tray icon toggles the pad; the menu has the few actions that make sense from outside.</summary>
+/// <summary>Tray icon: click shows the pad; menu has the few actions that make sense from outside.</summary>
 internal sealed class Tray : IDisposable
 {
     private readonly TrayIcon _tray;
 
-    public Tray(Action toggle, Action show, Action newNote, Action settings, Action quit,
-        Func<IReadOnlyList<(string Title, bool Occupied)>>? slotTitles = null, Action<int>? openSlot = null)
+    public Tray(Action show, Action newNote, Action settings, Action quit, Func<IReadOnlyList<(string Title, bool Occupied)>>? slotTitles = null, Action<int>? openSlot = null)
     {
         var menu = new NativeMenu();
         void Add(string label, Action action) { var item = new NativeMenuItem(label); item.Click += (_, _) => action(); menu.Items.Add(item); }
@@ -42,7 +41,7 @@ internal sealed class Tray : IDisposable
         menu.Items.Add(new NativeMenuItemSeparator());
         Add($"Quit {AppInfo.DisplayName}", quit);
         _tray = new TrayIcon { ToolTipText = AppInfo.DisplayName, Icon = CreateIcon(), Menu = menu, IsVisible = true };
-        _tray.Clicked += (_, _) => toggle();
+        _tray.Clicked += (_, _) => show();
         TrayIcon.SetIcons(Application.Current!, new TrayIcons { _tray });
     }
 

@@ -352,8 +352,7 @@ public sealed class App : Application
                 e.Cancel = false;
             };
             window.QuitRequested = () => { _tray?.Dispose(); desktop.Shutdown(); };
-            _tray = new Tray(window.ToggleFromTray, window.ShowResident,
-                () => { window.ShowResident(); window.NewNote(); }, window.OpenSettings, window.Quit,
+            _tray = new Tray(window.ShowResident, () => { window.ShowResident(); window.NewNote(); }, window.OpenSettings, window.Quit,
                 () => store.Data.Slots.Select(n => (n.Title, !n.IsEmpty)).ToList(),
                 slot => { window.ShowResident(); if (store.Data.ViewSlot != slot) window.OpenSlot(slot); });
             window.HotkeyStatusChanged += status => _tray.Tooltip = $"{AppInfo.DisplayName} · {status}";

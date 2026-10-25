@@ -15,17 +15,6 @@ internal static class Native
     private const uint DwmwaTransitionsForcedDisabled = 3;
     private const uint DwmwcpDonotround = 1;
     private const uint DwmwaColorNone = 0xFFFFFFFE;
-    private const uint SpiGetClientAreaAnimation = 0x1042;
-    private const int SwHide = 0;
-    private const int SwShowNoActivate = 4;
-    private const int SwShowMinNoActive = 7;
-    private const uint WsCaption = 0x00C00000;
-    private const uint WsSysMenu = 0x00080000;
-    private const uint WsMinimizeBox = 0x00020000;
-    private const uint WsMaximizeBox = 0x00010000;
-    internal const uint NativeTransitionStyleBits = WsCaption | WsSysMenu | WsMinimizeBox | WsMaximizeBox;
-    private static readonly object DwmTransitionLock = new();
-    private static readonly Dictionary<IntPtr, TransitionSuppressionState> DwmTransitionSuppressions = new();
 
     /// <summary>Raises <paramref name="changed"/> on every clipboard update while the window handle lives.</summary>
     public static IDisposable ListenClipboard(Window window, Action changed)
@@ -89,77 +78,13 @@ internal static class Native
         }
     }
 
-    /// <summary>
-    /// Keeps the native top-level caption style bits through Avalonia's frameless style rewrites.
-    /// Avalonia's extended-client-area path suppresses the actual non-client title bar and keeps resize-border sizing.
-    /// </summary>
-    public static IDisposable ConfigureNativeTransitions(TopLevel window)
-    {
-        Win32Properties.CustomWindowStylesCallback styles = (style, exStyle) =>
-            (AddNativeTransitionStyles(style), exStyle);
-        Win32Properties.AddWindowStylesCallback(window, styles);
-        return new Disposer(() => Win32Properties.RemoveWindowStylesCallback(window, styles));
-    }
-
-    /// <summary>Adds caption, system-menu, minimize, and maximize style bits without dropping existing styles.</summary>
-    internal static uint AddNativeTransitionStyles(uint style) => style | NativeTransitionStyleBits;
-
-    /// <summary>Temporarily suppresses DWM transitions for one window. Nested scopes restore the original value once.</summary>
-    public static IDisposable SuppressDwmTransitions(TopLevel window)
-    {
-        var hwnd = window.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
-        if (hwnd == IntPtr.Zero) return new Disposer(() => { });
-
-        lock (DwmTransitionLock)
-        {
-            if (DwmTransitionSuppressions.TryGetValue(hwnd, out var existing))
-            {
-                existing.Depth++;
-                return new TransitionSuppression(hwnd);
-            }
-
-            // This DWM attribute is documented as set-only. Read it when the OS supports that query; otherwise the
-            // new HWND's default is zero and A32 owns all subsequent changes to it.
-            var previous = TryGetDwmWindowAttribute(hwnd, DwmwaTransitionsForcedDisabled, out var current) ? current : 0;
-            if (!TrySetDwmWindowAttribute(hwnd, DwmwaTransitionsForcedDisabled, 1))
-                return new Disposer(() => { });
-
-            DwmTransitionSuppressions.Add(hwnd, new TransitionSuppressionState(previous));
-            return new TransitionSuppression(hwnd);
-        }
-    }
-
-    /// <summary>Reads the Windows client-area animation preference; a failed query conservatively disables app motion.</summary>
-    public static bool AnimationsEnabled
-    {
-        get
-        {
-            try { return SystemParametersInfo(SpiGetClientAreaAnimation, 0, out var enabled, 0) && enabled != 0; }
-            catch { return false; }
-        }
-    }
-
-    /// <summary>Registers a system-wide message such as TaskbarCreated for a native window hook.</summary>
-    public static uint RegisterWindowMessage(string name)
-    {
-        try { return RegisterWindowMessageNative(name); }
-        catch { return 0; }
-    }
-
-    /// <summary>Shows a native taskbar stand-in minimized without activating it.</summary>
-    public static void ShowMinimizedNoActivate(TopLevel window) => ShowNativeWindow(window, SwShowMinNoActive);
-
-    /// <summary>Restores a native window without activating it.</summary>
-    public static void RestoreNoActivate(TopLevel window) => ShowNativeWindow(window, SwShowNoActivate);
-
-    /// <summary>Hides a native taskbar stand-in without changing Avalonia's logical window state.</summary>
-    public static void HideNativeWindow(TopLevel window) => ShowNativeWindow(window, SwHide);
-
-    private static void ShowNativeWindow(TopLevel window, int command)
+    /// <summary>Disables DWM's native show, hide, minimize, and restore transitions for this window.</summary>
+    public static void DisableDwmTransitions(TopLevel window)
     {
         var hwnd = window.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
         if (hwnd == IntPtr.Zero) return;
-        try { ShowWindowNative(hwnd, command); } catch { }
+        try { SetDwmWindowAttribute(hwnd, DwmwaTransitionsForcedDisabled, 1); }
+        catch { /* Unsupported or unavailable DWM must not affect the window. */ }
     }
 
     public static void Flash(Window window)
@@ -187,35 +112,6 @@ internal static class Native
         public void Dispose() { _dispose?.Invoke(); _dispose = null; }
     }
 
-    private sealed class TransitionSuppression(IntPtr hwnd) : IDisposable
-    {
-        private IntPtr _hwnd = hwnd;
-
-        public void Dispose()
-        {
-            var target = _hwnd;
-            if (target == IntPtr.Zero) return;
-            _hwnd = IntPtr.Zero;
-
-            lock (DwmTransitionLock)
-            {
-                if (!DwmTransitionSuppressions.TryGetValue(target, out var state)) return;
-                if (--state.Depth == 0)
-                {
-                    DwmTransitionSuppressions.Remove(target);
-                    // Keep restoration serialized with a new suppression scope for the same HWND.
-                    TrySetDwmWindowAttribute(target, DwmwaTransitionsForcedDisabled, state.Previous);
-                }
-            }
-        }
-    }
-
-    private sealed class TransitionSuppressionState(uint previous)
-    {
-        public uint Previous { get; } = previous;
-        public int Depth { get; set; } = 1;
-    }
-
     [StructLayout(LayoutKind.Sequential)]
     private struct FlashInfo { public uint Size; public IntPtr Hwnd; public uint Flags; public uint Count; public uint Timeout; }
     [StructLayout(LayoutKind.Sequential)] private struct NativePoint { public int X, Y; }
@@ -233,25 +129,9 @@ internal static class Native
     [DllImport("kernel32.dll")] private static extern bool GlobalUnlock(IntPtr handle);
     [DllImport("user32.dll")] private static extern bool FlashWindowEx(ref FlashInfo info);
     [DllImport("dwmapi.dll")] private static extern int DwmSetWindowAttribute(IntPtr hwnd, uint attribute, ref uint value, int valueSize);
-    [DllImport("dwmapi.dll")] private static extern int DwmGetWindowAttribute(IntPtr hwnd, uint attribute, out uint value, int valueSize);
-    [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW")] private static extern bool SystemParametersInfo(uint action, uint param, out int value, uint flags);
-    [DllImport("user32.dll", EntryPoint = "RegisterWindowMessageW", CharSet = CharSet.Unicode)] private static extern uint RegisterWindowMessageNative(string name);
-    [DllImport("user32.dll", EntryPoint = "ShowWindow")] private static extern bool ShowWindowNative(IntPtr hwnd, int command);
 
     private static void SetDwmWindowAttribute(IntPtr hwnd, uint attribute, uint value) =>
         _ = DwmSetWindowAttribute(hwnd, attribute, ref value, sizeof(uint));
-
-    private static bool TryGetDwmWindowAttribute(IntPtr hwnd, uint attribute, out uint value)
-    {
-        try { return DwmGetWindowAttribute(hwnd, attribute, out value, sizeof(uint)) == 0; }
-        catch { value = 0; return false; }
-    }
-
-    private static bool TrySetDwmWindowAttribute(IntPtr hwnd, uint attribute, uint value)
-    {
-        try { return DwmSetWindowAttribute(hwnd, attribute, ref value, sizeof(uint)) == 0; }
-        catch { return false; }
-    }
 }
 
 /// <summary>HKCU Run entry for this product, with a one-time migration from the legacy value name.</summary>

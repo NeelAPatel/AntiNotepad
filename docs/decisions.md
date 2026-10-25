@@ -4,16 +4,17 @@ Newest first. History before 2026-10-23 (overnight build log and write-up) is in
 `antipad-v*` and `baseline/m8c-v1-compact`.
 
 ## 2026-10-25
-- **Native window** (user, A34-native-window-frame): the pad is the product and must meet every native Windows 11 window
-  expectation, while its top stays chrome-free (no title text or caption buttons). Windows supplies rounded corners, shadow,
-  border, resize edges and the open/close/minimize/restore animations. Supported: Snap (Win+Arrow, drag to edges/corners),
-  Maximize (Win+Up, double-click the top strip), Alt+Tab/Win+Tab while open or minimized, and Windows 11 snap layouts
-  (Win+Z, and the top-right hover flyout). A closed pad (hotkey/tray/Esc) is invisible to Windows: no Alt+Tab, no taskbar
-  unless the Taskbar icon setting says so.
-- **Taskbar icon** (A32-native-show-hide-animation, revising A20-taskbar-icon-setting and A22-taskbar-button-fixes): Defaults to Never; Settings offers While visible, Always and Never. The real pad is an unowned native app window, with taskbar presence controlled through ITaskbarList rather than Avalonia's live owner-changing setter. Its own button supplies Windows' minimize/restore behavior: a focused click minimizes, an inactive click focuses, and a minimized click restores. While visible removes the button when minimized or closed; Always retains the real button when minimized and uses a minimized stand-in only when closed. The closed-state stand-in stages a nonactivating minimized pad before restoring it; hotkey/tray reopening from closed uses the normal open path. Never removes the pad button. The native animation, button handoff and absence of transient buttons need the A32 dev-copy live gate. Settings keeps its own button; the tray stays available in every mode.
+- **Native window** (user decision; implementation reverted): the pad is the product and must meet every native Windows 11
+  window expectation, while its top stays chrome-free (no title text or caption buttons): Windows-drawn rounded corners,
+  shadow, border, resize edges and native open/close/minimize/restore animations; Snap, Maximize, Alt+Tab while open or
+  minimized, snap layouts; a closed pad invisible to Windows. A32-native-show-hide-animation and A34-native-window-frame
+  tried this by forcing caption-window styles onto the frameless window, which lost the corners and shadow and broke all
+  three bar styles; dev was reverted to just after A30 (A31-A33 reverted, A34 dropped). Any retry must not change the
+  window's frame styles and goes lab-first.
 
 ## 2026-10-24
 - **Windows session end** (A26-allow-windows-shutdown): synchronously flush panes and save all dirty notes once on Avalonia's Win32 shutdown request, log failures without UI, and let both resident windows close; ordinary closes still stay resident.
+- **Taskbar icon** (A20-taskbar-icon-setting, A22-taskbar-button-fixes): Defaults to Never; Settings offers While visible, Always and Never. One stable minimized stand-in supplies the pad's button in both visible and hidden states (Always keeps it while hidden); the real pad stays off the taskbar to avoid Avalonia's owner-change hide/re-show. Clicking the button hides the focused pad or shows/focuses it otherwise. Settings keeps its own button; the tray stays available in every mode.
 
 ## 2026-10-23
 - **Notes location and recovery** (A7-notes-folder-and-recovery, decision 1): app home remains `%LOCALAPPDATA%\AntiNotepad`

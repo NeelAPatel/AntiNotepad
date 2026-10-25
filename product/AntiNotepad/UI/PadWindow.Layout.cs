@@ -333,14 +333,6 @@ internal sealed partial class PadWindow
         Anim.Run(layer, 170, t => { var k = Anim.EaseOut(t); shift.Y = fromY + (toY - fromY) * k; layer.Opacity = fromO + (toO - fromO) * k; }, decorative: false);
     }
 
-    private void HideBarsForWindowHidden()
-    {
-        _barsSleep.Stop();
-        if (!Sliding) return;
-        SlideBar(top: true, show: false, instant: true);
-        SlideBar(top: false, show: false, instant: true);
-    }
-
     /// <summary>The floating pager: its own small popup just below the window, faded in and out.</summary>
     private void FloatPager(bool show, bool instant)
     {
