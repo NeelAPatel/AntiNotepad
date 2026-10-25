@@ -13,8 +13,8 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   A29-incremental-analysis + A30-background-save-and-log; windowing identical to r4 (Windows corners/shadow, bars, app's own
   show fade, A22-A25 taskbar stand-in). Reason: A32/A34 forced caption-window styles onto the frameless pad, losing corners
   and shadow and breaking Docked/Overlay/Float. 0 warnings, SELFTEST PASS.
-- `main`: tag `antinotepad-v0.6.0-untested-r5` still contains A31-A33. Installed copy: r5 (upgraded by the user, 12:51),
-  so it has the broken frame until a release from the reverted dev.
+- `main`: tag `antinotepad-v0.6.0-untested-r6` (2026-10-25), the user-approved good version = reverted dev (r4 windowing
+  + A29 + A30). Installed copy: r5 (broken frame) until the user reinstalls r6 with `tools/install.ps1`.
 - Finished briefs, reports and the A1 audit doc were removed from the tree on 2026-10-25; they live in git under tag
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
@@ -23,7 +23,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   goes lab-first. A34 (lab) was dropped: thick native border, bars broken in all three styles.
 
 ## Open (needs the user)
-- Release the reverted dev as r6 and reinstall, so the installed copy gets the r4 window back.
+- Reinstall the installed copy with r6 (`tools/install.ps1` from Windows Terminal) to get the r4 window back.
 - Live check not yet done: A30 Windows restart/sign-out saving an edit typed just before.
 - N3-release-and-update-plan: proposal at tag `proposal/N3-release-plan`; discussed in a separate chat ("Production readiness
   for antinotepad"): publishing, GitHub repo, license, signing, version label, installer.
