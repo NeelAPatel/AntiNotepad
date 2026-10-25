@@ -42,6 +42,8 @@ internal sealed class PadView : Grid
     private PaperLayer _paper = null!;
     private ChevronGutter? _gutter;
     private readonly FenceColorizer _fences;
+    private IBrush? _edgeFadeMask;
+    private (double BandFraction, byte TopAlpha, byte BottomAlpha)? _edgeFadeKey;
     public NoteStructure? Structure { get; private set; }
     private bool _binding;
     private string? _loadHint;
@@ -284,26 +286,44 @@ internal sealed class PadView : Grid
     private void UpdateEdgeFade()
     {
         var h = Editor.Bounds.Height;
-        if (!Settings.EdgeFade || h < 60) { if (Editor.OpacityMask is not null) Editor.OpacityMask = null; return; }
+        if (!Settings.EdgeFade || h < 60) { ClearEdgeFade(); return; }
         const double band = 40;
         var view = Editor.TextArea.TextView;
         var offset = view.VerticalOffset;
         var more = Math.Max(0, view.DocumentHeight - (offset + view.Bounds.Height));
         var top = Math.Clamp(offset / band, 0, 1);
         var bottom = Math.Clamp(more / band, 0, 1);
-        if (top == 0 && bottom == 0) { if (Editor.OpacityMask is not null) Editor.OpacityMask = null; return; }
+        if (top == 0 && bottom == 0) { ClearEdgeFade(); return; }
         var b = band / h;
-        Editor.OpacityMask = new LinearGradientBrush
+        var topAlpha = (byte)(255 * (1 - top));
+        var bottomAlpha = (byte)(255 * (1 - bottom));
+        var key = (b, topAlpha, bottomAlpha);
+        if (_edgeFadeMask is not null && _edgeFadeKey == key)
+        {
+            if (!ReferenceEquals(Editor.OpacityMask, _edgeFadeMask)) Editor.OpacityMask = _edgeFadeMask;
+            return;
+        }
+        var mask = new LinearGradientBrush
         {
             StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative), EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
             GradientStops =
             {
-                new GradientStop(Color.FromArgb((byte)(255 * (1 - top)), 0, 0, 0), 0),
+                new GradientStop(Color.FromArgb(topAlpha, 0, 0, 0), 0),
                 new GradientStop(Colors.Black, b),
                 new GradientStop(Colors.Black, 1 - b),
-                new GradientStop(Color.FromArgb((byte)(255 * (1 - bottom)), 0, 0, 0), 1),
+                new GradientStop(Color.FromArgb(bottomAlpha, 0, 0, 0), 1),
             },
-        };
+        }.ToImmutable();
+        _edgeFadeMask = mask;
+        _edgeFadeKey = key;
+        Editor.OpacityMask = mask;
+    }
+
+    private void ClearEdgeFade()
+    {
+        _edgeFadeMask = null;
+        _edgeFadeKey = null;
+        if (Editor.OpacityMask is not null) Editor.OpacityMask = null;
     }
 
     /// <summary>Lets go of the document (a preview being closed), so nothing it was listening to keeps it alive.</summary>
@@ -311,6 +331,7 @@ internal sealed class PadView : Grid
     {
         if (Editor.Document is { } doc) doc.Changed -= OnDocumentChanged;
         if (_timerTick is { } tick) { _timers.Tick -= tick; _timerTick = null; }
+        ClearEdgeFade();
         _analyse.Stop();
         _caret.Stop();
         _private.Clear();
@@ -361,6 +382,7 @@ internal sealed class PadView : Grid
         for (var i = 0; i < lines.Length; i++) lines[i] = doc.GetText(doc.GetLineByNumber(i + 1));
         _timerKeys.Clear();
         Structure = NoteStructure.Build(lines);
+        _fences.UpdateStructure(Structure);
         UpdateFolds(lines);
         _math = mode == NoteMode.Math ? EvaluateMath(lines) : [];
         _inline.Clear();

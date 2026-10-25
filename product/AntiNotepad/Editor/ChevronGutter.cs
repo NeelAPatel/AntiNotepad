@@ -1,11 +1,48 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Folding;
 using AvaloniaEdit.Rendering;
+using AntiNotepad.Theme;
 
 namespace AntiNotepad.Editor;
+
+/// <summary>One-entry owner cache for the gutter's three immutable stroke resources.</summary>
+internal sealed class ChevronPens
+{
+    private readonly record struct Key(Palette Palette, double Scale);
+    private Key? _key;
+    private ChevronPenSet? _current;
+
+    internal ChevronPenSet Get(double scale, Palette palette)
+    {
+        if (!double.IsFinite(scale) || scale <= 0) scale = 1;
+        var key = new Key(palette, scale);
+        if (_current is not null && _key == key) return _current;
+        _key = key;
+        return _current = new ChevronPenSet(palette);
+    }
+}
+
+internal sealed class ChevronPenSet
+{
+    public ImmutablePen Accent { get; }
+    public ImmutablePen Muted { get; }
+    public ImmutablePen Marker { get; }
+
+    internal ChevronPenSet(Palette palette)
+    {
+        Accent = Create(palette.Accent);
+        Muted = Create(palette.Muted);
+        Marker = Create(palette.Marker);
+    }
+
+    private static ImmutablePen Create(Color color) =>
+        new(new ImmutableSolidColorBrush(color), 1.6, null, PenLineCap.Round, PenLineJoin.Round, 10);
+}
 
 /// <summary>
 /// A quiet fold gutter: chevrons appear while the pointer is over the note (folded sections always show theirs),
@@ -16,6 +53,7 @@ internal sealed class ChevronGutter : AbstractMargin
     private const double GutterWidth = 16, Arm = 4.2;
     private readonly FoldingManager _manager;
     private readonly PadView _pad;
+    private readonly ChevronPens _pens = new();
     private bool _showAll;
     private Point? _hover;
 
@@ -58,12 +96,13 @@ internal sealed class ChevronGutter : AbstractMargin
     {
         context.DrawRectangle(Brushes.Transparent, null, new Rect(Bounds.Size)); // hit-testable everywhere
         var p = _pad.Palette;
+        var scale = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
+        var pens = _pens.Get(scale, p);
         foreach (var (folding, bounds) in Targets())
         {
             var hot = _hover is { } h && bounds.Contains(h);
             if (!folding.IsFolded && !_showAll && !hot) continue;
-            var color = hot ? p.Accent : folding.IsFolded ? p.Muted : p.Marker;
-            var pen = new Pen(new SolidColorBrush(color), 1.6, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round);
+            var pen = hot ? pens.Accent : folding.IsFolded ? pens.Muted : pens.Marker;
             var c = bounds.Center;
             if (folding.IsFolded)
             {

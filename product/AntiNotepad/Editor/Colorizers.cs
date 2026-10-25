@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
 using AntiNotepad.Calc;
@@ -7,9 +8,26 @@ using AntiNotepad.Model;
 
 namespace AntiNotepad.Editor;
 
+/// <summary>Per-colorizer immutable span brushes, capped so palette changes cannot grow a view's cache indefinitely.</summary>
+internal sealed class ColorizerBrushCache
+{
+    private const int Capacity = 24;
+    private readonly Dictionary<Color, ImmutableSolidColorBrush> _brushes = [];
+
+    internal ImmutableSolidColorBrush Get(Color color)
+    {
+        if (_brushes.TryGetValue(color, out var brush)) return brush;
+        if (_brushes.Count >= Capacity) _brushes.Clear();
+        brush = new ImmutableSolidColorBrush(color);
+        _brushes.Add(color, brush);
+        return brush;
+    }
+}
+
 /// <summary>Plain-note styling: headings, emphasis, inline code, fences, comments, quotes, done tasks, mode keyword.</summary>
 internal sealed class NoteColorizer(PadView pad) : DocumentColorizingTransformer
 {
+    private readonly ColorizerBrushCache _brushes = new();
     internal static readonly Regex Bold = new(@"\*\*(?=\S)(.+?)(?<=\S)\*\*", RegexOptions.Compiled);
     internal static readonly Regex Italic = new(@"(?<![*\w])\*(?=\S)([^*]+?)(?<=\S)\*(?![*\w])|(?<![_\w])_(?=\S)([^_]+?)(?<=\S)_(?![_\w])", RegexOptions.Compiled);
     internal static readonly Regex Underline = new(@"(?<![+_])(\+\+|__)(?=\S)(.+?)(?<=\S)\1", RegexOptions.Compiled);
@@ -64,7 +82,7 @@ internal sealed class NoteColorizer(PadView pad) : DocumentColorizingTransformer
         {
             ChangeLinePart(o + box.Length, line.EndOffset, e =>
             {
-                e.TextRunProperties.SetForegroundBrush(new SolidColorBrush(p.Done));
+                e.TextRunProperties.SetForegroundBrush(_brushes.Get(p.Done));
                 e.TextRunProperties.SetTextDecorations(TextDecorations.Strikethrough);
             });
             return;
@@ -78,7 +96,7 @@ internal sealed class NoteColorizer(PadView pad) : DocumentColorizingTransformer
         foreach (Match m in Tag.Matches(text)) Paint(o + m.Index, o + m.Index + m.Length, p.Identifier);
         foreach (Match m in LinkGenerator.Url.Matches(text)) ChangeLinePart(o + m.Index, o + m.Index + m.Length, e =>
         {
-            e.TextRunProperties.SetForegroundBrush(new SolidColorBrush(p.Link));
+            e.TextRunProperties.SetForegroundBrush(_brushes.Get(p.Link));
             e.TextRunProperties.SetTextDecorations(TextDecorations.Underline);
         });
         var comment = text.IndexOf(" //", StringComparison.Ordinal);
@@ -115,7 +133,7 @@ internal sealed class NoteColorizer(PadView pad) : DocumentColorizingTransformer
         if (end <= start) return;
         ChangeLinePart(start, end, e =>
         {
-            e.TextRunProperties.SetForegroundBrush(new SolidColorBrush(color));
+            e.TextRunProperties.SetForegroundBrush(_brushes.Get(color));
             if (weight is not null || style is not null)
             {
                 var t = e.TextRunProperties.Typeface;
@@ -152,13 +170,15 @@ internal sealed class NoteColorizer(PadView pad) : DocumentColorizingTransformer
     private void Mono(int start, int end, Color color)
     {
         if (end <= start) return;
-        ChangeLinePart(start, end, e => e.TextRunProperties.SetForegroundBrush(new SolidColorBrush(color)));
+        ChangeLinePart(start, end, e => e.TextRunProperties.SetForegroundBrush(_brushes.Get(color)));
     }
 }
 
 /// <summary>Math-note colouring from the calculator's own tokens, so colours always agree with evaluation.</summary>
 internal sealed class MathColorizer(PadView pad) : DocumentColorizingTransformer
 {
+    private readonly ColorizerBrushCache _brushes = new();
+
     protected override void ColorizeLine(DocumentLine line)
     {
         if (pad.Mode != NoteMode.Math || line.LineNumber == 1) return;
@@ -182,7 +202,7 @@ internal sealed class MathColorizer(PadView pad) : DocumentColorizingTransformer
             };
             ChangeLinePart(start, end, e =>
             {
-                e.TextRunProperties.SetForegroundBrush(new SolidColorBrush(color));
+                e.TextRunProperties.SetForegroundBrush(_brushes.Get(color));
                 if (italic) { var t = e.TextRunProperties.Typeface; e.TextRunProperties.SetTypeface(new Typeface(t.FontFamily, FontStyle.Italic, t.Weight, t.Stretch)); }
             });
         }

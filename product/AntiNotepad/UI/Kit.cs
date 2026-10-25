@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 using Avalonia.Styling;
 using AntiNotepad;
 using AntiNotepad.Theme;
@@ -26,23 +27,34 @@ internal static class Glyph
 internal sealed class GlyphIcon(string glyph, Color color, double size = 13, double weight = 0.15, FontFamily? font = null) : Control
 {
     private readonly Typeface _face = new(font ?? Glyph.Font);
+    private FormattedText? _text;
+    private double _textScale = double.NaN;
 
-    private FormattedText Text(IBrush brush) =>
-        new(glyph, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight, _face, size, brush);
+    private FormattedText Text(double scale)
+    {
+        if (_text is not null && _textScale.Equals(scale)) return _text;
+        _text = new FormattedText(glyph, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+            _face, size, new ImmutableSolidColorBrush(color));
+        _textScale = scale;
+        return _text;
+    }
 
     protected override Size MeasureOverride(Size availableSize) => new(size + 2, size + 2);
 
     public override void Render(DrawingContext context)
     {
-        var t = Text(new SolidColorBrush(color));
+        var scale = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
+        var t = Text(scale);
         var origin = new Point((Bounds.Width - t.Width) / 2, (Bounds.Height - t.Height) / 2);
         // Snap the centered glyph to whole device pixels for crisp Windows rendering.
-        var scale = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
         origin = new Point(Math.Round(origin.X * scale) / scale, Math.Round(origin.Y * scale) / scale);
         // Natural weight: one copy. (Five copies on the same spot stack their antialiased edges into a fuzzy outline.)
         if (weight <= 0) { context.DrawText(t, origin); return; }
-        foreach (var (dx, dy) in new[] { (-weight, 0.0), (weight, 0.0), (0.0, -weight), (0.0, weight), (0.0, 0.0) })
-            context.DrawText(t, new Point(origin.X + dx, origin.Y + dy));
+        context.DrawText(t, new Point(origin.X - weight, origin.Y));
+        context.DrawText(t, new Point(origin.X + weight, origin.Y));
+        context.DrawText(t, new Point(origin.X, origin.Y - weight));
+        context.DrawText(t, new Point(origin.X, origin.Y + weight));
+        context.DrawText(t, origin);
     }
 }
 

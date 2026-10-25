@@ -54,6 +54,7 @@ internal static class SelfTest
         Check(WelcomeSlotsSelfTest(out var welcomeReport), "welcome slots: " + welcomeReport);
         Check(SearchSpeedChecks(out var searchReport), "search speed: " + searchReport);
         Check(SettingsSearchMatchingChecks(out var settingsSearchReport), "A27-settings-search-build-matches: " + settingsSearchReport);
+        Check(FenceCacheChecks(out var fenceCacheReport), "A28-fence-cache: " + fenceCacheReport);
         Check(TaskbarChecks(out var taskbarReport), "taskbar: " + taskbarReport);
         Check(SessionEndCloseChecks(out var sessionEndReport), "session-end close: " + sessionEndReport);
 
@@ -714,5 +715,75 @@ internal static class SelfTest
         var passed = matchedCaseInsensitively && ignoredPrefix && nullQueryMatches;
         report = passed ? "case-insensitive match, ignored sub prefix, and null query" : "search match semantics changed";
         return passed;
+    }
+
+    private static bool FenceCacheChecks(out string report)
+    {
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+        try
+        {
+            var palette = Theme.Palette.All[0];
+            var doc = new AvaloniaEdit.Document.TextDocument("```cs\nint first = 1;\n```\n\n```js\nlet second = 2;\n```");
+            var original = Editor.NoteStructure.Build(["```cs", "int first = 1;", "```", "", "```js", "let second = 2;", "```"]);
+            var cache = new Editor.FenceCache<object>();
+            var copies = 0;
+            var builds = 0;
+            object Create(string _) { builds++; return new object(); }
+            string Copy(string text) { copies++; return text; }
+
+            foreach (var fence in original.Fences)
+            {
+                var body = fence.Language == "cs" ? "int first = 1;\n" : "let second = 2;\n";
+                cache.Get(fence.Open, fence.Close - 1, fence.Closed, doc.Version, fence.Language, palette, () => Copy(body), Create);
+            }
+            var first = cache.Get(1, 2, true, doc.Version, "cs", palette, () => Copy("int first = 1;\n"), Create);
+            for (var i = 0; i < 100; i++)
+                CheckCase(ReferenceEquals(first, cache.Get(1, 2, true, doc.Version, "cs", palette, () => Copy("int first = 1;\n"), Create)), "unchanged fence reuses its cached highlight");
+            CheckCase(copies == 2 && builds == 2, "one body copy for each unchanged fence across repeated lines");
+
+            var sameBodyNewVersion = new AvaloniaEdit.Document.TextDocument(doc.Text);
+            for (var i = 0; i < 100; i++)
+                cache.Get(1, 2, true, sameBodyNewVersion.Version, "cs", palette, () => Copy("int first = 1;\n"), Create);
+            CheckCase(copies == 3 && builds == 2, "one body copy after a document version change with unchanged fence text");
+
+            var boundsMissed = !cache.TryGet(1, 3, true, sameBodyNewVersion.Version, "cs", palette, out _);
+            var changedBounds = cache.Get(1, 3, true, sameBodyNewVersion.Version, "cs", palette,
+                () => Copy("int first = 1;\nextra line\n"), Create);
+            CheckCase(boundsMissed && !ReferenceEquals(first, changedBounds) && copies == 4 && builds == 3,
+                "same-version fence with changed body bounds misses and rebuilds");
+
+            var moved = Editor.NoteStructure.Build(["intro", "```cs", "int first = 1;", "```"]);
+            cache.Prune(moved.Fences.Select(f => f.Open));
+            CheckCase(cache.Count == 0, "moved and deleted fence keys are pruned");
+            var movedDoc = new AvaloniaEdit.Document.TextDocument("intro\n```cs\nint first = 1;\n```");
+            cache.Get(moved.Fences[0].Open, 3, moved.Fences[0].Closed, movedDoc.Version, moved.Fences[0].Language, palette,
+                () => Copy("int first = 1;\n"), Create);
+            cache.Prune(moved.Fences.Select(f => f.Open));
+            CheckCase(cache.Count == moved.Fences.Count && cache.TryGet(2, 3, true, movedDoc.Version, "cs", palette, out _)
+                && !cache.TryGet(1, 2, true, movedDoc.Version, "cs", palette, out _) && !cache.TryGet(5, 3, true, movedDoc.Version, "js", palette, out _),
+                "cache contains only the current moved fence");
+
+            var pens = new Editor.ChevronPens();
+            var firstPens = pens.Get(1, palette);
+            var reusedPens = pens.Get(1, palette);
+            var changedPalettePens = pens.Get(1, Theme.Palette.All[1]);
+            var changedScalePens = pens.Get(1.25, Theme.Palette.All[1]);
+            CheckCase(ReferenceEquals(firstPens, reusedPens) && !ReferenceEquals(firstPens, changedPalettePens)
+                && !ReferenceEquals(changedPalettePens, changedScalePens), "chevron pens reuse by palette and scale");
+
+            var brushes = new Editor.ColorizerBrushCache();
+            var firstBrush = brushes.Get(palette.Keyword);
+            var reusedBrush = brushes.Get(palette.Keyword);
+            var changedBrush = brushes.Get(Theme.Palette.All[1].Keyword);
+            CheckCase(ReferenceEquals(firstBrush, reusedBrush) && !ReferenceEquals(firstBrush, changedBrush),
+                "colorizer brush reuses the same color and refreshes on palette color change");
+
+            report = failures.Count == 0
+                ? "fence cache pruning and body-copy reuse, plus chevron and colorizer brush resource reuse"
+                : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+        catch (Exception ex) { report = string.Join("; ", failures.Append(ex.ToString())); return false; }
     }
 }

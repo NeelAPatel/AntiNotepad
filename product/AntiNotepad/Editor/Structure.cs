@@ -166,16 +166,93 @@ internal static class CodeColors
     }
 }
 
-/// <summary>
-/// Real syntax colours inside ``` fences: each fence's body gets its own small document and highlighter,
-/// cached until the fence's text changes.
-/// </summary>
+/// <summary>Per-opening-line fence text and highlighter cache, pruned to the current structure.</summary>
+internal sealed class FenceCache<T> where T : class
+{
+    private sealed class Entry
+    {
+        public required ITextSourceVersion Version;
+        public required int BodyEndLine;
+        public required bool Closed;
+        public required string Text;
+        public required string? Language;
+        public required Palette Palette;
+        public required T? Value;
+    }
+
+    private readonly Dictionary<int, Entry> _entries = [];
+    public int Count => _entries.Count;
+
+    public bool TryGet(int openLine, int bodyEndLine, bool closed, ITextSourceVersion version,
+        string? language, Palette palette, out T? value)
+    {
+        if (_entries.TryGetValue(openLine, out var entry) && ReferenceEquals(entry.Version, version)
+            && entry.BodyEndLine == bodyEndLine && entry.Closed == closed
+            && entry.Language == language && ReferenceEquals(entry.Palette, palette))
+        {
+            value = entry.Value;
+            return true;
+        }
+        value = null;
+        return false;
+    }
+
+    public T? Get(int openLine, int bodyEndLine, bool closed, ITextSourceVersion version,
+        string? language, Palette palette,
+        Func<string> copyText, Func<string, T?> create)
+    {
+        _entries.TryGetValue(openLine, out var entry);
+        var text = entry is not null && ReferenceEquals(entry.Version, version)
+            && entry.BodyEndLine == bodyEndLine && entry.Closed == closed ? entry.Text : copyText();
+        if (entry is not null && entry.Text == text && entry.Language == language && ReferenceEquals(entry.Palette, palette))
+        {
+            entry.Version = version;
+            entry.BodyEndLine = bodyEndLine;
+            entry.Closed = closed;
+            return entry.Value;
+        }
+
+        var value = create(text);
+        if (entry?.Value is IDisposable old) old.Dispose();
+        _entries[openLine] = new Entry
+        {
+            Version = version, BodyEndLine = bodyEndLine, Closed = closed,
+            Text = text, Language = language, Palette = palette, Value = value
+        };
+        return value;
+    }
+
+    public void Prune(IEnumerable<int> currentOpenLines)
+    {
+        var current = currentOpenLines.ToHashSet();
+        foreach (var open in _entries.Keys.Where(open => !current.Contains(open)).ToArray()) Remove(open);
+    }
+
+    public void Clear()
+    {
+        foreach (var open in _entries.Keys.ToArray()) Remove(open);
+    }
+
+    private void Remove(int openLine)
+    {
+        if (_entries.Remove(openLine, out var entry) && entry.Value is IDisposable disposable) disposable.Dispose();
+    }
+}
+
+/// <summary>Real syntax colours inside ``` fences: each fence's body gets its own small document and highlighter.</summary>
 internal sealed class FenceColorizer(PadView pad) : DocumentColorizingTransformer
 {
-    private sealed class Cache { public required string Text; public required string? Language; public required TextDocument Doc; public required DocumentHighlighter Highlighter; public required Palette Palette; }
-    private readonly Dictionary<int, Cache> _cache = [];   // by fence open line
+    private sealed class CodeHighlight : IDisposable
+    {
+        public required TextDocument Doc;
+        public required DocumentHighlighter Highlighter;
+        public void Dispose() { if (Highlighter is IDisposable disposable) disposable.Dispose(); }
+    }
+    private readonly FenceCache<CodeHighlight> _cache = new();   // by current fence open line
 
     public void Reset() => _cache.Clear();
+
+    public void UpdateStructure(NoteStructure structure) => _cache.Prune(structure.Fences.Select(f => f.Open));
 
     protected override void ColorizeLine(DocumentLine line)
     {
@@ -198,22 +275,23 @@ internal sealed class FenceColorizer(PadView pad) : DocumentColorizingTransforme
         }
     }
 
-    private Cache? Get(NoteStructure.Fence fence)
+    private CodeHighlight? Get(NoteStructure.Fence fence)
     {
         var doc = CurrentContext.Document;
         // The body ends before the closing fence, or at the last line while the fence is still open.
         var last = Math.Min(fence.Closed ? fence.Close - 1 : fence.Close, doc.LineCount);
+        if (_cache.TryGet(fence.Open, last, fence.Closed, doc.Version, fence.Language, pad.Palette, out var current)) return current;
         if (last <= fence.Open) return null;
         var from = doc.GetLineByNumber(fence.Open + 1).Offset;
         var to = doc.GetLineByNumber(last).EndOffset;
-        var text = doc.GetText(from, to - from);
-        if (_cache.TryGetValue(fence.Open, out var c) && c.Text == text && c.Language == fence.Language && ReferenceEquals(c.Palette, pad.Palette)) return c;
-        var definition = CodeColors.Definition(fence.Language, pad.Palette);
-        if (definition is null) return null;
-        var inner = new TextDocument(text);
-        var cache = new Cache { Text = text, Language = fence.Language, Doc = inner, Highlighter = new DocumentHighlighter(inner, definition), Palette = pad.Palette };
-        _cache[fence.Open] = cache;
-        return cache;
+        return _cache.Get(fence.Open, last, fence.Closed, doc.Version, fence.Language, pad.Palette,
+            () => doc.GetText(from, to - from), text =>
+            {
+                var definition = CodeColors.Definition(fence.Language, pad.Palette);
+                if (definition is null) return null;
+                var inner = new TextDocument(text);
+                return new CodeHighlight { Doc = inner, Highlighter = new DocumentHighlighter(inner, definition) };
+            });
     }
 }
 
