@@ -23,9 +23,7 @@ Product: AntiNotepad (`product/AntiNotepad`).
   - Needs Computer Use: swipe/scroll feel, demo notes on screen, Ctrl+F and Settings search typing, all three taskbar modes,
     dev vs prod icons/names in the taskbar and Task Manager, and the new installer's first real run.
 - Version 0.6.0 "untested" (V06-untested-version): dev merged into `main`, tag `antinotepad-v0.6.0-untested` (2026-10-24).
-  - Dev copy relaunched on fresh data (0.6.0-untested, "AntiNotepad (dev)", blue icon); demo notes seeded, opens slot 5.
-    The previous dev copy stopped unexplained when prod was quit (no crash or exit logged); watch for it.
-  - Prod upgraded to 0.6.0-untested by the user (build/prod-upgrade.ps1 from Windows Terminal): old data in
+  - Dev copy relaunched on fresh data (0.6.0-untested, "AntiNotepad (dev)", blue icon); demo notes seeded, opens slot 5.  - Prod upgraded to 0.6.0-untested by the user (build/prod-upgrade.ps1 from Windows Terminal): old data in
     `%LOCALAPPDATA%\AntiNotepad-backup-20261024-215228`, old install in `Programs\AntiNotepad.previous-*`; fresh notes in
     `Documents\AntiNotepad` with the demo notes.
   - Live test (computer use, 2026-10-24): demo notes, scrolling, Ctrl+F, dev name/icon (Task Manager, tray, Settings button) pass.
@@ -64,6 +62,12 @@ Product: AntiNotepad (`product/AntiNotepad`).
   GitHub repo, license, signing, portable data defaults, Inno Setup terms.
 
 ## Open
-- Settings window retention: A1 measured `freed=True` in 5 of 5 plain cycles (private memory flat at about 157 MB). A1-3's preview
-  timer path is fixed in A9 and A1-13 in A14.
-- Optional: choose final bar styles (scroll/swipe defaults chosen in A19).
+- Open audit findings (all Med, speed/memory): A1-7, A1-9, A1-10 (A28, dispatched), A1-8-whole-document-analysis (L),
+  A1-14-synchronous-save-and-log (L).
+- N3 release plan: being discussed in a separate chat ("Production readiness for antinotepad").
+
+## Backlog (someday, not in the current release plan)
+- Settings window runs about 90 threads (A1 evidence); memory is stable (freed 5 of 5 cycles). A big-ticket look someday.
+
+## Closed by the user (2026-10-25)
+- Final bar styles: non-issue. The dev copy's unexplained stop when prod quit: dropped.
