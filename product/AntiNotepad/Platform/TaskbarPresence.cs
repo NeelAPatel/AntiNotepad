@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform;
@@ -10,6 +12,8 @@ namespace AntiNotepad.Platform;
 /// <summary>Maps the taskbar preference to whether the taskbar proxy should be present.</summary>
 internal static class TaskbarPresence
 {
+    private static readonly TimeSpan ForegroundLossGracePeriod = TimeSpan.FromMilliseconds(500);
+
     internal static bool ShouldShow(string? setting, bool padVisible) => setting switch
     {
         "visible" => padVisible,
@@ -19,6 +23,22 @@ internal static class TaskbarPresence
 
     /// <summary>A taskbar click hides only when the visible pad owned the foreground before the click.</summary>
     internal static bool ShouldHideOnClick(bool padVisible, bool padForeground) => padVisible && padForeground;
+
+    /// <summary>
+    /// Windows can activate the taskbar before delivering the stand-in's restore request. Treat a recent loss
+    /// to the taskbar or stand-in as foreground at click time, while ignoring losses to other windows.
+    /// </summary>
+    internal static bool WasPadRecentlyForeground(long lastForegroundLoss, long now, TaskbarActivationCounterpart counterpart) =>
+        lastForegroundLoss > 0 && now >= lastForegroundLoss
+        && counterpart is TaskbarActivationCounterpart.Taskbar or TaskbarActivationCounterpart.Proxy
+        && Stopwatch.GetElapsedTime(lastForegroundLoss, now) <= ForegroundLossGracePeriod;
+}
+
+internal enum TaskbarActivationCounterpart
+{
+    Other,
+    Taskbar,
+    Proxy,
 }
 
 /// <summary>A stable minimized taskbar button for the resident pad.</summary>
@@ -42,6 +62,8 @@ internal sealed class TaskbarProxy : IDisposable
     private bool _shown;
     private bool _activationPending;
     private bool _padWasForegroundBeforeProxyActivation;
+    private long _lastForegroundLoss;
+    private TaskbarActivationCounterpart _lastForegroundLossCounterpart;
     private bool _suppressNextPadDeactivation;
     private int _focusSnapshotGeneration;
     private int _presenceGeneration;
@@ -119,20 +141,48 @@ internal sealed class TaskbarProxy : IDisposable
 
     private IntPtr OnPadWindowMessage(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (message == WmActivate && (wParam.ToInt64() & 0xFFFF) == WaInactive && _shown && lParam == Handle)
+        if (message == WmActivate && (wParam.ToInt64() & 0xFFFF) == WaInactive && _shown)
         {
-            // Capture before Avalonia raises Deactivated and before Windows can make the proxy foreground.
-            _padWasForegroundBeforeProxyActivation = _pad.IsActive || GetForegroundWindow() == hwnd;
-            _suppressNextPadDeactivation = true;
-            var generation = ++_focusSnapshotGeneration;
-            Dispatcher.UIThread.Post(() =>
+            // WM_ACTIVATE carries the next active window. Explorer can take foreground before the proxy receives
+            // SC_RESTORE, so preserve the loss time and counterpart while this message still identifies both.
+            _lastForegroundLoss = Stopwatch.GetTimestamp();
+            _lastForegroundLossCounterpart = GetCounterpart(lParam);
+
+            var proxyHwnd = Handle;
+            if (proxyHwnd != IntPtr.Zero && lParam == proxyHwnd)
             {
-                if (generation != _focusSnapshotGeneration) return;
+                // Capture before Avalonia raises Deactivated and before Windows can make the proxy foreground.
+                _padWasForegroundBeforeProxyActivation = _pad.IsActive || GetForegroundWindow() == hwnd;
+                _suppressNextPadDeactivation = true;
+                var generation = ++_focusSnapshotGeneration;
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (generation != _focusSnapshotGeneration) return;
+                    _padWasForegroundBeforeProxyActivation = false;
+                    _suppressNextPadDeactivation = false;
+                }, DispatcherPriority.Background);
+            }
+            else
+            {
                 _padWasForegroundBeforeProxyActivation = false;
                 _suppressNextPadDeactivation = false;
-            }, DispatcherPriority.Background);
+                _focusSnapshotGeneration++;
+            }
         }
         return IntPtr.Zero;
+    }
+
+    private TaskbarActivationCounterpart GetCounterpart(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero) return TaskbarActivationCounterpart.Other;
+        if (hwnd == Handle) return TaskbarActivationCounterpart.Proxy;
+
+        var className = new StringBuilder(64);
+        var length = GetClassName(hwnd, className, className.Capacity);
+        return length > 0 && (string.Equals(className.ToString(), "Shell_TrayWnd", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(className.ToString(), "Shell_SecondaryTrayWnd", StringComparison.OrdinalIgnoreCase))
+            ? TaskbarActivationCounterpart.Taskbar
+            : TaskbarActivationCounterpart.Other;
     }
 
     private IntPtr OnProxyWindowMessage(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -168,11 +218,15 @@ internal sealed class TaskbarProxy : IDisposable
     {
         if (_activationPending || _disposed || !_shown) return;
         var padHwnd = PadHandle;
+        var now = Stopwatch.GetTimestamp();
         var padWasForeground = _padWasForegroundBeforeProxyActivation
             || (padHwnd != IntPtr.Zero && previousForeground == padHwnd)
             || (padHwnd != IntPtr.Zero && GetForegroundWindow() == padHwnd)
+            || TaskbarPresence.WasPadRecentlyForeground(_lastForegroundLoss, now, _lastForegroundLossCounterpart)
             || _pad.IsActive;
         _padWasForegroundBeforeProxyActivation = false;
+        _lastForegroundLoss = 0;
+        _lastForegroundLossCounterpart = TaskbarActivationCounterpart.Other;
         var hide = TaskbarPresence.ShouldHideOnClick(_pad.IsVisible, padWasForeground);
         var presenceGeneration = _presenceGeneration;
         _activationPending = true;
@@ -210,6 +264,9 @@ internal sealed class TaskbarProxy : IDisposable
 
     [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetClassName(IntPtr hwnd, StringBuilder className, int maxCount);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern uint RegisterWindowMessage(string message);

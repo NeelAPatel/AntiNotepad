@@ -659,7 +659,15 @@ internal static class SelfTest
         CheckCase(!TaskbarPresence.ShouldHideOnClick(false, true), "hidden pad click shows even with stale foreground state");
         CheckCase(!TaskbarPresence.ShouldHideOnClick(true, false), "visible inactive pad click focuses");
         CheckCase(TaskbarPresence.ShouldHideOnClick(true, true), "visible foreground pad click hides");
-        report = failures.Count == 0 ? "Never default, old JSON default, three JSON round trips, all six visibility combinations, missing/unknown modes, and all four click states" : string.Join("; ", failures);
+        var lastLoss = 100L;
+        var withinGrace = lastLoss + System.Diagnostics.Stopwatch.Frequency / 2;
+        var outsideGrace = withinGrace + 1;
+        CheckCase(TaskbarPresence.WasPadRecentlyForeground(lastLoss, withinGrace, TaskbarActivationCounterpart.Taskbar), "recent loss to taskbar counts as foreground");
+        CheckCase(TaskbarPresence.WasPadRecentlyForeground(lastLoss, withinGrace, TaskbarActivationCounterpart.Proxy), "recent loss to proxy counts as foreground");
+        CheckCase(!TaskbarPresence.WasPadRecentlyForeground(lastLoss, withinGrace, TaskbarActivationCounterpart.Other), "recent loss to another window does not count");
+        CheckCase(!TaskbarPresence.WasPadRecentlyForeground(lastLoss, outsideGrace, TaskbarActivationCounterpart.Taskbar), "taskbar loss expires after 500 ms");
+        CheckCase(!TaskbarPresence.WasPadRecentlyForeground(withinGrace, lastLoss, TaskbarActivationCounterpart.Taskbar), "future foreground-loss time is rejected");
+        report = failures.Count == 0 ? "Never default, old JSON default, three JSON round trips, all six visibility combinations, missing/unknown modes, all four click states, and recent foreground-loss attribution" : string.Join("; ", failures);
         return failures.Count == 0;
     }
 }
