@@ -19,7 +19,10 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
-- Nothing in flight. Native-window work (A32/A34) parked; any retry must not change the window's frame styles and
+- A35-bar-insets: concept mockup (true size, feather editor) awaiting the user's approval:
+  https://claude.ai/artifact/Mo8BBWxPk2f4t8mvChRaQn . No branch or code yet. Overlay/Float backdrop must be a feathered
+  gradient or blur, never solid (user, 2026-10-25).
+- Native-window work (A32/A34) parked; any retry must not change the window's frame styles and
   goes lab-first. A34 (lab) was dropped: thick native border, bars broken in all three styles.
 
 ## Open (needs the user)
