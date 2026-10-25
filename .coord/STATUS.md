@@ -4,7 +4,7 @@ Updated: 2026-10-25
 Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 
 ## Working rules right now
-- Codex is used up: implementation goes to Haiku subagents, one at a time, until the user says otherwise.
+- Codex is back (user, 2026-10-25): director Sol medium delegating to Luna xhigh; Claude briefs, reviews, commits.
 - Computer Use is off until the user's explicit go-ahead; live checks are done by the user by hand in the dev copy.
 - Never run `AntiNotepad.exe --quit` without `ANTINOTEPAD_DATA`: it targets the installed copy's instance.
 
@@ -19,9 +19,14 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
-- A35-bar-insets: concept mockup (true size, feather editor) awaiting the user's approval:
-  https://claude.ai/artifact/Mo8BBWxPk2f4t8mvChRaQn . No branch or code yet. Overlay/Float backdrop must be a feathered
-  gradient or blur, never solid (user, 2026-10-25).
+- A35-bar-insets: mockup approved, values locked (`.coord/handoff/A35-bar-insets/approved-values.md`). Dispatched to Codex
+  Sol on `feat/A35-bar-insets` (worktree `.claude/worktrees/A35-bar-insets`): chrome design tokens + new geometry + a dev-only
+  lab comparing pill material Acrylic window / Blur behind / Solid (best to worst; Mica omitted for the pill).
+  Lab round 1 (503696e): Acrylic-window pill and feathered gradient rejected. r2 (7c01071): Solid pill, blur-behind top
+  band, ink-centered glyphs, pill inset 4. r3 (1a09b5c): overlay/float top gap is scrollable whitespace (line 1 normal height
+  in every style). r4 (441dc04): blur band masks editor text, no opaque backing (light-wallpaper strip). All 0 warnings,
+  SELFTEST PASS; lab dev copy running from the worktree; waiting on the user's live check.
+  Watch: geometry-drawn glyphs may look softer than DrawText.
 - Native-window work (A32/A34) parked; any retry must not change the window's frame styles and
   goes lab-first. A34 (lab) was dropped: thick native border, bars broken in all three styles.
 
