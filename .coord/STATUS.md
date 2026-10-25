@@ -20,7 +20,11 @@ Product: AntiNotepad (`product/AntiNotepad`).
   - A29 returned and passed review (line-text cache per document line, structure reused when changed lines keep their
     signature, full rebuild otherwise; math and timer keys stay global; 19,000 randomized edits matched a full rebuild;
     1500-line keystroke 0.51 -> 0.08 ms, 5000-line 1.35 -> 0.27 ms). Merged into dev (0 warnings, SELFTEST PASS); dev copy
-    relaunched with A29 + A31. Waiting on the user's live test. A30 still running.
+    relaunched with A29 + A31. Waiting on the user's live test.
+  - A30 returned: background writer and log queue accepted, 0 warnings, SELFTEST PASS. Rejected for two regressions: an
+    unavailable notes folder became a save failure (toast on every hide, Quit and `--quit` blocked, so installs would time
+    out), and a failed save made Flush block Load/RemoveOrphans/SwitchFolder (no way out via Settings > Storage).
+    A30-save-unavailable-fix (Sol + luna) is fixing both in the same worktree.
 - A28-editor-render-memory (A1-7, A1-9, A1-10; Sol director + 3 luna workers, worktree `../AntiQuickPad-wt/A28-editor-render-memory`)
   returned 2026-10-25: 0 warnings, SELFTEST PASS. Review accepted the render caches; one bug found: in notes over 1500 lines the
   fence color cache can keep a stale code-block body after an edit (hit by document version alone). A28-fence-cache-bounds-fix
