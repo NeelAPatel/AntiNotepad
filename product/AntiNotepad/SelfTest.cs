@@ -667,7 +667,15 @@ internal static class SelfTest
         CheckCase(!TaskbarPresence.WasPadRecentlyForeground(lastLoss, withinGrace, TaskbarActivationCounterpart.Other), "recent loss to another window does not count");
         CheckCase(!TaskbarPresence.WasPadRecentlyForeground(lastLoss, outsideGrace, TaskbarActivationCounterpart.Taskbar), "taskbar loss expires after 500 ms");
         CheckCase(!TaskbarPresence.WasPadRecentlyForeground(withinGrace, lastLoss, TaskbarActivationCounterpart.Taskbar), "future foreground-loss time is rejected");
-        report = failures.Count == 0 ? "Never default, old JSON default, three JSON round trips, all six visibility combinations, missing/unknown modes, all four click states, and recent foreground-loss attribution" : string.Join("; ", failures);
+        var hideDecision = 200L;
+        var withinHideFallback = hideDecision + System.Diagnostics.Stopwatch.Frequency;
+        var afterHideFallback = withinHideFallback + 1;
+        CheckCase(TaskbarPresence.ShouldSuppressPostHideActivation(true, true, false, false, hideDecision, withinHideFallback), "post-hide activation fallback is suppressed");
+        CheckCase(!TaskbarPresence.ShouldSuppressPostHideActivation(true, true, true, false, hideDecision, withinHideFallback), "fresh click start permits a new hidden-pad click");
+        CheckCase(!TaskbarPresence.ShouldSuppressPostHideActivation(true, true, false, true, hideDecision, withinHideFallback), "explicit restore permits a new hidden-pad click");
+        CheckCase(!TaskbarPresence.ShouldSuppressPostHideActivation(true, true, false, false, hideDecision, afterHideFallback), "post-hide suppression expires after one second");
+        CheckCase(!TaskbarPresence.ShouldSuppressPostHideActivation(true, false, false, false, hideDecision, withinHideFallback), "focus decision does not suppress a later click");
+        report = failures.Count == 0 ? "Never default, old JSON default, three JSON round trips, all six visibility combinations, missing/unknown modes, all four click states, recent foreground-loss attribution, and post-hide activation-fallback suppression" : string.Join("; ", failures);
         return failures.Count == 0;
     }
 }

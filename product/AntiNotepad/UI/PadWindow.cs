@@ -68,6 +68,7 @@ internal sealed partial class PadWindow : Window
         PointerExited += (_, _) => SleepChrome(soon: true);
         Deactivated += (_, _) =>
         {
+            if (Program.IsDev) TaskbarPresence.Trace($"pad Avalonia.Deactivated visible={IsVisible} active={IsActive} {TaskbarPresence.PadActionContext()}");
             Save();
             if (_saveFailureOverlay is { } prompt && IsOverlay(prompt)) CloseOverlay();
             var taskbarTransfer = _taskbarProxy?.ConsumePadDeactivationToProxy() ?? false;
@@ -76,7 +77,11 @@ internal sealed partial class PadWindow : Window
             if (Settings.HideOnBlur && !Topmost && !_overlayOpen && IsVisible && !taskbarTransfer) QueueHideOnBlur();
             else if (Topmost && Settings.DimWhenPinned) FadeWindow(0.72);
         };
-        Activated += (_, _) => { CancelQueuedHideOnBlur(); WakeChrome(); FadeWindow(1); };
+        Activated += (_, _) =>
+        {
+            if (Program.IsDev) TaskbarPresence.Trace($"pad Avalonia.Activated visible={IsVisible} active={IsActive} {TaskbarPresence.PadActionContext()}");
+            CancelQueuedHideOnBlur(); WakeChrome(); FadeWindow(1);
+        };
         Closing += (_, e) => { if (!_quitting) { e.Cancel = true; HideResident(); } };
         Opened += (_, _) => { FocusActive(); CycleSettingsForDev(); };
         PositionChanged += (_, _) => RememberBounds();
@@ -99,14 +104,15 @@ internal sealed partial class PadWindow : Window
 
     private void ToggleResident(long hotkeyPressed)
     {
-        if (IsVisible && IsActive) HideResident();
-        else ShowResident(hotkeyPressed);
+        if (IsVisible && IsActive) HideResident("hotkey-toggle");
+        else ShowResident(hotkeyPressed, "hotkey-toggle");
     }
 
-    public void ShowResident() => ShowResident(hotkeyPressed: 0);
+    public void ShowResident() => ShowResident(hotkeyPressed: 0, cause: "api-show");
 
-    private void ShowResident(long hotkeyPressed)
+    private void ShowResident(long hotkeyPressed, string cause = "show")
     {
+        TaskbarPresence.TracePadAction(cause, "show-begin", IsVisible);
         CancelQueuedHideOnBlur();
         var away = DateTime.Now - _hiddenAt;
         if (!IsVisible && Settings.FreshNoteAfterMinutes > 0 && away.TotalMinutes >= Settings.FreshNoteAfterMinutes) OpenFreshNote();
@@ -135,6 +141,7 @@ internal sealed partial class PadWindow : Window
         }
         else if (!wasVisible) PlayShow();
         WakeChrome();
+        TaskbarPresence.TracePadAction(cause, "show-end", IsVisible);
     }
 
     /// <summary>Where the pad appears: where it was left, centred, under the mouse, or above the tray like a flyout.</summary>
@@ -162,13 +169,16 @@ internal sealed partial class PadWindow : Window
     /// <summary>Hidden start: lay out and render once, invisibly, so the first hotkey press is as fast as the rest.</summary>
     internal void Prewarm()
     {
+        TaskbarPresence.TracePadAction("prewarm-show", "show-begin", IsVisible);
         Opacity = 0; ShowActivated = false;
         Show();
         Dispatcher.UIThread.Post(() =>
         {
+            TaskbarPresence.TracePadAction("prewarm-hide", "hide-begin", IsVisible);
             Hide();
             Opacity = 1; ShowActivated = true; _hiddenAt = DateTime.Now; _trim.Start();
             ApplyTaskbarSetting();
+            TaskbarPresence.TracePadAction("prewarm-hide", "hide-end", IsVisible);
         }, DispatcherPriority.Background);
     }
 
@@ -176,15 +186,20 @@ internal sealed partial class PadWindow : Window
     internal void ShowQuietly()
     {
         if (IsVisible) return;
+        TaskbarPresence.TracePadAction("timer-quiet-show", "show-begin", IsVisible);
         CancelQueuedHideOnBlur();
         ShowActivated = false;
         Show();
         ShowActivated = true;
         ApplyTaskbarSetting();
+        TaskbarPresence.TracePadAction("timer-quiet-show", "show-end", IsVisible);
     }
 
-    public void HideResident()
+    public void HideResident() => HideResident("hide");
+
+    public void HideResident(string cause)
     {
+        TaskbarPresence.TracePadAction(cause, "hide-begin", IsVisible);
         CancelQueuedHideOnBlur();
         CloseOverlay();
         Save();
@@ -192,6 +207,7 @@ internal sealed partial class PadWindow : Window
         Hide();
         _trim.Stop(); _trim.Start();
         ApplyTaskbarSetting();
+        TaskbarPresence.TracePadAction(cause, "hide-end", IsVisible);
     }
 
     public void Quit()
@@ -260,14 +276,16 @@ internal sealed partial class PadWindow : Window
     private void EnsureTaskbarProxy() =>
         _taskbarProxy ??= new TaskbarProxy(this, AppInfo.DisplayName, Icon, OnTaskbarProxyClick);
 
-    private void OnTaskbarProxyClick(bool hide)
+    private void OnTaskbarProxyClick(bool hide, string source)
     {
+        var cause = $"taskbar-click:{source}";
+        if (Program.IsDev) TaskbarPresence.Trace($"pad taskbar callback source={source} action={(hide ? "hide" : IsVisible ? "focus" : "show")} visible={IsVisible}");
         CancelQueuedHideOnBlur();
         if (hide)
         {
-            if (IsVisible) HideResident();
+            if (IsVisible) HideResident(cause);
         }
-        else ShowResident();
+        else ShowResident(0, cause);
     }
 
     private int _blurHideGeneration;
@@ -275,10 +293,16 @@ internal sealed partial class PadWindow : Window
     private void QueueHideOnBlur()
     {
         var generation = ++_blurHideGeneration;
+        if (Program.IsDev) TaskbarPresence.Trace($"pad hide-on-blur queued generation={generation} visible={IsVisible} active={IsActive}");
         Dispatcher.UIThread.Post(() =>
         {
-            if (generation != _blurHideGeneration || IsActive || !IsVisible || _settingsWindow is not null || !Settings.HideOnBlur || Topmost || _overlayOpen) return;
-            HideResident();
+            if (generation != _blurHideGeneration || IsActive || !IsVisible || _settingsWindow is not null || !Settings.HideOnBlur || Topmost || _overlayOpen)
+            {
+                if (Program.IsDev) TaskbarPresence.Trace($"pad hide-on-blur skipped generation={generation} current={_blurHideGeneration} visible={IsVisible} active={IsActive} settings={_settingsWindow is not null}");
+                return;
+            }
+            if (Program.IsDev) TaskbarPresence.Trace($"pad hide-on-blur fired generation={generation}");
+            HideResident("hide-on-blur");
         }, DispatcherPriority.Background);
     }
 
