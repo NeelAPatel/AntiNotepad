@@ -59,7 +59,7 @@ internal sealed partial class PadWindow : Window
         BuildLayout();
         ApplyAppearance();
         BindPanes(arrive: 0);
-        _saveTimer.Tick += (_, _) => { _saveTimer.Stop(); Save(); };
+        _saveTimer.Tick += (_, _) => { _saveTimer.Stop(); QueueSave(); };
         _trim.Tick += (_, _) => TrimWhileHidden();
         _timers.Finished += OnTimerFinished;
         Completion.OcrRequested += pad => _ = RunOcr(pad);
@@ -71,7 +71,7 @@ internal sealed partial class PadWindow : Window
         {
             if (SessionEnd.IsEnding) return;
             if (Program.IsDev) TaskbarPresence.Trace($"pad Avalonia.Deactivated visible={IsVisible} active={IsActive} {TaskbarPresence.PadActionContext()}");
-            Save();
+            QueueSave();
             if (_saveFailureOverlay is { } prompt && IsOverlay(prompt)) CloseOverlay();
             var taskbarTransfer = _taskbarProxy?.ConsumePadDeactivationToProxy() ?? false;
             // Moving into the Settings window is not "clicking away": the pad stays up, undimmed, to show each change.
@@ -215,7 +215,7 @@ internal sealed partial class PadWindow : Window
         TaskbarPresence.TracePadAction(cause, "hide-begin", IsVisible);
         CancelQueuedHideOnBlur();
         CloseOverlay();
-        Save();
+        QueueSave();
         _hiddenAt = DateTime.Now;
         Hide();
         _trim.Stop(); _trim.Start();
@@ -248,8 +248,7 @@ internal sealed partial class PadWindow : Window
             CancelQueuedHideOnBlur();
             _left.Flush();
             _right.Flush();
-            // Save includes every dirty note, not just the two visible panes. An unavailable
-            // store reports a no-op success, so inspect LastError as well for shutdown logging.
+            // Capture the latest edit and drain every queued write before accepting session end.
             var saved = _store.Save() && _store.LastError is null;
             Program.Log($"session-end save={(saved ? "ok" : "failed")} ms={System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds:F1}" +
                 (saved ? "" : $" error={_store.LastError}"));
@@ -258,6 +257,7 @@ internal sealed partial class PadWindow : Window
         {
             Program.Log($"session-end save=failed ms={System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds:F1} error={ex.Message}");
         }
+        finally { Program.FlushLogs(); }
     }
 
     private void RetryQuit()
@@ -270,6 +270,9 @@ internal sealed partial class PadWindow : Window
 
     private void CompleteQuit()
     {
+        // Even Quit anyway must let an in-flight write finish before the process exits.
+        _store.Flush();
+        Program.FlushLogs();
         _quitting = true;
         CloseSettings();
         _hotkey?.Dispose();
@@ -356,6 +359,23 @@ internal sealed partial class PadWindow : Window
     }
 
     internal bool Save() => Save(showFailureToast: true);
+
+    private async void QueueSave()
+    {
+        if (SessionEnd.IsEnding || _quitting) return;
+        _left.Flush(); _right.Flush();
+        try
+        {
+            var saved = await _store.QueueSave();
+            if (SessionEnd.IsEnding || _quitting) return;
+            if (!saved) Toast("Couldn't save · " + _store.LastError);
+            else PadView.Evict(KeepDocuments, [_left.Note, _right.Note]);
+        }
+        catch (Exception ex)
+        {
+            if (!SessionEnd.IsEnding && !_quitting) Toast("Couldn't save · " + ex.Message);
+        }
+    }
 
     private bool Save(bool showFailureToast)
     {

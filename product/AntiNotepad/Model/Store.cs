@@ -210,6 +210,14 @@ public sealed class Note
         InvalidateSearchBody?.Invoke(Id);
     }
 
+    internal bool TryGetDirtyText(out string text)
+    {
+        if (_live is not null) { text = _live(); return true; }
+        if (_text is not null) { text = _text; return true; }
+        text = "";
+        return false;
+    }
+
     /// <summary>An editor now owns the text; edits arrive through <see cref="Touched"/>.</summary>
     public void Attach(Func<string> live) { _live = live; _text = null; }
 
@@ -315,6 +323,13 @@ public sealed class Settings
     public bool Split { get; set; }
     public bool SearchGrid { get; set; }
     public bool Welcomed { get; set; }
+
+    internal Settings CopyForSave()
+    {
+        var copy = (Settings)MemberwiseClone();
+        copy.DisabledLanguages = DisabledLanguages is null ? [] : [.. DisabledLanguages];
+        return copy;
+    }
 }
 
 /// <summary>The index: every note's metadata and settings. Bodies are separate files.</summary>
@@ -338,6 +353,7 @@ public sealed class StoreData
 /// </summary>
 public sealed class Store
 {
+    private static readonly TimeSpan SaveCoalesceWindow = TimeSpan.FromMilliseconds(50);
     private static readonly JsonSerializerOptions Json = new()
     {
         WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, Converters = { new JsonStringEnumConverter() }
@@ -349,6 +365,12 @@ public sealed class Store
     private bool _forcedUnavailable;
     private bool _indexReadUnavailable;
     private readonly SearchBodyCache _searchBodyCache = new();
+    private readonly object _saveGate = new();
+    private readonly Dictionary<string, PendingBody> _pendingBodies = new(StringComparer.Ordinal);
+    private readonly Queue<SaveCompletion> _completedSaves = new();
+    private PendingSaveBatch? _pendingSave;
+    private Task? _writerTask;
+    private bool _lastSaveSucceeded = true;
     public StoreData Data { get; private set; } = new();
     public string? LastError { get; private set; }
     public bool IsAvailable { get; private set; } = true;
@@ -505,6 +527,7 @@ public sealed class Store
 
     public void Load()
     {
+        DrainSaveQueue();
         if (_forcedUnavailable) return;
         ClearSearchBodyCache();
         if (!Directory.Exists(_folder))
@@ -602,6 +625,7 @@ public sealed class Store
     /// <summary>Moves unknown Markdown bodies aside. Note lifecycle deletions are handled from the saved model, not by this sweep.</summary>
     public void RemoveOrphans()
     {
+        DrainSaveQueue();
         try
         {
             if (!Directory.Exists(_bodies)) return;
@@ -621,35 +645,272 @@ public sealed class Store
         catch (Exception ex) { LastError = "tidy: " + ex.Message; }
     }
 
+    public Task<bool> QueueSave()
+    {
+        if (IsStoreUnavailable()) return Task.FromResult(true);
+        try { return EnqueueSave(CaptureSaveSnapshot(), forceNow: false).PublicTask; }
+        catch (Exception ex)
+        {
+            LastError = ex.Message;
+            lock (_saveGate) _lastSaveSucceeded = false;
+            return Task.FromResult(false);
+        }
+    }
+
+    /// <summary>Captures the current model and synchronously drains its write for quit, retry, and session end.</summary>
     public bool Save()
     {
-        if (!IsAvailable || !Directory.Exists(_folder)) { LastError = $"Notes folder is unavailable: {_folder}"; return true; }
+        if (IsStoreUnavailable())
+        {
+            Flush();
+            return true;
+        }
         try
         {
-            if (Data.All.Any(note => note.Dirty && !note.BodyUnavailable)) Directory.CreateDirectory(_bodies);
-            foreach (var note in Data.All.Where(n => n.Dirty).ToList())
+            var batch = EnqueueSave(CaptureSaveSnapshot(), forceNow: true);
+            var completion = batch.Completion.Task.GetAwaiter().GetResult();
+            ApplyCompletedSaves();
+            return completion.Result.Success;
+        }
+        catch (Exception ex)
+        {
+            LastError = ex.Message;
+            lock (_saveGate) _lastSaveSucceeded = false;
+            return false;
+        }
+    }
+
+    /// <summary>Drains queued saves immediately without taking a new model snapshot.</summary>
+    public bool Flush()
+    {
+        var unavailable = IsStoreUnavailable();
+        DrainSaveQueue();
+        if (unavailable)
+        {
+            // A completed writer can clear LastError; refresh it after draining if the folder is still unavailable.
+            IsStoreUnavailable();
+            return true;
+        }
+        if (IsStoreUnavailable()) return true;
+        lock (_saveGate) return _lastSaveSucceeded;
+    }
+
+    /// <summary>Waits for outstanding writer work without consulting the last completed save result.</summary>
+    private void DrainSaveQueue()
+    {
+        while (true)
+        {
+            Task? writer;
+            lock (_saveGate)
+            {
+                _pendingSave?.FlushRequested.TrySetResult(true);
+                writer = _writerTask;
+            }
+            if (writer is null) break;
+            try { writer.GetAwaiter().GetResult(); }
+            catch (Exception ex)
+            {
+                LastError = ex.Message;
+                lock (_saveGate) _lastSaveSucceeded = false;
+                break;
+            }
+        }
+        ApplyCompletedSaves();
+    }
+
+    private bool IsStoreUnavailable()
+    {
+        if (!Directory.Exists(_folder))
+        {
+            // Checked on every save and not remembered: a folder that comes back (OneDrive, a drive) saves again.
+            LastError = $"Notes folder is unavailable: {_folder}";
+            return true;
+        }
+        if (IsAvailable) return false;
+        LastError ??= $"Notes folder is unavailable: {_folder}";
+        return true;
+    }
+
+    private PendingSaveBatch EnqueueSave(SaveSnapshot snapshot, bool forceNow)
+    {
+        lock (_saveGate)
+        {
+            var batch = _pendingSave;
+            if (batch is null)
+            {
+                batch = new PendingSaveBatch(snapshot);
+                _pendingSave = batch;
+                batch.PublicTask = CompleteQueuedSaveAsync(batch.Completion.Task);
+            }
+            else batch.Replace(snapshot);
+
+            if (forceNow) batch.FlushRequested.TrySetResult(true);
+            if (_writerTask is null) _writerTask = Task.Run(ProcessSaveQueueAsync);
+            return batch;
+        }
+    }
+
+    private async Task<bool> CompleteQueuedSaveAsync(Task<SaveCompletion> completionTask)
+    {
+        var completion = await completionTask;
+        ApplyCompletedSaves();
+        return completion.Result.Success;
+    }
+
+    private async Task ProcessSaveQueueAsync()
+    {
+        while (true)
+        {
+            PendingSaveBatch batch;
+            lock (_saveGate)
+            {
+                if (_pendingSave is null) { _writerTask = null; return; }
+                batch = _pendingSave;
+            }
+
+            await Task.WhenAny(Task.Delay(SaveCoalesceWindow), batch.FlushRequested.Task);
+
+            SaveSnapshot snapshot;
+            IReadOnlyDictionary<string, SaveAcknowledgement> acknowledgements;
+            lock (_saveGate)
+            {
+                if (!ReferenceEquals(_pendingSave, batch)) continue;
+                snapshot = batch.Snapshot;
+                acknowledgements = batch.Acknowledgements;
+                _pendingSave = null;
+            }
+
+            var result = WriteSnapshot(snapshot);
+            var completion = new SaveCompletion(result, acknowledgements, snapshot.Data);
+            lock (_saveGate)
+            {
+                foreach (var body in result.DurableBodies)
+                    if (_pendingBodies.TryGetValue(body.Id, out var pending) && pending.Revision == body.Revision)
+                        _pendingBodies.Remove(body.Id);
+                _completedSaves.Enqueue(completion);
+                _lastSaveSucceeded = result.Success;
+            }
+            batch.Completion.TrySetResult(completion);
+        }
+    }
+
+    private SaveSnapshot CaptureSaveSnapshot()
+    {
+        var notes = Data.All.ToArray();
+        lock (_saveGate)
+        {
+            var currentIds = notes.Select(note => note.Id).ToHashSet(StringComparer.Ordinal);
+            foreach (var removed in _pendingBodies.Keys.Where(id => !currentIds.Contains(id)).ToArray())
+                _pendingBodies.Remove(removed);
+
+            foreach (var note in notes)
+            {
+                if (!note.Dirty || note.BodyUnavailable || !note.TryGetDirtyText(out var text)) continue;
+                _pendingBodies[note.Id] = new PendingBody(text, note.SearchRevision);
+            }
+
+            var bodies = new List<SaveBodySnapshot>();
+            var acknowledgements = new Dictionary<string, SaveAcknowledgement>(StringComparer.Ordinal);
+            foreach (var note in notes)
             {
                 if (note.BodyUnavailable) continue;
-                note.InvalidateSearchCache();
-                var text = note.Text;
-                note.TitleCache = Note.MakeTitle(text);
-                note.ModeCache = Modes.Detect(text).Mode;
-                Atomic(BodyPath(note.Id), text, backup: false);
-                note.Dirty = false;
+                if (!_pendingBodies.TryGetValue(note.Id, out var body)) continue;
+                bodies.Add(new SaveBodySnapshot(note.Id, body.Text, body.Revision));
+                acknowledgements[note.Id] = new SaveAcknowledgement(note, body.Revision);
             }
-            Atomic(_index, JsonSerializer.Serialize(Data, Json), backup: !_preserveBackupOnce);
+
+            return new SaveSnapshot(_folder, _index, _bodies, IsAvailable, CloneData(Data), bodies.ToArray(), acknowledgements);
+        }
+    }
+
+    private static StoreData CloneData(StoreData data) => new()
+    {
+        Version = data.Version,
+        Stack = data.Stack.Select(CloneMetadata).ToList(),
+        Slots = data.Slots.Select(CloneMetadata).ToArray(),
+        Trash = data.Trash.Select(CloneMetadata).ToList(),
+        Current = data.Current,
+        ViewSlot = data.ViewSlot,
+        Settings = data.Settings.CopyForSave()
+    };
+
+    private static Note CloneMetadata(Note note) => new()
+    {
+        Id = note.Id,
+        Created = note.Created,
+        Modified = note.Modified,
+        Caret = note.Caret,
+        Scroll = note.Scroll,
+        Deleted = note.Deleted,
+        Slot = note.Slot,
+        TitleCache = note.TitleCache,
+        Blank = note.Blank,
+        ModeCache = note.ModeCache
+    };
+
+    private SaveResult WriteSnapshot(SaveSnapshot snapshot)
+    {
+        if (!snapshot.IsAvailable || !IsAvailable || !Directory.Exists(snapshot.Folder))
+        {
+            LastError = $"Notes folder is unavailable: {snapshot.Folder}";
+            return new SaveResult(true, []);
+        }
+
+        try
+        {
+            if (snapshot.Bodies.Length > 0) Directory.CreateDirectory(snapshot.BodiesFolder);
+            foreach (var body in snapshot.Bodies)
+            {
+                var note = snapshot.Data.All.FirstOrDefault(candidate => candidate.Id == body.Id);
+                if (note is not null)
+                {
+                    note.TitleCache = Note.MakeTitle(body.Text);
+                    note.ModeCache = Modes.Detect(body.Text).Mode;
+                }
+                Atomic(SearchBodyPath(snapshot.BodiesFolder, body.Id), body.Text, backup: false);
+            }
+
+            Atomic(snapshot.Index, JsonSerializer.Serialize(snapshot.Data, Json), backup: !_preserveBackupOnce);
             _preserveBackupOnce = false;
-            var current = Data.All.Select(note => note.Id).ToHashSet(StringComparer.Ordinal);
+
+            var current = snapshot.Data.All.Select(note => note.Id).ToHashSet(StringComparer.Ordinal);
             var failedDeletes = new List<string>();
             if (!_recoveryMode)
                 foreach (var removed in _knownIds.Except(current, StringComparer.Ordinal))
-                    if (!DeleteOwnBody(removed)) failedDeletes.Add(removed);
+                    if (!DeleteOwnBody(snapshot.BodiesFolder, removed)) failedDeletes.Add(removed);
             _knownIds = current;
             _knownIds.UnionWith(failedDeletes);
-            if (failedDeletes.Count > 0) return false;
-            LastError = null; return true;
+
+            if (failedDeletes.Count > 0)
+                return new SaveResult(false, snapshot.Bodies);
+            LastError = null;
+            return new SaveResult(true, snapshot.Bodies);
         }
-        catch (Exception ex) { LastError = ex.Message; return false; }
+        catch (Exception ex)
+        {
+            LastError = ex.Message;
+            return new SaveResult(false, []);
+        }
+    }
+
+    private void ApplyCompletedSaves()
+    {
+        SaveCompletion[] completions;
+        lock (_saveGate)
+        {
+            completions = _completedSaves.ToArray();
+            _completedSaves.Clear();
+        }
+        foreach (var completion in completions)
+            foreach (var body in completion.Result.DurableBodies)
+                if (completion.Acknowledgements.TryGetValue(body.Id, out var acknowledgement) &&
+                    acknowledgement.Note.Dirty && acknowledgement.Note.SearchRevision == acknowledgement.Revision)
+                {
+                    var metadata = completion.Data.All.First(note => note.Id == body.Id);
+                    acknowledgement.Note.TitleCache = metadata.TitleCache;
+                    acknowledgement.Note.ModeCache = metadata.ModeCache;
+                    acknowledgement.Note.Dirty = false;
+                }
     }
 
     private bool DeleteOwnBody(string id)
@@ -658,16 +919,43 @@ public sealed class Store
         catch (Exception ex) { LastError = $"delete {id}: {ex.Message}"; return false; }
     }
 
+    private bool DeleteOwnBody(string bodiesFolder, string id)
+    {
+        try { File.Delete(SearchBodyPath(bodiesFolder, id)); return true; }
+        catch (Exception ex) { LastError = $"delete {id}: {ex.Message}"; return false; }
+    }
+
+    private sealed record PendingBody(string Text, long Revision);
+    private sealed record SaveBodySnapshot(string Id, string Text, long Revision);
+    private sealed record SaveAcknowledgement(Note Note, long Revision);
+    private sealed record SaveSnapshot(string Folder, string Index, string BodiesFolder, bool IsAvailable, StoreData Data,
+        SaveBodySnapshot[] Bodies, IReadOnlyDictionary<string, SaveAcknowledgement> Acknowledgements);
+    private sealed record SaveResult(bool Success, SaveBodySnapshot[] DurableBodies);
+    private sealed record SaveCompletion(SaveResult Result, IReadOnlyDictionary<string, SaveAcknowledgement> Acknowledgements, StoreData Data);
+
+    private sealed class PendingSaveBatch(SaveSnapshot snapshot)
+    {
+        internal SaveSnapshot Snapshot { get; private set; } = snapshot;
+        internal IReadOnlyDictionary<string, SaveAcknowledgement> Acknowledgements => Snapshot.Acknowledgements;
+        internal TaskCompletionSource<bool> FlushRequested { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal TaskCompletionSource<SaveCompletion> Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal Task<bool> PublicTask { get; set; } = Task.FromResult(false);
+        internal void Replace(SaveSnapshot snapshot) => Snapshot = snapshot;
+    }
+
     private static bool IsIoFailure(Exception ex) => ex is IOException or UnauthorizedAccessException or System.Security.SecurityException;
 
     public void SwitchFolder(string folder)
     {
+        DrainSaveQueue();
         _folder = Path.GetFullPath(folder);
         _index = Path.Combine(_folder, "index.json");
         _legacy = Path.Combine(_folder, "antipad.json");
         _bodies = Path.Combine(_folder, "notes");
         _forcedUnavailable = false;
         IsAvailable = Directory.Exists(_folder);
+        lock (_saveGate) _lastSaveSucceeded = true;
+        LastError = IsAvailable ? null : $"Notes folder is unavailable: {_folder}";
         Note.LoadBody = ReadBody;
         Note.InvalidateSearchBody = InvalidateSearchBody;
         ClearSearchBodyCache();

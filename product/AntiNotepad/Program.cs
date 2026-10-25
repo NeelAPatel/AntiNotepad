@@ -5,6 +5,7 @@ using Avalonia.Threading;
 using AntiNotepad.Model;
 using AntiNotepad.Platform;
 using AntiNotepad.UI;
+using System.Collections.Concurrent;
 
 namespace AntiNotepad;
 
@@ -28,11 +29,26 @@ internal static class Program
     public static int Main(string[] args)
     {
         if (args is ["--selftest"]) return SelfTest.Run();
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => FlushLogs();
+        try { return RunApplication(args); }
+        finally { DisposeLogs(); }
+    }
+
+    private static int RunApplication(string[] args)
+    {
         Environment.SetEnvironmentVariable("AVALONIA_TELEMETRY_OPTOUT", "1");
         // Any crash leaves its stack in the data folder's product log.
-        AppDomain.CurrentDomain.UnhandledException += (_, e) => Log("crash " + e.ExceptionObject);
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            Log("crash " + e.ExceptionObject);
+            FlushLogs();
+        };
         // UI-thread exceptions end the process before the handler above runs; log them on the way out too.
-        Dispatcher.UIThread.UnhandledException += (_, e) => Log("crash " + e.Exception);
+        Dispatcher.UIThread.UnhandledException += (_, e) =>
+        {
+            Log("crash " + e.Exception);
+            FlushLogs();
+        };
 
         // A custom data folder (dev/test runs) gets its own instance, so it can run beside the real one.
         // Decided before --quit, so quitting a dev run never quits the real copy.
@@ -120,13 +136,32 @@ internal static class Program
         try
         {
             if (string.IsNullOrWhiteSpace(AppHome)) return;
-            Directory.CreateDirectory(AppHome);
-            var path = Path.Combine(AppHome, AppInfo.LogFileName);
-            // Kept tiny: a timing line per hotkey press, reset once it passes 64 KB.
-            if (File.Exists(path) && new FileInfo(path).Length > 64 * 1024) File.Delete(path);
-            File.AppendAllText(path, $"{DateTime.Now:s} {line}{Environment.NewLine}");
+            BackgroundLog logger;
+            lock (_logGate)
+            {
+                _logger ??= new BackgroundLog(Path.Combine(AppHome, AppInfo.LogFileName));
+                logger = _logger;
+            }
+            logger.Write(line);
         }
         catch { }
+    }
+
+    private static readonly object _logGate = new();
+    private static BackgroundLog? _logger;
+
+    public static void FlushLogs()
+    {
+        BackgroundLog? logger;
+        lock (_logGate) logger = _logger;
+        try { logger?.Flush(); } catch { }
+    }
+
+    private static void DisposeLogs()
+    {
+        BackgroundLog? logger;
+        lock (_logGate) logger = _logger;
+        try { logger?.Dispose(); } catch { }
     }
 
     public static bool MoveNotes(string target, out string message)
@@ -134,6 +169,13 @@ internal static class Program
         if (Store is null || !Store.IsAvailable || NotesLocationError is not null)
         {
             message = NotesLocationError ?? $"The current notes folder is unavailable: {DataFolder}";
+            return false;
+        }
+        if (!Store.Save())
+        {
+            message = Store.LastError is { } saveError
+                ? $"The current notes could not be saved before moving them. {saveError}"
+                : "The current notes could not be saved before moving them.";
             return false;
         }
         var result = NotesLocation.Move(AppHome, DataFolder, target);
@@ -153,6 +195,91 @@ internal static class Program
         _pendingRequests.Attach(
             () => Dispatcher.UIThread.Post(window.ShowResident),
             () => Dispatcher.UIThread.Post(window.Quit));
+    }
+}
+
+/// <summary>Serializes best-effort product log writes on one background worker.</summary>
+internal sealed class BackgroundLog : IDisposable
+{
+    private sealed record Entry(string? Line, TaskCompletionSource? Barrier);
+
+    private readonly string _path;
+    private readonly object _gate = new();
+    private readonly BlockingCollection<Entry> _queue = new(new ConcurrentQueue<Entry>());
+    private readonly Task _worker;
+    private bool _disposed;
+
+    internal BackgroundLog(string path)
+    {
+        _path = Path.GetFullPath(path);
+        _worker = Task.Run(Consume);
+    }
+
+    internal void Write(string line)
+    {
+        ArgumentNullException.ThrowIfNull(line);
+        lock (_gate)
+        {
+            if (_disposed) return;
+            // Capture the timestamp here so it describes when the event happened, not when disk I/O runs.
+            _queue.Add(new Entry($"{DateTime.Now:s} {line}", null));
+        }
+    }
+
+    /// <summary>Waits until every write queued before this call has been attempted.</summary>
+    internal void Flush()
+    {
+        var barrier = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task worker;
+        var queued = false;
+        lock (_gate)
+        {
+            worker = _worker;
+            if (!_disposed)
+            {
+                _queue.Add(new Entry(null, barrier));
+                queued = true;
+            }
+        }
+        if (queued) barrier.Task.GetAwaiter().GetResult();
+        else worker.GetAwaiter().GetResult();
+    }
+
+    private void Consume()
+    {
+        foreach (var entry in _queue.GetConsumingEnumerable())
+        {
+            if (entry.Barrier is { } barrier)
+            {
+                barrier.TrySetResult();
+                continue;
+            }
+
+            try
+            {
+                var directory = Path.GetDirectoryName(_path);
+                if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
+                // Match the existing product log rotation: reset the file once it has passed 64 KB.
+                if (File.Exists(_path) && new FileInfo(_path).Length > 64 * 1024) File.Delete(_path);
+                File.AppendAllText(_path, entry.Line + Environment.NewLine);
+            }
+            catch { }
+        }
+    }
+
+    public void Dispose()
+    {
+        Task worker;
+        lock (_gate)
+        {
+            if (!_disposed)
+            {
+                _disposed = true;
+                _queue.CompleteAdding();
+            }
+            worker = _worker;
+        }
+        worker.GetAwaiter().GetResult();
     }
 }
 

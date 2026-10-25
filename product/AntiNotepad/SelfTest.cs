@@ -58,6 +58,7 @@ internal static class SelfTest
         Check(IncrementalAnalysisChecks(out var analysisReport), "A29-incremental-analysis: " + analysisReport);
         Check(TaskbarChecks(out var taskbarReport), "taskbar: " + taskbarReport);
         Check(SessionEndCloseChecks(out var sessionEndReport), "session-end close: " + sessionEndReport);
+        Check(BackgroundSaveAndLogChecks(out var backgroundSaveAndLogReport), "background save and log: " + backgroundSaveAndLogReport);
 
         Console.WriteLine(failures.Count == 0 ? "SELFTEST PASS" : "SELFTEST FAIL\n" + string.Join("\n", failures));
         return failures.Count == 0 ? 0 : 1;
@@ -956,5 +957,182 @@ internal static class SelfTest
             report = string.Join("; ", failures.Append(ex.ToString()));
             return false;
         }
+    }
+
+    private static bool BackgroundSaveAndLogChecks(out string report)
+    {
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+        var root = Path.Combine(Path.GetTempPath(), $"{AppInfo.Name.ToLowerInvariant()}-background-save-selftest-{Guid.NewGuid():N}");
+        try
+        {
+            var burstPath = Path.Combine(root, "burst");
+            var burstStore = new Store(burstPath);
+            burstStore.Load();
+            CheckCase(burstStore.Save(), "baseline save for coalescing");
+            var baselineIndex = File.ReadAllBytes(Path.Combine(burstPath, "index.json"));
+            var note = burstStore.Data.Stack[0];
+            Task<bool>? firstBatch = null;
+            Task<bool>? lastBatch = null;
+            string lastText = "";
+            for (var i = 0; i < 40; i++)
+            {
+                lastText = $"queued snapshot {i}\nbody {i}";
+                note.Text = lastText;
+                var queued = burstStore.QueueSave();
+                firstBatch ??= queued;
+                lastBatch = queued;
+            }
+            var burstFlush = burstStore.Flush();
+            var burstResult = lastBatch?.GetAwaiter().GetResult() ?? false;
+            var burstReloaded = new Store(burstPath);
+            burstReloaded.Load();
+            var backupPath = Path.Combine(burstPath, "index.json.bak");
+            CheckCase(firstBatch is not null && ReferenceEquals(firstBatch, lastBatch), "rapid queue burst coalesces into one task");
+            CheckCase(burstFlush && burstResult && burstReloaded.Data.Stack[0].Text == lastText, "flush persists the burst's last snapshot");
+            CheckCase(File.Exists(backupPath) && File.ReadAllBytes(backupPath).SequenceEqual(baselineIndex), "coalesced burst writes one index revision");
+
+            var flushPath = Path.Combine(root, "flush");
+            var flushStore = new Store(flushPath);
+            flushStore.Load();
+            flushStore.Data.Stack[0].Text = "queued then synchronously flushed";
+            var queuedFlush = flushStore.QueueSave();
+            var synchronousFlush = flushStore.Flush();
+            var flushResult = queuedFlush.GetAwaiter().GetResult();
+            var flushReloaded = new Store(flushPath);
+            flushReloaded.Load();
+            CheckCase(synchronousFlush && flushResult && flushReloaded.Data.Stack[0].Text == "queued then synchronously flushed",
+                "Flush drains a queued save before returning");
+
+            var livePath = Path.Combine(root, "live-note");
+            var liveStore = new Store(livePath);
+            liveStore.Load();
+            var liveNote = liveStore.Data.Stack[0];
+            var liveText = "first live value";
+            liveNote.Attach(() => liveText);
+            liveNote.Touched(blank: false, NoteMode.Plain);
+            var liveQueued = liveStore.QueueSave();
+            liveText = "latest live value before quit";
+            liveNote.Touched(blank: false, NoteMode.Plain);
+            var liveSaved = liveStore.Save();
+            var liveQueueResult = liveQueued.GetAwaiter().GetResult();
+            var liveReloaded = new Store(livePath);
+            liveReloaded.Load();
+            CheckCase(liveSaved && liveQueueResult && liveReloaded.Data.Stack[0].Text == liveText && liveNote.TitleCache == liveText,
+                "synchronous Save replaces a pending snapshot with the latest live editor text");
+
+            var settingsPath = Path.Combine(root, "snapshot");
+            var settingsStore = new Store(settingsPath);
+            settingsStore.Load();
+            settingsStore.Data.Settings.DisabledLanguages = ["before-queue"];
+            var settingsQueued = settingsStore.QueueSave();
+            settingsStore.Data.Settings.DisabledLanguages.Add("after-queue");
+            var settingsFlushed = settingsStore.Flush();
+            var settingsResult = settingsQueued.GetAwaiter().GetResult();
+            var settingsReloaded = new Store(settingsPath);
+            settingsReloaded.Load();
+            CheckCase(settingsFlushed && settingsResult
+                && settingsReloaded.Data.Settings.DisabledLanguages.SequenceEqual(["before-queue"]),
+                "queued save persists its immutable settings snapshot");
+
+            var blockedPath = Path.Combine(root, "blocked");
+            var blockedStore = new Store(blockedPath);
+            blockedStore.Load();
+            blockedStore.Data.Stack[0].Text = "write must fail";
+            Directory.CreateDirectory(Path.Combine(blockedPath, "index.json"));
+            var blockedQueued = blockedStore.QueueSave();
+            var blockedFlush = blockedStore.Flush();
+            var blockedQueueResult = blockedQueued.GetAwaiter().GetResult();
+            var quitSaveGate = blockedStore.Save();
+            CheckCase(!blockedFlush && !blockedQueueResult && !quitSaveGate,
+                "blocked index write returns failure through queue, flush, and synchronous Save gate");
+            Directory.Delete(Path.Combine(blockedPath, "index.json"));
+            var retrySaved = blockedStore.Save();
+            var retryReloaded = new Store(blockedPath);
+            retryReloaded.Load();
+            CheckCase(retrySaved && retryReloaded.Data.Stack[0].Text == "write must fail",
+                "retry after removing the index obstruction saves the dirty note");
+
+            var unavailablePath = Path.Combine(root, "unavailable");
+            var unavailableStore = new Store(unavailablePath);
+            unavailableStore.Load();
+            var unavailableNote = unavailableStore.Data.Stack[0];
+            unavailableNote.Text = "kept dirty while unavailable";
+            var unavailableFilesBefore = Directory.GetFiles(unavailablePath, "*", SearchOption.AllDirectories).Order().ToArray();
+            unavailableStore.MarkUnavailable("fixture store unavailable");
+            var unavailableQueued = unavailableStore.QueueSave().GetAwaiter().GetResult();
+            var unavailableSaved = unavailableStore.Save();
+            var unavailableFlushed = unavailableStore.Flush();
+            var unavailableFilesAfter = Directory.GetFiles(unavailablePath, "*", SearchOption.AllDirectories).Order().ToArray();
+            CheckCase(unavailableQueued && unavailableSaved && unavailableFlushed
+                && unavailableStore.LastError is not null && unavailableNote.Dirty
+                && unavailableFilesBefore.SequenceEqual(unavailableFilesAfter),
+                "unavailable existing folder makes QueueSave, Save, and Flush successful no-ops without clearing dirty text");
+
+            var missingPath = Path.Combine(root, "missing-folder");
+            var missingStore = new Store(missingPath);
+            missingStore.Load();
+            var missingNote = missingStore.Data.Stack[0];
+            missingNote.Text = "kept dirty while folder is missing";
+            var missingInitiallyAvailable = missingStore.IsAvailable;
+            Directory.Delete(missingPath, recursive: true);
+            var missingQueued = missingStore.QueueSave().GetAwaiter().GetResult();
+            var missingSaved = missingStore.Save();
+            var missingFlushed = missingStore.Flush();
+            CheckCase(missingStore.IsAvailable == missingInitiallyAvailable && missingQueued && missingSaved && missingFlushed
+                && missingStore.LastError is not null && missingNote.Dirty && !Directory.Exists(missingPath),
+                "missing folder makes QueueSave, Save, and Flush successful no-ops without changing availability or clearing dirty text");
+            Directory.CreateDirectory(missingPath);
+            var missingRecoveredSaved = missingStore.Save();
+            var missingReloaded = new Store(missingPath);
+            missingReloaded.Load();
+            CheckCase(missingRecoveredSaved && missingStore.IsAvailable == missingInitiallyAvailable
+                && !missingNote.Dirty && missingReloaded.Data.Stack[0].Text == "kept dirty while folder is missing",
+                "Save persists retained dirty text after the missing folder returns");
+
+            var switchSourcePath = Path.Combine(root, "failed-switch-source");
+            var switchStore = new Store(switchSourcePath);
+            switchStore.Load();
+            var switchNote = switchStore.Data.Stack[0];
+            switchNote.Text = "retained after failed folder write";
+            Directory.CreateDirectory(Path.Combine(switchSourcePath, "index.json"));
+            var switchFailed = !switchStore.Save();
+            var switchPath = Path.Combine(root, "fresh-folder");
+            Directory.CreateDirectory(switchPath);
+            switchStore.SwitchFolder(switchPath);
+            var switchDirty = switchNote.Dirty;
+            var switchedSaved = switchStore.Save();
+            var switchedReloaded = new Store(switchPath);
+            switchedReloaded.Load();
+            CheckCase(switchFailed && switchDirty && switchedSaved && switchedReloaded.Data.Stack[0].Text == "retained after failed folder write"
+                && File.Exists(Path.Combine(switchPath, "index.json")),
+                "SwitchFolder drains a prior failed write and saves subsequent edits in the fresh folder");
+
+            var logPath = Path.Combine(root, "logger", AppInfo.LogFileName);
+            using (var logger = new BackgroundLog(logPath))
+            {
+                const int lines = 64;
+                for (var i = 0; i < lines; i++) logger.Write($"ordered-{i:D3}");
+                logger.Flush();
+                var written = File.ReadAllLines(logPath);
+                var orderedAndTimestamped = written.Length == lines && Enumerable.Range(0, lines).All(i =>
+                    written[i].Length >= 20 && written[i][19] == ' '
+                    && DateTime.TryParseExact(written[i][..19], "s", System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.None, out _)
+                    && written[i].EndsWith($"ordered-{i:D3}", StringComparison.Ordinal));
+                CheckCase(orderedAndTimestamped, "logger Flush writes captured timestamps and entries in queue order");
+            }
+
+            report = failures.Count == 0
+                ? "40 queued snapshots coalesce to the last index revision; queued Flush drains; unavailable saves are successful no-ops; blocked writes fail the synchronous Save gate; folder switching recovers after a failed write; logger Flush preserves timestamped order"
+                : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+        catch (Exception ex)
+        {
+            report = string.Join("; ", failures.Append(ex.ToString()));
+            return false;
+        }
+        finally { try { if (Directory.Exists(root)) Directory.Delete(root, true); } catch { } }
     }
 }
