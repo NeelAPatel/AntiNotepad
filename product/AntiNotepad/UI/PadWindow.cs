@@ -68,6 +68,7 @@ internal sealed partial class PadWindow : Window
         PointerExited += (_, _) => SleepChrome(soon: true);
         Deactivated += (_, _) =>
         {
+            if (SessionEnd.IsEnding) return;
             if (Program.IsDev) TaskbarPresence.Trace($"pad Avalonia.Deactivated visible={IsVisible} active={IsActive} {TaskbarPresence.PadActionContext()}");
             Save();
             if (_saveFailureOverlay is { } prompt && IsOverlay(prompt)) CloseOverlay();
@@ -79,10 +80,19 @@ internal sealed partial class PadWindow : Window
         };
         Activated += (_, _) =>
         {
+            if (SessionEnd.IsEnding) return;
             if (Program.IsDev) TaskbarPresence.Trace($"pad Avalonia.Activated visible={IsVisible} active={IsActive} {TaskbarPresence.PadActionContext()}");
             CancelQueuedHideOnBlur(); WakeChrome(); FadeWindow(1);
         };
-        Closing += (_, e) => { if (!_quitting) { e.Cancel = true; HideResident(); } };
+        Closing += (_, e) =>
+        {
+            if (e.CloseReason == WindowCloseReason.OSShutdown) PrepareForSessionEnd();
+            if (SessionEnd.ShouldCancelClose(e.CloseReason, _quitting, SessionEnd.IsEnding))
+            {
+                e.Cancel = true;
+                HideResident();
+            }
+        };
         Opened += (_, _) => { FocusActive(); CycleSettingsForDev(); };
         PositionChanged += (_, _) => RememberBounds();
         SizeChanged += (_, _) => RememberBounds();
@@ -112,6 +122,7 @@ internal sealed partial class PadWindow : Window
 
     private void ShowResident(long hotkeyPressed, string cause = "show")
     {
+        if (SessionEnd.IsEnding) return;
         TaskbarPresence.TracePadAction(cause, "show-begin", IsVisible);
         CancelQueuedHideOnBlur();
         var away = DateTime.Now - _hiddenAt;
@@ -199,6 +210,7 @@ internal sealed partial class PadWindow : Window
 
     public void HideResident(string cause)
     {
+        if (SessionEnd.IsEnding) return;
         TaskbarPresence.TracePadAction(cause, "hide-begin", IsVisible);
         CancelQueuedHideOnBlur();
         CloseOverlay();
@@ -212,6 +224,7 @@ internal sealed partial class PadWindow : Window
 
     public void Quit()
     {
+        if (SessionEnd.IsEnding) return;
         if (!Save(showFailureToast: false))
         {
             if (!IsVisible) ShowResident();
@@ -220,6 +233,30 @@ internal sealed partial class PadWindow : Window
         }
 
         CompleteQuit();
+    }
+
+    /// <summary>One synchronous save before Avalonia closes any windows; no prompt, retry or eviction.</summary>
+    internal void PrepareForSessionEnd()
+    {
+        if (!SessionEnd.Begin()) return;
+        var started = System.Diagnostics.Stopwatch.GetTimestamp();
+        try
+        {
+            _saveTimer.Stop();
+            _trim.Stop();
+            CancelQueuedHideOnBlur();
+            _left.Flush();
+            _right.Flush();
+            // Save includes every dirty note, not just the two visible panes. An unavailable
+            // store reports a no-op success, so inspect LastError as well for shutdown logging.
+            var saved = _store.Save() && _store.LastError is null;
+            Program.Log($"session-end save={(saved ? "ok" : "failed")} ms={System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds:F1}" +
+                (saved ? "" : $" error={_store.LastError}"));
+        }
+        catch (Exception ex)
+        {
+            Program.Log($"session-end save=failed ms={System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds:F1} error={ex.Message}");
+        }
     }
 
     private void RetryQuit()
@@ -321,6 +358,9 @@ internal sealed partial class PadWindow : Window
 
     private bool Save(bool showFailureToast)
     {
+        // Closing/deactivation can call Save again after the session-end flush. Never show UI
+        // or repeat disk work on that path, even if the single shutdown save failed.
+        if (SessionEnd.IsEnding) return true;
         _left.Flush(); _right.Flush();
         if (!_store.Save())
         {

@@ -133,13 +133,13 @@ internal sealed class TaskbarProxy : IDisposable
         };
         _window.Closing += (_, e) =>
         {
-            if (_disposed) return;
+            if (!SessionEnd.ShouldCancelClose(e.CloseReason, _disposed, SessionEnd.IsEnding)) return;
             e.Cancel = true;
             ShowMinimized();
         };
         _window.Activated += (_, _) =>
         {
-            if (!_shown || _disposed) return;
+            if (!_shown || _disposed || SessionEnd.IsEnding) return;
             if (Program.IsDev) TaskbarPresence.Trace("proxy Avalonia.Activated fallback");
             QueueTaskbarClick(IntPtr.Zero, "Avalonia.Activated");
             ShowNativeMinimized();
@@ -195,6 +195,7 @@ internal sealed class TaskbarProxy : IDisposable
 
     private IntPtr OnPadWindowMessage(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
+        if (SessionEnd.IsEnding) return IntPtr.Zero;
         if (message == WmActivate)
         {
             var state = (int)(wParam.ToInt64() & 0xFFFF);
@@ -263,6 +264,7 @@ internal sealed class TaskbarProxy : IDisposable
 
     private IntPtr OnProxyWindowMessage(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
+        if (SessionEnd.IsEnding) return IntPtr.Zero;
         TraceProxyMessage(hwnd, message, wParam, lParam);
 
         if (_taskbarCreated != 0 && message == _taskbarCreated)

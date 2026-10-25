@@ -54,6 +54,7 @@ internal static class SelfTest
         Check(WelcomeSlotsSelfTest(out var welcomeReport), "welcome slots: " + welcomeReport);
         Check(SearchSpeedChecks(out var searchReport), "search speed: " + searchReport);
         Check(TaskbarChecks(out var taskbarReport), "taskbar: " + taskbarReport);
+        Check(SessionEndCloseChecks(out var sessionEndReport), "session-end close: " + sessionEndReport);
 
         Console.WriteLine(failures.Count == 0 ? "SELFTEST PASS" : "SELFTEST FAIL\n" + string.Join("\n", failures));
         return failures.Count == 0 ? 0 : 1;
@@ -684,6 +685,23 @@ internal static class SelfTest
         CheckCase(!TaskbarPresence.ShouldSuppressPostHideActivation(true, true, false, false, hideDecision, afterHideFallback), "post-hide suppression expires after one second");
         CheckCase(!TaskbarPresence.ShouldSuppressPostHideActivation(true, false, false, false, hideDecision, withinHideFallback), "focus decision does not suppress a later click");
         report = failures.Count == 0 ? "Never default, old JSON default, three JSON round trips, all six visibility combinations, missing/unknown modes, all four click states, recent foreground-loss attribution including null counterpart at 17 ms and expiry, and post-hide activation-fallback suppression" : string.Join("; ", failures);
+        return failures.Count == 0;
+    }
+
+    private static bool SessionEndCloseChecks(out string report)
+    {
+        var failures = new List<string>();
+        foreach (var reason in Enum.GetValues<Avalonia.Controls.WindowCloseReason>())
+        {
+            // Covers pad X/Alt+F4 and stand-in closes, explicit quit/disposal, shutdown/restart,
+            // and sign-out (Avalonia 12.1.4 uses ApplicationShutdown for nonzero end-session flags).
+            if (SessionEnd.ShouldCancelClose(reason, exiting: false, sessionEnding: false)
+                != (reason != Avalonia.Controls.WindowCloseReason.OSShutdown)) failures.Add($"ordinary {reason}");
+            if (SessionEnd.ShouldCancelClose(reason, exiting: false, sessionEnding: true)) failures.Add($"session end {reason}");
+            if (SessionEnd.ShouldCancelClose(reason, exiting: true, sessionEnding: false)) failures.Add($"quit/dispose {reason}");
+            if (SessionEnd.ShouldCancelClose(reason, exiting: true, sessionEnding: true)) failures.Add($"quit during session end {reason}");
+        }
+        report = failures.Count == 0 ? "normal resident closes cancel; quit, OS shutdown and session-end sign-out closes proceed" : string.Join("; ", failures);
         return failures.Count == 0;
     }
 }

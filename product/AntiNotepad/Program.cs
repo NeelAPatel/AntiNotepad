@@ -216,6 +216,14 @@ public sealed class App : Application
             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
             var store = Program.Store;
             var window = new PadWindow(store);
+            // Win32 raises this on WM_QUERYENDSESSION, before Closing. In 12.1.4 the OS reason
+            // is internal, and sign-out is labeled ApplicationShutdown rather than OSShutdown.
+            // Our explicit Quit uses forced Shutdown(), which does not raise this event.
+            desktop.ShutdownRequested += (_, e) =>
+            {
+                window.PrepareForSessionEnd();
+                e.Cancel = false;
+            };
             window.QuitRequested = () => { _tray?.Dispose(); desktop.Shutdown(); };
             _tray = new Tray(window.ShowResident, () => { window.ShowResident(); window.NewNote(); }, window.OpenSettings, window.Quit,
                 () => store.Data.Slots.Select(n => (n.Title, !n.IsEmpty)).ToList(),
