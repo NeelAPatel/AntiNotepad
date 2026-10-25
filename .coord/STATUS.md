@@ -30,7 +30,9 @@ Product: AntiNotepad (`product/AntiNotepad`).
     with no counterpart on a taskbar click. A25-taskbar-click-foreground-loss fixed it: live test passes (focused click hides,
     hidden click shows, inactive click focuses). Prod reinstalled by the user (23:07, has the A22-A25 fixes).
   - At 23:07:44 the user started a restart/sign-out and both copies vetoed it (event 10001), then exited: prod and dev are not
-    running. Cause: the pad's and stand-in's Closing handlers cancel closes. Dispatched A26-allow-windows-shutdown (Sol).
+    running. Cause: the pad's and stand-in's Closing handlers cancel closes. A26-allow-windows-shutdown merged and verified on dev: a dev-only simulated
+    WM_QUERYENDSESSION is accepted (reply=1), saves in 1.7 ms including an edit typed just before, and exits; Alt+F4 still hides.
+    Next: user reinstalls prod (tools/install.ps1 from Windows Terminal) so it gets A26; then merge dev into main.
   - Backups made from Claude sessions exist only in `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\`:
     `AntiNotepad-backup-20261024-155646` (stale Oct 22-23 data) and `Antipad-backup-2026-10-23`. Kept; don't delete.
 - A6-audit-decisions merged into dev (2026-10-24), together with A5-audit-refresh. It applies the user's 8 audit decisions
