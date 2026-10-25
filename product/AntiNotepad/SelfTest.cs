@@ -55,6 +55,7 @@ internal static class SelfTest
         Check(SearchSpeedChecks(out var searchReport), "search speed: " + searchReport);
         Check(SettingsSearchMatchingChecks(out var settingsSearchReport), "A27-settings-search-build-matches: " + settingsSearchReport);
         Check(FenceCacheChecks(out var fenceCacheReport), "A28-fence-cache: " + fenceCacheReport);
+        Check(IncrementalAnalysisChecks(out var analysisReport), "A29-incremental-analysis: " + analysisReport);
         Check(TaskbarChecks(out var taskbarReport), "taskbar: " + taskbarReport);
         Check(SessionEndCloseChecks(out var sessionEndReport), "session-end close: " + sessionEndReport);
 
@@ -785,5 +786,175 @@ internal static class SelfTest
             return failures.Count == 0;
         }
         catch (Exception ex) { report = string.Join("; ", failures.Append(ex.ToString())); return false; }
+    }
+
+    private static bool IncrementalAnalysisChecks(out string report)
+    {
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+
+        static string EvalSignature(Calc.LineEval? line)
+        {
+            if (line is null) return "null";
+            var result = line.Result is { } value
+                ? $"{value.Display}|{value.Value.ToString("R", System.Globalization.CultureInfo.InvariantCulture)}|{value.Unit}"
+                : "-";
+            var tokens = string.Join(",", line.Tokens.Select(t => $"{t.Start}:{t.Length}:{t.Kind}"));
+            return $"{result}|{line.ErrorReason}|{line.AssignedName}|{tokens}";
+        }
+
+        static bool Equivalent(Editor.NoteAnalysis incremental, Editor.NoteAnalysis full, AvaloniaEdit.Document.TextDocument document)
+        {
+            var structureA = incremental.Structure;
+            var structureB = full.Structure;
+            if (incremental.Mode != full.Mode || incremental.CodeLanguage != full.CodeLanguage
+                || incremental.ModeKeywordLength != full.ModeKeywordLength
+                || !incremental.Lines.SequenceEqual(full.Lines)
+                || structureA is null || structureB is null
+                || !structureA.Fences.SequenceEqual(structureB.Fences)
+                || !structureA.Indent.SequenceEqual(structureB.Indent)
+                || !structureA.InFence.SequenceEqual(structureB.InFence)
+                || incremental.MathLines.Count != full.MathLines.Count
+                || !incremental.MathLines.Select(EvalSignature).SequenceEqual(full.MathLines.Select(EvalSignature))) return false;
+
+            var inlineA = incremental.InlineLines.OrderBy(pair => pair.Key)
+                .Select(pair => $"{pair.Key}:{EvalSignature(pair.Value)}");
+            var inlineB = full.InlineLines.OrderBy(pair => pair.Key)
+                .Select(pair => $"{pair.Key}:{EvalSignature(pair.Value)}");
+            if (!inlineA.SequenceEqual(inlineB)) return false;
+
+            var timersA = incremental.TimerKeys.OrderBy(pair => pair.Key).Select(pair => $"{pair.Key}:{pair.Value}");
+            var timersB = full.TimerKeys.OrderBy(pair => pair.Key).Select(pair => $"{pair.Key}:{pair.Value}");
+            if (!timersA.SequenceEqual(timersB)) return false;
+
+            var foldsA = structureA.Folds(document, incremental.Lines, incremental.Mode == NoteMode.Code)
+                .Select(fold => (fold.StartOffset, fold.EndOffset, fold.Name)).ToArray();
+            var foldsB = structureB.Folds(document, full.Lines, full.Mode == NoteMode.Code)
+                .Select(fold => (fold.StartOffset, fold.EndOffset, fold.Name)).ToArray();
+            return foldsA.SequenceEqual(foldsB);
+        }
+
+        static Editor.NoteAnalysis Full(AvaloniaEdit.Document.TextDocument document, bool inlineMath, string? noteId)
+        {
+            var full = new Editor.NoteAnalysis();
+            full.Update(document, 0, document.LineCount - 1, inlineMath, noteId, timers: null, forceFull: true);
+            return full;
+        }
+
+        static (int First, int Last) Around(AvaloniaEdit.Document.TextDocument document, int lineNumber) =>
+            (Math.Max(0, lineNumber - 2), Math.Min(document.LineCount - 1, lineNumber));
+
+        static int FindLine(AvaloniaEdit.Document.TextDocument document, string text)
+        {
+            for (var number = 1; number <= document.LineCount; number++)
+                if (document.GetText(document.GetLineByNumber(number)) == text) return number;
+            return 0;
+        }
+
+        try
+        {
+            var document = new AvaloniaEdit.Document.TextDocument(string.Join('\n', new[]
+            {
+                "# Start", "intro", "```cs", "int value = 1;", "```", "## After",
+                "- item one", "  details", "- item two", "total 2 + 3 ="
+            }));
+            var analysis = new Editor.NoteAnalysis();
+            analysis.Update(document, 0, document.LineCount - 1, inlineMath: true, noteId: "a29-note", timers: null, forceFull: true);
+            CheckCase(analysis.LastCopiedLineCount == document.LineCount, "initial analysis copies each document line once");
+            CheckCase(analysis.InlineLines.Count == 1, "plain note retains its inline result");
+
+            bool Refresh(AvaloniaEdit.Document.TextDocument target, Editor.NoteAnalysis current,
+                int first, int last, bool inlineMath, string? noteId, string name)
+            {
+                current.Invalidate(target, first, last);
+                current.Update(target, first, last, inlineMath, noteId, timers: null);
+                var equivalent = Equivalent(current, Full(target, inlineMath, noteId), target);
+                CheckCase(equivalent, name);
+                return equivalent;
+            }
+
+            var body = document.GetLineByNumber(4);
+            document.Replace(body.Offset, body.Length, "int value = 2;");
+            var range = Around(document, 4);
+            Refresh(document, analysis, range.First, range.Last, true, "a29-note", "fence body edit matches full analysis");
+
+            var opening = document.GetLineByNumber(3);
+            document.Replace(opening.Offset, opening.Length, "```py");
+            range = Around(document, 3);
+            Refresh(document, analysis, range.First, range.Last, true, "a29-note", "fence opening edit matches full analysis");
+
+            var closing = document.GetLineByNumber(5);
+            document.Replace(closing.Offset, closing.Length, "tail");
+            range = Around(document, 5);
+            Refresh(document, analysis, range.First, range.Last, true, "a29-note", "open fence edit matches full analysis");
+
+            closing = document.GetLineByNumber(5);
+            document.Replace(closing.Offset, closing.Length, "```");
+            range = Around(document, 5);
+            Refresh(document, analysis, range.First, range.Last, true, "a29-note", "fence close edit matches full analysis");
+
+            document.Insert(0, "## Inserted\n");
+            Refresh(document, analysis, 0, 2, true, "a29-note", "heading insertion matches full analysis");
+            var insertedHeading = document.GetLineByNumber(1);
+            document.Remove(insertedHeading.Offset, insertedHeading.TotalLength);
+            Refresh(document, analysis, 0, Math.Min(2, document.LineCount - 1), true, "a29-note", "heading deletion matches full analysis");
+
+            var detailsLine = FindLine(document, "  details");
+            if (detailsLine == 0) throw new InvalidOperationException("list child fixture was lost");
+            var details = document.GetLineByNumber(detailsLine);
+            document.Replace(details.Offset, details.Length, "details");
+            range = Around(document, detailsLine);
+            Refresh(document, analysis, range.First, range.Last, true, "a29-note", "list run edit matches full analysis");
+
+            var mathDocument = new AvaloniaEdit.Document.TextDocument("math\nrate = 10\ncost = rate * 3\nlunch 2 + 4");
+            var mathAnalysis = new Editor.NoteAnalysis();
+            mathAnalysis.Update(mathDocument, 0, mathDocument.LineCount - 1, inlineMath: true, noteId: "a29-math", timers: null, forceFull: true);
+            var rate = mathDocument.GetLineByNumber(2);
+            mathDocument.Replace(rate.Offset, rate.Length, "rate = 12");
+            Refresh(mathDocument, mathAnalysis, 1, 1, true, "a29-math", "later variable use matches full two-pass math analysis");
+            CheckCase(mathAnalysis.MathLines[2]?.Result?.Value == 36, "later math line reflects the edited variable");
+
+            var timerDocument = new AvaloniaEdit.Document.TextDocument("timer\n5m tea\n1m water\n5m coffee");
+            var timerAnalysis = new Editor.NoteAnalysis();
+            timerAnalysis.Update(timerDocument, 0, timerDocument.LineCount - 1, inlineMath: true, noteId: "a29-timers", timers: null, forceFull: true);
+            var water = timerDocument.GetLineByNumber(3);
+            timerDocument.Replace(water.Offset, water.Length, "5m water");
+            range = Around(timerDocument, 3);
+            Refresh(timerDocument, timerAnalysis, range.First, range.Last, true, "a29-timers", "timer duration edit matches full parsing");
+            CheckCase(timerAnalysis.TimerKeys.TryGetValue(2, out var firstTimer) && firstTimer == "a29-timers:5m:1"
+                && timerAnalysis.TimerKeys.TryGetValue(3, out var secondTimer) && secondTimer == "a29-timers:5m:2"
+                && timerAnalysis.TimerKeys.TryGetValue(4, out var thirdTimer) && thirdTimer == "a29-timers:5m:3",
+                "duplicate timer ordinals remain in document order");
+
+            var burstDocument = new AvaloniaEdit.Document.TextDocument(string.Join("\n",
+                Enumerable.Range(0, 5000).Select(index => $"ordinary line {index}")));
+            var burst = new Editor.NoteAnalysis();
+            burst.Update(burstDocument, 0, burstDocument.LineCount - 1, inlineMath: true, noteId: "a29-burst", timers: null, forceFull: true);
+            var firstEdit = burstDocument.GetLineByNumber(2500);
+            burstDocument.Replace(firstEdit.Offset, firstEdit.Length, "ordinary line 2499 edited");
+            var firstRange = Around(burstDocument, 2500);
+            burst.Invalidate(burstDocument, firstRange.First, firstRange.Last);
+            var secondEdit = burstDocument.GetLineByNumber(2501);
+            burstDocument.Replace(secondEdit.Offset, secondEdit.Length, "ordinary line 2500 edited");
+            var secondRange = Around(burstDocument, 2501);
+            burst.Invalidate(burstDocument, secondRange.First, secondRange.Last);
+            var unionFirst = Math.Min(firstRange.First, secondRange.First);
+            var unionLast = Math.Max(firstRange.Last, secondRange.Last);
+            burst.Update(burstDocument, unionFirst, unionLast, inlineMath: true, noteId: "a29-burst", timers: null);
+            CheckCase(burst.LastCopiedLineCount <= 8 && burst.LastAnalysedLineCount < 32,
+                $"5,000-line burst copies {burst.LastCopiedLineCount} and analyses {burst.LastAnalysedLineCount} lines");
+            CheckCase(Equivalent(burst, Full(burstDocument, true, "a29-burst"), burstDocument),
+                "multiple same-count edits match full analysis");
+
+            report = failures.Count == 0
+                ? "fence, heading, list, math, timer, inline and fold equivalence; two-edit 5,000-line burst stayed bounded"
+                : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+        catch (Exception ex)
+        {
+            report = string.Join("; ", failures.Append(ex.ToString()));
+            return false;
+        }
     }
 }

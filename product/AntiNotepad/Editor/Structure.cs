@@ -14,36 +14,221 @@ internal sealed class NoteStructure
 {
     public sealed record Fence(int Open, int Close, string? Language, bool Closed = true);   // 1-based; an unclosed fence runs to the last line
 
+    private readonly record struct LineSignature(bool IsBlank, int RawIndent, int HeadingLevel, bool IsFence, string? FenceLanguage);
+    private readonly record struct FoldRange(int StartLine, int EndLine);                    // inclusive, 1-based lines
+
     public List<Fence> Fences { get; } = [];
     public int[] Indent { get; private set; } = [];                       // per line (1-based), in spaces; blank lines inherit
     public bool[] InFence { get; private set; } = [];
+    private LineSignature[] _lineSignatures = [];
+    private List<FoldRange> _textNoteFolds = [];
+    private List<FoldRange> _codeNoteFolds = [];
+
+    /// <summary>Number of line signatures computed by the most recent Build or Update call.</summary>
+    public int LastAnalysedLineCount { get; private set; }
 
     public static NoteStructure Build(string[] lines)
     {
-        var s = new NoteStructure { Indent = new int[lines.Length + 2], InFence = new bool[lines.Length + 2] };
-        int openLine = 0; string? lang = null;
+        return BuildCore(lines, null, 0, -1, 0);
+    }
+
+    /// <summary>
+    /// Reuses this structure when every changed line keeps the same structural signature. Bounds are zero-based and inclusive.
+    /// A line-count change or a structural change falls back to a full rebuild.
+    /// </summary>
+    public NoteStructure Update(string[] lines, int firstChanged, int lastChanged)
+    {
+        if (lines.Length != _lineSignatures.Length) return Build(lines);
+        if (firstChanged > lastChanged)
+        {
+            if (lines.Length == 0 && firstChanged == 0 && lastChanged == -1)
+            {
+                LastAnalysedLineCount = 0;
+                return this;
+            }
+            return Build(lines);
+        }
+        if (firstChanged < 0 || lastChanged >= lines.Length) return Build(lines);
+
+        var count = lastChanged - firstChanged + 1;
+        var changedSignatures = new LineSignature[count];
+        var matches = true;
+        for (var i = firstChanged; i <= lastChanged; i++)
+        {
+            var signature = GetSignature(lines[i]);
+            changedSignatures[i - firstChanged] = signature;
+            if (signature != _lineSignatures[i]) matches = false;
+        }
+
+        if (matches)
+        {
+            LastAnalysedLineCount = count;
+            return this;
+        }
+
+        // Keep the signatures already computed for the changed region; BuildCore computes only the remaining lines.
+        return BuildCore(lines, changedSignatures, firstChanged, lastChanged, count);
+    }
+
+    private static NoteStructure BuildCore(string[] lines, LineSignature[]? knownSignatures, int knownFrom, int knownTo, int alreadyAnalysed)
+    {
+        var signatures = new LineSignature[lines.Length];
+        var analysed = alreadyAnalysed;
         for (var i = 0; i < lines.Length; i++)
         {
-            var t = lines[i].TrimStart();
-            if (t.StartsWith("```"))
+            if (knownSignatures is not null && i >= knownFrom && i <= knownTo)
             {
-                if (openLine == 0) { openLine = i + 1; lang = t[3..].Trim().ToLowerInvariant(); if (lang.Length == 0) lang = null; }
+                signatures[i] = knownSignatures[i - knownFrom];
+            }
+            else
+            {
+                signatures[i] = GetSignature(lines[i]);
+                analysed++;
+            }
+        }
+
+        var s = new NoteStructure
+        {
+            Indent = new int[lines.Length + 2],
+            InFence = new bool[lines.Length + 2],
+            _lineSignatures = signatures,
+            LastAnalysedLineCount = analysed
+        };
+
+        int openLine = 0;
+        string? lang = null;
+        for (var i = 0; i < signatures.Length; i++)
+        {
+            var signature = signatures[i];
+            if (signature.IsFence)
+            {
+                if (openLine == 0) { openLine = i + 1; lang = signature.FenceLanguage; }
                 else { s.Fences.Add(new Fence(openLine, i + 1, lang)); openLine = 0; lang = null; }
             }
-            s.InFence[i + 1] = openLine != 0 || t.StartsWith("```");
+            s.InFence[i + 1] = openLine != 0 || signature.IsFence;
         }
         if (openLine != 0) s.Fences.Add(new Fence(openLine, lines.Length, lang, Closed: false));
-        // Indent: real for text lines; blank lines take the smaller of their neighbours so guides run through gaps.
-        var raw = lines.Select(l => l.Trim().Length == 0 ? -1 : l.Length - l.TrimStart(' ', '\t').Length + l.TakeWhile(c => c is ' ' or '\t').Count(c => c == '\t') * 3).ToArray();
-        for (var i = 0; i < raw.Length; i++)
+
+        // Blank lines inherit the smaller of their nearest nonblank neighbours. Two passes keep this linear.
+        for (int i = 0, previous = 0; i < signatures.Length; i++)
         {
-            if (raw[i] >= 0) { s.Indent[i + 1] = raw[i]; continue; }
-            int prev = 0, next = 0;
-            for (var j = i - 1; j >= 0; j--) if (raw[j] >= 0) { prev = raw[j]; break; }
-            for (var j = i + 1; j < raw.Length; j++) if (raw[j] >= 0) { next = raw[j]; break; }
-            s.Indent[i + 1] = Math.Min(prev, next);
+            if (signatures[i].RawIndent >= 0)
+            {
+                previous = signatures[i].RawIndent;
+                s.Indent[i + 1] = previous;
+            }
+            else s.Indent[i + 1] = previous;
         }
+        for (int i = signatures.Length - 1, next = 0; i >= 0; i--)
+        {
+            if (signatures[i].RawIndent >= 0) next = signatures[i].RawIndent;
+            else s.Indent[i + 1] = Math.Min(s.Indent[i + 1], next);
+        }
+
+        s.CacheFoldRanges(signatures);
         return s;
+    }
+
+    private static LineSignature GetSignature(string line)
+    {
+        var trimmedStart = line.TrimStart();
+        var isFence = trimmedStart.StartsWith("```");
+        string? language = null;
+        if (isFence)
+        {
+            var value = trimmedStart[3..].Trim().ToLowerInvariant();
+            if (value.Length != 0) language = value;
+        }
+        var isBlank = line.Trim().Length == 0;
+        var rawIndent = isBlank
+            ? -1
+            : line.Length - line.TrimStart(' ', '\t').Length + line.TakeWhile(c => c is ' ' or '\t').Count(c => c == '\t') * 3;
+        return new LineSignature(isBlank, rawIndent, NoteColorizer.HeadingLevel(trimmedStart), isFence, language);
+    }
+
+    private void CacheFoldRanges(LineSignature[] signatures)
+    {
+        var count = signatures.Length;
+        var blank = new bool[count];
+        var fenceOpen = new bool[count];
+        var insideCode = new bool[count];
+        for (var i = 0; i < count; i++) blank[i] = signatures[i].IsBlank;
+        foreach (var fence in Fences)
+        {
+            fenceOpen[fence.Open - 1] = true;
+            for (var line = fence.Open + 1; line < fence.Close; line++) insideCode[line - 1] = true;
+        }
+
+        var headingFolds = new List<FoldRange>();
+        var lastContentLine = new int[count + 1];
+        for (var i = 0; i < count; i++) lastContentLine[i + 1] = blank[i] ? lastContentLine[i] : i + 1;
+
+        // The nearest qualifying blank-pair boundary at or after each line.
+        var nextGap = new int[count + 1];
+        var nearestGap = count;
+        for (var i = count - 1; i >= 0; i--)
+        {
+            if (i > 0 && blank[i] && blank[i - 1] && !InFence[i + 1]) nearestGap = i;
+            nextGap[i] = nearestGap;
+        }
+        nextGap[count] = count;
+
+        // At most six heading levels exist, so a reverse pass finds every next same-or-higher heading in linear time.
+        var latestHeadingAtLevel = new int[7];
+        Array.Fill(latestHeadingAtLevel, count);
+        for (var i = count - 1; i >= 0; i--)
+        {
+            var level = signatures[i].HeadingLevel;
+            if (level > 0 && !InFence[i + 1])
+            {
+                var boundary = count;
+                for (var candidateLevel = 1; candidateLevel <= level; candidateLevel++)
+                    boundary = Math.Min(boundary, latestHeadingAtLevel[candidateLevel]);
+                var gapFrom = Math.Min(i + 2, count);
+                boundary = Math.Min(boundary, nextGap[gapFrom]);
+                var endLine = Math.Max(i + 1, lastContentLine[boundary]);
+                if (endLine > i + 1) headingFolds.Add(new FoldRange(i + 1, endLine));
+            }
+            if (level > 0 && !InFence[i + 1]) latestHeadingAtLevel[level] = i;
+        }
+        headingFolds.Reverse();
+
+        var fenceFolds = new List<FoldRange>(Fences.Count);
+        foreach (var fence in Fences)
+            if (fence.Close > fence.Open) fenceFolds.Add(new FoldRange(fence.Open, fence.Close));
+
+        // For each nonblank line, find the next nonblank line with indentation no deeper than its own.
+        var nextAtOrLess = new int[count];
+        Array.Fill(nextAtOrLess, count);
+        var stack = new int[count];
+        var top = -1;
+        for (var i = count - 1; i >= 0; i--)
+        {
+            if (blank[i]) continue;
+            while (top >= 0 && Indent[stack[top] + 1] > Indent[i + 1]) top--;
+            if (top >= 0) nextAtOrLess[i] = stack[top];
+            stack[++top] = i;
+        }
+        var previousNonblankIndex = new int[count + 1];
+        Array.Fill(previousNonblankIndex, -1);
+        for (var i = 0; i < count; i++) previousNonblankIndex[i + 1] = blank[i] ? previousNonblankIndex[i] : i;
+
+        var textIndentFolds = new List<FoldRange>();
+        var codeIndentFolds = new List<FoldRange>();
+        for (var i = 0; i < count; i++)
+        {
+            if (blank[i] || fenceOpen[i]) continue;
+            var next = nextAtOrLess[i];
+            var endLine = previousNonblankIndex[next] + 1;
+            if (endLine <= i + 1) continue;
+
+            var range = new FoldRange(i + 1, endLine);
+            codeIndentFolds.Add(range);
+            if (!InFence[i + 1] || insideCode[i]) textIndentFolds.Add(range);
+        }
+
+        _textNoteFolds = [.. headingFolds, .. fenceFolds, .. textIndentFolds];
+        _codeNoteFolds = [.. fenceFolds, .. codeIndentFolds];
     }
 
     /// <summary>
@@ -52,50 +237,16 @@ internal sealed class NoteStructure
     /// </summary>
     public IEnumerable<NewFolding> Folds(TextDocument doc, string[] lines, bool codeNote)
     {
-        var folds = new List<NewFolding>();
-        int EndOf(int line) => doc.GetLineByNumber(line).EndOffset;
-        int LastContent(int from, int to) { while (to > from && lines[to - 1].Trim().Length == 0) to--; return to; }
-        // Headings (not in code notes, not inside fences).
-        if (!codeNote)
+        var ranges = codeNote ? _codeNoteFolds : _textNoteFolds;
+        var folds = new List<NewFolding>(ranges.Count);
+        foreach (var range in ranges)
         {
-            for (var i = 0; i < lines.Length; i++)
-            {
-                if (InFence[i + 1]) continue;
-                var level = NoteColorizer.HeadingLevel(lines[i].TrimStart());
-                if (level == 0) continue;
-                var end = lines.Length;
-                for (var j = i + 1; j < lines.Length; j++)
-                {
-                    if (InFence[j + 1]) continue;
-                    var l = NoteColorizer.HeadingLevel(lines[j].TrimStart());
-                    if (l > 0 && l <= level) { end = j; break; }
-                    // Two blank lines in a row close the section, so a heading never swallows the rest of the note.
-                    if (j > i + 1 && lines[j].Trim().Length == 0 && lines[j - 1].Trim().Length == 0) { end = j; break; }
-                }
-                end = LastContent(i + 1, end);
-                if (end > i + 1) folds.Add(new NewFolding(EndOf(i + 1), EndOf(end)) { Name = " … " });
-            }
+            var start = doc.GetLineByNumber(range.StartLine).EndOffset;
+            var end = doc.GetLineByNumber(range.EndLine).EndOffset;
+            if (end > start) folds.Add(new NewFolding(start, end) { Name = " … " });
         }
-        foreach (var f in Fences)
-            if (f.Close > f.Open) folds.Add(new NewFolding(EndOf(f.Open), EndOf(f.Close)) { Name = " … " });
-        // Indented children: a line followed by deeper lines (lists anywhere, any indentation in code).
-        for (var i = 0; i < lines.Length; i++)
-        {
-            if (lines[i].Trim().Length == 0 || (!codeNote && InFence[i + 1] && !Fences.Any(f => f.Open == i + 1) && !InsideCode(i + 1))) continue;
-            var me = Indent[i + 1];
-            var end = i + 1;
-            for (var j = i + 1; j < lines.Length; j++)
-            {
-                if (lines[j].Trim().Length == 0) continue;
-                if (Indent[j + 1] <= me) break;
-                end = j + 1;
-            }
-            if (end > i + 1 && !Fences.Any(f => f.Open == i + 1)) folds.Add(new NewFolding(EndOf(i + 1), EndOf(end)) { Name = " … " });
-        }
-        return folds.Where(f => f.EndOffset > f.StartOffset).OrderBy(f => f.StartOffset);
+        return folds.OrderBy(f => f.StartOffset);
     }
-
-    private bool InsideCode(int line) => Fences.Any(f => line > f.Open && line < f.Close);
 }
 
 /// <summary>Palette-mapped AvaloniaEdit highlighting definitions, shared by code notes and fenced blocks.</summary>

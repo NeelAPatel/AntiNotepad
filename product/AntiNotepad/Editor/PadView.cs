@@ -1,5 +1,6 @@
 using Avalonia.Input.Platform;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
@@ -31,13 +32,11 @@ internal sealed class PadView : Grid
     private static readonly Regex ListPrefix = new(@"^(\s*)((?:[-*+]\s+)?\[[ xX]\]\s?|[-*+]\s|([0-9]+)([.)])\s)", RegexOptions.Compiled);
 
     private readonly Timers _timers;
-    private readonly Dictionary<int, string> _timerKeys = [];
     private Action? _timerTick;
     private readonly TextBlock _hint;
     private readonly ResultRenderer _results;
     private readonly SmoothCaret _caret;
-    private IReadOnlyList<LineEval?> _math = [];
-    private readonly Dictionary<int, LineEval> _inline = [];
+    private readonly NoteAnalysis _analysis = new();
     private FoldingManager? _folding;
     private PaperLayer _paper = null!;
     private ChevronGutter? _gutter;
@@ -51,6 +50,11 @@ internal sealed class PadView : Grid
     private Anim.Handle? _arrive;
     private int _bindToken;
     private int _lastCaretLine;
+    private int _observedLineCount;
+    private int? _pendingFirstChanged;
+    private int _pendingLastChanged;
+    private int _pendingChangeCount;
+    private bool _pendingFullAnalysis;
 
     public TextEditor Editor { get; }
     public Note? Note { get; private set; }
@@ -140,7 +144,15 @@ internal sealed class PadView : Grid
         PointerExited += (_, _) => { if (_gutter is not null) _gutter.ShowAll = false; };
         Editor.TemplateApplied += (_, _) => Dispatcher.UIThread.Post(ClearBackgrounds, DispatcherPriority.Loaded);
         Editor.Loaded += (_, _) => ClearBackgrounds();
-        _analyse.Tick += (_, _) => { _analyse.Stop(); Analyse(); };
+        _analyse.Tick += (_, _) =>
+        {
+            _analyse.Stop();
+            var first = _pendingFirstChanged ?? 0;
+            var last = _pendingFirstChanged is null ? Editor.Document.LineCount - 1 : _pendingLastChanged;
+            var forceFull = _pendingFullAnalysis;
+            ClearPendingAnalysis();
+            Analyse(first, last, forceFull);
+        };
         _timerTick = () => { if (Mode == NoteMode.Timer) view.InvalidateLayer(KnownLayer.Selection); };
         _timers.Tick += _timerTick;
         ApplyLook(palette, settings);
@@ -246,6 +258,9 @@ internal sealed class PadView : Grid
         Flush();
         _binding = true;
         if (Editor.Document is { } old) old.Changed -= OnDocumentChanged;
+        _analyse.Stop();
+        _analysis.Reset();
+        ClearPendingAnalysis();
         Note = note;
         var locationError = Program.NotesLocationError;
         if (locationError is null) _ = note.PeekText();
@@ -265,6 +280,7 @@ internal sealed class PadView : Grid
         _gutter = null;
         Editor.Document = doc;
         doc.Changed += OnDocumentChanged;
+        _observedLineCount = doc.LineCount;
         _folding = Settings.Folding ? FoldingManager.Install(Editor.TextArea) : null;
         if (_folding is not null) _gutter = ChevronGutter.Replace(Editor.TextArea, _folding, this);
         StyleFoldingMargin();
@@ -333,6 +349,8 @@ internal sealed class PadView : Grid
         if (_timerTick is { } tick) { _timers.Tick -= tick; _timerTick = null; }
         ClearEdgeFade();
         _analyse.Stop();
+        _analysis.Reset();
+        ClearPendingAnalysis();
         _caret.Stop();
         _private.Clear();
     }
@@ -363,53 +381,75 @@ internal sealed class PadView : Grid
     private void OnDocumentChanged(object? sender, DocumentChangeEventArgs e)
     {
         if (_binding) return;
+        var doc = Editor.Document;
+        var (first, last) = ChangedLineRange(doc, e);
+        _analysis.Invalidate(doc, first, last);
+        var lineCountChanged = doc.LineCount != _observedLineCount;
+        _observedLineCount = doc.LineCount;
         // Long notes: analysis (modes, fences, folds, answers) waits for a typing pause instead of running per keystroke.
-        if (Editor.Document.LineCount > 1500) { _analyse.Stop(); _analyse.Start(); }
-        else Analyse();
+        if (doc.LineCount > 1500)
+        {
+            if (_pendingFirstChanged is null)
+            {
+                _pendingFirstChanged = first;
+                _pendingLastChanged = last;
+            }
+            else
+            {
+                _pendingFirstChanged = Math.Min(_pendingFirstChanged.Value, first);
+                _pendingLastChanged = Math.Max(_pendingLastChanged, last);
+            }
+            _pendingChangeCount++;
+            // A second line-count change can move an earlier pending range. Fall back to a full pass rather than risk stale line maps.
+            if (lineCountChanged && _pendingChangeCount > 1) _pendingFullAnalysis = true;
+            _analyse.Stop(); _analyse.Start();
+        }
+        else
+        {
+            var hadPending = _pendingFirstChanged is not null;
+            _analyse.Stop();
+            ClearPendingAnalysis();
+            Analyse(hadPending ? 0 : first, hadPending ? doc.LineCount - 1 : last, hadPending || lineCountChanged);
+        }
         Edited?.Invoke();
     }
 
     private readonly DispatcherTimer _analyse = new() { Interval = TimeSpan.FromMilliseconds(140) };
 
-    private void Analyse()
+    private static (int First, int Last) ChangedLineRange(TextDocument doc, DocumentChangeEventArgs e)
+    {
+        var startOffset = Math.Clamp(e.Offset, 0, doc.TextLength);
+        var endOffset = Math.Clamp(e.Offset + e.InsertionLength, 0, doc.TextLength);
+        var first = Math.Max(0, doc.GetLineByOffset(startOffset).LineNumber - 2);
+        var last = Math.Min(doc.LineCount - 1, doc.GetLineByOffset(endOffset).LineNumber);
+        return (first, Math.Max(first, last));
+    }
+
+    private void ClearPendingAnalysis()
+    {
+        _pendingFirstChanged = null;
+        _pendingLastChanged = 0;
+        _pendingChangeCount = 0;
+        _pendingFullAnalysis = false;
+    }
+
+    private void Analyse() => Analyse(0, Editor.Document.LineCount - 1, forceFull: true);
+
+    private void Analyse(int firstChanged, int lastChanged, bool forceFull = false)
     {
         var doc = Editor.Document;
-        var text = doc.Text;
-        var (mode, keyword, argument) = Modes.Detect(text);
-        var changed = mode != Mode || argument != CodeLanguage;
-        Mode = mode; CodeLanguage = argument; ModeKeywordLength = keyword;
-        var lines = new string[doc.LineCount];
-        for (var i = 0; i < lines.Length; i++) lines[i] = doc.GetText(doc.GetLineByNumber(i + 1));
-        _timerKeys.Clear();
-        Structure = NoteStructure.Build(lines);
+        var previousMode = Mode;
+        var previousLanguage = CodeLanguage;
+        _analysis.Update(doc, firstChanged, lastChanged, Settings.InlineMath, Note?.Id, _timers, forceFull);
+        Mode = _analysis.Mode;
+        CodeLanguage = _analysis.CodeLanguage;
+        ModeKeywordLength = _analysis.ModeKeywordLength;
+        Structure = _analysis.Structure!;
+        var lines = _analysis.Lines;
+        var changed = previousMode != Mode || previousLanguage != CodeLanguage;
         _fences.UpdateStructure(Structure);
         UpdateFolds(lines);
-        _math = mode == NoteMode.Math ? EvaluateMath(lines) : [];
-        _inline.Clear();
-        if (mode == NoteMode.Plain && Settings.InlineMath)
-            for (var i = 0; i < lines.Length; i++)
-                if (lines[i].TrimEnd().EndsWith('=')
-                    && (Calculator.EvaluateInlineLine(StripListMarker(lines[i])) ?? Calculator.EvaluateInlineLine(BlankLabel(StripListMarker(lines[i])))) is { } result
-                    && (result.Result is not null || result.ErrorReason == CalcErrorReason.MixedCurrencies)) _inline[i + 1] = result;
-        if (Note is { } note)
-        {
-            var timerKeys = new HashSet<string>(StringComparer.Ordinal);
-            if (mode == NoteMode.Timer)
-            {
-                // Count position among timers of the same duration, so adding or removing other timers never resets a running one.
-                var ordinals = new Dictionary<string, int>(StringComparer.Ordinal);
-                for (var i = 1; i < lines.Length; i++)
-                {
-                    if (!Timers.TryParse(lines[i], out var d, out var label, out var durationText)) continue;
-                    var key = TimerKey(note.Id, durationText, ordinals[durationText] = ordinals.GetValueOrDefault(durationText) + 1);
-                    _timerKeys[i + 1] = key;
-                    timerKeys.Add(key);
-                    if (!_timers.IsDone(key)) _timers.Ensure(key, d, label, note.Id);
-                }
-            }
-            _timers.Reconcile(note.Id, timerKeys);
-        }
-        _hint.IsVisible = _loadHint is not null || text.Length == 0;
+        _hint.IsVisible = _loadHint is not null || doc.TextLength == 0;
         _hint.Text = _loadHint ?? (Note is { Slot: > 0 } slot
             ? $"Slot {slot.Slot} is empty.\n\nType here, or press Ctrl+Shift+{slot.Slot}\non any note to keep it in this slot."
             : "Start typing.\n\nLine 1 can switch modes:\nmath · list · timer · code py · clipboard");
@@ -421,7 +461,7 @@ internal sealed class PadView : Grid
     /// Math notes with prose labels ("lunch 12 + 3"): lines that fail are retried with the leading words blanked,
     /// keeping column offsets so token colours still line up. Bullets are ignored the same way.
     /// </summary>
-    private static IReadOnlyList<LineEval?> EvaluateMath(string[] lines)
+    internal static IReadOnlyList<LineEval?> EvaluateMath(string[] lines)
     {
         var cleaned = lines.Select((l, i) => i == 0 ? l : StripListMarker(l)).ToArray();
         var first = Calculator.EvaluateNote(cleaned);
@@ -467,10 +507,10 @@ internal sealed class PadView : Grid
     private void Redraw() => Editor.TextArea.TextView.Redraw();
 
     public bool InFence(int line) => Structure is { } s && line < s.InFence.Length && s.InFence[line];
-    public LineEval? MathLine(int line) => line - 1 < _math.Count ? _math[line - 1] : null;
-    public LineEval? InlineLine(int line) => _inline.GetValueOrDefault(line);
+    public LineEval? MathLine(int line) => line - 1 < _analysis.MathLines.Count ? _analysis.MathLines[line - 1] : null;
+    public LineEval? InlineLine(int line) => _analysis.InlineLines.GetValueOrDefault(line);
     public CalcResult? InlineResult(int line) => InlineLine(line)?.Result;
-    internal static string TimerKey(string noteId, string durationText, int ordinal) => $"{noteId}:{durationText}:{ordinal}";
+    internal static string TimerKey(string noteId, string durationText, int ordinal) => NoteAnalysis.TimerKey(noteId, durationText, ordinal);
 
     /// <summary>The chip to draw at a line's end: text, kind, colour, and the value clicking acts on.</summary>
     public (string Text, string Kind, Color Color, string Value)? ChipFor(int line)
@@ -488,7 +528,7 @@ internal sealed class PadView : Grid
                 return ("mixed currencies", "error", p.Error, "");
             case NoteMode.Timer when line > 1:
                 {
-                    if (!_timerKeys.TryGetValue(line, out var key)) return null;
+                    if (!_analysis.TimerKeys.TryGetValue(line, out var key)) return null;
                     if (_timers.IsDone(key)) return ("done", "timer:done", p.Confirm, key);
                     if (_timers.Get(key) is not { } t) return null;
                     // The kind carries the icon ResultRenderer draws before the time (drawn, not font glyphs).
@@ -586,7 +626,7 @@ internal sealed class PadView : Grid
     private void ToggleTimerAtCaret()
     {
         var text = Editor.Document.GetText(Editor.Document.GetLineByNumber(CaretLine));
-        if (Timers.TryParse(text, out var d, out var label) && _timerKeys.TryGetValue(CaretLine, out var key))
+        if (Timers.TryParse(text, out var d, out var label) && _analysis.TimerKeys.TryGetValue(CaretLine, out var key))
         {
             if (!ResetDoneTimer(key)) _timers.Toggle(_timers.Ensure(key, d, label, Note?.Id ?? ""));
         }
@@ -596,7 +636,7 @@ internal sealed class PadView : Grid
     private bool ResetDoneTimer(string key)
     {
         if (!_timers.ClearDone(key)) return false;
-        var line = _timerKeys.FirstOrDefault(pair => pair.Value == key).Key;
+        var line = _analysis.TimerKeys.FirstOrDefault(pair => pair.Value == key).Key;
         if (line > 1)
         {
             var text = Editor.Document.GetText(Editor.Document.GetLineByNumber(line));
@@ -609,7 +649,7 @@ internal sealed class PadView : Grid
     {
         if (lineNumber <= 1) return;
         var text = Editor.Document.GetText(Editor.Document.GetLineByNumber(lineNumber));
-        if (Timers.TryParse(text, out var d, out var label) && _timerKeys.TryGetValue(lineNumber, out var key) && !_timers.IsDone(key))
+        if (Timers.TryParse(text, out var d, out var label) && _analysis.TimerKeys.TryGetValue(lineNumber, out var key) && !_timers.IsDone(key))
         {
             var entry = _timers.Ensure(key, d, label, Note?.Id ?? "");
             if (entry.EndsAt is null) { _timers.Start(entry); Toast?.Invoke($"Timer started · {Timers.Format(d)}{(label.Length > 0 ? " · " + label : "")}"); }
@@ -813,4 +853,261 @@ internal sealed class PadView : Grid
     private void OnTextEntered(object? sender, TextInputEventArgs e) => Completion.OnTextEntered(this, e.Text);
 
     public void RaiseToast(string text) => Toast?.Invoke(text);
+}
+
+/// <summary>Cached per-document analysis shared by the pad and headless selftests.</summary>
+internal sealed class NoteAnalysis
+{
+    private sealed record CachedLine(string Text);
+    private sealed record TimerLine(TimeSpan Duration, string Label, string DurationText);
+
+    private ConditionalWeakTable<DocumentLine, CachedLine> _lineText = new();
+    private TextDocument? _document;
+    private int _previousLineCount;
+    private bool _hasProcessed;
+    private bool _previousInlineMath;
+    private TimerLine?[] _timerLines = [];
+    private readonly Dictionary<int, LineEval> _inlineLines = [];
+    private readonly Dictionary<int, string> _timerKeys = [];
+    private IReadOnlyList<LineEval?> _mathLines = [];
+
+    public NoteMode Mode { get; private set; }
+    public string? CodeLanguage { get; private set; }
+    public int ModeKeywordLength { get; private set; }
+    public NoteStructure? Structure { get; private set; }
+    public string[] Lines { get; private set; } = [];
+    public IReadOnlyList<LineEval?> MathLines => _mathLines;
+    public IReadOnlyDictionary<int, LineEval> InlineLines => _inlineLines;
+    public IReadOnlyDictionary<int, string> TimerKeys => _timerKeys;
+    /// <summary>DocumentLine.GetText calls performed by the most recent update.</summary>
+    public int LastCopiedLineCount { get; private set; }
+    /// <summary>Changed structure signatures and inline, math, or timer lines processed by the most recent update.</summary>
+    public int LastAnalysedLineCount { get; private set; }
+
+    /// <summary>Invalidate text for lines changed by a document event. Line objects keep cache identity across shifts.</summary>
+    public void Invalidate(TextDocument document, int firstChanged, int lastChanged)
+    {
+        if (!ReferenceEquals(document, _document)) return;
+        if (document.LineCount == 0) return;
+        firstChanged = Math.Clamp(firstChanged, 0, document.LineCount - 1);
+        lastChanged = Math.Clamp(lastChanged, firstChanged, document.LineCount - 1);
+        for (var i = firstChanged; i <= lastChanged; i++)
+            _lineText.Remove(document.GetLineByNumber(i + 1));
+    }
+
+    /// <summary>Drop document and derived state. The next update is a full analysis and text snapshot.</summary>
+    public void Reset()
+    {
+        _lineText = new ConditionalWeakTable<DocumentLine, CachedLine>();
+        _document = null;
+        _previousLineCount = 0;
+        _hasProcessed = false;
+        _previousInlineMath = false;
+        _timerLines = [];
+        _inlineLines.Clear();
+        _timerKeys.Clear();
+        _mathLines = [];
+        Structure = null;
+        Lines = [];
+        Mode = NoteMode.Plain;
+        CodeLanguage = null;
+        ModeKeywordLength = 0;
+        LastCopiedLineCount = 0;
+        LastAnalysedLineCount = 0;
+    }
+
+    public void Update(TextDocument document, int firstChanged, int lastChanged, bool inlineMath,
+        string? noteId, Timers? timers, bool forceFull = false)
+    {
+        var newDocument = !ReferenceEquals(document, _document);
+        if (newDocument)
+        {
+            Reset();
+            _document = document;
+            forceFull = true;
+        }
+
+        var oldMode = Mode;
+        var oldInlineMath = _previousInlineMath;
+        var previousCount = _previousLineCount;
+        LastCopiedLineCount = 0;
+        Lines = ReadLines(document);
+        if (Lines.Length == 0) Lines = [string.Empty];
+
+        var detected = Modes.Detect(Lines[0]);
+        Mode = detected.Mode;
+        CodeLanguage = detected.Argument;
+        ModeKeywordLength = detected.KeywordLength;
+        var lineCountDelta = Lines.Length - previousCount;
+        var structuralModeChanged = _hasProcessed && oldMode != Mode;
+        var inlineSettingChanged = _hasProcessed && oldInlineMath != inlineMath;
+
+        if (!_hasProcessed || forceFull || firstChanged < 0 || lastChanged < firstChanged
+            || lastChanged >= Lines.Length || previousCount == 0)
+        {
+            forceFull = true;
+            firstChanged = 0;
+            lastChanged = Lines.Length - 1;
+        }
+        else
+        {
+            var oldLastChanged = lastChanged - lineCountDelta;
+            if (oldLastChanged < firstChanged - 1 || oldLastChanged >= previousCount)
+            {
+                forceFull = true;
+                firstChanged = 0;
+                lastChanged = Lines.Length - 1;
+            }
+        }
+
+        var structuralWork = 0;
+        if (forceFull || Structure is null)
+        {
+            Structure = NoteStructure.Build(Lines);
+            structuralWork = Structure.LastAnalysedLineCount;
+        }
+        else
+        {
+            Structure = Structure.Update(Lines, firstChanged, lastChanged);
+            structuralWork = Structure.LastAnalysedLineCount;
+        }
+
+        var inlineWork = 0;
+        if (Mode == NoteMode.Plain && inlineMath)
+        {
+            var fullInline = forceFull || structuralModeChanged || inlineSettingChanged || oldMode != NoteMode.Plain;
+            if (fullInline) _inlineLines.Clear();
+            else ShiftInlineLines(firstChanged, lastChanged, lineCountDelta);
+
+            var from = fullInline ? 0 : firstChanged;
+            var to = fullInline ? Lines.Length - 1 : lastChanged;
+            for (var i = from; i <= to; i++)
+            {
+                _inlineLines.Remove(i + 1);
+                inlineWork++;
+                if (!Lines[i].TrimEnd().EndsWith('=')) continue;
+                var marked = PadView.StripListMarker(Lines[i]);
+                if ((Calculator.EvaluateInlineLine(marked) ?? Calculator.EvaluateInlineLine(PadView.BlankLabel(marked))) is { } result
+                    && (result.Result is not null || result.ErrorReason == CalcErrorReason.MixedCurrencies))
+                    _inlineLines[i + 1] = result;
+            }
+        }
+        else _inlineLines.Clear();
+
+        if (Mode == NoteMode.Math)
+        {
+            // Variables and prose-label retry semantics can affect later lines, so math deliberately keeps the full pass.
+            _mathLines = PadView.EvaluateMath(Lines);
+        }
+        else _mathLines = [];
+
+        var timerWork = UpdateTimers(firstChanged, lastChanged, lineCountDelta, forceFull || oldMode != NoteMode.Timer,
+            noteId, timers);
+        LastAnalysedLineCount = structuralWork + inlineWork + timerWork + (Mode == NoteMode.Math ? Lines.Length : 0);
+        _previousLineCount = Lines.Length;
+        _previousInlineMath = inlineMath;
+        _hasProcessed = true;
+    }
+
+    private string[] ReadLines(TextDocument document)
+    {
+        var lines = new string[document.LineCount];
+        for (var i = 0; i < lines.Length; i++)
+        {
+            var documentLine = document.GetLineByNumber(i + 1);
+            if (!_lineText.TryGetValue(documentLine, out var cached))
+            {
+                cached = new CachedLine(document.GetText(documentLine));
+                _lineText.Add(documentLine, cached);
+                LastCopiedLineCount++;
+            }
+            lines[i] = cached.Text;
+        }
+        return lines;
+    }
+
+    private void ShiftInlineLines(int firstChanged, int lastChanged, int lineCountDelta)
+    {
+        var oldLastChanged = lastChanged - lineCountDelta;
+        if (lineCountDelta == 0)
+        {
+            for (var line = firstChanged; line <= lastChanged; line++) _inlineLines.Remove(line + 1);
+            return;
+        }
+        var shifted = new Dictionary<int, LineEval>();
+        foreach (var pair in _inlineLines.ToArray())
+        {
+            var zeroBased = pair.Key - 1;
+            if (zeroBased >= firstChanged && zeroBased <= oldLastChanged) continue;
+            var shiftedLine = zeroBased > oldLastChanged ? zeroBased + lineCountDelta : zeroBased;
+            if (shiftedLine >= 0 && shiftedLine < Lines.Length) shifted[shiftedLine + 1] = pair.Value;
+        }
+        _inlineLines.Clear();
+        foreach (var pair in shifted) _inlineLines[pair.Key] = pair.Value;
+    }
+
+    private int UpdateTimers(int firstChanged, int lastChanged, int lineCountDelta, bool forceFull,
+        string? noteId, Timers? timers)
+    {
+        _timerKeys.Clear();
+        var hasTimerNote = Mode == NoteMode.Timer;
+        if (!hasTimerNote)
+        {
+            _timerLines = [];
+            if (noteId is not null) timers?.Reconcile(noteId, Array.Empty<string>());
+            return 0;
+        }
+
+        var oldCount = _timerLines.Length;
+        var next = new TimerLine?[Lines.Length];
+        var parsed = 0;
+
+        if (!forceFull && oldCount > 0)
+        {
+            var oldLastChanged = lastChanged - lineCountDelta;
+            if (oldLastChanged >= firstChanged - 1 && oldLastChanged < oldCount)
+            {
+                var prefixEnd = Math.Min(firstChanged, Math.Min(oldCount, next.Length));
+                if (prefixEnd > 0) Array.Copy(_timerLines, 0, next, 0, prefixEnd);
+                for (var oldIndex = Math.Max(0, oldLastChanged + 1); oldIndex < oldCount; oldIndex++)
+                {
+                    var newIndex = oldIndex + lineCountDelta;
+                    if (newIndex >= 0 && newIndex < next.Length) next[newIndex] = _timerLines[oldIndex];
+                }
+            }
+            else forceFull = true;
+        }
+
+        var from = forceFull ? 1 : Math.Max(1, firstChanged);
+        var to = forceFull ? Lines.Length - 1 : Math.Min(Lines.Length - 1, lastChanged);
+        for (var i = from; i <= to; i++)
+        {
+            parsed++;
+            if (Timers.TryParse(Lines[i], out var duration, out var label, out var durationText))
+                next[i] = new TimerLine(duration, label, durationText);
+        }
+
+        _timerLines = next;
+        var timerKeys = new HashSet<string>(StringComparer.Ordinal);
+        if (noteId is not null && hasTimerNote)
+        {
+            var ordinals = new Dictionary<string, int>(StringComparer.Ordinal);
+            for (var i = 1; i < _timerLines.Length; i++)
+            {
+                if (_timerLines[i] is not { } timerLine) continue;
+                var ordinal = ordinals[timerLine.DurationText] = ordinals.GetValueOrDefault(timerLine.DurationText) + 1;
+                var key = TimerKey(noteId, timerLine.DurationText, ordinal);
+                _timerKeys[i + 1] = key;
+                timerKeys.Add(key);
+                if (timers is not null && !timers.IsDone(key))
+                    timers.Ensure(key, timerLine.Duration, timerLine.Label, noteId);
+            }
+        }
+
+        if (noteId is not null) timers?.Reconcile(noteId, timerKeys);
+        var keyLinesExamined = noteId is not null ? Math.Max(0, Lines.Length - 1) : 0;
+        return Math.Max(parsed, keyLinesExamined);
+    }
+
+    internal static string TimerKey(string noteId, string durationText, int ordinal) => $"{noteId}:{durationText}:{ordinal}";
 }
