@@ -13,7 +13,7 @@ Newest first. History before 2026-10-23 (overnight build log and write-up) is in
   text masked out to 40, half at 46, back by 52), never a solid or gradient band; the window material shows through.
   The overlay/float top gap is 40 px of scrollable whitespace before the document, not part of line 1. Toolbar glyphs
   are centered by their ink. Rejected in the lab: an Acrylic popup window for the pill (glitchy, wrong corners), the
-  feathered gradient, Mica for the pill. A dev-only Lab row still compares the solid pill with blur behind it.
+  feathered gradient, Mica for the pill, and blur behind the pill (user picked solid; A36 removed the lab).
 - **Native window** (user decision; implementation reverted): the pad is the product and must meet every native Windows 11
   window expectation, while its top stays chrome-free (no title text or caption buttons): Windows-drawn rounded corners,
   shadow, border, resize edges and native open/close/minimize/restore animations; Snap, Maximize, Alt+Tab while open or

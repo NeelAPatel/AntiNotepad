@@ -357,15 +357,6 @@ internal sealed partial class SettingsWindow : Window
             Row(null, "Colored menu icons", "Tint a few menu icons with your accent", () => Toggle(S.MenuColorIcons, v => Set(() => S.MenuColorIcons = v), "Colored menu icons")),
             Row(null, "Dim when pinned", "A pinned pad fades back while you work elsewhere", () => Toggle(S.DimWhenPinned, v => Set(() => S.DimWhenPinned = v), "Dim when pinned")),
         ]));
-
-        if (Program.IsDev)
-        {
-            page.Children.Add(Group("Lab"));
-            page.Children.Add(Card(
-                Row(null, "Pill material", "Runtime only. Compare the opaque Surface with blur behind the pill.",
-                    () => Seg([("solid", "Solid"), ("blur", "Blur behind")],
-                        _pad.LabPillMaterial, _pad.SetLabPillMaterial))));
-        }
     }
 
     // Solid switches to software rendering (about 80 MB less memory), which needs a restart either way.

@@ -86,7 +86,7 @@ internal sealed partial class PadWindow
         var root = new Grid();
         root.Children.Add(_tint);
         root.Children.Add(_content);
-        InitializeMaterialLabVisuals();
+        InitializeTopBlurVisuals();
         root.Children.Add(_topLayer);
         root.Children.Add(_bottomLayer);
         root.Children.Add(_toast);
@@ -105,7 +105,7 @@ internal sealed partial class PadWindow
         _top.PointerEntered += (_, _) => WakeChrome(hold: true);
         _chromeSleep.Tick += (_, _) => { _chromeSleep.Stop(); SleepChrome(soon: false); };
         _toastTimer.Tick += (_, _) => { _toastTimer.Stop(); HideToast(); };
-        InitializeMaterialLab();
+        InitializeTopBlur();
     }
 
     private PadView NewPane()
@@ -222,14 +222,7 @@ internal sealed partial class PadWindow
             Avalonia.Automation.AutomationProperties.SetName(b, $"Slot {i}");
             row.Children.Add(b);
         }
-        if (_labPillVisualHost is { } visualHost && _labPillGroup is { } pillGroup)
-        {
-            visualHost.Children.Clear();
-            visualHost.Children.Add(pillGroup);
-            visualHost.Children.Add(row);
-            _pill.Child = visualHost;
-        }
-        else _pill.Child = row;
+        _pill.Child = row;
     }
 
     // ---------- chrome visibility: present when the mouse moves, gone while typing ----------
@@ -283,7 +276,7 @@ internal sealed partial class PadWindow
             Grid.SetRow(_top, 0);
             _content.Children.Insert(0, _top);
         }
-        ApplyLabMaterials();
+        ApplyTopBlur();
     }
 
     /// <summary>Sliding styles: the top bar shows within 20 px of the top edge; the pager within 20 px (overlay) or 8 px (float) of the bottom.</summary>

@@ -519,7 +519,7 @@ internal sealed partial class PadWindow : Window
         if (!Equals(_stylesPalette, _palette)) { Kit.InputStyles(Styles, _palette); _stylesPalette = _palette; }
         RebuildChrome();
         ApplyBars();
-        ApplyLabMaterials();
+        ApplyTopBlur();
         if (_overlay is { } current) ReopenOverlay(current);
         _settingsWindow?.SyncLook();
     }

@@ -80,7 +80,6 @@ internal static class ChromeTokens
         public const double ClearMaskAlpha = 0;
         public const double BlurRadius = 10;
         public const double TintAlpha = 0.4;
-        public const double BlurTintAlpha = 0.78;
 
         public static double DensePosition => DenseStop / ClearStop;
         public static double MidpointStop => DenseStop + (ClearStop - DenseStop) * Midpoint;
