@@ -14,6 +14,9 @@ Product: AntiNotepad (`product/AntiNotepad`).
   - A31-no-windows-show-animation (user request): Windows' own open/close animation never plays on pad show/hide; the app's
     own fade and drop-down slide stay.
   A30 and A31 both touch `UI/PadWindow.cs`; the manager resolves overlap at merge.
+  - A31 returned and passed review (DWMWA_TRANSITIONS_FORCEDISABLED on the pad and the taskbar stand-in at creation; 3 small
+    edits, no selftest since it isn't checkable headless). Merged into dev (0 warnings, SELFTEST PASS); dev copy relaunched.
+    Waiting on the user's live test. A29 and A30 still running.
 - A28-editor-render-memory (A1-7, A1-9, A1-10; Sol director + 3 luna workers, worktree `../AntiQuickPad-wt/A28-editor-render-memory`)
   returned 2026-10-25: 0 warnings, SELFTEST PASS. Review accepted the render caches; one bug found: in notes over 1500 lines the
   fence color cache can keep a stale code-block body after an edit (hit by document version alone). A28-fence-cache-bounds-fix
