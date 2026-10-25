@@ -19,9 +19,12 @@ Product: AntiNotepad (`product/AntiNotepad`).
 - Version 0.6.0 "untested" (V06-untested-version): dev merged into `main`, tag `antinotepad-v0.6.0-untested` (2026-10-24).
   - Dev copy relaunched on fresh data (0.6.0-untested, "AntiNotepad (dev)", blue icon); demo notes seeded, opens slot 5.
     The previous dev copy stopped unexplained when prod was quit (no crash or exit logged); watch for it.
-  - Prod is STOPPED (quit for the upgrade) and still 0.5.0; its real notes in `%LOCALAPPDATA%\AntiNotepad` are untouched.
-    The upgrade was not run: this session's shells have AppData writes redirected into the Claude package store
-    (`docs/dev-loop.md`). The user runs the backup and `tools/install.ps1` from a normal Windows Terminal.
+  - Prod upgraded to 0.6.0-untested by the user (build/prod-upgrade.ps1 from Windows Terminal): old data in
+    `%LOCALAPPDATA%\AntiNotepad-backup-20261024-215228`, old install in `Programs\AntiNotepad.previous-*`; fresh notes in
+    `Documents\AntiNotepad` with the demo notes.
+  - Live test (computer use, 2026-10-24): demo notes, scrolling, Ctrl+F, dev name/icon (Task Manager, tray, Settings button) pass.
+    Taskbar setting fails: the real pad never gets a button (While visible = Never; Always only while hidden); the row sits inside
+    the Open at expander. Dispatched A22-taskbar-button-fixes (Sol). An elevated Task Manager in front blocks computer-use input.
   - Backups made from Claude sessions exist only in `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\`:
     `AntiNotepad-backup-20261024-155646` (stale Oct 22-23 data) and `Antipad-backup-2026-10-23`. Kept; don't delete.
 - A6-audit-decisions merged into dev (2026-10-24), together with A5-audit-refresh. It applies the user's 8 audit decisions
