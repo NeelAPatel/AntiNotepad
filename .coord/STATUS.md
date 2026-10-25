@@ -4,6 +4,9 @@ Updated: 2026-10-24
 Product: AntiNotepad (`product/AntiNotepad`).
 
 ## Now
+- A27-settings-search-build-matches dispatched (2026-10-24, worker luna xhigh) in worktree
+  `../AntiQuickPad-wt/A27-settings-search-build-matches` on `feat/A27-settings-search-build-matches`: the proper A1-12 fix,
+  Settings search builds only matching rows, with no duplicated row catalog. Manager reviews the diff; the user tests live.
 - A14 to A21 merged into dev (2026-10-24, HEAD after A17). Dev builds with 0 warnings and passes SELFTEST. Manager reviewed
   each; no live UI check was possible this round (no Computer Use), so every item below still needs one.
   - Audit batch 1: A14-swipe-close-cancel (A1-13), A15-startup-quit-pending (A1-15), A16-staged-upgrade-rollback (A1-17),

@@ -52,19 +52,42 @@ internal sealed partial class SettingsWindow
     }
 
     /// <summary>Icon, title and an optional description on the left; the control on the right.</summary>
-    private Border Row(Control? icon, string title, string? description, Control? control)
+    private Border? Row(Func<Control?>? icon, string title, string? description, Func<Control?>? control,
+        Func<string?>? describe = null, Func<string, bool>? descriptionMatches = null)
     {
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto") };
-        grid.Children.Add(new Border { Width = 20, Height = 20, Margin = new Thickness(0, 0, 16, 0), Child = icon, VerticalAlignment = VerticalAlignment.Center });
-        var text = Texts(title, description);
-        Grid.SetColumn(text, 1); grid.Children.Add(text);
-        if (control is not null)
+        var shownDescription = description;
+        var descriptionResolved = describe is null;
+        string? ResolveDescription()
         {
-            control.Margin = new Thickness(16, 0, 0, 0);
-            control.VerticalAlignment = VerticalAlignment.Center;
-            Grid.SetColumn(control, 2); grid.Children.Add(control);
+            if (!descriptionResolved) { shownDescription = describe!() ?? shownDescription; descriptionResolved = true; }
+            return shownDescription;
         }
-        return new Border { MinHeight = 62, Padding = new Thickness(16, 10), Child = grid, Tag = title + " " + description };
+        if (_searchQuery is { } query && !SearchMatches(title + " " + description, query))
+        {
+            if (descriptionMatches is not null)
+            {
+                if (!descriptionMatches(query)) return null;
+            }
+            else
+            {
+                shownDescription = ResolveDescription();
+                if (!SearchMatches(title + " " + shownDescription, query)) return null;
+            }
+        }
+        if (describe is not null) shownDescription = ResolveDescription();
+
+        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto") };
+        grid.Children.Add(new Border { Width = 20, Height = 20, Margin = new Thickness(0, 0, 16, 0), Child = icon?.Invoke(), VerticalAlignment = VerticalAlignment.Center });
+        var text = Texts(title, shownDescription);
+        Grid.SetColumn(text, 1); grid.Children.Add(text);
+        var right = control?.Invoke();
+        if (right is not null)
+        {
+            right.Margin = new Thickness(16, 0, 0, 0);
+            right.VerticalAlignment = VerticalAlignment.Center;
+            Grid.SetColumn(right, 2); grid.Children.Add(right);
+        }
+        return new Border { MinHeight = 62, Padding = new Thickness(16, 10), Child = grid, Tag = title + " " + shownDescription };
     }
 
     private StackPanel Texts(string title, string? description)
@@ -77,34 +100,42 @@ internal sealed partial class SettingsWindow
     }
 
     /// <summary>A nested row under an expander, indented to the titles above. Wide controls take the whole row.</summary>
-    private Border SubRow(string? title, Control control, bool wide = false)
+    private Border? SubRow(string? title, Func<Control> control, bool wide = false, string? searchTag = null)
     {
+        var tag = searchTag ?? "sub " + title;
+        if (!SearchMatches(tag, _searchQuery)) return null;
+        var content = control();
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
-        if (wide) { Grid.SetColumnSpan(control, 2); grid.Children.Add(control); }
+        if (wide) { Grid.SetColumnSpan(content, 2); grid.Children.Add(content); }
         else
         {
             grid.Children.Add(Texts(title ?? "", null));
-            control.Margin = new Thickness(16, 0, 0, 0);
-            control.VerticalAlignment = VerticalAlignment.Center;
-            Grid.SetColumn(control, 1); grid.Children.Add(control);
+            content.Margin = new Thickness(16, 0, 0, 0);
+            content.VerticalAlignment = VerticalAlignment.Center;
+            Grid.SetColumn(content, 1); grid.Children.Add(content);
         }
         return new Border
         {
             MinHeight = 54, Padding = new Thickness(52, 10, 16, 10), Background = new SolidColorBrush(_p.Ink, _p.Dark ? .03 : .025),
-            Child = grid, Tag = "sub " + title,
+            Child = grid, Tag = tag,
         };
     }
 
     /// <summary>A row that opens the rows under it. Which ones are open is remembered while AntiNotepad runs.</summary>
-    private Border[] Expander(string key, Control? icon, string title, string? description, string value, params Border?[] subs)
+    private Border?[] Expander(string key, Func<Control?>? icon, string title, string? description, string value, params Func<Border?>?[] subs)
     {
         var open = Expanded.Contains(key);
-        var chevron = new GlyphIcon(char.ConvertFromUtf32(0xf2a3), _p.Muted, 16, 0, Glyph.Fluent) { RenderTransform = new RotateTransform(open ? 180 : 0), VerticalAlignment = VerticalAlignment.Center };
-        var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
-        right.Children.Add(Kit.Text(value, _p.Muted, 13));
-        right.Children.Add(chevron);
-        var row = Row(icon, title, description, right);
-        var kids = subs.Where(s => s is not null).Cast<Border>().ToArray();
+        GlyphIcon? chevron = null;
+        var kids = subs.Where(s => s is not null).Select(s => s!()).Where(s => s is not null).Cast<Border>().ToArray();
+        var row = Row(icon, title, description, () =>
+        {
+            chevron = new GlyphIcon(char.ConvertFromUtf32(0xf2a3), _p.Muted, 16, 0, Glyph.Fluent) { RenderTransform = new RotateTransform(open ? 180 : 0), VerticalAlignment = VerticalAlignment.Center };
+            var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
+            right.Children.Add(Kit.Text(value, _p.Muted, 13));
+            right.Children.Add(chevron);
+            return right;
+        });
+        if (row is null) return [.. kids];
         foreach (var kid in kids) kid.IsVisible = open;
         // The whole row toggles, with the soft hover every other clickable surface has.
         var face = row.Child!;
@@ -118,12 +149,15 @@ internal sealed partial class SettingsWindow
             open = !open;
             if (open) Expanded.Add(key); else Expanded.Remove(key);
             foreach (var kid in kids) kid.IsVisible = open;
-            ((RotateTransform)chevron.RenderTransform!).Angle = open ? 180 : 0;
+            ((RotateTransform)chevron!.RenderTransform!).Angle = open ? 180 : 0;
         };
         Avalonia.Automation.AutomationProperties.SetName(button, title);
         row.Child = button;
         return [row, .. kids];
     }
+
+    internal static bool SearchMatches(string? tag, string? query) => query is null
+        || tag is not null && tag.Replace("sub ", "").Contains(query, StringComparison.OrdinalIgnoreCase);
 
     // ---------- controls ----------
 

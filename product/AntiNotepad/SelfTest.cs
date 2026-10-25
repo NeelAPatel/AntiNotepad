@@ -53,6 +53,7 @@ internal static class SelfTest
         Check(NoteSwipeChecks(out var swipeReport), "note swipe: " + swipeReport);
         Check(WelcomeSlotsSelfTest(out var welcomeReport), "welcome slots: " + welcomeReport);
         Check(SearchSpeedChecks(out var searchReport), "search speed: " + searchReport);
+        Check(SettingsSearchMatchingChecks(out var settingsSearchReport), "A27-settings-search-build-matches: " + settingsSearchReport);
         Check(TaskbarChecks(out var taskbarReport), "taskbar: " + taskbarReport);
         Check(SessionEndCloseChecks(out var sessionEndReport), "session-end close: " + sessionEndReport);
 
@@ -703,5 +704,15 @@ internal static class SelfTest
         }
         report = failures.Count == 0 ? "normal resident closes cancel; quit, OS shutdown and session-end sign-out closes proceed" : string.Join("; ", failures);
         return failures.Count == 0;
+    }
+
+    private static bool SettingsSearchMatchingChecks(out string report)
+    {
+        var matchedCaseInsensitively = UI.SettingsWindow.SearchMatches("sub Light mode palette", "PALETTE");
+        var ignoredPrefix = !UI.SettingsWindow.SearchMatches("sub Light mode palette", "sub");
+        var nullQueryMatches = UI.SettingsWindow.SearchMatches(null, null);
+        var passed = matchedCaseInsensitively && ignoredPrefix && nullQueryMatches;
+        report = passed ? "case-insensitive match, ignored sub prefix, and null query" : "search match semantics changed";
+        return passed;
     }
 }
