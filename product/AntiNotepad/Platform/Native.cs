@@ -12,6 +12,7 @@ internal static class Native
     private const uint WmClipboardUpdate = 0x031D;
     private const uint DwmwaWindowCornerPreference = 33;
     private const uint DwmwaBorderColor = 34;
+    private const uint DwmwaTransitionsForcedDisabled = 3;
     private const uint DwmwcpDonotround = 1;
     private const uint DwmwaColorNone = 0xFFFFFFFE;
 
@@ -75,6 +76,15 @@ internal static class Native
         {
             // DWM attributes are cosmetic; unsupported or unavailable DWM must not affect the menu.
         }
+    }
+
+    /// <summary>Disables DWM's native show, hide, minimize, and restore transitions for this window.</summary>
+    public static void DisableDwmTransitions(TopLevel window)
+    {
+        var hwnd = window.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
+        if (hwnd == IntPtr.Zero) return;
+        try { SetDwmWindowAttribute(hwnd, DwmwaTransitionsForcedDisabled, 1); }
+        catch { /* Unsupported or unavailable DWM must not affect the window. */ }
     }
 
     public static void Flash(Window window)

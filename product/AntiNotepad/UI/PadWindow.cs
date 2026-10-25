@@ -50,6 +50,7 @@ internal sealed partial class PadWindow : Window
         ExtendClientAreaToDecorationsHint = true;
         ExtendClientAreaTitleBarHeightHint = 36;
         ShowInTaskbar = false;
+        Native.DisableDwmTransitions(this);
         Topmost = Settings.Pinned;
         Background = Brushes.Transparent;
         FontFamily = new FontFamily("Segoe UI Variable Text, Segoe UI");
