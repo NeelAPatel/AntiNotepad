@@ -265,10 +265,13 @@ internal sealed class SmoothCaret : IBackgroundRenderer
 
     private void Moved()
     {
+        // Read where the caret is drawn right now before restarting the clock: Current() measures from _movedAt, so doing it after
+        // would return the stale start of the previous glide (during a drag, every move jumped back to the last pause).
+        var shown = _animating ? Current() : _to;
         _movedAt = DateTime.Now; _on = true;
         if (!_editor.TextArea.TextView.VisualLinesValid || Target() is not { } target) { Invalidate(); return; }
         if (Anim.Reduced || !_pad.Settings.CaretGlide || _to == default) { _from = _to = target; Invalidate(); return; }
-        _from = Current(); _to = target;
+        _from = shown; _to = target;
         if (!_animating) { _animating = true; Frame(); }
     }
 

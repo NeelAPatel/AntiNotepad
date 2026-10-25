@@ -24,6 +24,8 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   A35 branches and worktree deleted (user). Lab history no longer kept. Installed copy not upgraded.
 - A36-drop-pill-lab merged: dev-only Lab row and pill blur code removed; Solid pill ships; top-bar blur now in
   `UI/PadWindow.TopBlur.cs`. Branch and worktree deleted. Nothing in flight.
+- A37-caret-drag-jump merged (user-approved live): SmoothCaret glide restarts from the drawn position, fixing the caret
+  jumping back to the pause point during drag-select. Nothing in flight.
 - Native-window work (A32/A34) parked; any retry must not change the window's frame styles and
   goes lab-first. A34 (lab) was dropped: thick native border, bars broken in all three styles.
 
