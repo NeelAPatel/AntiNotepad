@@ -29,6 +29,12 @@ Product: AntiNotepad (`product/AntiNotepad`).
     A30-folder-returns-fix (luna) updated the selftest and added a folder-returns case. Merged into dev (2026-10-25; SelfTest
     conflict with A29 resolved by keeping both methods; merged tree 0 warnings, SELFTEST PASS). Dev copy relaunched with
     A29 + A30 + A31. Waiting on the user's live test of all three.
+  - User test (2026-10-25): A29 and A30 pass; closed, A1-8 and A1-14 marked fixed, worktrees and branches removed.
+    A31 is the opposite of what the user wanted (manager misread the request): they want Windows' native open animation on
+    show and the native close/minimize animation on hide, not the app's own fade and not none. A31's worktree is removed;
+    its change stays on dev until A32 reverts it.
+  - A32-native-show-hide-animation dispatched (Sol + luna, worktree `../AntiQuickPad-wt/A32-native-show-hide-animation`):
+    revert A31, make Windows animate the pad's show and hide natively, drop the app's own show fade.
 - A28-editor-render-memory (A1-7, A1-9, A1-10; Sol director + 3 luna workers, worktree `../AntiQuickPad-wt/A28-editor-render-memory`)
   returned 2026-10-25: 0 warnings, SELFTEST PASS. Review accepted the render caches; one bug found: in notes over 1500 lines the
   fence color cache can keep a stale code-block body after an edit (hit by document version alone). A28-fence-cache-bounds-fix
@@ -93,7 +99,7 @@ Product: AntiNotepad (`product/AntiNotepad`).
   GitHub repo, license, signing, portable data defaults, Inno Setup terms.
 
 ## Open
-- Open audit findings (both Med, speed, effort L): A1-8-whole-document-analysis, A1-14-synchronous-save-and-log.
+- Audit findings: none open (A1-8 and A1-14 fixed in A29 and A30, 2026-10-25).
 - N3 release plan: being discussed in a separate chat ("Production readiness for antinotepad").
 
 ## Backlog (someday, not in the current release plan)

@@ -208,6 +208,8 @@ problem.
 | A1-7-stale-fence-cache | The code-block color cache is pruned to current fences after each structure update (A28-editor-render-memory, 2026-10-25, user-tested live) |
 | A1-9-fence-copy-per-colored-line | An unchanged code block's text is copied once, keyed by document version and body bounds (A28) |
 | A1-10-render-path-allocation | Chips, timer icons, chevrons, glyph icons, edge fade, paper, dividers and checkboxes reuse bounded per-view brushes, pens, text and geometry (A28) |
+| A1-8-whole-document-analysis | After an edit only the changed lines (plus a neighbor each side) are re-analysed; structural changes fall back to a full rebuild (A29-incremental-analysis, 2026-10-25, user-tested live) |
+| A1-14-synchronous-save-and-log | Autosave, hide and logging write on background queues; quit, retry, session end and folder moves still save synchronously (A30-background-save-and-log, 2026-10-25, user-tested live) |
 
 ## Fixed in A6 (your decisions)
 
