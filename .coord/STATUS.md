@@ -9,10 +9,10 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Never run `AntiNotepad.exe --quit` without `ANTINOTEPAD_DATA`: it targets the installed copy's instance.
 
 ## Where things are
-- `main`: tag `antinotepad-v0.6.0-untested-r4` (through A28). Installed copy: r3 (through A27), reinstalled 2026-10-25 00:33.
-- `dev` (not yet released): A29-incremental-analysis (A1-8), A30-background-save-and-log (A1-14),
-  A32-native-show-hide-animation (Windows' own open/close and minimize/restore animations; replaces A31). User-tested: A29,
-  A30 and A32 ("good enough"). All audit findings are fixed.
+- `main`: tag `antinotepad-v0.6.0-untested-r5` (2026-10-25): A29-incremental-analysis (A1-8),
+  A30-background-save-and-log (A1-14), A32-native-show-hide-animation (Windows' own open/close and minimize/restore
+  animations; replaces A31), A33-taskbar-dead-code. User-tested: A29, A30, A32 ("good enough"). All audit findings fixed.
+- Installed copy: r3 (through A27) until the user upgrades to r5 with `tools/install.ps1`.
 - Finished briefs, reports and the A1 audit doc were removed from the tree on 2026-10-25; they live in git under tag
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
@@ -21,7 +21,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   without callers and their selftest cases (0 warnings, SELFTEST PASS; no behavior change).
 
 ## Open (needs the user)
-- Release dev to `main` as r5 and upgrade the installed copy (`tools/install.ps1` from Windows Terminal).
+- Upgrade the installed copy to r5 (`tools/install.ps1` from Windows Terminal).
 - Live checks not yet done: A30 Windows restart/sign-out saving an edit typed just before; A32 Alt+Tab presence in Never
   mode and any transient taskbar button.
 - A32 issues: parked by the user ("good enough but there are issues"; list not given).
