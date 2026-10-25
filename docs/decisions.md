@@ -3,9 +3,11 @@
 Newest first. History before 2026-10-23 (overnight build log and write-up) is in git history and the tags `v0.1`,
 `antipad-v*` and `baseline/m8c-v1-compact`.
 
+## 2026-10-25
+- **Taskbar icon** (A32-native-show-hide-animation, revising A20-taskbar-icon-setting and A22-taskbar-button-fixes): Defaults to Never; Settings offers While visible, Always and Never. The real pad is an unowned native app window, with taskbar presence controlled through ITaskbarList rather than Avalonia's live owner-changing setter. Its own button supplies Windows' minimize/restore behavior: a focused click minimizes, an inactive click focuses, and a minimized click restores. While visible removes the button when minimized or closed; Always retains the real button when minimized and uses a minimized stand-in only when closed. The closed-state stand-in stages a nonactivating minimized pad before restoring it; hotkey/tray reopening from closed uses the normal open path. Never removes the pad button. The native animation, button handoff and absence of transient buttons need the A32 dev-copy live gate. Settings keeps its own button; the tray stays available in every mode.
+
 ## 2026-10-24
 - **Windows session end** (A26-allow-windows-shutdown): synchronously flush panes and save all dirty notes once on Avalonia's Win32 shutdown request, log failures without UI, and let both resident windows close; ordinary closes still stay resident.
-- **Taskbar icon** (A20-taskbar-icon-setting, A22-taskbar-button-fixes): Defaults to Never; Settings offers While visible, Always and Never. One stable minimized stand-in supplies the pad's button in both visible and hidden states (Always keeps it while hidden); the real pad stays off the taskbar to avoid Avalonia's owner-change hide/re-show. Clicking the button hides the focused pad or shows/focuses it otherwise. Settings keeps its own button; the tray stays available in every mode.
 
 ## 2026-10-23
 - **Notes location and recovery** (A7-notes-folder-and-recovery, decision 1): app home remains `%LOCALAPPDATA%\AntiNotepad`

@@ -310,7 +310,7 @@ internal sealed partial class PadWindow
         var doc = PadView.DocumentFor(target);
         var entry = text.Trim().Replace("\r\n", "\n").Replace("\n", "\n  ");
         doc.Insert(doc.TextLength, (doc.Text.EndsWith('\n') ? "" : "\n") + "- " + entry);
-        if (!IsVisible) _hiddenAt = DateTime.Now;
+        if (!IsPadOpen) _hiddenAt = DateTime.Now;
         Edited();
     }
 
@@ -359,7 +359,7 @@ internal sealed partial class PadWindow
     private async Task OcrIntoTarget(OcrTarget target)
     {
         var (text, error) = await Ocr.ReadClipboardImage();
-        if (!IsVisible) ShowResident(); else Activate();
+        if (!IsPadOpen) ShowResident(); else Activate();
         var note = target.Note;
         if (!Data.Stack.Contains(note) && !Data.Slots.Contains(note))
         {

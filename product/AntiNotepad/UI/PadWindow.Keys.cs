@@ -158,7 +158,7 @@ internal sealed partial class PadWindow
     internal void OpenSettings()
     {
         // From the tray the pad may be hidden: show it too, so changes are visible on a real note.
-        if (!IsVisible) ShowResident();
+        if (!IsPadOpen) ShowResident();
         if (_settingsWindow is { } open) { open.Activate(); return; }
         var window = new SettingsWindow(this);
         _settingsWindow = window;
@@ -235,7 +235,7 @@ internal sealed partial class PadWindow
     internal void SettingsLostFocus() => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
     {
         if (IsActive || _settingsWindow is { IsActive: true }) return;
-        if (Settings.HideOnBlur && !Topmost && !_overlayOpen && IsVisible) HideResident();
+        if (Settings.HideOnBlur && !Topmost && !_overlayOpen && IsPadOpen) HideResident();
         else if (Topmost && Settings.DimWhenPinned) FadeWindow(0.72);
     }, Avalonia.Threading.DispatcherPriority.Background);
 
@@ -264,7 +264,7 @@ internal sealed partial class PadWindow
     internal void SettingsChanged()
     {
         Topmost = Settings.Pinned;
-        if (Settings.Taskbar != "never") EnsureTaskbarProxy();
+        TaskbarPresence.PrepareForSettingsChange();
         ApplyTaskbarSetting();
         ApplyAppearance();
         Edited();

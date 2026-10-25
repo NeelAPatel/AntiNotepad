@@ -6,7 +6,9 @@ Product: AntiNotepad (`product/AntiNotepad`).
 ## Now
 - Computer Use is off until the user's explicit go-ahead (2026-10-25); live checks are done by the user by hand.
 - Codex is used up (2026-10-25): implementation goes to Haiku subagents, one at a time, until the user says otherwise.
-- A32 lab copy: user says "good enough but there are issues" (issues not yet listed).
+- A32 lab copy: user says "good enough but there are issues" (issues not yet listed). User approved merging it as is:
+  merged into dev 2026-10-25 (0 warnings, SELFTEST PASS), worktree and branch removed, dev copy relaunched from dev.
+  Follow-up fixes (Haiku) wait for the user's issue list. Not in main or the installed copy.
 - Dev merged into main, tag antinotepad-v0.6.0-untested-r4 (2026-10-25, A28). Installed copy still on r3 until the user
   upgrades.
 - Dispatched 2026-10-25, each a Sol director (gpt-6.1-sol medium) with luna xhigh subagents in its own worktree under

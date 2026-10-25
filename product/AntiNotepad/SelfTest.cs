@@ -59,6 +59,7 @@ internal static class SelfTest
         Check(TaskbarChecks(out var taskbarReport), "taskbar: " + taskbarReport);
         Check(SessionEndCloseChecks(out var sessionEndReport), "session-end close: " + sessionEndReport);
         Check(BackgroundSaveAndLogChecks(out var backgroundSaveAndLogReport), "background save and log: " + backgroundSaveAndLogReport);
+        Check(NativeTransitionStyleChecks(out var nativeTransitionStyleReport), "native transition styles: " + nativeTransitionStyleReport);
 
         Console.WriteLine(failures.Count == 0 ? "SELFTEST PASS" : "SELFTEST FAIL\n" + string.Join("\n", failures));
         return failures.Count == 0 ? 0 : 1;
@@ -1134,5 +1135,46 @@ internal static class SelfTest
             return false;
         }
         finally { try { if (Directory.Exists(root)) Directory.Delete(root, true); } catch { } }
+    }
+
+    private static bool NativeTransitionStyleChecks(out string report)
+    {
+        const uint borderOnlyVisibleResizable = 0x10000000 | 0x02000000 | 0x04000000 | 0x00800000 | 0x00040000;
+        const uint expectedTransitionBits = 0x00CB0000;
+        var expected = borderOnlyVisibleResizable | expectedTransitionBits;
+        var actual = Native.AddNativeTransitionStyles(borderOnlyVisibleResizable);
+        var failures = new List<string>();
+        if (actual != expected)
+            failures.Add("style policy preserves BorderOnly visibility, clipping, border, and resize flags while adding the expected native frame flags");
+
+        (string? Setting, PadVisibilityState State, bool Pad, bool Proxy)[] presenceCases =
+        [
+            ("never", PadVisibilityState.Closed, false, false),
+            ("never", PadVisibilityState.Minimized, false, false),
+            ("never", PadVisibilityState.Open, false, false),
+            ("visible", PadVisibilityState.Closed, false, false),
+            ("visible", PadVisibilityState.Minimized, false, false),
+            ("visible", PadVisibilityState.Open, true, false),
+            ("always", PadVisibilityState.Closed, false, true),
+            ("always", PadVisibilityState.Minimized, true, false),
+            ("always", PadVisibilityState.Open, true, false),
+            (null, PadVisibilityState.Closed, false, false),
+            (null, PadVisibilityState.Minimized, false, false),
+            (null, PadVisibilityState.Open, false, false),
+            ("unknown", PadVisibilityState.Closed, false, false),
+            ("unknown", PadVisibilityState.Minimized, false, false),
+            ("unknown", PadVisibilityState.Open, false, false),
+        ];
+        foreach (var test in presenceCases)
+        {
+            if (TaskbarPresence.ShouldShowPad(test.Setting, test.State) != test.Pad
+                || TaskbarPresence.ShouldShowProxy(test.Setting, test.State) != test.Proxy)
+                failures.Add($"taskbar presence setting={test.Setting ?? "null"}, state={test.State}");
+        }
+
+        report = failures.Count == 0
+            ? "style policy preserves BorderOnly/resize bits and adds the expected native frame flags; taskbar presence policy covers Never, While visible, Always, and unknown settings across closed, minimized, and open states"
+            : string.Join("; ", failures);
+        return failures.Count == 0;
     }
 }
