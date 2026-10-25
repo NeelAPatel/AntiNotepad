@@ -25,6 +25,8 @@ Product: AntiNotepad (`product/AntiNotepad`).
   - Live test (computer use, 2026-10-24): demo notes, scrolling, Ctrl+F, dev name/icon (Task Manager, tray, Settings button) pass.
     Taskbar setting fails: the real pad never gets a button (While visible = Never; Always only while hidden); the row sits inside
     the Open at expander. Dispatched A22-taskbar-button-fixes (Sol). An elevated Task Manager in front blocks computer-use input.
+  - A22-taskbar-button-fixes merged and retested live: While visible, Always, Never, click-to-show, Settings row icon and the
+    timing log pass. Remaining bug: clicking a focused pad's button doesn't hide it. Dispatched A23-taskbar-click-hides (luna).
   - Backups made from Claude sessions exist only in `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\`:
     `AntiNotepad-backup-20261024-155646` (stale Oct 22-23 data) and `Antipad-backup-2026-10-23`. Kept; don't delete.
 - A6-audit-decisions merged into dev (2026-10-24), together with A5-audit-refresh. It applies the user's 8 audit decisions
