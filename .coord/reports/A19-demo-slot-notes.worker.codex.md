@@ -1,5 +1,0 @@
-Implemented both changes. Fresh installs now default to rate matched scrolling and progress swipe, and seed demo notes into empty slots 1–5 with the guide selected in slot 5. Existing saved settings and occupied slots are preserved.
-
-The Release build passed with 0 warnings and 0 errors when run with `-p:NuGetAudit=false`; the standard build succeeded but emitted NU1900 because NuGet’s vulnerability data endpoint was unreachable. The selftest printed `SELFTEST PASS`, and `git diff --check` was clean.
-
-The report includes the final text of notes 4 and 5, timer behavior, and the rendering findings: [A19-demo-slot-notes.md](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad-wt/A19-demo-slot-notes/.coord/reports/A19-demo-slot-notes.md>). The first-run appearance and demo interactions still need a live check. The build output folder remains because the sandbox rejected its recursive cleanup.

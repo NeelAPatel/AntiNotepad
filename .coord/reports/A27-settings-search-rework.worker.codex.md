@@ -1,5 +1,0 @@
-Removed the Settings window selftest harness and duplicate build-all search path. Restored direct settings and hotkey reads, made `_scroll` and `_rail` readonly, and kept one small selftest for case-insensitive matching, the `sub ` prefix, and null queries. Updated the [A27 report](F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad-wt/A27-settings-search-build-matches/.coord/reports/A27-settings-search-build-matches.md); the removed harness’s timing numbers are omitted.
-
-The Release build passed with **0 warnings and 0 errors**; `--selftest` printed **SELFTEST PASS**; `git diff --check` passed. `git diff dev -- product` lists only the three expected product files.
-
-`build/a27-check` remains because the shell policy rejected its recursive removal. Settings search still needs a live check; I did not launch the app.

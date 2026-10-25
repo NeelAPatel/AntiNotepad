@@ -1,6 +1,0 @@
-**A23-taskbar-click-hides** is implemented. The pad now records monotonic foreground-loss time and its activation counterpart; a loss to the taskbar or proxy counts as foreground for up to 500 ms when deciding whether a taskbar click should hide the pad. The existing click rules remain in place.
-
-- Updated [TaskbarPresence.cs](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad-wt/A23-taskbar-click-hides/product/AntiNotepad/Platform/TaskbarPresence.cs:26>) and added decision-rule cases to [SelfTest.cs](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad-wt/A23-taskbar-click-hides/product/AntiNotepad/SelfTest.cs:662>).
-- Release build: **PASS**, 0 warnings and 0 errors. `--selftest`: **SELFTEST PASS**. `git diff --check`: **PASS**.
-- The [A23 report](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad-wt/A23-taskbar-click-hides/.coord/reports/A23-taskbar-click-hides.md>) includes the manager’s live click checks. I did not launch the GUI; live behavior still needs verification in the dev copy.
-- Automatic approval review blocked removal of `build/a23-check` as **“blocked by policy”**. The generated build output remains.

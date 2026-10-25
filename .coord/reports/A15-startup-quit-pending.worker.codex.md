@@ -1,5 +1,0 @@
-Implemented **A15-startup-quit-pending**. Early quit and show requests now wait for the window, then dispatch through Avalonia’s UI thread. Quit uses the normal save path, including its save-failure prompt. The existing `--quit` protocol waits for the app to exit before returning success, so `SingleInstance.cs` needed no change.
-
-Added the latch selftest and task report: [Program.cs](</F:/LocalVSProj/Visual Studio Apps/AntiQuickPad-wt/A15-startup-quit-pending/product/AntiNotepad/Program.cs:100>), [SelfTest.cs](</F:/LocalVSProj/Visual Studio Apps/AntiQuickPad-wt/A15-startup-quit-pending/product/AntiNotepad/SelfTest.cs:400>), [task report](</F:/LocalVSProj/Visual Studio Apps/AntiQuickPad-wt/A15-startup-quit-pending/.coord/reports/A15-startup-quit-pending.md>).
-
-**Verification:** Release build with `NuGetAudit=false` passed with 0 warnings and 0 errors; `--selftest` passed; `git diff --check` was clean. The standard build emitted two `NU1900` warnings because nuget.org was unreachable. Cleanup of `build/a15-check` was rejected by shell policy, so that folder remains. Live UI and second-process behavior still need a live check. No app was launched.
