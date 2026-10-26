@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
 using AntiNotepad;
+using AntiNotepad.Model;
 using AntiNotepad.Motion;
 using AntiNotepad.Platform;
 
@@ -102,10 +103,14 @@ internal sealed partial class PadWindow
 
     private void Zoom(int step)
     {
-        Settings.FontSize = Math.Clamp(Settings.FontSize + step, 10, 28);
-        _left.ApplyLook(_palette, Settings); _right.ApplyLook(_palette, Settings);
+        var previous = Settings.FontSize;
+        _settingsService.Update(settings => settings.FontSize = Math.Clamp(settings.FontSize + step, 10, 28));
+        if (Settings.FontSize == previous)
+        {
+            _left.ApplyLook(_palette, Settings); _right.ApplyLook(_palette, Settings);
+            Edited();
+        }
         Toast($"Text size {Settings.FontSize:0}");
-        Edited();
     }
 
     // ---------- overlays ----------
@@ -161,7 +166,7 @@ internal sealed partial class PadWindow
         // From the tray the pad may be hidden: show it too, so changes are visible on a real note.
         if (!IsVisible) ShowResident();
         if (_settingsWindow is { } open) { open.Activate(); return; }
-        var window = new SettingsWindow(this);
+        var window = new SettingsWindow(_settingsService, this);
         _settingsWindow = window;
         _settingsGone = new WeakReference(window);
         window.Closed += (_, _) =>
@@ -252,22 +257,29 @@ internal sealed partial class PadWindow
 
         void Apply(Model.Settings s)
         {
-            Data.Settings = s;
             _left.ApplyLook(_palette, s); _right.ApplyLook(_palette, s);
             RegisterHotkey(s.Hotkey);
             RegisterNewNoteHotkey(s.NewNoteHotkey);
-            SettingsChanged();
+            _settingsService.Replace(s);
             _settingsWindow?.Refresh();
         }
     }
 
-    /// <summary>Settings call this after any change: apply, persist, keep the panel open.</summary>
-    internal void SettingsChanged()
+    /// <summary>Runs the single ordered settings reaction for a committed batch.</summary>
+    internal void HandleSettingsChanged(SettingsChange change)
     {
-        Topmost = Settings.Pinned;
-        if (Settings.Taskbar != "never") EnsureTaskbarProxy();
-        ApplyTaskbarSetting();
-        ApplyAppearance();
-        Edited();
+        var flags = change.Flags;
+        if ((flags & (SettingsChangeFlags.Appearance | SettingsChangeFlags.WindowPolicy)) != 0) Topmost = Settings.Pinned;
+        if ((flags & (SettingsChangeFlags.Appearance | SettingsChangeFlags.Taskbar)) != 0)
+        {
+            if (Settings.Taskbar != "never") EnsureTaskbarProxy();
+            ApplyTaskbarSetting();
+        }
+        if ((flags & SettingsChangeFlags.Appearance) != 0) ApplyAppearance();
+        if ((flags & SettingsChangeFlags.Persistence) != 0)
+        {
+            if ((flags & SettingsChangeFlags.Appearance) != 0) Edited();
+            else ScheduleSave();
+        }
     }
 }

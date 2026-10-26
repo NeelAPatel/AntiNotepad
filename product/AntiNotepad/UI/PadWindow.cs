@@ -16,9 +16,10 @@ using AntiNotepad.Theme;
 namespace AntiNotepad.UI;
 
 /// <summary>The resident pad window. Hidden, never closed, until Quit.</summary>
-internal sealed partial class PadWindow : Window
+internal sealed partial class PadWindow : Window, ISettingsHost
 {
     private readonly Store _store;
+    private readonly SettingsService _settingsService;
     private readonly Timers _timers = new(id => Program.Store.Data.Stack.Any(n => n.Id == id) || Program.Store.Data.Slots.Any(n => n.Id == id));
     private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(400) };
     private Palette _palette;
@@ -34,11 +35,13 @@ internal sealed partial class PadWindow : Window
     public string HotkeyStatus { get; private set; } = "";
     public event Action<string>? HotkeyStatusChanged;
     internal StoreData Data => _store.Data;
-    internal Settings Settings => _store.Data.Settings;
+    internal Settings Settings => _settingsService.Current;
+    internal SettingsService SettingsService => _settingsService;
 
-    public PadWindow(Store store)
+    public PadWindow(Store store, SettingsService settingsService)
     {
         _store = store;
+        _settingsService = settingsService;
         Title = AppInfo.DisplayName;
         Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new Uri(AppInfo.IconUri)));
         Anim.Reduced = Settings.ReduceMotion;
@@ -353,9 +356,14 @@ internal sealed partial class PadWindow : Window
 
     private void Edited()
     {
-        _saveTimer.Stop(); _saveTimer.Start();
+        ScheduleSave();
         UpdateChrome();
         SleepChrome(soon: false);
+    }
+
+    private void ScheduleSave()
+    {
+        _saveTimer.Stop(); _saveTimer.Start();
     }
 
     internal bool Save() => Save(showFailureToast: true);
@@ -418,9 +426,11 @@ internal sealed partial class PadWindow : Window
     private void RememberBounds()
     {
         if (WindowState != WindowState.Normal || !IsVisible || _sizingForSplit) return;
-        Settings.X = Position.X; Settings.Y = Position.Y;
-        Settings.Width = Settings.Split ? Width / 2 : Width; Settings.Height = Height;
-        _saveTimer.Stop(); _saveTimer.Start();
+        _settingsService.Update(settings =>
+        {
+            settings.X = Position.X; settings.Y = Position.Y;
+            settings.Width = settings.Split ? Width / 2 : Width; settings.Height = Height;
+        });
     }
 
     private bool OnAnyScreen(int x, int y) =>
@@ -530,4 +540,16 @@ internal sealed partial class PadWindow : Window
 
     /// <summary>The palette the pad wears now (the Settings window dresses to match).</summary>
     internal Palette CurrentPalette => _palette;
+
+    Palette ISettingsHost.CurrentPalette => CurrentPalette;
+    WindowIcon? ISettingsHost.Icon => Icon;
+    string ISettingsHost.HotkeyStatus => HotkeyStatus;
+    string ISettingsHost.NewNoteHotkeyStatus => NewNoteHotkeyStatus;
+    bool ISettingsHost.RegisterHotkey(string? gesture) => RegisterHotkey(gesture);
+    bool ISettingsHost.RegisterNewNoteHotkey(string? gesture) => RegisterNewNoteHotkey(gesture);
+    void ISettingsHost.Toast(string text, string? action, Action? onAction, bool brief) => Toast(text, action, onAction, brief);
+    void ISettingsHost.OpenHelp() => OpenHelp();
+    void ISettingsHost.ResetSettings() => ResetSettings();
+    bool ISettingsHost.Save() => Save();
+    void ISettingsHost.SettingsLostFocus() => SettingsLostFocus();
 }

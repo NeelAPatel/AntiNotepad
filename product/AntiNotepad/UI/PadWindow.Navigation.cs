@@ -24,7 +24,8 @@ internal sealed partial class PadWindow
         if (Settings.Split)
         {
             // Never show the same slot twice side by side.
-            if (Data.ViewSlot == Settings.SplitSlot) Settings.SplitSlot = Settings.SplitSlot % 9 + 1;
+            if (Data.ViewSlot == Settings.SplitSlot)
+                _settingsService.Update(settings => settings.SplitSlot = settings.SplitSlot % 9 + 1);
             _right.Bind(RightNote);
         }
         _panes.ColumnDefinitions = new ColumnDefinitions(Settings.Split ? "*,1,*" : "*,0,0");
@@ -146,13 +147,19 @@ internal sealed partial class PadWindow
     {
         _left.Flush(); _right.Flush();
         var single = Math.Max(320, Settings.Width);
-        Settings.Split = !Settings.Split;
+        var split = !Settings.Split;
+        var first = split
+            ? Enumerable.Range(1, 9).FirstOrDefault(i => i != Data.ViewSlot && !Data.Slots[i - 1].IsEmpty)
+            : 0;
+        _settingsService.Update(settings =>
+        {
+            settings.Split = split;
+            if (first > 0) settings.SplitSlot = first;
+        });
         _sizingForSplit = true;
         if (Settings.Split)
         {
             // Start the split on the first filled slot that isn't already on the left.
-            var first = Enumerable.Range(1, 9).FirstOrDefault(i => i != Data.ViewSlot && !Data.Slots[i - 1].IsEmpty);
-            if (first > 0) Settings.SplitSlot = first;
             var screen = Screens.ScreenFromWindow(this);
             var scale = screen?.Scaling ?? 1;
             Width = Math.Min(single * 2, (screen?.WorkingArea.Width ?? 4000) / scale - 24);
@@ -170,18 +177,15 @@ internal sealed partial class PadWindow
         _right.Flush();
         var next = Settings.SplitSlot;
         do { next = (next - 1 + direction + 9) % 9 + 1; } while (next == Data.ViewSlot);
-        Settings.SplitSlot = next;
+        _settingsService.Update(settings => settings.SplitSlot = next);
         BindPanes(0);
         _right.Arrive(direction);
     }
 
     internal void TogglePin()
     {
-        Settings.Pinned = !Settings.Pinned;
-        Topmost = Settings.Pinned;
-        RebuildChrome();
+        _settingsService.Update(settings => settings.Pinned = !settings.Pinned);
         Toast(Settings.Pinned ? "Kept on top" : "No longer on top");
-        Edited();
     }
 
     /// <summary>Delete: stack notes go to the trash (undoable); slots are cleared, their text going to the trash.</summary>

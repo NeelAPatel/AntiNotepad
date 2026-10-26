@@ -21,6 +21,7 @@ internal static class Program
     public static bool IsDev { get; private set; }
     public static bool SoftwareRendering { get; private set; }
     public static Store Store { get; private set; } = null!;
+    public static SettingsService SettingsService { get; private set; } = null!;
     private static long GpuCacheBytes => long.TryParse(Environment.GetEnvironmentVariable(AppInfo.Env("GPU_CACHE_MB")), out var mb) ? mb * 1048576 : 8 * 1048576;
     private static PadWindow? _window;
     private static readonly StartupRequestLatch _pendingRequests = new();
@@ -95,12 +96,13 @@ internal static class Program
             StartupNotice = notes.Notice;
             Store.MarkUnavailable(notes.Error);
         }
+        SettingsService = Store.SettingsService;
         if (notes.Error is { } unavailable) Store.MarkUnavailable(unavailable);
         Store.Load();
         if (!Store.IsAvailable && NotesLocationError is null) NotesLocationError = Store.LastError ?? $"The notes folder is unavailable: {DataFolder}";
         if (Store.IsAvailable)
         {
-            Welcome.SeedIfNew(Store.Data);
+            Welcome.SeedIfNew(Store.Data, SettingsService);
             Showcase.EnsureInDev(Store.Data, IsDev);
         }
         if (Store.LastError is { } storeError) Log(storeError);
@@ -108,7 +110,7 @@ internal static class Program
             // A scratchpad redraws little: a small GPU resource cache instead of Skia's default.
             .With(new Avalonia.SkiaOptions { MaxGpuResourceSizeBytes = GpuCacheBytes });
         // Solid windows need no GPU compositing: software rendering uses about 80 MB less memory.
-        SoftwareRendering = Environment.GetEnvironmentVariable(AppInfo.Env("RENDER")) is { } r ? r == "software" : Store.Data.Settings.Material == "solid";
+        SoftwareRendering = Environment.GetEnvironmentVariable(AppInfo.Env("RENDER")) is { } r ? r == "software" : SettingsService.Current.Material == "solid";
         if (SoftwareRendering) builder = builder.With(new Win32PlatformOptions { RenderingMode = [Win32RenderingMode.Software] });
         return builder.StartWithClassicDesktopLifetime(args);
     }
@@ -342,7 +344,9 @@ public sealed class App : Application
         {
             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
             var store = Program.Store;
-            var window = new PadWindow(store);
+            var window = new PadWindow(store, Program.SettingsService);
+            // One composition-root subscription preserves the ordered pad effects and persistence debounce.
+            Program.SettingsService.Changed += window.HandleSettingsChanged;
             // Win32 raises this on WM_QUERYENDSESSION, before Closing. In 12.1.4 the OS reason
             // is internal, and sign-out is labeled ApplicationShutdown rather than OSShutdown.
             // Our explicit Quit uses forced Shutdown(), which does not raise this event.

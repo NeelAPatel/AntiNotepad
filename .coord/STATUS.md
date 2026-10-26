@@ -34,9 +34,10 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Reorg series, one at a time from the latest dev, in order: A40-settings-change-event, A41-padwindow-split,
   A42-padview-commands, A43-app-context, A44-platform-seam. Read-only investigator sessions wrote each plan on its own
   branch (`reorg/<ID-slug>`: `.coord/tasks/<ID-slug>-plan.md` + impact report); they never implement. Implementation
-  starts per task on the user's go, from that plan, with the user's hand test before merge. Next: A40.
-- A40-settings-change-event dispatched 2026-10-26 on `reorg/A40-settings-change-event-impl` (the investigator's worktree holds
-  `reorg/A40-settings-change-event`): Sonnet manager session drives Codex luna xhigh from the investigator plan; user hand test before merge.
+  starts per task on the user's go, from that plan, with the user's hand test before merge. Next: A41-padwindow-split.
+- A40-settings-change-event merged into dev (565a1e5, user-approved live 2026-10-26): SettingsService + one Changed event,
+  SettingsWindow on ISettingsHost, all writers migrated; guards now 12 LAYERS lines + `SETTINGS Changed`; 0 warnings, SELFTEST PASS.
+  Fix: SearchGrid/SplitSlot/Split now saved. Folding/InlineMath apply only on note bind/analysis (pre-existing; backlog).
 - Native-window work (A32/A34) parked; any retry must not change the window's frame styles and
   goes lab-first. A34 (lab) was dropped: thick native border, bars broken in all three styles.
 

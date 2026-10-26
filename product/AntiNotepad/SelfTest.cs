@@ -20,6 +20,10 @@ internal static class SelfTest
         foreach (var line in layerCheck.Lines) Console.WriteLine(line);
         foreach (var failure in layerCheck.Failures) Check(false, failure);
 
+        var settingsChangedPass = SettingsChangedChecks(out var settingsChangedReport);
+        Console.WriteLine(settingsChangedPass ? "SETTINGS Changed" : "SETTINGS Changed FAIL " + settingsChangedReport);
+        Check(settingsChangedPass, "settings Changed: " + settingsChangedReport);
+
         Check(Calc.Calculator.SelfTest(out var calcReport), "calculator: " + calcReport);
         Check(ChromeTokens.PillHeight == 42 && ChromeTokens.PagerStripHeight == 50
             && ChromeTokens.TopBackdrop.MidpointStop == 46 && ChromeTokens.TopScrollableWhitespace == 40
@@ -85,9 +89,21 @@ internal static class SelfTest
         return failures.Count == 0 ? 0 : 1;
     }
 
-    private sealed record LayerRule(string From, string? To, bool AnyAntiNotepadNamespace = false)
+    private sealed record LayerRule(
+        string From,
+        string? To,
+        bool AnyAntiNotepadNamespace = false,
+        Type? ExactFrom = null,
+        Type? ExactTo = null)
     {
         public string Label => AnyAntiNotepadNamespace ? $"{From}->*any other AntiNotepad namespace*" : $"{From}->{To}";
+    }
+
+    private sealed record SettingsSetterAllowance(Type CallerType, string[] Methods);
+
+    private sealed record SettingsSetterViolation(MethodBase Caller, MethodBase Setter)
+    {
+        public string Display => $"{Caller.DeclaringType?.FullName}.{Caller.Name} -> {Setter.DeclaringType?.FullName}.{Setter.Name}";
     }
 
     private static readonly LayerRule[] LayerRules =
@@ -100,6 +116,22 @@ internal static class SelfTest
         new("Theme", "Editor"),
         new("Platform", "UI"),
         new("Platform", "Editor"),
+        new("SettingsWindow", "PadWindow", ExactFrom: typeof(SettingsWindow), ExactTo: typeof(PadWindow)),
+        new("SettingsService", "UI", ExactFrom: typeof(SettingsService)),
+        new("SettingsService", "Editor", ExactFrom: typeof(SettingsService)),
+    ];
+
+    // Setter calls from these exact methods are passed to SettingsService.Update, except ResetSettings' defaults initializer.
+    // Settings itself owns its detached-copy initializer; StoreData's constructor is the JSON/default construction path.
+    private static readonly SettingsSetterAllowance[] SettingsSetterAllowances =
+    [
+        new(typeof(Settings), ["CopyForSave"]),
+        new(typeof(StoreData), [".ctor"]),
+        new(typeof(Store), ["Normalize"]),
+        new(typeof(Welcome), ["SeedIfNew"]),
+        new(typeof(PadWindow), ["Zoom", "RememberBounds", "BindPanes", "ToggleSplit", "CycleSplitSlot", "TogglePin", "ResetSettings"]),
+        new(typeof(SettingsWindow), ["ThemePage", "AccentDots", "UiPage", "EditorPage", "FeelPage", "TuningRows", "SystemPage"]),
+        new(typeof(SearchOverlay), ["ToggleGrid"]),
     ];
 
     private static (List<string> Lines, List<string> Failures) CheckLayers()
@@ -116,7 +148,7 @@ internal static class SelfTest
         }
 
         var references = new Dictionary<Type, HashSet<Type>>();
-        foreach (var type in types.Where(t => InNamespace(t.Namespace, "Editor")))
+        foreach (var type in types.Where(t => LayerRules.Any(rule => MatchesSource(rule, t))))
         {
             var found = new HashSet<Type>();
             references[type] = found;
@@ -145,7 +177,7 @@ internal static class SelfTest
         foreach (var rule in LayerRules)
         {
             var offenders = references.SelectMany(pair => pair.Value
-                    .Where(target => MatchesRule(rule, pair.Key.Namespace, target.Namespace))
+                    .Where(target => MatchesRule(rule, pair.Key, target))
                     .Select(target => (Source: pair.Key, Target: target)))
                 .Distinct()
                 .OrderBy(pair => pair.Source.FullName, StringComparer.Ordinal)
@@ -156,16 +188,163 @@ internal static class SelfTest
                 failures.Add($"layer violation {rule.Label}: {offender.Source.FullName} -> {offender.Target.FullName}");
         }
 
+        var setterCheck = CheckSettingsSetters(types);
+        lines.Add($"LAYERS Settings.set_* outside owner {setterCheck.Violations.Count}");
+        foreach (var violation in setterCheck.Violations)
+            failures.Add("settings setter violation: " + violation.Display);
+
         foreach (var error in scanErrors.Distinct(StringComparer.Ordinal)) failures.Add("layer scan: " + error);
+        foreach (var error in setterCheck.ScanErrors) failures.Add("settings setter scan: " + error);
         return (lines, failures);
     }
 
-    private static bool MatchesRule(LayerRule rule, string? from, string? to)
+    private static (List<SettingsSetterViolation> Violations, List<string> ScanErrors) CheckSettingsSetters(Type[] types)
     {
-        if (!InNamespace(from, rule.From)) return false;
+        var violations = new List<SettingsSetterViolation>();
+        var scanErrors = new List<string>();
+        var scannedTypes = new HashSet<Type>();
+        foreach (var type in types)
+        {
+            const BindingFlags declared = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
+                | BindingFlags.Static | BindingFlags.DeclaredOnly;
+            foreach (var constructor in type.GetConstructors(declared))
+                ScanMethod(constructor, scannedTypes, scanErrors, InspectCall);
+            if (type.TypeInitializer is { } initializer) ScanMethod(initializer, scannedTypes, scanErrors, InspectCall);
+            foreach (var method in type.GetMethods(declared)) ScanMethod(method, scannedTypes, scanErrors, InspectCall);
+        }
+
+        return (violations.Distinct().OrderBy(item => item.Display, StringComparer.Ordinal).ToList(), scanErrors.Distinct(StringComparer.Ordinal).ToList());
+
+        void InspectCall(MethodBase caller, OpCode opcode, MethodBase target)
+        {
+            if (opcode != OpCodes.Call && opcode != OpCodes.Callvirt) return;
+            if (target.DeclaringType != typeof(Settings) || !target.Name.StartsWith("set_", StringComparison.Ordinal)) return;
+            if (IsAllowedSettingsSetterCaller(caller)) return;
+            violations.Add(new SettingsSetterViolation(caller, target));
+        }
+    }
+
+    private static bool IsAllowedSettingsSetterCaller(MethodBase caller)
+    {
+        var type = caller.DeclaringType;
+        while (type?.DeclaringType is { } parent) type = parent;
+        if (type == typeof(SettingsService) || type == typeof(SelfTest)) return true;
+        var method = caller.Name;
+        if (method.StartsWith('<') && method.IndexOf('>') is var end && end > 1) method = method[1..end];
+        return SettingsSetterAllowances.Any(allowance => allowance.CallerType == type && allowance.Methods.Contains(method, StringComparer.Ordinal));
+    }
+
+    private static bool MatchesSource(LayerRule rule, Type source) => rule.ExactFrom is { } exact
+        ? IsExactOrNested(source, exact)
+        : InNamespace(source.Namespace, rule.From);
+
+    private static bool MatchesRule(LayerRule rule, Type from, Type to)
+    {
+        if (!MatchesSource(rule, from)) return false;
         if (rule.AnyAntiNotepadNamespace)
-            return IsAntiNotepadNamespace(to) && !InNamespace(to, rule.From);
-        return InNamespace(to, rule.To!);
+            return IsAntiNotepadNamespace(to.Namespace) && !InNamespace(to.Namespace, rule.From);
+        if (rule.ExactTo is { } exact) return IsExactOrNested(to, exact);
+        return InNamespace(to.Namespace, rule.To!);
+    }
+
+    private static bool IsExactOrNested(Type type, Type exact)
+    {
+        for (var current = type; current is not null; current = current.DeclaringType)
+            if (current == exact) return true;
+        return false;
+    }
+
+    private static bool SettingsChangedChecks(out string report)
+    {
+        var failures = new List<string>();
+        void Expect(bool ok, string name) { if (!ok) failures.Add(name); }
+
+        var service = new SettingsService(new Settings());
+        var first = new List<SettingsChange>();
+        var second = new List<SettingsChange>();
+        var appearanceCalls = 0;
+        var callbackDepth = 0;
+        var maxCallbackDepth = 0;
+        var nestedRequested = false;
+        var nestedWasQueued = false;
+
+        void RecordAndNest(SettingsChange change)
+        {
+            callbackDepth++;
+            maxCallbackDepth = Math.Max(maxCallbackDepth, callbackDepth);
+            first.Add(change);
+            if (!nestedRequested && change.Properties.Contains(nameof(Settings.Theme)))
+            {
+                nestedRequested = true;
+                service.Update(settings => settings.Tone = "cool");
+                nestedWasQueued = service.Current.Tone == "default";
+            }
+            callbackDepth--;
+        }
+
+        void ObserveAppearance(SettingsChange change)
+        {
+            second.Add(change);
+            if ((change.Flags & SettingsChangeFlags.Appearance) != 0) appearanceCalls++;
+        }
+
+        service.Changed += RecordAndNest;
+        service.Changed += ObserveAppearance;
+        service.Update(settings => { settings.FontSize = 18; settings.Theme = "dark"; });
+
+        Expect(first.Count == 2 && second.Count == 2, "one batch and one queued follow-up");
+        Expect(first.Count > 0 && first[0].Properties.Contains(nameof(Settings.FontSize))
+            && first[0].Properties.Contains(nameof(Settings.Theme)), "both changed property names");
+        Expect(nestedWasQueued && first.Any(change => change.Properties.Contains(nameof(Settings.Tone))), "handler update is deferred");
+        Expect(maxCallbackDepth == 1, "follow-up is not recursive");
+        Expect(service.Current.FontSize == 18 && service.Current.Theme == "dark" && service.Current.Tone == "cool", "final values");
+
+        var countBeforeNoOp = first.Count;
+        service.Update(settings => settings.Theme = settings.Theme);
+        Expect(first.Count == countBeforeNoOp, $"no-op update emits nothing ({countBeforeNoOp}->{first.Count})");
+
+        var countBeforeList = first.Count;
+        service.Update(settings => settings.DisabledLanguages.Add("py"));
+        Expect(first.Count == countBeforeList + 1 && first[^1].Properties.Contains(nameof(Settings.DisabledLanguages)),
+            $"language list edit detected ({countBeforeList}->{first.Count}: {string.Join(',', first[^1].Properties)})");
+
+        var countBeforeLanguageMethod = first.Count;
+        service.SetLanguageEnabled("js", false);
+        Expect(first.Count == countBeforeLanguageMethod + 1
+            && first[^1].Properties.SequenceEqual([nameof(Settings.DisabledLanguages)])
+            && first[^1].Flags == (SettingsChangeFlags.Appearance | SettingsChangeFlags.Analysis | SettingsChangeFlags.Persistence),
+            $"SetLanguageEnabled uses the owner ({countBeforeLanguageMethod}->{first.Count}: {string.Join(',', first[^1].Properties)})");
+
+        var replacement = new Settings { FontSize = 20 };
+        var countBeforeReplace = first.Count;
+        service.Replace(replacement);
+        Expect(ReferenceEquals(service.Current, replacement), "Replace changes Current identity");
+        Expect(first.Count == countBeforeReplace + 1 && first[^1].Flags == SettingsChangeFlags.All
+            && first[^1].Properties.Count == 56, "Replace emits all flags once");
+
+        var appearanceBeforeSplit = appearanceCalls;
+        var countBeforeSplit = first.Count;
+        service.Update(settings => settings.Split = true);
+        Expect(first.Count == countBeforeSplit + 1 && first[^1].Properties.SequenceEqual([nameof(Settings.Split)])
+            && first[^1].Flags == (SettingsChangeFlags.Split | SettingsChangeFlags.Persistence),
+            $"split flags stay isolated ({countBeforeSplit}->{first.Count}: {first[^1].Flags})");
+        Expect(appearanceCalls == appearanceBeforeSplit, "split skips appearance subscriber");
+
+        var detachedCalls = 0;
+        void Detached(SettingsChange _) => detachedCalls++;
+        service.Changed += Detached;
+        service.Changed -= Detached;
+        var appearanceBeforeGeometry = appearanceCalls;
+        var countBeforeGeometry = first.Count;
+        service.Update(settings => settings.X = 40);
+        Expect(first.Count == countBeforeGeometry + 1 && first[^1].Properties.SequenceEqual([nameof(Settings.X)])
+            && first[^1].Flags == (SettingsChangeFlags.Geometry | SettingsChangeFlags.Persistence),
+            $"geometry flags are isolated ({countBeforeGeometry}->{first.Count}: {first[^1].Flags} {string.Join(',', first[^1].Properties)})");
+        Expect(appearanceCalls == appearanceBeforeGeometry, $"geometry skips appearance subscriber ({appearanceBeforeGeometry}->{appearanceCalls})");
+        Expect(detachedCalls == 0, "detached subscriber is not called");
+
+        report = failures.Count == 0 ? "passed" : string.Join(", ", failures);
+        return failures.Count == 0;
     }
 
     private static bool InNamespace(string? actual, string segment) =>
@@ -194,7 +373,8 @@ internal static class SelfTest
         }
     }
 
-    private static void ScanMethod(MethodBase method, HashSet<Type> found, List<string> errors)
+    private static void ScanMethod(MethodBase method, HashSet<Type> found, List<string> errors,
+        Action<MethodBase, OpCode, MethodBase>? inspectCall = null)
     {
         AddType(method.DeclaringType, found);
         foreach (var parameter in method.GetParameters()) AddType(parameter.ParameterType, found);
@@ -276,7 +456,11 @@ internal static class SelfTest
                     if (tokenKind == OperandType.InlineType) AddType(module.ResolveType(token, typeArguments, methodArguments), found);
                     else if (tokenKind == OperandType.InlineMethod)
                     {
-                        if (module.ResolveMethod(token, typeArguments, methodArguments) is { } target) AddMethodReference(target, found);
+                        if (module.ResolveMethod(token, typeArguments, methodArguments) is { } target)
+                        {
+                            AddMethodReference(target, found);
+                            inspectCall?.Invoke(method, opcode, target);
+                        }
                     }
                     else if (tokenKind == OperandType.InlineField)
                     {
@@ -731,7 +915,7 @@ internal static class SelfTest
     private static bool WelcomeSlotsSelfTest(out string report)
     {
         var fresh = new StoreData();
-        Welcome.SeedIfNew(fresh);
+        Welcome.SeedIfNew(fresh, new SettingsService(fresh.Settings));
         var expected = new[] { "# h1", "math", "list", "timer", $"# Welcome to {AppInfo.Name}" };
         var seeded = expected.Select((line, i) => fresh.Slots[i].Text.Split('\n')[0] == line).All(ok => ok)
             && fresh.Slots.Take(5).All(note => !note.IsEmpty)
@@ -744,11 +928,11 @@ internal static class SelfTest
 
         var occupied = new StoreData();
         occupied.Slots[0].Text = "keep this note\nwith its body";
-        Welcome.SeedIfNew(occupied);
+        Welcome.SeedIfNew(occupied, new SettingsService(occupied.Settings));
         var preserved = occupied.Slots[0].Text == "keep this note\nwith its body";
         var beforeSecondCall = occupied.Slots.Select(note => note.Text).ToArray();
         var viewBeforeSecondCall = occupied.ViewSlot;
-        Welcome.SeedIfNew(occupied);
+        Welcome.SeedIfNew(occupied, new SettingsService(occupied.Settings));
         var secondCallNoOp = occupied.Slots.Select(note => note.Text).SequenceEqual(beforeSecondCall)
             && occupied.ViewSlot == viewBeforeSecondCall;
         var defaults = new Settings() is { Scrolling: "rate", Swipe: "progress" };

@@ -372,12 +372,14 @@ public sealed class Store
     private Task? _writerTask;
     private bool _lastSaveSucceeded = true;
     public StoreData Data { get; private set; } = new();
+    internal SettingsService SettingsService { get; }
     public string? LastError { get; private set; }
     public bool IsAvailable { get; private set; } = true;
     public string Folder => _folder;
 
     public Store(string directory, bool createDirectories = true)
     {
+        SettingsService = new SettingsService(Data.Settings, settings => Data.Settings = settings);
         _folder = Path.GetFullPath(directory);
         if (createDirectories) Directory.CreateDirectory(_folder);
         _index = Path.Combine(_folder, "index.json");
@@ -547,6 +549,7 @@ public sealed class Store
                 if (!File.Exists(candidate)) continue;
                 if (JsonSerializer.Deserialize<StoreData>(File.ReadAllText(candidate), Json) is not { } data || !IsComplete(data)) continue;
                 Data = data;
+                SettingsService.Replace(data.Settings);
                 _recoveryMode = !string.Equals(candidate, _index, StringComparison.OrdinalIgnoreCase);
                 loaded = true;
                 break;
@@ -564,7 +567,12 @@ public sealed class Store
             IsAvailable = false;
             return;
         }
-        if (!loaded) { Data = new StoreData(); _recoveryMode = true; }
+        if (!loaded)
+        {
+            Data = new StoreData();
+            SettingsService.Replace(Data.Settings);
+            _recoveryMode = true;
+        }
         _preserveBackupOnce = _recoveryMode;
         var expired = Normalize();
         _knownIds = Data.All.Select(note => note.Id).ToHashSet(StringComparer.Ordinal);
@@ -591,6 +599,7 @@ public sealed class Store
                     if (n?["Id"]?.GetValue<string>() is { } id) texts[id] = n["Text"]?.GetValue<string>() ?? "";
             foreach (var note in data.All) note.SetMigratedText(texts.GetValueOrDefault(note.Id, ""));
             Data = data;
+            SettingsService.Replace(data.Settings);
             _recoveryMode = true;
             Normalize();
             return true;
@@ -608,14 +617,18 @@ public sealed class Store
         var d = Data;
         d.Version = 2;
         // Older builds stored a family name the editor can't load (it fell back to Cascadia Mono without a word).
-        if (d.Settings.Font == "Segoe UI Variable Text") d.Settings.Font = "Segoe UI";
+        // This owner-internal load path normalizes the live object before UI subscribers are attached.
+        SettingsService.Update(settings =>
+        {
+            if (settings.Font == "Segoe UI Variable Text") settings.Font = "Segoe UI";
+            settings.SplitSlot = Math.Clamp(settings.SplitSlot, 1, 9);
+        });
         if (d.Slots is not { Length: 9 }) d.Slots = Enumerable.Range(1, 9).Select(i => d.Slots?.ElementAtOrDefault(i - 1) ?? new Note { Slot = i }).ToArray();
         for (var i = 0; i < 9; i++) { d.Slots[i] ??= new Note(); d.Slots[i].Slot = i + 1; }
         d.Stack.RemoveAll(n => n is null);
         if (d.Stack.Count == 0) d.Stack.Add(new Note());
         d.Current = Math.Clamp(d.Current < 0 ? d.Stack.Count - 1 : d.Current, 0, d.Stack.Count - 1);
         d.ViewSlot = Math.Clamp(d.ViewSlot, 0, 9);
-        d.Settings.SplitSlot = Math.Clamp(d.Settings.SplitSlot, 1, 9);
         // Trash keeps 30 days.
         var expired = d.Trash.Where(n => n.Deleted is { } when && (DateTime.Now - when).TotalDays > 30).Select(n => n.Id).ToList();
         d.Trash.RemoveAll(n => n.Deleted is { } when && (DateTime.Now - when).TotalDays > 30);

@@ -388,7 +388,7 @@ internal sealed class SearchOverlay : Grid
 
     private void ToggleGrid()
     {
-        _window.Settings.SearchGrid = !_window.Settings.SearchGrid;
+        _window.SettingsService.Update(settings => settings.SearchGrid = !settings.SearchGrid);
         _window.OpenSearch(Query, ShowingTrash);
     }
 

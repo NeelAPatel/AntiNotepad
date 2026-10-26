@@ -5,10 +5,10 @@ namespace AntiNotepad.Model;
 /// <summary>First-run demo notes in the permanent slots.</summary>
 internal static class Welcome
 {
-    public static void SeedIfNew(StoreData data)
+    public static void SeedIfNew(StoreData data, SettingsService settings)
     {
         if (data.Settings.Welcomed) return;
-        data.Settings.Welcomed = true;
+        settings.Update(current => current.Welcomed = true);
 
         var notes = new[] { Markdown, Math, List, Timers, Guide };
         for (var i = 0; i < notes.Length; i++)

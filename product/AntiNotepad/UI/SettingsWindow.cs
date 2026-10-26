@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using Avalonia.Platform.Storage;
 using System.Diagnostics;
 using AntiNotepad;
+using AntiNotepad.Model;
 using AntiNotepad.Motion;
 using AntiNotepad.Platform;
 using AntiNotepad.Theme;
@@ -33,7 +34,8 @@ internal sealed partial class SettingsWindow : Window
     private static string _section = "theme";
     private static readonly HashSet<string> Expanded = ["light-palette", "backing", "toolbar", "scrolling", "switching", "open-at"];
 
-    private readonly PadWindow _pad;
+    private readonly SettingsService _settings;
+    private readonly ISettingsHost _host;
     private Palette _p;
     private readonly MotionPreview _preview;
     private readonly ScrollViewer _scroll = new() { HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
@@ -47,14 +49,15 @@ internal sealed partial class SettingsWindow : Window
     private string? _notesNotice;
     private Palette? _stylesPalette;
     private string? _searchQuery;
-    private Model.Settings S => _pad.Settings;
+    private Settings S => _settings.Current;
 
-    public SettingsWindow(PadWindow pad)
+    public SettingsWindow(SettingsService settings, ISettingsHost host)
     {
-        _pad = pad;
-        _p = pad.CurrentPalette;
+        _settings = settings;
+        _host = host;
+        _p = host.CurrentPalette;
         Title = $"{AppInfo.DisplayName} Settings";
-        Icon = pad.Icon;
+        Icon = host.Icon;
         Width = 900; Height = 720; MinWidth = 640; MinHeight = 460;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         WindowDecorations = WindowDecorations.BorderOnly;
@@ -75,8 +78,8 @@ internal sealed partial class SettingsWindow : Window
             if (_find.Text is { Length: > 0 }) _find.Text = "";
             else Close();
         }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
-        Deactivated += (_, _) => _pad.SettingsLostFocus();
-        Closed += (_, _) => { _preview.Release(); _pad.SettingsLostFocus(); };
+        Deactivated += (_, _) => _host.SettingsLostFocus();
+        Closed += (_, _) => { _preview.Release(); _host.SettingsLostFocus(); };
     }
 
     // ---------- look ----------
@@ -94,8 +97,8 @@ internal sealed partial class SettingsWindow : Window
     /// <summary>The pad's palette changed (a setting here, or Windows switching light and dark): dress to match.</summary>
     public void SyncLook()
     {
-        if (Equals(_p, _pad.CurrentPalette)) return;
-        _p = _pad.CurrentPalette;
+        if (Equals(_p, _host.CurrentPalette)) return;
+        _p = _host.CurrentPalette;
         Restyle();
     }
 
@@ -108,7 +111,7 @@ internal sealed partial class SettingsWindow : Window
     /// <summary>Settings were replaced wholesale (restore defaults, undo): rebuild what's on screen.</summary>
     public void Refresh()
     {
-        _p = _pad.CurrentPalette;
+        _p = _host.CurrentPalette;
         Restyle();
     }
 
@@ -125,9 +128,19 @@ internal sealed partial class SettingsWindow : Window
     /// <summary>Applies a change to the pad. Only <paramref name="rows"/> changes (an option that shows or hides rows) rebuild the page.</summary>
     private void Set(System.Action change, bool rows = false)
     {
-        change();
-        _pad.SettingsChanged();
-        if (!Equals(_p, _pad.CurrentPalette)) { _p = _pad.CurrentPalette; Restyle(); return; }
+        _settings.Update(_ => change());
+        AfterSet(rows);
+    }
+
+    private void SetLanguageEnabled(string id)
+    {
+        _settings.SetLanguageEnabled(id, !S.DisabledLanguages.Contains(id));
+        AfterSet(rows: true);
+    }
+
+    private void AfterSet(bool rows)
+    {
+        if (!Equals(_p, _host.CurrentPalette)) { _p = _host.CurrentPalette; Restyle(); return; }
         ApplyLook();
         _preview.ApplyLook(_p, S);
         if (!rows) return;
@@ -412,7 +425,7 @@ internal sealed partial class SettingsWindow : Window
             .. Expander("code", () => Fl(0xf2ef), "Code languages", "Off: plain text, not offered after ```",
                 enabled == Editor.CodeColors.Languages.Length ? $"All {enabled} on" : $"{enabled} of {Editor.CodeColors.Languages.Length} on",
                 () => SubRow(null, () => Kit.Toggles(_p, Editor.CodeColors.Languages.Select(l => (l.Id, l.Name)).ToList(),
-                    id => !S.DisabledLanguages.Contains(id), id => Set(() => { if (!S.DisabledLanguages.Remove(id)) S.DisabledLanguages.Add(id); }, rows: true)), wide: true)),
+                    id => !S.DisabledLanguages.Contains(id), SetLanguageEnabled), wide: true)),
         ]));
     }
 
@@ -473,11 +486,11 @@ internal sealed partial class SettingsWindow : Window
     {
         page.Children.Add(Group("Shortcuts"));
         page.Children.Add(Card(
-            Row(() => Fl(0xf4b8), $"Show or hide {AppInfo.Name}", null, () => HotkeyEditor(() => _pad.HotkeyStatus, text => _pad.RegisterHotkey(text) && Store(() => S.Hotkey = text), allowEmpty: false)),
-            Row(() => Fl(0xf8bd), "Open on a new note", null, () => HotkeyEditor(() => _pad.NewNoteHotkeyStatus, text =>
+            Row(() => Fl(0xf4b8), $"Show or hide {AppInfo.Name}", null, () => HotkeyEditor(() => _host.HotkeyStatus, text => _host.RegisterHotkey(text) && Store(() => S.Hotkey = text), allowEmpty: false)),
+            Row(() => Fl(0xf8bd), "Open on a new note", null, () => HotkeyEditor(() => _host.NewNoteHotkeyStatus, text =>
             {
                 var value = string.IsNullOrWhiteSpace(text) ? null : text;
-                return _pad.RegisterNewNoteHotkey(value) && Store(() => S.NewNoteHotkey = value);
+                return _host.RegisterNewNoteHotkey(value) && Store(() => S.NewNoteHotkey = value);
             }, allowEmpty: true))));
 
         page.Children.Add(Group("Opening"));
@@ -503,7 +516,7 @@ internal sealed partial class SettingsWindow : Window
             Row(() => Fl(0xf60e), "Start with Windows", null, () =>
             {
                 bool startup = false; try { startup = Startup.IsEnabled; } catch { }
-                return Toggle(startup, v => { try { Startup.SetEnabled(v); } catch (Exception ex) { _pad.Toast(ex.Message); } }, "Start with Windows");
+                return Toggle(startup, v => { try { Startup.SetEnabled(v); } catch (Exception ex) { _host.Toast(ex.Message); } }, "Start with Windows");
             })));
     }
 
@@ -512,7 +525,7 @@ internal sealed partial class SettingsWindow : Window
         "center" => "Center", "mouse" => "Mouse", "tray" => "Above the tray", "dropdown" => "Drop down from the top", _ => "Where I left it",
     };
 
-    private bool Store(System.Action change) { change(); _pad.SettingsChanged(); return true; }
+    private bool Store(System.Action change) { _settings.Update(_ => change()); return true; }
 
     /// <summary>The shortcut as key caps with a Change button; Change swaps in a box (Enter applies, Esc cancels).</summary>
     private Control HotkeyEditor(Func<string> current, Func<string, bool> apply, bool allowEmpty)
@@ -566,8 +579,8 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Group(AppInfo.Name));
         page.Children.Add(Card(
             Row(() => Fl(0xf4a3), $"{AppInfo.Name} {AppInfo.Version} ({AppInfo.Label})", $"{AppInfo.Description}\n{AppInfo.Copyright}", null),
-            Row(() => Fl(0xf4b8), "Keyboard shortcuts", "Every shortcut on one page", () => TextButton("Show", () => { _pad.ShowResident(); _pad.OpenHelp(); })),
-            Row(() => Fl(0xf19f), "Restore default settings", "Undo it from the pad's notice", () => TextButton("Restore", () => _pad.ResetSettings()))));
+            Row(() => Fl(0xf4b8), "Keyboard shortcuts", "Every shortcut on one page", () => TextButton("Show", () => { _host.ShowResident(); _host.OpenHelp(); })),
+            Row(() => Fl(0xf19f), "Restore default settings", "Undo it from the pad's notice", () => TextButton("Restore", () => _host.ResetSettings()))));
     }
 
     private void StoragePage(StackPanel page)
@@ -663,7 +676,7 @@ internal sealed partial class SettingsWindow : Window
 
     private void MoveNotes(string target)
     {
-        _pad.Save();
+        _host.Save();
         if (Program.Store.LastError is { } saveError)
         {
             _notesError = "Couldn't save notes · " + saveError;
@@ -758,12 +771,12 @@ internal sealed partial class SettingsWindow : Window
     {
         try
         {
-            if (!Directory.Exists(path)) { _pad.Toast($"Folder is unavailable · {path}"); return; }
+            if (!Directory.Exists(path)) { _host.Toast($"Folder is unavailable · {path}"); return; }
             var start = new ProcessStartInfo("explorer.exe") { UseShellExecute = true };
             start.ArgumentList.Add(path);
             Process.Start(start);
         }
-        catch (Exception ex) { _pad.Toast("Couldn't open folder · " + ex.Message); }
+        catch (Exception ex) { _host.Toast("Couldn't open folder · " + ex.Message); }
     }
 
     /// <summary>The one preview, moved to whichever page shows it, so its trace and scroll survive tab changes.</summary>
