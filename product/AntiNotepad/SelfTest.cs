@@ -24,6 +24,10 @@ internal static class SelfTest
         Console.WriteLine(settingsChangedPass ? "SETTINGS Changed" : "SETTINGS Changed FAIL " + settingsChangedReport);
         Check(settingsChangedPass, "settings Changed: " + settingsChangedReport);
 
+        var hotkeySwapPass = HotkeySwapChecks(out var hotkeySwapReport);
+        Console.WriteLine(hotkeySwapPass ? "HOTKEYS swap " + hotkeySwapReport : "HOTKEYS swap FAIL " + hotkeySwapReport);
+        Check(hotkeySwapPass, "hotkeys swap: " + hotkeySwapReport);
+
         Check(Calc.Calculator.SelfTest(out var calcReport), "calculator: " + calcReport);
         Check(ChromeTokens.PillHeight == 42 && ChromeTokens.PagerStripHeight == 50
             && ChromeTokens.TopBackdrop.MidpointStop == 46 && ChromeTokens.TopScrollableWhitespace == 40
@@ -106,6 +110,166 @@ internal static class SelfTest
         public string Display => $"{Caller.DeclaringType?.FullName}.{Caller.Name} -> {Setter.DeclaringType?.FullName}.{Setter.Name}";
     }
 
+    private sealed record FakeHotkeyOutcome(bool IsRegistered, string? ErrorMessage);
+
+    private sealed class FakeHotkeyRegistration(string label, FakeHotkeyOutcome outcome, Action onDispose) : IHotkeyRegistration
+    {
+        public string GestureLabel { get; } = label;
+        public bool IsRegistered { get; } = outcome.IsRegistered;
+        public string? RegistrationErrorMessage { get; } = outcome.ErrorMessage;
+        public int DisposeCount { get; private set; }
+
+        public void Dispose()
+        {
+            DisposeCount++;
+            onDispose();
+        }
+    }
+
+    private sealed class FakeHotkeyFactory(string name, List<string> order)
+    {
+        private readonly Dictionary<string, Queue<FakeHotkeyOutcome>> _outcomes = new(StringComparer.OrdinalIgnoreCase);
+        public List<FakeHotkeyRegistration> Created { get; } = [];
+
+        public void Queue(string label, params FakeHotkeyOutcome[] outcomes)
+        {
+            if (!_outcomes.TryGetValue(label, out var queue)) _outcomes[label] = queue = new Queue<FakeHotkeyOutcome>();
+            foreach (var outcome in outcomes) queue.Enqueue(outcome);
+        }
+
+        public IHotkeyRegistration Create(string label, Action<long> onPressed)
+        {
+            order.Add($"create:{name}:{label}");
+            var outcome = _outcomes.TryGetValue(label, out var queue) && queue.Count > 0
+                ? queue.Dequeue()
+                : new FakeHotkeyOutcome(true, null);
+            var registration = new FakeHotkeyRegistration(label, outcome, () => order.Add($"dispose:{name}:{label}"));
+            Created.Add(registration);
+            return registration;
+        }
+    }
+
+    private static bool HotkeySwapChecks(out string report)
+    {
+        const string firstLabel = "Ctrl+Alt+Shift+A";
+        const string secondLabel = "Ctrl+Alt+Shift+B";
+        const string newNoteLabel = "Ctrl+Alt+Shift+N";
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+        HotkeyRegistrar Make(FakeHotkeyFactory show, FakeHotkeyFactory newNote, Action<string> toast) =>
+            new(show.Create, newNote.Create, _ => { }, () => { }, toast);
+
+        try
+        {
+            var sameOrder = new List<string>();
+            var sameShow = new FakeHotkeyFactory("show", sameOrder);
+            var sameNewNote = new FakeHotkeyFactory("new-note", sameOrder);
+            var sameRegistrar = Make(sameShow, sameNewNote, _ => { });
+            var sameStatusChanges = 0;
+            sameRegistrar.HotkeyStatusChanged += _ => sameStatusChanges++;
+            var firstRegistered = sameRegistrar.RegisterHotkey(firstLabel);
+            var createdBeforeSame = sameShow.Created.Count;
+            var sameLabel = sameRegistrar.RegisterHotkey(firstLabel);
+            CheckCase(firstRegistered && sameLabel && sameShow.Created.Count == createdBeforeSame
+                && sameShow.Created[0].DisposeCount == 0,
+                "same registered label does not create or dispose a registration");
+            CheckCase(sameStatusChanges == 2, "show status event fires for each registration request");
+            sameRegistrar.Dispose();
+
+            var order = new List<string>();
+            var orderShow = new FakeHotkeyFactory("show", order);
+            var orderNewNote = new FakeHotkeyFactory("new-note", order);
+            var orderRegistrar = Make(orderShow, orderNewNote, _ => { });
+            var orderStarted = orderRegistrar.RegisterHotkey(firstLabel);
+            order.Clear();
+            var orderSwapped = orderRegistrar.RegisterHotkey(secondLabel);
+            CheckCase(orderStarted && orderSwapped && order.SequenceEqual(
+                [$"dispose:show:{firstLabel}", $"create:show:{secondLabel}"]),
+                "swap releases old registration before creating the new one");
+            orderRegistrar.Dispose();
+
+            var restoreOrder = new List<string>();
+            var restoreShow = new FakeHotkeyFactory("show", restoreOrder);
+            var restoreNewNote = new FakeHotkeyFactory("new-note", restoreOrder);
+            restoreShow.Queue(secondLabel, new FakeHotkeyOutcome(false, "registration conflict"));
+            var restoreRegistrar = Make(restoreShow, restoreNewNote, _ => { });
+            var restoreEvents = 0;
+            restoreRegistrar.HotkeyStatusChanged += _ => restoreEvents++;
+            var restoreStarted = restoreRegistrar.RegisterHotkey(firstLabel);
+            var refused = restoreRegistrar.RegisterHotkey(secondLabel);
+            CheckCase(restoreStarted && !refused && restoreShow.Created.Select(h => h.GestureLabel)
+                    .SequenceEqual([firstLabel, secondLabel, firstLabel])
+                && restoreShow.Created[0].DisposeCount == 1 && restoreShow.Created[1].DisposeCount == 1
+                && restoreShow.Created[2].IsRegistered
+                && restoreShow.Created[1].RegistrationErrorMessage == "registration conflict"
+                && restoreRegistrar.HotkeyStatus == firstLabel && restoreEvents == 2,
+                "refused replacement restores the old label and reports the restored status");
+            restoreRegistrar.Dispose();
+
+            var failedOrder = new List<string>();
+            var failedShow = new FakeHotkeyFactory("show", failedOrder);
+            var failedNewNote = new FakeHotkeyFactory("new-note", failedOrder);
+            failedShow.Queue(firstLabel, new FakeHotkeyOutcome(true, null), new FakeHotkeyOutcome(false, "restore refused"));
+            failedShow.Queue(secondLabel, new FakeHotkeyOutcome(false, "new key unavailable"));
+            var failedRegistrar = Make(failedShow, failedNewNote, _ => { });
+            var failedStarted = failedRegistrar.RegisterHotkey(firstLabel);
+            var failedReplacement = failedRegistrar.RegisterHotkey(secondLabel);
+            CheckCase(failedStarted && !failedReplacement && failedShow.Created.Count == 3
+                && failedShow.Created.All(h => h.DisposeCount == 1)
+                && failedRegistrar.HotkeyStatus == $"{secondLabel} unavailable: new key unavailable",
+                "failed replacement and restore leave the slot empty with the refusal status");
+            failedRegistrar.Dispose();
+
+            var blankOrder = new List<string>();
+            var blankShow = new FakeHotkeyFactory("show", blankOrder);
+            var blankNewNote = new FakeHotkeyFactory("new-note", blankOrder);
+            var blankRegistrar = Make(blankShow, blankNewNote, _ => { });
+            var newNoteEnabled = blankRegistrar.RegisterNewNoteHotkey(newNoteLabel);
+            var newNoteDisabled = blankRegistrar.RegisterNewNoteHotkey(" ");
+            CheckCase(newNoteEnabled && newNoteDisabled && blankNewNote.Created.Count == 1
+                && blankNewNote.Created[0].DisposeCount == 1 && blankRegistrar.NewNoteHotkeyStatus == "off",
+                "blank new-note gesture disposes and disables its slot");
+            blankRegistrar.Dispose();
+
+            var disposeOrder = new List<string>();
+            var disposeShow = new FakeHotkeyFactory("show", disposeOrder);
+            var disposeNewNote = new FakeHotkeyFactory("new-note", disposeOrder);
+            var disposeRegistrar = Make(disposeShow, disposeNewNote, _ => { });
+            disposeRegistrar.RegisterHotkey(firstLabel);
+            disposeRegistrar.RegisterNewNoteHotkey(newNoteLabel);
+            disposeRegistrar.Dispose();
+            disposeRegistrar.Dispose();
+            CheckCase(disposeShow.Created.Single().DisposeCount == 1 && disposeNewNote.Created.Single().DisposeCount == 1,
+                "dispose releases each active slot exactly once, including repeated disposal");
+
+            var parseOrder = new List<string>();
+            var parseShow = new FakeHotkeyFactory("show", parseOrder);
+            var parseNewNote = new FakeHotkeyFactory("new-note", parseOrder);
+            var toasts = new List<string>();
+            var parseRegistrar = Make(parseShow, parseNewNote, toasts.Add);
+            var parseEvents = 0;
+            parseRegistrar.HotkeyStatusChanged += _ => parseEvents++;
+            parseRegistrar.RegisterHotkey(firstLabel);
+            var parseDisposedBefore = parseShow.Created[0].DisposeCount;
+            var invalid = parseRegistrar.RegisterHotkey("not-a-hotkey");
+            CheckCase(!invalid && toasts.Count == 1 && toasts[0].Contains("Hotkey must", StringComparison.Ordinal)
+                && parseShow.Created.Count == 1 && parseShow.Created[0].DisposeCount == parseDisposedBefore
+                && parseRegistrar.HotkeyStatus == firstLabel && parseEvents == 1,
+                "unparsable gesture toasts and leaves the current slot untouched");
+            parseRegistrar.Dispose();
+
+            report = failures.Count == 0
+                ? "same-label no-op; release-before-create; refusal rollback and failed-restore status; blank new-note disable; idempotent disposal; parse toast; status events"
+                : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+        catch (Exception ex)
+        {
+            report = string.Join("; ", failures.Append(ex.ToString()));
+            return false;
+        }
+    }
+
     private static readonly LayerRule[] LayerRules =
     [
         new("Editor", "UI"),
@@ -116,6 +280,9 @@ internal static class SelfTest
         new("Theme", "Editor"),
         new("Platform", "UI"),
         new("Platform", "Editor"),
+        new("HotkeyRegistrar", "PadWindow", ExactFrom: typeof(HotkeyRegistrar), ExactTo: typeof(PadWindow)),
+        new("HotkeyRegistrar", "PadView", ExactFrom: typeof(HotkeyRegistrar), ExactTo: typeof(Editor.PadView)),
+        new("HotkeyRegistrar", "Program", ExactFrom: typeof(HotkeyRegistrar), ExactTo: typeof(Program)),
         new("SettingsWindow", "PadWindow", ExactFrom: typeof(SettingsWindow), ExactTo: typeof(PadWindow)),
         new("SettingsService", "UI", ExactFrom: typeof(SettingsService)),
         new("SettingsService", "Editor", ExactFrom: typeof(SettingsService)),

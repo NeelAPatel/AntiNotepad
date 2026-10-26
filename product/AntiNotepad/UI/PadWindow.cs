@@ -26,14 +26,18 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     private bool _quitting;
     private DateTime _hiddenAt = DateTime.Now;
     private IDisposable? _clipboardHook;
-    private GlobalHotkey? _hotkey, _newNoteHotkey;
+    private readonly HotkeyRegistrar _hotkeys;
     private TaskbarProxy? _taskbarProxy;
     private PadView _left = null!, _right = null!;
     private PadView _active = null!;
 
     public Action? QuitRequested { get; set; }
-    public string HotkeyStatus { get; private set; } = "";
-    public event Action<string>? HotkeyStatusChanged;
+    public string HotkeyStatus => _hotkeys.HotkeyStatus;
+    public event Action<string>? HotkeyStatusChanged
+    {
+        add => _hotkeys.HotkeyStatusChanged += value;
+        remove => _hotkeys.HotkeyStatusChanged -= value;
+    }
     internal StoreData Data => _store.Data;
     internal Settings Settings => _settingsService.Current;
     internal SettingsService SettingsService => _settingsService;
@@ -42,6 +46,12 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     {
         _store = store;
         _settingsService = settingsService;
+        _hotkeys = new HotkeyRegistrar(
+            (gesture, onPressed) => new GlobalHotkeyRegistration(this, onPressed, gesture),
+            (gesture, onPressed) => new GlobalHotkeyRegistration(this, onPressed, gesture, id: 0x4151, fromEnvironment: false),
+            pressed => Dispatcher.UIThread.Post(() => ToggleResident(pressed)),
+            () => Dispatcher.UIThread.Post(() => { ShowResident(); NewNote(); }),
+            text => Toast(text));
         Title = AppInfo.DisplayName;
         Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new Uri(AppInfo.IconUri)));
         Anim.Reduced = Settings.ReduceMotion;
@@ -278,8 +288,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         Program.FlushLogs();
         _quitting = true;
         CloseSettings();
-        _hotkey?.Dispose();
-        _newNoteHotkey?.Dispose();
+        _hotkeys.Dispose();
         _clipboardHook?.Dispose();
         _taskbarProxy?.Dispose(); _taskbarProxy = null;
         Close();
@@ -438,58 +447,9 @@ internal sealed partial class PadWindow : Window, ISettingsHost
 
     // ---------- hotkey ----------
 
-    internal bool RegisterHotkey(string? gesture)
-    {
-        try
-        {
-            // No gesture: the dev override, else the default.
-            var wanted = gesture ?? (Environment.GetEnvironmentVariable(AppInfo.Env("HOTKEY")) is { Length: > 0 } env ? env : GlobalHotkey.DefaultGesture.Label);
-            var label = GlobalHotkey.HotkeyGesture.Parse(wanted).Label;
-            var ok = SwapHotkey(ref _hotkey, wanted, label,
-                g => new GlobalHotkey(this, pressed => Dispatcher.UIThread.Post(() => ToggleResident(pressed)), g), out var error);
-            HotkeyStatus = _hotkey?.GestureLabel ?? $"{label} unavailable: {error}";
-            HotkeyStatusChanged?.Invoke(HotkeyStatus);
-            return ok;
-        }
-        catch (FormatException ex) { Toast(ex.Message); return false; }
-    }
-
-    /// <summary>
-    /// Replaces a registered hotkey. Windows keeps two registrations with the same id side by side and may release either,
-    /// so the old key is released first, and put back if Windows refuses the new one. The same key again changes nothing.
-    /// </summary>
-    private static bool SwapHotkey(ref GlobalHotkey? slot, string wanted, string label, Func<string, GlobalHotkey> make, out string? error)
-    {
-        error = null;
-        if (slot is { IsRegistered: true } && string.Equals(slot.GestureLabel, label, StringComparison.OrdinalIgnoreCase)) return true;
-        var previous = slot?.GestureLabel;
-        slot?.Dispose(); slot = null;
-        var next = make(wanted);
-        if (next.IsRegistered) { slot = next; return true; }
-        error = next.RegistrationErrorMessage;
-        next.Dispose();
-        if (previous is not null)
-        {
-            var back = make(previous);
-            if (back.IsRegistered) slot = back; else back.Dispose();
-        }
-        return false;
-    }
-
-    /// <summary>A second global hotkey that shows the pad on a fresh note. Empty turns it off. Returns false if Windows refused it.</summary>
-    internal bool RegisterNewNoteHotkey(string? gesture)
-    {
-        if (string.IsNullOrWhiteSpace(gesture)) { _newNoteHotkey?.Dispose(); _newNoteHotkey = null; return true; }
-        try
-        {
-            var label = GlobalHotkey.HotkeyGesture.Parse(gesture).Label;
-            return SwapHotkey(ref _newNoteHotkey, gesture, label,
-                g => new GlobalHotkey(this, _ => Dispatcher.UIThread.Post(() => { ShowResident(); NewNote(); }), g, id: 0x4151, fromEnvironment: false), out _);
-        }
-        catch (FormatException ex) { Toast(ex.Message); return false; }
-    }
-
-    internal string NewNoteHotkeyStatus => _newNoteHotkey?.GestureLabel ?? "off";
+    internal bool RegisterHotkey(string? gesture) => _hotkeys.RegisterHotkey(gesture);
+    internal bool RegisterNewNoteHotkey(string? gesture) => _hotkeys.RegisterNewNoteHotkey(gesture);
+    internal string NewNoteHotkeyStatus => _hotkeys.NewNoteHotkeyStatus;
 
     // ---------- appearance ----------
 
