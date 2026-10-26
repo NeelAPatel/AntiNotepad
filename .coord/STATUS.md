@@ -35,6 +35,8 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   A42-padview-commands, A43-app-context, A44-platform-seam. Read-only investigator sessions wrote each plan on its own
   branch (`reorg/<ID-slug>`: `.coord/tasks/<ID-slug>-plan.md` + impact report); they never implement. Implementation
   starts per task on the user's go, from that plan, with the user's hand test before merge. Next: A40.
+- A40-settings-change-event dispatched 2026-10-26 on `reorg/A40-settings-change-event-impl` (the investigator's worktree holds
+  `reorg/A40-settings-change-event`): Sonnet manager session drives Codex luna xhigh from the investigator plan; user hand test before merge.
 - Native-window work (A32/A34) parked; any retry must not change the window's frame styles and
   goes lab-first. A34 (lab) was dropped: thick native border, bars broken in all three styles.
 
