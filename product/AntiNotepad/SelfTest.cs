@@ -32,6 +32,14 @@ internal static class SelfTest
         Console.WriteLine(clipboardPolicyPass ? "CLIPBOARD policy " + clipboardPolicyReport : "CLIPBOARD policy FAIL " + clipboardPolicyReport);
         Check(clipboardPolicyPass, "clipboard policy: " + clipboardPolicyReport);
 
+        var mathNotesPass = MathNotesChecks(out var mathNotesReport);
+        Console.WriteLine(mathNotesPass ? "MATH NOTES " + mathNotesReport : "MATH NOTES FAIL " + mathNotesReport);
+        Check(mathNotesPass, "math notes: " + mathNotesReport);
+
+        var listEditingPass = ListEditingChecks(out var listEditingReport);
+        Console.WriteLine(listEditingPass ? "LIST EDITING " + listEditingReport : "LIST EDITING FAIL " + listEditingReport);
+        Check(listEditingPass, "list editing: " + listEditingReport);
+
         Check(Calc.Calculator.SelfTest(out var calcReport), "calculator: " + calcReport);
         Check(ChromeTokens.PillHeight == 42 && ChromeTokens.PagerStripHeight == 50
             && ChromeTokens.TopBackdrop.MidpointStop == 46 && ChromeTokens.TopScrollableWhitespace == 40
@@ -60,8 +68,8 @@ internal static class SelfTest
         Check(AppInfoSelfTest(out var identityReport), "app identity: " + identityReport);
         Check(DevIdentitySelfTest(out var devIdentityReport), "dev identity: " + devIdentityReport);
 
-        Check(Calc.Calculator.EvaluateInline(Editor.PadView.BlankLabel("spent 12.50 + 8.25 + 3.99 ="))?.Value is > 24.73 and < 24.75, "inline with a label");
-        Check(Calc.Calculator.EvaluateInline(Editor.PadView.StripListMarker("- 19.99 * 3 ="))?.Value is > 59.96 and < 59.98, "inline after a bullet");
+        Check(Calc.Calculator.EvaluateInline(Editor.MathNotes.BlankLabel("spent 12.50 + 8.25 + 3.99 ="))?.Value is > 24.73 and < 24.75, "inline with a label");
+        Check(Calc.Calculator.EvaluateInline(Editor.MathNotes.StripListMarker("- 19.99 * 3 ="))?.Value is > 59.96 and < 59.98, "inline after a bullet");
 
         var dir = Path.Combine(Path.GetTempPath(), $"{AppInfo.Name.ToLowerInvariant()}-selftest-{Guid.NewGuid():N}");
         try
@@ -340,6 +348,48 @@ internal static class SelfTest
         return failures.Count == 0;
     }
 
+    private static bool MathNotesChecks(out string report)
+    {
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+
+        CheckCase(Editor.MathNotes.BlankLabel("spent 12.50 + 8.25 =") == "      12.50 + 8.25 =",
+            "blank prose label through the first number");
+        CheckCase(Editor.MathNotes.StripListMarker("- 19.99 * 3 =") == "  19.99 * 3 =",
+            "blank bullet marker without shifting math");
+        CheckCase(Editor.MathNotes.StripListMarker("2. 19 + 3 =") == "2. 19 + 3 =",
+            "keep numbered marker for math evaluation");
+        CheckCase(Editor.MathNotes.StripListMarker("  - [x] 3 + 4 =") == "        3 + 4 =",
+            "blank checkbox bullet marker without shifting math");
+
+        var evaluated = Editor.MathNotes.EvaluateMath(["math", "lunch 12 + 3 =", "x = 4", "x * 2 ="]);
+        CheckCase(evaluated[1]?.Result?.Value == 15, "label line evaluates after retry");
+        CheckCase(evaluated[2]?.AssignedName == "x" && evaluated[2]?.Result?.Value == 4
+            && evaluated[3]?.Result?.Value == 8, "variables survive label retry");
+        CheckCase(evaluated[1]?.Tokens is { Count: > 0 } tokens
+            && tokens[0] == new Calc.CalcToken(0, "lunch ".Length, Calc.TokenKind.Comment),
+            "label token keeps its comment span");
+        CheckCase(Editor.MathNotes.EvaluateMath(["math", "- 2 + 3 ="])[1]?.Result?.Value == 5,
+            "bullet math evaluates as positive");
+
+        report = failures.Count == 0 ? "8 checks" : string.Join("; ", failures);
+        return failures.Count == 0;
+    }
+
+    private static bool ListEditingChecks(out string report)
+    {
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+
+        CheckCase(Editor.ListEditing.TryListNumber("123456789. item", out var nineDigits) && nineDigits == 123_456_789,
+            "9-digit list marker accepted");
+        CheckCase(!Editor.ListEditing.TryListNumber("1234567890. item", out _),
+            "10-digit list marker rejected");
+
+        report = failures.Count == 0 ? "2 checks" : string.Join("; ", failures);
+        return failures.Count == 0;
+    }
+
     private static readonly LayerRule[] LayerRules =
     [
         new("Editor", "UI"),
@@ -356,6 +406,37 @@ internal static class SelfTest
         new("ClipboardCapturePolicy", "UI", ExactFrom: typeof(Editor.ClipboardCapturePolicy)),
         new("ClipboardCapturePolicy", "Platform", ExactFrom: typeof(Editor.ClipboardCapturePolicy)),
         new("ClipboardCapturePolicy", "Motion", ExactFrom: typeof(Editor.ClipboardCapturePolicy)),
+        new("MathNotes", "UI", ExactFrom: typeof(Editor.MathNotes)),
+        new("MathNotes", "Platform", ExactFrom: typeof(Editor.MathNotes)),
+        new("MathNotes", "Motion", ExactFrom: typeof(Editor.MathNotes)),
+        new("MathNotes", "Theme", ExactFrom: typeof(Editor.MathNotes)),
+        new("MathNotes", "PadWindow", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(PadWindow)),
+        new("MathNotes", "PadView", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(Editor.PadView)),
+        new("MathNotes", "Program", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(Program)),
+        new("MathNotes", "Native", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(Native)),
+        new("MathNotes", "Window", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(Avalonia.Controls.Window)),
+        new("MathNotes", "Control", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(Avalonia.Controls.Control)),
+        new("MathNotes", "Dispatcher", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(Avalonia.Threading.Dispatcher)),
+        new("MathNotes", "TextDocument", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(AvaloniaEdit.Document.TextDocument)),
+        new("MathNotes", "Timers", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(Timers)),
+        new("MathNotes", "Settings", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(Settings)),
+        new("MathNotes", "SettingsService", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(SettingsService)),
+        new("ListEditing", "UI", ExactFrom: typeof(Editor.ListEditing)),
+        new("ListEditing", "Platform", ExactFrom: typeof(Editor.ListEditing)),
+        new("ListEditing", "Motion", ExactFrom: typeof(Editor.ListEditing)),
+        new("ListEditing", "Theme", ExactFrom: typeof(Editor.ListEditing)),
+        new("ListEditing", "PadWindow", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(PadWindow)),
+        new("ListEditing", "PadView", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Editor.PadView)),
+        new("ListEditing", "Program", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Program)),
+        new("ListEditing", "Native", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Native)),
+        new("ListEditing", "Window", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Avalonia.Controls.Window)),
+        new("ListEditing", "Control", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Avalonia.Controls.Control)),
+        new("ListEditing", "Dispatcher", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Avalonia.Threading.Dispatcher)),
+        new("ListEditing", "TextDocument", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(AvaloniaEdit.Document.TextDocument)),
+        new("ListEditing", "Timers", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Timers)),
+        new("ListEditing", "Settings", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Settings)),
+        new("ListEditing", "SettingsService", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(SettingsService)),
+        new("ListEditing", "CheckboxGenerator", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Editor.CheckboxGenerator)),
         new("ClipboardCapturePolicy", "PadWindow", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(PadWindow)),
         new("ClipboardCapturePolicy", "PadView", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Editor.PadView)),
         new("ClipboardCapturePolicy", "Program", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Program)),
@@ -905,7 +986,7 @@ internal static class SelfTest
 
         try
         {
-            Check(!Editor.PadView.TryListNumber("123456789012. item", out _), "12-digit list marker is not continued or renumbered");
+            Check(!Editor.ListEditing.TryListNumber("123456789012. item", out _), "12-digit list marker is not continued or renumbered");
 
             Check(!Timers.TryParse("999999999999999999999h", out _, out _), "oversized timer is rejected");
             Check(!Timers.TryParse("\u0665m", out _, out _), "non-ASCII timer digits are rejected");

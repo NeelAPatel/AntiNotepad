@@ -29,7 +29,6 @@ namespace AntiNotepad.Editor;
 internal sealed class PadView : Grid
 {
     private static readonly Dictionary<string, TextDocument> Documents = [];
-    private static readonly Regex ListPrefix = new(@"^(\s*)((?:[-*+]\s+)?\[[ xX]\]\s?|[-*+]\s|([0-9]+)([.)])\s)", RegexOptions.Compiled);
 
     private readonly Timers _timers;
     private Action? _timerTick;
@@ -532,53 +531,6 @@ internal sealed class PadView : Grid
         Redraw();
     }
 
-    /// <summary>
-    /// Math notes with prose labels ("lunch 12 + 3"): lines that fail are retried with the leading words blanked,
-    /// keeping column offsets so token colours still line up. Bullets are ignored the same way.
-    /// </summary>
-    internal static IReadOnlyList<LineEval?> EvaluateMath(string[] lines)
-    {
-        var cleaned = lines.Select((l, i) => i == 0 ? l : StripListMarker(l)).ToArray();
-        var first = Calculator.EvaluateNote(cleaned);
-        var retry = (string[])cleaned.Clone();
-        var changed = false;
-        for (var i = 1; i < retry.Length; i++)
-        {
-            if (first[i]?.Result is not null) continue;
-            var blanked = BlankLabel(retry[i]);
-            if (blanked != retry[i]) { retry[i] = blanked; changed = true; }
-        }
-        if (!changed) return first;
-        var second = Calculator.EvaluateNote(retry);
-        var merged = new LineEval?[first.Count];
-        for (var i = 0; i < merged.Length; i++)
-        {
-            var retryLine = second[i];
-            if (first[i]?.Result is not null || retryLine is null
-                || (retryLine.Result is null && retryLine.ErrorReason == CalcErrorReason.None))
-            { merged[i] = first[i]; continue; }
-            var label = retry[i].Length - retry[i].TrimStart().Length;
-            var tokens = new List<CalcToken> { new(0, label, TokenKind.Comment) };
-            tokens.AddRange(retryLine.Tokens);
-            merged[i] = new LineEval { Result = retryLine.Result, ErrorReason = retryLine.ErrorReason, Tokens = tokens, AssignedName = retryLine.AssignedName };
-        }
-        return merged;
-    }
-
-    /// <summary>"spent 12.50 + 8.25 =" → spaces up to the first number, currency sign or bracket.</summary>
-    internal static string BlankLabel(string line)
-    {
-        var m = Regex.Match(line, @"^\s*[A-Za-z][A-Za-z' ]*?\s+(?=[\d$€£(.])");
-        return m.Success ? new string(' ', m.Length) + line[m.Length..] : line;
-    }
-
-    /// <summary>`- 19.99 * 3 =` is a bullet, not a negative number.</summary>
-    internal static string StripListMarker(string line)
-    {
-        var m = ListPrefix.Match(line);
-        return m.Success && !m.Groups[3].Success ? new string(' ', m.Length) + line[m.Length..] : line;
-    }
-
     private void Redraw() => Editor.TextArea.TextView.Redraw();
 
     public bool InFence(int line) => Structure is { } s && line < s.InFence.Length && s.InFence[line];
@@ -757,18 +709,8 @@ internal sealed class PadView : Grid
 
     private bool IsListLine(int lineNumber)
     {
-        var m = ListPrefix.Match(Editor.Document.GetText(Editor.Document.GetLineByNumber(lineNumber)));
-        return m.Success && (!m.Groups[3].Success || TryListNumber(m, out _));
-    }
-
-    internal static bool TryListNumber(string line, out int number) => TryListNumber(ListPrefix.Match(line), out number);
-
-    private static bool TryListNumber(Match match, out int number)
-    {
-        number = 0;
-        var digits = match.Groups[3];
-        return digits.Success && digits.Length <= 9
-            && int.TryParse(digits.Value, NumberStyles.None, CultureInfo.InvariantCulture, out number);
+        var m = ListEditing.ListPrefix.Match(Editor.Document.GetText(Editor.Document.GetLineByNumber(lineNumber)));
+        return m.Success && (!m.Groups[3].Success || ListEditing.TryListNumber(m, out _));
     }
 
     private void Indent(int lineNumber, bool deeper)
@@ -794,7 +736,7 @@ internal sealed class PadView : Grid
         var doc = Editor.Document;
         string Text(int n) => doc.GetText(doc.GetLineByNumber(n));
         // A list block: list items and their indented text, up to a blank or unindented non-list line.
-        bool InBlock(int n) { var t = Text(n); return t.Trim().Length > 0 && (ListPrefix.IsMatch(t) || t.StartsWith(' ')); }
+        bool InBlock(int n) { var t = Text(n); return t.Trim().Length > 0 && (ListEditing.ListPrefix.IsMatch(t) || t.StartsWith(' ')); }
         if (lineNumber < 1 || lineNumber > doc.LineCount || !InBlock(lineNumber)) return;
         int first = lineNumber, last = lineNumber;
         while (first > 1 && InBlock(first - 1)) first--;
@@ -802,12 +744,12 @@ internal sealed class PadView : Grid
         var counts = new Dictionary<int, int>();
         for (var n = first; n <= last; n++)
         {
-            var m = ListPrefix.Match(Text(n));
+            var m = ListEditing.ListPrefix.Match(Text(n));
             if (!m.Success) continue;
             var indent = m.Groups[1].Length;
             foreach (var deeper in counts.Keys.Where(k => k > indent).ToList()) counts.Remove(deeper);
             if (!m.Groups[3].Success) { counts.Remove(indent); continue; }
-            if (!TryListNumber(m, out var own)) { counts.Remove(indent); continue; }
+            if (!ListEditing.TryListNumber(m, out var own)) { counts.Remove(indent); continue; }
             if (counts.TryGetValue(indent, out var previous) && previous == 999_999_999)
             { counts.Remove(indent); continue; }
             var want = counts.TryGetValue(indent, out var before) ? before + 1 : fresh && n == lineNumber ? 1 : own;
@@ -823,7 +765,7 @@ internal sealed class PadView : Grid
         var line = doc.GetLineByNumber(CaretLine);
         var text = doc.GetText(line);
         if (Mode == NoteMode.Code) return false;
-        var m = ListPrefix.Match(text);
+        var m = ListEditing.ListPrefix.Match(text);
         if (!m.Success)
         {
             if (Mode == NoteMode.List && (line.LineNumber == 1 || text.Trim().Length > 0))
@@ -833,7 +775,7 @@ internal sealed class PadView : Grid
             }
             return false;
         }
-        if (m.Groups[3].Success && (!TryListNumber(m, out var ownNumber) || ownNumber == 999_999_999)) return false;
+        if (m.Groups[3].Success && (!ListEditing.TryListNumber(m, out var ownNumber) || ownNumber == 999_999_999)) return false;
         var indent = m.Groups[1].Value;
         var prefix = m.Groups[2].Value;
         if (text.Trim() == prefix.Trim())
@@ -847,7 +789,7 @@ internal sealed class PadView : Grid
         string next;
         if (m.Groups[3].Success)
         {
-            TryListNumber(m, out var nextNumber);
+            ListEditing.TryListNumber(m, out var nextNumber);
             next = $"{nextNumber + 1}{m.Groups[4].Value} ";
         }
         else if (prefix.Contains('[')) next = Regex.Replace(prefix, @"\[[ xX]\]", "[ ]");
@@ -1063,8 +1005,8 @@ internal sealed class NoteAnalysis
                 _inlineLines.Remove(i + 1);
                 inlineWork++;
                 if (!Lines[i].TrimEnd().EndsWith('=')) continue;
-                var marked = PadView.StripListMarker(Lines[i]);
-                if ((Calculator.EvaluateInlineLine(marked) ?? Calculator.EvaluateInlineLine(PadView.BlankLabel(marked))) is { } result
+                var marked = MathNotes.StripListMarker(Lines[i]);
+                if ((Calculator.EvaluateInlineLine(marked) ?? Calculator.EvaluateInlineLine(MathNotes.BlankLabel(marked))) is { } result
                     && (result.Result is not null || result.ErrorReason == CalcErrorReason.MixedCurrencies))
                     _inlineLines[i + 1] = result;
             }
@@ -1074,7 +1016,7 @@ internal sealed class NoteAnalysis
         if (Mode == NoteMode.Math)
         {
             // Variables and prose-label retry semantics can affect later lines, so math deliberately keeps the full pass.
-            _mathLines = PadView.EvaluateMath(Lines);
+            _mathLines = MathNotes.EvaluateMath(Lines);
         }
         else _mathLines = [];
 

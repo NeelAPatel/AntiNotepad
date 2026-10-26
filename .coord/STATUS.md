@@ -34,7 +34,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Reorg series, one at a time from the latest dev, in order: A40-settings-change-event, A41-padwindow-split,
   A42-padview-commands, A43-app-context, A44-platform-seam. Read-only investigator sessions wrote each plan on its own
   branch (`reorg/<ID-slug>`: `.coord/tasks/<ID-slug>-plan.md` + impact report); they never implement. Implementation
-  starts per task on the user's go, from that plan, with the user's hand test before merge. Next: A42a-math-notes.
+  starts per task on the user's go, from that plan, with the user's hand test before merge. Next: A42b-note-analysis-file.
   Rule (user, 2026-10-26): after each task merges, the next task's investigator merges the latest dev into its branch and
   re-runs a read-only Codex delta audit (`<ID-slug>-impact-r2`), updating its plan with a "Recommendation on handling"
   (scope, split into sub-tasks or not, riskiest parts and hand checks). The user decides from that before implementation.
@@ -50,7 +50,9 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - A42-padview-commands re-audit done (on `reorg/A42-padview-commands`): split, stop after A42b. User's sequence
   (2026-10-26): A42a-math-notes -> hand test -> merge -> A42b-note-analysis-file re-audit -> implement -> hand test -> merge
   -> stop at the gate (A42c-checkbox-indent, A42d-list-commands optional; ChipText/FoldSelection skipped). A42a dispatched
-  on `reorg/A42a-math-notes`.
+  and implemented on `reorg/A42a-math-notes` (`Editor/MathNotes`, `Editor/ListEditing`, 31 LAYERS rows, `MATH NOTES`/`LIST EDITING`
+  selftests; PadView 1,190 -> 1,132; gate passed, guards proven); user hand test passed 2026-10-26; merged into dev
+  (7f845be, 0 warnings, SELFTEST PASS, 57 LAYERS rows). Next: A42b-note-analysis-file re-audit by the A42 investigator.
 - A40-settings-change-event merged into dev (565a1e5, user-approved live 2026-10-26): SettingsService + one Changed event,
   SettingsWindow on ISettingsHost, all writers migrated; guards now 12 LAYERS lines + `SETTINGS Changed`; 0 warnings, SELFTEST PASS.
   Fix: SearchGrid/SplitSlot/Split now saved. Folding/InlineMath apply only on note bind/analysis (pre-existing; backlog).
@@ -69,6 +71,9 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   knows exactly what is being checked. Lab-first.
 - A47-hotkey-recorder (user wish, 2026-10-26): binding a hotkey in Settings should record the actual key press, not typed text.
   Lab-first.
+- A48-answers-toggle-clarity (user wish, 2026-10-26): the Settings toggle "Answers" (`Settings.InlineMath`) should say what it does
+  (basic `=` math on any note; off = results only in math-mode notes), e.g. "Basic math in all notes", and apply live
+  (today it applies only on note bind/analysis). Lab-first.
 - A46-motion-timings (after A44, if needed): user finds the Settings page change and the pill appearing too fast;
   investigate Windows 11 motion timings as the reference across the app. Lab-first.
 
