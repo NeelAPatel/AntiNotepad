@@ -35,6 +35,10 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   A42-padview-commands, A43-app-context, A44-platform-seam. Read-only investigator sessions wrote each plan on its own
   branch (`reorg/<ID-slug>`: `.coord/tasks/<ID-slug>-plan.md` + impact report); they never implement. Implementation
   starts per task on the user's go, from that plan, with the user's hand test before merge. Next: A41-padwindow-split.
+  Rule (user, 2026-10-26): after each task merges, the next task's investigator merges the latest dev into its branch and
+  re-runs a read-only Codex delta audit (`<ID-slug>-impact-r2`), updating its plan with a "Recommendation on handling"
+  (scope, split into sub-tasks or not, riskiest parts and hand checks). The user decides from that before implementation.
+  A41 re-audit running now; A42 follows once A41 merges, then A43, A44.
 - A40-settings-change-event merged into dev (565a1e5, user-approved live 2026-10-26): SettingsService + one Changed event,
   SettingsWindow on ISettingsHost, all writers migrated; guards now 12 LAYERS lines + `SETTINGS Changed`; 0 warnings, SELFTEST PASS.
   Fix: SearchGrid/SplitSlot/Split now saved. Folding/InlineMath apply only on note bind/analysis (pre-existing; backlog).
