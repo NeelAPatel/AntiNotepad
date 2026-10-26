@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Media;
 using AntiNotepad.Model;
+using AntiNotepad.Motion;
 
 namespace AntiNotepad.UI;
 

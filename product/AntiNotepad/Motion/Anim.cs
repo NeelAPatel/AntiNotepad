@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace AntiNotepad.UI;
+namespace AntiNotepad.Motion;
 
 /// <summary>Frame-driven tweens. Short, interruptible, and skipped entirely with reduced motion.</summary>
 internal static class Anim

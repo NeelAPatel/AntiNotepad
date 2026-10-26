@@ -7,7 +7,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using AvaloniaEdit;
 using AvaloniaEdit.Rendering;
-using AntiNotepad.UI;
+using AntiNotepad.Motion;
 
 namespace AntiNotepad.Editor;
 

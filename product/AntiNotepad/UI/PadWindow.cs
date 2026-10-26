@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using AntiNotepad;
 using AntiNotepad.Editor;
 using AntiNotepad.Model;
+using AntiNotepad.Motion;
 using AntiNotepad.Platform;
 using AntiNotepad.Theme;
 

@@ -1,4 +1,4 @@
-namespace AntiNotepad.UI;
+namespace AntiNotepad.Theme;
 
 /// <summary>Shared measurements for the pad's top bar and pager.</summary>
 internal static class ChromeTokens

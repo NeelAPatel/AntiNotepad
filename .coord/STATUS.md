@@ -1,6 +1,6 @@
 # STATUS
 
-Updated: 2026-10-25
+Updated: 2026-10-26
 Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 
 ## Working rules right now
@@ -25,7 +25,16 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - A36-drop-pill-lab merged: dev-only Lab row and pill blur code removed; Solid pill ships; top-bar blur now in
   `UI/PadWindow.TopBlur.cs`. Branch and worktree deleted. Nothing in flight.
 - A37-caret-drag-jump merged (user-approved live): SmoothCaret glide restarts from the drawn position, fixing the caret
-  jumping back to the pause point during drag-select. Nothing in flight.
+  jumping back to the pause point during drag-select. Nothing in flight at that point.
+- A38-mvvm-audit done (branch `feat/A38-mvvm-audit`, `docs/A38-mvvm-audit.md`, not merged): no MVVM; targeted
+  refactors A39-A44 on `reorg/<ID-slug>` branches off dev.
+- A39-motion-out-of-ui merged into dev (bac8a6c, user-approved live 2026-10-26): Editor no longer depends on UI
+  (`Anim` -> `Motion/`, `ChromeTokens` -> `Theme/`, context menu shown via the host); IL-based `LAYERS` selftest with 8
+  one-way rules. Branch kept until the reorg series ends.
+- Reorg series, one at a time from the latest dev, in order: A40-settings-change-event, A41-padwindow-split,
+  A42-padview-commands, A43-app-context, A44-platform-seam. Read-only investigator sessions wrote each plan on its own
+  branch (`reorg/<ID-slug>`: `.coord/tasks/<ID-slug>-plan.md` + impact report); they never implement. Implementation
+  starts per task on the user's go, from that plan, with the user's hand test before merge. Next: A40.
 - Native-window work (A32/A34) parked; any retry must not change the window's frame styles and
   goes lab-first. A34 (lab) was dropped: thick native border, bars broken in all three styles.
 
@@ -37,6 +46,10 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 
 ## Backlog (someday)
 - Settings window runs about 90 threads (memory is stable, freed 5 of 5 cycles).
+- A45-dev-build-badge (user wish, 2026-10-26): the dev badge shows which task/build is live (e.g. "dev · A39"), so the user
+  knows exactly what is being checked. Lab-first.
+- A46-motion-timings (after A44, if needed): user finds the Settings page change and the pill appearing too fast;
+  investigate Windows 11 motion timings as the reference across the app. Lab-first.
 
 ## Keep
 - Backups made from Claude shells live only in `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\`:

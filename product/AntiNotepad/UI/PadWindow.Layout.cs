@@ -10,7 +10,9 @@ using Avalonia.Threading;
 using AntiNotepad;
 using AntiNotepad.Editor;
 using AntiNotepad.Model;
+using AntiNotepad.Motion;
 using AntiNotepad.Platform;
+using AntiNotepad.Theme;
 
 namespace AntiNotepad.UI;
 
@@ -115,14 +117,15 @@ internal sealed partial class PadWindow
         pane.ModeChanged += UpdateChrome;
         pane.Toast += t => Toast(t);
         pane.Copy += text => _ = CopyText(text);
+        pane.ShowMenu = (anchor, entries) => PadMenu.Show(anchor, entries, _palette, Settings);
         pane.AppMenu = () =>
         [
-            new("New note", "Ctrl+N", PadMenu.NewNote, NewNote),
-            new("Search notes", "Ctrl+F", PadMenu.Search, () => OpenSearch()),
-            new(Settings.Split ? "Close split view" : "Split view", "Ctrl+OemBackslash", PadMenu.Split, ToggleSplit),
-            new(Settings.Pinned ? "Unpin" : "Keep on top", "Ctrl+T", PadMenu.Pin, TogglePin),
+            new("New note", "Ctrl+N", MenuGlyphs.NewNote, NewNote),
+            new("Search notes", "Ctrl+F", MenuGlyphs.Search, () => OpenSearch()),
+            new(Settings.Split ? "Close split view" : "Split view", "Ctrl+OemBackslash", MenuGlyphs.Split, ToggleSplit),
+            new(Settings.Pinned ? "Unpin" : "Keep on top", "Ctrl+T", MenuGlyphs.Pin, TogglePin),
             MenuEntry.Separator,
-            new("Settings", "Ctrl+OemComma", PadMenu.Settings, OpenSettings),
+            new("Settings", "Ctrl+OemComma", MenuGlyphs.Settings, OpenSettings),
             new($"Hide {AppInfo.Name}", "Escape", null, HideResident),
         ];
         pane.FocusedPane += () => { if (_active != pane) { _active = pane; UpdateChrome(); } };

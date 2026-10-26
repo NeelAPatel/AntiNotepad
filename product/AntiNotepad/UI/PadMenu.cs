@@ -4,17 +4,12 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using AntiNotepad.Editor;
 using AntiNotepad.Model;
 using AntiNotepad.Platform;
 using AntiNotepad.Theme;
 
 namespace AntiNotepad.UI;
-
-/// <summary>One right-click menu line. A null header is a separator; a null icon leaves the icon column empty.</summary>
-internal sealed record MenuEntry(string? Header, string? Keys = null, string? Icon = null, Action? Click = null, bool Enabled = true)
-{
-    public static readonly MenuEntry Separator = new((string?)null);
-}
 
 /// <summary>The right-click menu: a Windows-style popup with Fluent icons and dimmed shortcuts.</summary>
 internal static class PadMenu
@@ -202,8 +197,8 @@ internal static class PadMenu
         if (glyph is null) return new Border { Width = 18, Height = 18, VerticalAlignment = VerticalAlignment.Center };
         var color = colored ? glyph switch
         {
-            NewNote or Pin => p.Accent,
-            Delete => p.Error,
+            MenuGlyphs.NewNote or MenuGlyphs.Pin => p.Accent,
+            MenuGlyphs.Delete => p.Error,
             _ => p.Ink,
         } : p.Ink;
         return new GlyphIcon(glyph, color, 16, 0)
@@ -234,8 +229,4 @@ internal static class PadMenu
     };
 
     private static string Display(string keys) => keys.Replace("OemBackslash", "\\").Replace("OemComma", ",").Replace("Escape", "Esc").Replace("Delete", "Del");
-
-    // Segoe Fluent Icons code points.
-    public const string Undo = "", Redo = "", Cut = "", Copy = "", Paste = "", SelectAll = "\uE8B3",
-        Delete = Glyph.Delete, NewNote = "", Search = Glyph.Search, Split = Glyph.Split, Pin = Glyph.Pin, Settings = Glyph.Settings;
 }

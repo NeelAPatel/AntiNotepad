@@ -20,8 +20,8 @@ using AvaloniaEdit.Rendering;
 using AntiNotepad;
 using AntiNotepad.Calc;
 using AntiNotepad.Model;
+using AntiNotepad.Motion;
 using AntiNotepad.Theme;
-using AntiNotepad.UI;
 
 namespace AntiNotepad.Editor;
 
@@ -76,6 +76,7 @@ internal sealed class PadView : Grid
     public event Action<string>? Copy;
     /// <summary>The pad's own items for the right-click menu (new note, search, pin...), added below the editing ones.</summary>
     public Func<IEnumerable<MenuEntry>>? AppMenu { get; set; }
+    public Action<Control, IReadOnlyList<MenuEntry>>? ShowMenu { get; set; }
 
     public PadView(Palette palette, Settings settings, Timers timers)
     {
@@ -138,7 +139,7 @@ internal sealed class PadView : Grid
         Editor.TextArea.Caret.PositionChanged += (_, _) => OnCaretMoved();
         Editor.TextArea.GotFocus += (_, _) => FocusedPane?.Invoke();
         view.AddHandler(PointerPressedEvent, OnViewPressed, RoutingStrategies.Tunnel);
-        Editor.TextArea.ContextRequested += (_, e) => { ShowMenu(); e.Handled = true; };
+        Editor.TextArea.ContextRequested += (_, e) => { RequestMenu(); e.Handled = true; };
         view.PointerMoved += OnViewMoved;
         // Fold chevrons show while the pointer is over the note.
         PointerEntered += (_, _) => { if (_gutter is not null) _gutter.ShowAll = true; };
@@ -731,27 +732,27 @@ internal sealed class PadView : Grid
     }
 
     /// <summary>Right-click: the standard editing commands, then the pad's own.</summary>
-    private void ShowMenu()
+    private void RequestMenu()
     {
         var area = Editor.TextArea;
         var hasSelection = !area.Selection.IsEmpty;
         var items = new List<MenuEntry>
         {
-            new("Undo", "Ctrl+Z", PadMenu.Undo, () => Editor.Undo(), Editor.CanUndo),
-            new("Redo", "Ctrl+Y", PadMenu.Redo, () => Editor.Redo(), Editor.CanRedo),
-            new("Select all", "Ctrl+A", PadMenu.SelectAll, () => Editor.SelectAll()),
+            new("Undo", "Ctrl+Z", MenuGlyphs.Undo, () => Editor.Undo(), Editor.CanUndo),
+            new("Redo", "Ctrl+Y", MenuGlyphs.Redo, () => Editor.Redo(), Editor.CanRedo),
+            new("Select all", "Ctrl+A", MenuGlyphs.SelectAll, () => Editor.SelectAll()),
             MenuEntry.Separator,
-            new("Cut", "Ctrl+X", PadMenu.Cut, () => Editor.Cut(), hasSelection),
-            new("Copy", "Ctrl+C", PadMenu.Copy, () => Editor.Copy(), hasSelection),
-            new("Paste", "Ctrl+V", PadMenu.Paste, () => Editor.Paste()),
-            new("Delete", "Delete", PadMenu.Delete, () => area.Selection.ReplaceSelectionWithText(string.Empty), hasSelection),
+            new("Cut", "Ctrl+X", MenuGlyphs.Cut, () => Editor.Cut(), hasSelection),
+            new("Copy", "Ctrl+C", MenuGlyphs.Copy, () => Editor.Copy(), hasSelection),
+            new("Paste", "Ctrl+V", MenuGlyphs.Paste, () => Editor.Paste()),
+            new("Delete", "Delete", MenuGlyphs.Delete, () => area.Selection.ReplaceSelectionWithText(string.Empty), hasSelection),
         };
         if (AppMenu?.Invoke() is { } extra)
         {
             items.Add(MenuEntry.Separator);
             items.AddRange(extra);
         }
-        PadMenu.Show(Editor, items, Palette, Settings);
+        ShowMenu?.Invoke(Editor, items);
     }
 
     private bool IsListLine(int lineNumber)

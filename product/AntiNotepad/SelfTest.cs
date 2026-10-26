@@ -1,7 +1,10 @@
 using AntiNotepad.Model;
 using AntiNotepad.Platform;
+using AntiNotepad.Theme;
 using AntiNotepad.UI;
 using Avalonia.Platform;
+using System.Reflection;
+using System.Reflection.Emit;
 
 namespace AntiNotepad;
 
@@ -12,6 +15,10 @@ internal static class SelfTest
     {
         var failures = new List<string>();
         void Check(bool ok, string what) { if (!ok) failures.Add(what); }
+
+        var layerCheck = CheckLayers();
+        foreach (var line in layerCheck.Lines) Console.WriteLine(line);
+        foreach (var failure in layerCheck.Failures) Check(false, failure);
 
         Check(Calc.Calculator.SelfTest(out var calcReport), "calculator: " + calcReport);
         Check(ChromeTokens.PillHeight == 42 && ChromeTokens.PagerStripHeight == 50
@@ -77,6 +84,241 @@ internal static class SelfTest
         Console.WriteLine(failures.Count == 0 ? "SELFTEST PASS" : "SELFTEST FAIL\n" + string.Join("\n", failures));
         return failures.Count == 0 ? 0 : 1;
     }
+
+    private sealed record LayerRule(string From, string? To, bool AnyAntiNotepadNamespace = false)
+    {
+        public string Label => AnyAntiNotepadNamespace ? $"{From}->*any other AntiNotepad namespace*" : $"{From}->{To}";
+    }
+
+    private static readonly LayerRule[] LayerRules =
+    [
+        new("Editor", "UI"),
+        new("Model", "UI"),
+        new("Model", "Editor"),
+        new("Calc", null, AnyAntiNotepadNamespace: true),
+        new("Theme", "UI"),
+        new("Theme", "Editor"),
+        new("Platform", "UI"),
+        new("Platform", "Editor"),
+    ];
+
+    private static (List<string> Lines, List<string> Failures) CheckLayers()
+    {
+        var lines = new List<string>();
+        var failures = new List<string>();
+        var scanErrors = new List<string>();
+        Type[] types;
+        try { types = typeof(SelfTest).Assembly.GetTypes(); }
+        catch (ReflectionTypeLoadException ex)
+        {
+            types = ex.Types.OfType<Type>().ToArray();
+            scanErrors.Add($"assembly type load was partial ({ex.LoaderExceptions?.Length ?? 0} loader errors)");
+        }
+
+        var references = new Dictionary<Type, HashSet<Type>>();
+        foreach (var type in types.Where(t => InNamespace(t.Namespace, "Editor")))
+        {
+            var found = new HashSet<Type>();
+            references[type] = found;
+            try
+            {
+                AddType(type, found);
+                AddType(type.BaseType, found);
+                foreach (var iface in type.GetInterfaces()) AddType(iface, found);
+
+                const BindingFlags declared = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
+                    | BindingFlags.Static | BindingFlags.DeclaredOnly;
+                foreach (var field in type.GetFields(declared)) AddType(field.FieldType, found);
+                foreach (var property in type.GetProperties(declared))
+                {
+                    AddType(property.PropertyType, found);
+                    foreach (var parameter in property.GetIndexParameters()) AddType(parameter.ParameterType, found);
+                }
+                foreach (var ev in type.GetEvents(declared)) AddType(ev.EventHandlerType, found);
+                foreach (var constructor in type.GetConstructors(declared)) ScanMethod(constructor, found, scanErrors);
+                if (type.TypeInitializer is { } initializer) ScanMethod(initializer, found, scanErrors);
+                foreach (var method in type.GetMethods(declared)) ScanMethod(method, found, scanErrors);
+            }
+            catch (Exception ex) { scanErrors.Add($"{type.FullName}: reflection {ex.GetType().Name}"); }
+        }
+
+        foreach (var rule in LayerRules)
+        {
+            var offenders = references.SelectMany(pair => pair.Value
+                    .Where(target => MatchesRule(rule, pair.Key.Namespace, target.Namespace))
+                    .Select(target => (Source: pair.Key, Target: target)))
+                .Distinct()
+                .OrderBy(pair => pair.Source.FullName, StringComparer.Ordinal)
+                .ThenBy(pair => pair.Target.FullName, StringComparer.Ordinal)
+                .ToArray();
+            lines.Add($"LAYERS {rule.Label} {offenders.Length} refs");
+            foreach (var offender in offenders)
+                failures.Add($"layer violation {rule.Label}: {offender.Source.FullName} -> {offender.Target.FullName}");
+        }
+
+        foreach (var error in scanErrors.Distinct(StringComparer.Ordinal)) failures.Add("layer scan: " + error);
+        return (lines, failures);
+    }
+
+    private static bool MatchesRule(LayerRule rule, string? from, string? to)
+    {
+        if (!InNamespace(from, rule.From)) return false;
+        if (rule.AnyAntiNotepadNamespace)
+            return IsAntiNotepadNamespace(to) && !InNamespace(to, rule.From);
+        return InNamespace(to, rule.To!);
+    }
+
+    private static bool InNamespace(string? actual, string segment) =>
+        actual == $"AntiNotepad.{segment}" || actual?.StartsWith($"AntiNotepad.{segment}.", StringComparison.Ordinal) == true;
+
+    private static bool IsAntiNotepadNamespace(string? value) =>
+        value == "AntiNotepad" || value?.StartsWith("AntiNotepad.", StringComparison.Ordinal) == true;
+
+    private static void AddType(Type? type, HashSet<Type> found)
+    {
+        if (type is null || !found.Add(type)) return;
+        if (type.HasElementType) AddType(type.GetElementType(), found);
+        if (type.IsGenericParameter)
+        {
+            foreach (var constraint in type.GetGenericParameterConstraints()) AddType(constraint, found);
+        }
+        if (type.IsGenericType)
+        {
+            AddType(type.GetGenericTypeDefinition(), found);
+            foreach (var argument in type.GetGenericArguments()) AddType(argument, found);
+        }
+        if (type.IsFunctionPointer)
+        {
+            AddType(type.GetFunctionPointerReturnType(), found);
+            foreach (var parameter in type.GetFunctionPointerParameterTypes()) AddType(parameter, found);
+        }
+    }
+
+    private static void ScanMethod(MethodBase method, HashSet<Type> found, List<string> errors)
+    {
+        AddType(method.DeclaringType, found);
+        foreach (var parameter in method.GetParameters()) AddType(parameter.ParameterType, found);
+        if (method is MethodInfo info) AddType(info.ReturnType, found);
+        if (method is MethodInfo methodInfo)
+        {
+            foreach (var argument in methodInfo.GetGenericArguments())
+            {
+                AddType(argument, found);
+                if (argument.IsGenericParameter)
+                    foreach (var constraint in argument.GetGenericParameterConstraints()) AddType(constraint, found);
+            }
+        }
+
+        MethodBody? body;
+        try { body = method.GetMethodBody(); }
+        catch (Exception ex) { errors.Add($"{method.DeclaringType?.FullName}.{method.Name}: {ex.GetType().Name}"); return; }
+        if (body?.GetILAsByteArray() is not { } il) return;
+
+        var module = method.Module;
+        var typeArguments = method.DeclaringType?.GetGenericArguments();
+        var methodArguments = method is MethodInfo genericMethod && genericMethod.IsGenericMethod
+            ? genericMethod.GetGenericArguments() : null;
+        var opcodes = OpCodeMap.Value;
+        var position = 0;
+        while (position < il.Length)
+        {
+            var instructionOffset = position;
+            var code = il[position++];
+            short value = code == 0xfe && position < il.Length
+                ? unchecked((short)(0xfe00 | il[position++]))
+                : code;
+            if (!opcodes.TryGetValue(value, out var opcode))
+            {
+                errors.Add($"{method.DeclaringType?.FullName}.{method.Name}: unknown IL opcode at {instructionOffset}");
+                break;
+            }
+
+            var operandStart = position;
+            var tokenKind = opcode.OperandType;
+            int operandSize;
+            switch (tokenKind)
+            {
+                case OperandType.InlineNone: operandSize = 0; break;
+                case OperandType.ShortInlineBrTarget:
+                case OperandType.ShortInlineI:
+                case OperandType.ShortInlineVar: operandSize = 1; break;
+                case OperandType.InlineVar: operandSize = 2; break;
+                case OperandType.InlineI:
+                case OperandType.InlineBrTarget:
+                case OperandType.InlineField:
+                case OperandType.InlineMethod:
+                case OperandType.InlineSig:
+                case OperandType.InlineString:
+                case OperandType.InlineTok:
+                case OperandType.InlineType:
+                case OperandType.ShortInlineR: operandSize = 4; break;
+                case OperandType.InlineI8:
+                case OperandType.InlineR: operandSize = 8; break;
+                case OperandType.InlineSwitch:
+                    if (!HasBytes(il, position, 4)) { errors.Add($"{method.Name}: truncated switch at {instructionOffset}"); return; }
+                    var branches = BitConverter.ToInt32(il, position);
+                    if (branches < 0 || branches > (il.Length - position - 4) / 4)
+                    { errors.Add($"{method.Name}: invalid switch at {instructionOffset}"); return; }
+                    operandSize = 4 + branches * 4;
+                    break;
+                default:
+                    errors.Add($"{method.DeclaringType?.FullName}.{method.Name}: unsupported IL operand {tokenKind}");
+                    return;
+            }
+            if (!HasBytes(il, position, operandSize))
+            { errors.Add($"{method.DeclaringType?.FullName}.{method.Name}: truncated IL at {instructionOffset}"); return; }
+
+            if (operandSize == 4 && tokenKind is OperandType.InlineType or OperandType.InlineMethod or OperandType.InlineField or OperandType.InlineTok)
+            {
+                var token = BitConverter.ToInt32(il, operandStart);
+                try
+                {
+                    if (tokenKind == OperandType.InlineType) AddType(module.ResolveType(token, typeArguments, methodArguments), found);
+                    else if (tokenKind == OperandType.InlineMethod)
+                    {
+                        if (module.ResolveMethod(token, typeArguments, methodArguments) is { } target) AddMethodReference(target, found);
+                    }
+                    else if (tokenKind == OperandType.InlineField)
+                    {
+                        if (module.ResolveField(token, typeArguments, methodArguments) is { } field)
+                        { AddType(field.DeclaringType, found); AddType(field.FieldType, found); }
+                    }
+                    else if (module.ResolveMember(token, typeArguments, methodArguments) is { } member)
+                    {
+                        if (member is Type resolvedType) AddType(resolvedType, found);
+                        else if (member is MethodBase resolvedMethod) AddMethodReference(resolvedMethod, found);
+                        else if (member is FieldInfo resolvedField)
+                        { AddType(resolvedField.DeclaringType, found); AddType(resolvedField.FieldType, found); }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errors.Add($"{method.DeclaringType?.FullName}.{method.Name}: token 0x{token:x8} {ex.GetType().Name}");
+                }
+            }
+            position += operandSize;
+        }
+    }
+
+    private static void AddMethodReference(MethodBase method, HashSet<Type> found)
+    {
+        AddType(method.DeclaringType, found);
+        foreach (var parameter in method.GetParameters()) AddType(parameter.ParameterType, found);
+        if (method is MethodInfo info)
+        {
+            AddType(info.ReturnType, found);
+            foreach (var argument in info.GetGenericArguments()) AddType(argument, found);
+        }
+    }
+
+    private static bool HasBytes(byte[] il, int position, int count) =>
+        count >= 0 && position >= 0 && position <= il.Length - count;
+
+    private static readonly Lazy<Dictionary<short, OpCode>> OpCodeMap = new(() =>
+        typeof(OpCodes).GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Where(field => field.FieldType == typeof(OpCode))
+            .Select(field => (OpCode)field.GetValue(null)!)
+            .ToDictionary(opcode => opcode.Value));
 
     private static bool DefaultDataMigrationSelfTest(out string report)
     {

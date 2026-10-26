@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
 using AntiNotepad;
+using AntiNotepad.Motion;
 using AntiNotepad.Platform;
 
 namespace AntiNotepad.UI;

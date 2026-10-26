@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using Avalonia.Platform.Storage;
 using System.Diagnostics;
 using AntiNotepad;
+using AntiNotepad.Motion;
 using AntiNotepad.Platform;
 using AntiNotepad.Theme;
 

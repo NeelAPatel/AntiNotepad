@@ -5,6 +5,7 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using AntiNotepad.Editor;
 using AntiNotepad.Platform;
+using AntiNotepad.Theme;
 
 namespace AntiNotepad.UI;
 

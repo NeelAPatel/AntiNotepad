@@ -7,7 +7,6 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Utils;
 using AvaloniaEdit.Rendering;
 using AntiNotepad.Theme;
-using AntiNotepad.UI;
 
 namespace AntiNotepad.Editor;
 
