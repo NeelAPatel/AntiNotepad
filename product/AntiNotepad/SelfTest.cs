@@ -28,6 +28,10 @@ internal static class SelfTest
         Console.WriteLine(hotkeySwapPass ? "HOTKEYS swap " + hotkeySwapReport : "HOTKEYS swap FAIL " + hotkeySwapReport);
         Check(hotkeySwapPass, "hotkeys swap: " + hotkeySwapReport);
 
+        var clipboardPolicyPass = ClipboardPolicyChecks(out var clipboardPolicyReport);
+        Console.WriteLine(clipboardPolicyPass ? "CLIPBOARD policy " + clipboardPolicyReport : "CLIPBOARD policy FAIL " + clipboardPolicyReport);
+        Check(clipboardPolicyPass, "clipboard policy: " + clipboardPolicyReport);
+
         Check(Calc.Calculator.SelfTest(out var calcReport), "calculator: " + calcReport);
         Check(ChromeTokens.PillHeight == 42 && ChromeTokens.PagerStripHeight == 50
             && ChromeTokens.TopBackdrop.MidpointStop == 46 && ChromeTokens.TopScrollableWhitespace == 40
@@ -270,6 +274,72 @@ internal static class SelfTest
         }
     }
 
+    private static bool ClipboardPolicyChecks(out string report)
+    {
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+
+        var blank = new Editor.ClipboardCapturePolicy();
+        CheckCase(blank.CheckText(null) == Editor.ClipboardCapturePolicy.TextCheck.Blank
+            && blank.CheckText("") == Editor.ClipboardCapturePolicy.TextCheck.Blank
+            && blank.CheckText(" \t\r\n") == Editor.ClipboardCapturePolicy.TextCheck.Blank, "blank inputs");
+
+        var ownCopy = new Editor.ClipboardCapturePolicy();
+        ownCopy.RecordOwnCopy("x");
+        CheckCase(ownCopy.CheckText("x") == Editor.ClipboardCapturePolicy.TextCheck.OwnCopy
+            && ownCopy.CheckText(" x ") == Editor.ClipboardCapturePolicy.TextCheck.Eligible
+            && ownCopy.CheckText("X") == Editor.ClipboardCapturePolicy.TextCheck.Eligible, "raw own-copy match");
+
+        var lastCaptured = new Editor.ClipboardCapturePolicy();
+        var acceptedRepeat = lastCaptured.Decide("x", "clipboard");
+        CheckCase(acceptedRepeat
+            && lastCaptured.CheckText("x") == Editor.ClipboardCapturePolicy.TextCheck.LastCaptured
+            && lastCaptured.CheckText(" x ") == Editor.ClipboardCapturePolicy.TextCheck.Eligible
+            && lastCaptured.Decide(" y ", "clipboard")
+            && lastCaptured.CheckText(" y ") == Editor.ClipboardCapturePolicy.TextCheck.LastCaptured
+            && lastCaptured.CheckText("y") == Editor.ClipboardCapturePolicy.TextCheck.Eligible, "raw last-captured match");
+
+        var contained = new Editor.ClipboardCapturePolicy();
+        CheckCase(!contained.Decide(" cat ", "clipboard\nconcatenate")
+            && contained.Decide("Cat", "clipboard\nconcatenate"), "substring and case-sensitive containment");
+
+        var rejectedKeepsLast = new Editor.ClipboardCapturePolicy();
+        var acceptedOld = rejectedKeepsLast.Decide("old", "clipboard");
+        var rejectedCat = rejectedKeepsLast.Decide("cat", "cat");
+        CheckCase(acceptedOld && !rejectedCat
+            && rejectedKeepsLast.CheckText("old") == Editor.ClipboardCapturePolicy.TextCheck.LastCaptured,
+            "rejection preserves last capture");
+
+        var dedupeBeforeFormatting = new Editor.ClipboardCapturePolicy();
+        CheckCase(dedupeBeforeFormatting.Decide("a\r\nb", "a\nb")
+            && !new Editor.ClipboardCapturePolicy().Decide(" a ", "a"), "trimmed raw containment");
+
+        CheckCase(Editor.ClipboardCapturePolicy.FormatAppend(" \r\nalpha\r\n  beta\r\n ", false) == "\n- alpha\n    beta",
+            "CRLF and indentation formatting");
+        CheckCase(Editor.ClipboardCapturePolicy.FormatAppend("a\nb", true) == "- a\n  b"
+            && Editor.ClipboardCapturePolicy.FormatAppend("a\rb", true) == "- a\rb", "LF and bare-CR formatting");
+        CheckCase(Editor.ClipboardCapturePolicy.FormatAppend(" x ", true) == "- x"
+            && Editor.ClipboardCapturePolicy.FormatAppend(" x ", false) == "\n- x", "newline join formatting");
+
+        CheckCase(new Editor.ClipboardCapturePolicy().Decide("x", null), "null existing text");
+
+        var precedence = new Editor.ClipboardCapturePolicy();
+        precedence.RecordOwnCopy(" ");
+        var blankPrecedesOwn = precedence.CheckText(" ") == Editor.ClipboardCapturePolicy.TextCheck.Blank;
+        var ownPrecedesLast = new Editor.ClipboardCapturePolicy();
+        ownPrecedesLast.Decide("x", "clipboard");
+        ownPrecedesLast.RecordOwnCopy("x");
+        CheckCase(blankPrecedesOwn
+            && ownPrecedesLast.CheckText("x") == Editor.ClipboardCapturePolicy.TextCheck.OwnCopy, "filter precedence");
+
+        var beforeInsert = new Editor.ClipboardCapturePolicy();
+        CheckCase(beforeInsert.Decide("x", "clipboard")
+            && beforeInsert.CheckText("x") == Editor.ClipboardCapturePolicy.TextCheck.LastCaptured, "record before insert effect");
+
+        report = failures.Count == 0 ? "12 cases" : string.Join("; ", failures);
+        return failures.Count == 0;
+    }
+
     private static readonly LayerRule[] LayerRules =
     [
         new("Editor", "UI"),
@@ -283,6 +353,17 @@ internal static class SelfTest
         new("HotkeyRegistrar", "PadWindow", ExactFrom: typeof(HotkeyRegistrar), ExactTo: typeof(PadWindow)),
         new("HotkeyRegistrar", "PadView", ExactFrom: typeof(HotkeyRegistrar), ExactTo: typeof(Editor.PadView)),
         new("HotkeyRegistrar", "Program", ExactFrom: typeof(HotkeyRegistrar), ExactTo: typeof(Program)),
+        new("ClipboardCapturePolicy", "UI", ExactFrom: typeof(Editor.ClipboardCapturePolicy)),
+        new("ClipboardCapturePolicy", "Platform", ExactFrom: typeof(Editor.ClipboardCapturePolicy)),
+        new("ClipboardCapturePolicy", "Motion", ExactFrom: typeof(Editor.ClipboardCapturePolicy)),
+        new("ClipboardCapturePolicy", "PadWindow", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(PadWindow)),
+        new("ClipboardCapturePolicy", "PadView", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Editor.PadView)),
+        new("ClipboardCapturePolicy", "Program", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Program)),
+        new("ClipboardCapturePolicy", "Native", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Native)),
+        new("ClipboardCapturePolicy", "Window", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Avalonia.Controls.Window)),
+        new("ClipboardCapturePolicy", "Control", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Avalonia.Controls.Control)),
+        new("ClipboardCapturePolicy", "Dispatcher", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Avalonia.Threading.Dispatcher)),
+        new("ClipboardCapturePolicy", "TextDocument", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(AvaloniaEdit.Document.TextDocument)),
         new("SettingsWindow", "PadWindow", ExactFrom: typeof(SettingsWindow), ExactTo: typeof(PadWindow)),
         new("SettingsService", "UI", ExactFrom: typeof(SettingsService)),
         new("SettingsService", "Editor", ExactFrom: typeof(SettingsService)),

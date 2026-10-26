@@ -46,6 +46,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     {
         _store = store;
         _settingsService = settingsService;
+        _clipboardPolicy = new();
         _hotkeys = new HotkeyRegistrar(
             (gesture, onPressed) => new GlobalHotkeyRegistration(this, onPressed, gesture),
             (gesture, onPressed) => new GlobalHotkeyRegistration(this, onPressed, gesture, id: 0x4151, fromEnvironment: false),

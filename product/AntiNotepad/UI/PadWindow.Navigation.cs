@@ -284,12 +284,11 @@ internal sealed partial class PadWindow
 
     // ---------- clipboard capture ----------
 
-    private string? _ownClipboard;
-    private string? _lastCaptured;
+    private readonly ClipboardCapturePolicy _clipboardPolicy;
 
     internal async Task CopyText(string text)
     {
-        _ownClipboard = text;
+        _clipboardPolicy.RecordOwnCopy(text);
         if (Clipboard is { } clipboard) await clipboard.SetTextAsync(text);
     }
 
@@ -307,13 +306,11 @@ internal sealed partial class PadWindow
         if (Native.ClipboardIsPrivate()) return;
         string? text;
         try { text = await clipboard.TryGetTextAsync(); } catch { return; }
-        if (string.IsNullOrWhiteSpace(text) || text == _ownClipboard || text == _lastCaptured) return;
+        if (_clipboardPolicy.CheckText(text) != ClipboardCapturePolicy.TextCheck.Eligible) return;
         // Copies out of the clipboard note itself would echo back in; skip anything already in it.
-        if (target.PeekText().Contains(text.Trim())) return;
-        _lastCaptured = text;
+        if (!_clipboardPolicy.Decide(text!, target.PeekText())) return;
         var doc = PadView.DocumentFor(target);
-        var entry = text.Trim().Replace("\r\n", "\n").Replace("\n", "\n  ");
-        doc.Insert(doc.TextLength, (doc.Text.EndsWith('\n') ? "" : "\n") + "- " + entry);
+        doc.Insert(doc.TextLength, ClipboardCapturePolicy.FormatAppend(text!, doc.Text.EndsWith('\n')));
         if (!IsVisible) _hiddenAt = DateTime.Now;
         Edited();
     }
