@@ -52,7 +52,9 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   -> stop at the gate (A42c-checkbox-indent, A42d-list-commands optional; ChipText/FoldSelection skipped). A42a dispatched
   and implemented on `reorg/A42a-math-notes` (`Editor/MathNotes`, `Editor/ListEditing`, 31 LAYERS rows, `MATH NOTES`/`LIST EDITING`
   selftests; PadView 1,190 -> 1,132; gate passed, guards proven); user hand test passed 2026-10-26; merged into dev
-  (7f845be, 0 warnings, SELFTEST PASS, 57 LAYERS rows). Next: A42b-note-analysis-file re-audit by the A42 investigator.
+  (7f845be, 0 warnings, SELFTEST PASS, 57 LAYERS rows). 
+- A42b-note-analysis-file re-audit done (on `reorg/A42-padview-commands`): do as scoped, verbatim move, nothing
+  added. Dispatched on `reorg/A42b-note-analysis-file`. After it: stop at the A42c/A42d gate (user decides).
 - A40-settings-change-event merged into dev (565a1e5, user-approved live 2026-10-26): SettingsService + one Changed event,
   SettingsWindow on ISettingsHost, all writers migrated; guards now 12 LAYERS lines + `SETTINGS Changed`; 0 warnings, SELFTEST PASS.
   Fix: SearchGrid/SplitSlot/Split now saved. Folding/InlineMath apply only on note bind/analysis (pre-existing; backlog).
