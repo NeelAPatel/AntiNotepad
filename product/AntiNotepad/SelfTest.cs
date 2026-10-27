@@ -437,6 +437,22 @@ internal static class SelfTest
         new("ListEditing", "Settings", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Settings)),
         new("ListEditing", "SettingsService", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(SettingsService)),
         new("ListEditing", "CheckboxGenerator", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Editor.CheckboxGenerator)),
+        new("NoteAnalysis", "PadView", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(Editor.PadView)),
+        new("NoteAnalysis", "UI", ExactFrom: typeof(Editor.NoteAnalysis)),
+        new("NoteAnalysis", "Platform", ExactFrom: typeof(Editor.NoteAnalysis)),
+        new("NoteAnalysis", "Motion", ExactFrom: typeof(Editor.NoteAnalysis)),
+        new("NoteAnalysis", "Theme", ExactFrom: typeof(Editor.NoteAnalysis)),
+        new("NoteAnalysis", "PadWindow", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(PadWindow)),
+        new("NoteAnalysis", "Program", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(Program)),
+        new("NoteAnalysis", "Native", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(Native)),
+        new("NoteAnalysis", "Window", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(Avalonia.Controls.Window)),
+        new("NoteAnalysis", "Control", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(Avalonia.Controls.Control)),
+        new("NoteAnalysis", "Dispatcher", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(Avalonia.Threading.Dispatcher)),
+        new("NoteAnalysis", "Settings", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(Settings)),
+        new("NoteAnalysis", "SettingsService", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(SettingsService)),
+        new("NoteAnalysis", "TextEditor", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(AvaloniaEdit.TextEditor)),
+        new("NoteAnalysis", "TextArea", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(AvaloniaEdit.Editing.TextArea)),
+        new("NoteAnalysis", "TextView", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(AvaloniaEdit.Rendering.TextView)),
         new("ClipboardCapturePolicy", "PadWindow", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(PadWindow)),
         new("ClipboardCapturePolicy", "PadView", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Editor.PadView)),
         new("ClipboardCapturePolicy", "Program", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Program)),
@@ -1015,8 +1031,8 @@ internal static class SelfTest
 
             bool parsedFirst = Timers.TryParse("5m tea", out var firstDuration, out var firstLabel, out var firstText);
             bool parsedSecond = Timers.TryParse("5m coffee", out var secondDuration, out var secondLabel, out var secondText);
-            var firstKey = Editor.PadView.TimerKey("selftest", firstText, 1);
-            var secondKey = Editor.PadView.TimerKey("selftest", secondText, 1);
+            var firstKey = Editor.NoteAnalysis.TimerKey("selftest", firstText, 1);
+            var secondKey = Editor.NoteAnalysis.TimerKey("selftest", secondText, 1);
             Check(parsedFirst && parsedSecond && firstDuration == secondDuration && firstLabel != secondLabel && firstKey == secondKey,
                 "timer key survives a label edit");
 
