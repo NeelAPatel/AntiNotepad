@@ -34,11 +34,11 @@ internal sealed partial class PadWindow
 #pragma warning restore CS0618
             return;
         }
-        if (e.Key == Key.F11 && Program.IsDev)
+        if (e.Key == Key.F11 && _isDev)
         {
             // Dev-only memory probe: managed heap vs what the GC has committed.
             var info = GC.GetGCMemoryInfo();
-            Program.Log($"mem managed={GC.GetTotalMemory(false) / 1048576.0:F1}MB heap={info.HeapSizeBytes / 1048576.0:F1}MB committed={info.TotalCommittedBytes / 1048576.0:F1}MB docs={Editor.PadView.CachedDocuments} gen2={GC.CollectionCount(2)}");
+            _log.Write($"mem managed={GC.GetTotalMemory(false) / 1048576.0:F1}MB heap={info.HeapSizeBytes / 1048576.0:F1}MB committed={info.TotalCommittedBytes / 1048576.0:F1}MB docs={Editor.PadView.CachedDocuments} gen2={GC.CollectionCount(2)}");
             e.Handled = true;
             return;
         }
@@ -166,7 +166,7 @@ internal sealed partial class PadWindow
         // From the tray the pad may be hidden: show it too, so changes are visible on a real note.
         if (!IsVisible) ShowResident();
         if (_settingsWindow is { } open) { open.Activate(); return; }
-        var window = new SettingsWindow(_settingsService, this);
+        var window = new SettingsWindow(_settingsService, this, _softwareRendering);
         _settingsWindow = window;
         _settingsGone = new WeakReference(window);
         window.Closed += (_, _) =>
@@ -200,10 +200,10 @@ internal sealed partial class PadWindow
             GC.WaitForPendingFinalizers();
             GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
             Native.TrimWorkingSet();
-            if (Program.IsDev)
+            if (_isDev)
             {
                 using var self = System.Diagnostics.Process.GetCurrentProcess();
-                Program.Log($"settings closed: freed={!(_settingsGone?.IsAlive ?? false)} managed={GC.GetTotalMemory(false) / 1048576.0:F1}MB private={self.PrivateMemorySize64 / 1048576.0:F0}MB ws={self.WorkingSet64 / 1048576.0:F0}MB threads={self.Threads.Count}");
+                _log.Write($"settings closed: freed={!(_settingsGone?.IsAlive ?? false)} managed={GC.GetTotalMemory(false) / 1048576.0:F1}MB private={self.PrivateMemorySize64 / 1048576.0:F0}MB ws={self.WorkingSet64 / 1048576.0:F0}MB threads={self.Threads.Count}");
             }
         };
         return timer;
@@ -212,12 +212,12 @@ internal sealed partial class PadWindow
     /// <summary>Dev only: reads the AppInfo-derived debug-settings-cycles environment variable to open and close Settings while logging memory.</summary>
     internal async void CycleSettingsForDev()
     {
-        if (!Program.IsDev || !int.TryParse(Environment.GetEnvironmentVariable(AppInfo.Env("DEBUG_SETTINGS_CYCLES")), out var cycles)) return;
+        if (!_isDev || !int.TryParse(Environment.GetEnvironmentVariable(AppInfo.Env("DEBUG_SETTINGS_CYCLES")), out var cycles)) return;
         await Task.Delay(1500);
         void Mem(string when)
         {
             using var self = System.Diagnostics.Process.GetCurrentProcess();
-            Program.Log($"cycle {when}: private={self.PrivateMemorySize64 / 1048576.0:F0}MB ws={self.WorkingSet64 / 1048576.0:F0}MB threads={self.Threads.Count} managed={GC.GetTotalMemory(false) / 1048576.0:F1}MB");
+            _log.Write($"cycle {when}: private={self.PrivateMemorySize64 / 1048576.0:F0}MB ws={self.WorkingSet64 / 1048576.0:F0}MB threads={self.Threads.Count} managed={GC.GetTotalMemory(false) / 1048576.0:F1}MB");
         }
         Mem("start");
         for (var i = 0; i < cycles; i++)

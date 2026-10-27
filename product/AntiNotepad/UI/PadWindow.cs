@@ -21,6 +21,10 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     private readonly Store _store;
     private readonly SettingsService _settingsService;
     private readonly Timers _timers = new(id => Program.Store.Data.Stack.Any(n => n.Id == id) || Program.Store.Data.Slots.Any(n => n.Id == id));
+    private readonly RuntimeLog _log;
+    private readonly bool _isDev;
+    private readonly bool _softwareRendering;
+    private readonly TaskbarTrace _trace;
     private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(400) };
     private Palette _palette;
     private bool _quitting;
@@ -42,10 +46,14 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     internal Settings Settings => _settingsService.Current;
     internal SettingsService SettingsService => _settingsService;
 
-    public PadWindow(Store store, SettingsService settingsService)
+    public PadWindow(Store store, SettingsService settingsService, RuntimeLog log, bool isDev, bool softwareRendering)
     {
         _store = store;
         _settingsService = settingsService;
+        _log = log;
+        _isDev = isDev;
+        _softwareRendering = softwareRendering;
+        _trace = new TaskbarTrace(isDev, log.Write);
         _clipboardPolicy = new();
         _hotkeys = new HotkeyRegistrar(
             (gesture, onPressed) => new GlobalHotkeyRegistration(this, onPressed, gesture),
@@ -84,7 +92,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         Deactivated += (_, _) =>
         {
             if (SessionEnd.IsEnding) return;
-            if (Program.IsDev) TaskbarPresence.Trace($"pad Avalonia.Deactivated visible={IsVisible} active={IsActive} {TaskbarPresence.PadActionContext()}");
+            if (_isDev) _trace.Write($"pad Avalonia.Deactivated visible={IsVisible} active={IsActive} {_trace.PadActionContext()}");
             QueueSave();
             if (_saveFailureOverlay is { } prompt && IsOverlay(prompt)) CloseOverlay();
             var taskbarTransfer = _taskbarProxy?.ConsumePadDeactivationToProxy() ?? false;
@@ -96,7 +104,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         Activated += (_, _) =>
         {
             if (SessionEnd.IsEnding) return;
-            if (Program.IsDev) TaskbarPresence.Trace($"pad Avalonia.Activated visible={IsVisible} active={IsActive} {TaskbarPresence.PadActionContext()}");
+            if (_isDev) _trace.Write($"pad Avalonia.Activated visible={IsVisible} active={IsActive} {_trace.PadActionContext()}");
             CancelQueuedHideOnBlur(); WakeChrome(); FadeWindow(1);
         };
         Closing += (_, e) =>
@@ -138,7 +146,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     private void ShowResident(long hotkeyPressed, string cause = "show")
     {
         if (SessionEnd.IsEnding) return;
-        TaskbarPresence.TracePadAction(cause, "show-begin", IsVisible);
+        _trace.TracePadAction(cause, "show-begin", IsVisible);
         CancelQueuedHideOnBlur();
         var away = DateTime.Now - _hiddenAt;
         if (!IsVisible && Settings.FreshNoteAfterMinutes > 0 && away.TotalMinutes >= Settings.FreshNoteAfterMinutes) OpenFreshNote();
@@ -156,7 +164,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
             FocusActive();
             if (hotkeyPressed != 0)
             {
-                Program.Log($"hotkey-to-focus ms={System.Diagnostics.Stopwatch.GetElapsedTime(hotkeyPressed).TotalMilliseconds:F1} sync={sync:F1} focused={_active.Editor.TextArea.IsFocused} open-at={Settings.OpenAt}");
+                _log.Write($"hotkey-to-focus ms={System.Diagnostics.Stopwatch.GetElapsedTime(hotkeyPressed).TotalMilliseconds:F1} sync={sync:F1} focused={_active.Editor.TextArea.IsFocused} open-at={Settings.OpenAt}");
             }
         }, DispatcherPriority.Input);
         if (drop is { } target)
@@ -167,7 +175,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         }
         else if (!wasVisible) PlayShow();
         WakeChrome();
-        TaskbarPresence.TracePadAction(cause, "show-end", IsVisible);
+        _trace.TracePadAction(cause, "show-end", IsVisible);
     }
 
     /// <summary>Where the pad appears: where it was left, centred, under the mouse, or above the tray like a flyout.</summary>
@@ -195,16 +203,16 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     /// <summary>Hidden start: lay out and render once, invisibly, so the first hotkey press is as fast as the rest.</summary>
     internal void Prewarm()
     {
-        TaskbarPresence.TracePadAction("prewarm-show", "show-begin", IsVisible);
+        _trace.TracePadAction("prewarm-show", "show-begin", IsVisible);
         Opacity = 0; ShowActivated = false;
         Show();
         Dispatcher.UIThread.Post(() =>
         {
-            TaskbarPresence.TracePadAction("prewarm-hide", "hide-begin", IsVisible);
+            _trace.TracePadAction("prewarm-hide", "hide-begin", IsVisible);
             Hide();
             Opacity = 1; ShowActivated = true; _hiddenAt = DateTime.Now; _trim.Start();
             ApplyTaskbarSetting();
-            TaskbarPresence.TracePadAction("prewarm-hide", "hide-end", IsVisible);
+            _trace.TracePadAction("prewarm-hide", "hide-end", IsVisible);
         }, DispatcherPriority.Background);
     }
 
@@ -212,13 +220,13 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     internal void ShowQuietly()
     {
         if (IsVisible) return;
-        TaskbarPresence.TracePadAction("timer-quiet-show", "show-begin", IsVisible);
+        _trace.TracePadAction("timer-quiet-show", "show-begin", IsVisible);
         CancelQueuedHideOnBlur();
         ShowActivated = false;
         Show();
         ShowActivated = true;
         ApplyTaskbarSetting();
-        TaskbarPresence.TracePadAction("timer-quiet-show", "show-end", IsVisible);
+        _trace.TracePadAction("timer-quiet-show", "show-end", IsVisible);
     }
 
     public void HideResident() => HideResident("hide");
@@ -226,7 +234,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     public void HideResident(string cause)
     {
         if (SessionEnd.IsEnding) return;
-        TaskbarPresence.TracePadAction(cause, "hide-begin", IsVisible);
+        _trace.TracePadAction(cause, "hide-begin", IsVisible);
         CancelQueuedHideOnBlur();
         CloseOverlay();
         QueueSave();
@@ -234,7 +242,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         Hide();
         _trim.Stop(); _trim.Start();
         ApplyTaskbarSetting();
-        TaskbarPresence.TracePadAction(cause, "hide-end", IsVisible);
+        _trace.TracePadAction(cause, "hide-end", IsVisible);
     }
 
     public void Quit()
@@ -264,14 +272,14 @@ internal sealed partial class PadWindow : Window, ISettingsHost
             _right.Flush();
             // Capture the latest edit and drain every queued write before accepting session end.
             var saved = _store.Save() && _store.LastError is null;
-            Program.Log($"session-end save={(saved ? "ok" : "failed")} ms={System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds:F1}" +
+            _log.Write($"session-end save={(saved ? "ok" : "failed")} ms={System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds:F1}" +
                 (saved ? "" : $" error={_store.LastError}"));
         }
         catch (Exception ex)
         {
-            Program.Log($"session-end save=failed ms={System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds:F1} error={ex.Message}");
+            _log.Write($"session-end save=failed ms={System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds:F1} error={ex.Message}");
         }
-        finally { Program.FlushLogs(); }
+        finally { _log.Flush(); }
     }
 
     private void RetryQuit()
@@ -286,7 +294,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     {
         // Even Quit anyway must let an in-flight write finish before the process exits.
         _store.Flush();
-        Program.FlushLogs();
+        _log.Flush();
         _quitting = true;
         CloseSettings();
         _hotkeys.Dispose();
@@ -328,12 +336,12 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     }
 
     private void EnsureTaskbarProxy() =>
-        _taskbarProxy ??= new TaskbarProxy(this, AppInfo.DisplayName, Icon, OnTaskbarProxyClick);
+        _taskbarProxy ??= new TaskbarProxy(this, AppInfo.DisplayName, Icon, OnTaskbarProxyClick, _isDev, _trace);
 
     private void OnTaskbarProxyClick(bool hide, string source)
     {
         var cause = $"taskbar-click:{source}";
-        if (Program.IsDev) TaskbarPresence.Trace($"pad taskbar callback source={source} action={(hide ? "hide" : IsVisible ? "focus" : "show")} visible={IsVisible}");
+        if (_isDev) _trace.Write($"pad taskbar callback source={source} action={(hide ? "hide" : IsVisible ? "focus" : "show")} visible={IsVisible}");
         CancelQueuedHideOnBlur();
         if (hide)
         {
@@ -347,15 +355,15 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     private void QueueHideOnBlur()
     {
         var generation = ++_blurHideGeneration;
-        if (Program.IsDev) TaskbarPresence.Trace($"pad hide-on-blur queued generation={generation} visible={IsVisible} active={IsActive}");
+        if (_isDev) _trace.Write($"pad hide-on-blur queued generation={generation} visible={IsVisible} active={IsActive}");
         Dispatcher.UIThread.Post(() =>
         {
             if (generation != _blurHideGeneration || IsActive || !IsVisible || _settingsWindow is not null || !Settings.HideOnBlur || Topmost || _overlayOpen)
             {
-                if (Program.IsDev) TaskbarPresence.Trace($"pad hide-on-blur skipped generation={generation} current={_blurHideGeneration} visible={IsVisible} active={IsActive} settings={_settingsWindow is not null}");
+                if (_isDev) _trace.Write($"pad hide-on-blur skipped generation={generation} current={_blurHideGeneration} visible={IsVisible} active={IsActive} settings={_settingsWindow is not null}");
                 return;
             }
-            if (Program.IsDev) TaskbarPresence.Trace($"pad hide-on-blur fired generation={generation}");
+            if (_isDev) _trace.Write($"pad hide-on-blur fired generation={generation}");
             HideResident("hide-on-blur");
         }, DispatcherPriority.Background);
     }
@@ -430,7 +438,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
         GC.WaitForPendingFinalizers();
         Native.TrimWorkingSet();
-        if (Program.IsDev) Program.Log($"trimmed docs={PadView.CachedDocuments} managed={GC.GetTotalMemory(false) / 1048576.0:F1}MB");
+        if (_isDev) _log.Write($"trimmed docs={PadView.CachedDocuments} managed={GC.GetTotalMemory(false) / 1048576.0:F1}MB");
     }
 
     private void RememberBounds()

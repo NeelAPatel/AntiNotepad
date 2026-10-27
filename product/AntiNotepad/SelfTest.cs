@@ -32,6 +32,14 @@ internal static class SelfTest
         Console.WriteLine(clipboardPolicyPass ? "CLIPBOARD policy " + clipboardPolicyReport : "CLIPBOARD policy FAIL " + clipboardPolicyReport);
         Check(clipboardPolicyPass, "clipboard policy: " + clipboardPolicyReport);
 
+        var runtimeLogPass = RuntimeLogChecks(out var runtimeLogReport);
+        Console.WriteLine(runtimeLogPass ? "RUNTIME LOG " + runtimeLogReport : "RUNTIME LOG FAIL " + runtimeLogReport);
+        Check(runtimeLogPass, "runtime log: " + runtimeLogReport);
+
+        var taskbarTracePass = TaskbarTraceChecks(out var taskbarTraceReport);
+        Console.WriteLine(taskbarTracePass ? "TASKBAR TRACE " + taskbarTraceReport : "TASKBAR TRACE FAIL " + taskbarTraceReport);
+        Check(taskbarTracePass, "taskbar trace: " + taskbarTraceReport);
+
         var mathNotesPass = MathNotesChecks(out var mathNotesReport);
         Console.WriteLine(mathNotesPass ? "MATH NOTES " + mathNotesReport : "MATH NOTES FAIL " + mathNotesReport);
         Check(mathNotesPass, "math notes: " + mathNotesReport);
@@ -348,6 +356,117 @@ internal static class SelfTest
         return failures.Count == 0;
     }
 
+    private static bool RuntimeLogChecks(out string report)
+    {
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+
+        var root = Path.Combine(Path.GetTempPath(), $"{AppInfo.Name.ToLowerInvariant()}-runtime-log-{Guid.NewGuid():N}");
+        try
+        {
+            var emptyHome = new RuntimeLog();
+            emptyHome.Write("ignored before home");
+            emptyHome.Flush();
+            var loggerField = typeof(RuntimeLog).GetField("_logger", BindingFlags.Instance | BindingFlags.NonPublic);
+            CheckCase(loggerField?.GetValue(emptyHome) is null && !Directory.Exists(root), "empty home Write creates no file or logger");
+            emptyHome.Dispose();
+
+            var firstHome = Path.Combine(root, "first");
+            var otherHome = Path.Combine(root, "other");
+            var firstPath = Path.Combine(firstHome, AppInfo.LogFileName);
+            var otherPath = Path.Combine(otherHome, AppInfo.LogFileName);
+            using (var logger = new RuntimeLog())
+            {
+                logger.SetHome(firstHome);
+                logger.Write("first home");
+                logger.Flush();
+                var firstWriteLanded = File.Exists(firstPath) && File.ReadAllLines(firstPath).Last().EndsWith("first home", StringComparison.Ordinal);
+                logger.SetHome(otherHome);
+                logger.Write("still first home");
+                logger.Flush();
+                var staysAtFirstHome = File.ReadAllLines(firstPath).Last().EndsWith("still first home", StringComparison.Ordinal)
+                    && !File.Exists(otherPath);
+                CheckCase(firstWriteLanded && staysAtFirstHome, "lazy write uses first home and never retargets");
+            }
+
+            var crashPath = Path.Combine(root, "crash", AppInfo.LogFileName);
+            var crashLog = new RuntimeLog();
+            crashLog.SetHome(Path.GetDirectoryName(crashPath)!);
+            crashLog.LogCrash(new InvalidOperationException("boom"));
+            CheckCase(File.Exists(crashPath) && File.ReadAllLines(crashPath).Any(line => line.Contains("crash ", StringComparison.Ordinal)
+                && line.EndsWith("boom", StringComparison.Ordinal)), "LogCrash flushes an early crash line");
+            crashLog.Dispose();
+
+            var disposePath = Path.Combine(root, "dispose", AppInfo.LogFileName);
+            var disposeLog = new RuntimeLog();
+            disposeLog.SetHome(Path.GetDirectoryName(disposePath)!);
+            disposeLog.Write("drained on dispose");
+            disposeLog.Dispose();
+            var writeAfterDispose = true;
+            try { disposeLog.Write("after dispose"); }
+            catch { writeAfterDispose = false; }
+            CheckCase(File.Exists(disposePath) && File.ReadAllLines(disposePath).Any(line => line.EndsWith("drained on dispose", StringComparison.Ordinal))
+                && writeAfterDispose, "Dispose drains queued writes and later Write does not throw");
+
+            var flushWithoutLogger = true;
+            try
+            {
+                var neverCreated = new RuntimeLog();
+                neverCreated.Flush();
+                neverCreated.Dispose();
+            }
+            catch { flushWithoutLogger = false; }
+            CheckCase(flushWithoutLogger, "Flush without a logger is safe");
+
+            report = failures.Count == 0 ? "5 checks" : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+        catch (Exception ex)
+        {
+            report = string.Join("; ", failures.Append(ex.ToString()));
+            return false;
+        }
+        finally { try { if (Directory.Exists(root)) Directory.Delete(root, true); } catch { } }
+    }
+
+    private static bool TaskbarTraceChecks(out string report)
+    {
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+
+        var suppressedLines = new List<string>();
+        var suppressed = new TaskbarTrace(false, suppressedLines.Add);
+        suppressed.Write("x");
+        suppressed.TracePadAction("ignored", "show-begin", true);
+        CheckCase(suppressedLines.Count == 0, "non-dev trace stays silent");
+
+        var lines = new List<string>();
+        var trace = new TaskbarTrace(true, lines.Add);
+        CheckCase(trace.PadActionContext() == "cause=unknown age=na", "unknown cause before first pad action");
+        trace.Write("x");
+        CheckCase(lines.Count == 1 && IsTaskbarTraceLine(lines[0], "x"), "Write prefixes elapsed taskbar time");
+        trace.TracePadAction("test-click", "show-begin", true);
+        var context = trace.PadActionContext();
+        CheckCase(context.StartsWith("cause=test-click age=", StringComparison.Ordinal) && context.EndsWith("ms", StringComparison.Ordinal),
+            "pad action cause and age persist");
+        CheckCase(lines.Count == 2 && IsTaskbarTraceLine(lines[1], "pad action=show-begin cause=test-click visible=True"),
+            "TracePadAction writes the action line");
+
+        report = failures.Count == 0 ? "5 checks" : string.Join("; ", failures);
+        return failures.Count == 0;
+
+        static bool IsTaskbarTraceLine(string line, string message)
+        {
+            const string prefix = "taskbar: t=";
+            if (!line.StartsWith(prefix, StringComparison.Ordinal)) return false;
+            var marker = line.IndexOf("ms ", prefix.Length, StringComparison.Ordinal);
+            return marker > prefix.Length
+                && double.TryParse(line[prefix.Length..marker], System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.CurrentCulture, out _)
+                && line[(marker + 3)..] == message;
+        }
+    }
+
     private static bool MathNotesChecks(out string report)
     {
         var failures = new List<string>();
@@ -461,6 +580,13 @@ internal static class SelfTest
         new("ClipboardCapturePolicy", "Control", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Avalonia.Controls.Control)),
         new("ClipboardCapturePolicy", "Dispatcher", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Avalonia.Threading.Dispatcher)),
         new("ClipboardCapturePolicy", "TextDocument", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(AvaloniaEdit.Document.TextDocument)),
+        new("Platform", "Program", ExactTo: typeof(Program)),
+        new("Model", "Program", ExactTo: typeof(Program)),
+        new("RuntimeLog", "UI", ExactFrom: typeof(RuntimeLog)),
+        new("RuntimeLog", "Editor", ExactFrom: typeof(RuntimeLog)),
+        new("RuntimeLog", "Platform", ExactFrom: typeof(RuntimeLog)),
+        new("RuntimeLog", "Program", ExactFrom: typeof(RuntimeLog), ExactTo: typeof(Program)),
+        new("RuntimeLog", "Avalonia", ExactFrom: typeof(RuntimeLog), ExactTo: typeof(Avalonia.Application)),
         new("SettingsWindow", "PadWindow", ExactFrom: typeof(SettingsWindow), ExactTo: typeof(PadWindow)),
         new("SettingsService", "UI", ExactFrom: typeof(SettingsService)),
         new("SettingsService", "Editor", ExactFrom: typeof(SettingsService)),

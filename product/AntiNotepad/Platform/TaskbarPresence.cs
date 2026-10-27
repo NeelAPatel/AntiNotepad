@@ -14,9 +14,6 @@ internal static class TaskbarPresence
 {
     private static readonly TimeSpan ForegroundLossGracePeriod = TimeSpan.FromMilliseconds(500);
     private static readonly TimeSpan PostHideFallbackPeriod = TimeSpan.FromSeconds(1);
-    private static readonly long TraceStartedAt = Stopwatch.GetTimestamp();
-    private static long _padActionAt;
-    private static string _padActionCause = "unknown";
 
     internal static bool ShouldShow(string? setting, bool padVisible) => setting switch
     {
@@ -44,24 +41,43 @@ internal static class TaskbarPresence
         && counterpart is TaskbarActivationCounterpart.None or TaskbarActivationCounterpart.Taskbar or TaskbarActivationCounterpart.Proxy
         && Stopwatch.GetElapsedTime(lastForegroundLoss, now) <= ForegroundLossGracePeriod;
 
-    internal static void Trace(string message)
+}
+
+/// <summary>Per-pad development trace timing and click-cause context.</summary>
+internal sealed class TaskbarTrace
+{
+    private readonly Action<string> _log;
+    private readonly long _startedAt;
+    private long _padActionAt;
+    private string _padActionCause = "unknown";
+
+    internal bool IsDev { get; }
+
+    internal TaskbarTrace(bool isDev, Action<string> log)
     {
-        if (Program.IsDev) Program.Log($"taskbar: t={Stopwatch.GetElapsedTime(TraceStartedAt).TotalMilliseconds:F1}ms {message}");
+        IsDev = isDev;
+        _log = log;
+        _startedAt = Stopwatch.GetTimestamp();
     }
 
-    internal static double SinceTraceStart(long timestamp) => Stopwatch.GetElapsedTime(TraceStartedAt, timestamp).TotalMilliseconds;
-
-    internal static void TracePadAction(string cause, string phase, bool visible)
+    internal void Write(string message)
     {
-        if (!Program.IsDev) return;
+        if (IsDev) _log($"taskbar: t={Stopwatch.GetElapsedTime(_startedAt).TotalMilliseconds:F1}ms {message}");
+    }
+
+    internal double SinceTraceStart(long timestamp) => Stopwatch.GetElapsedTime(_startedAt, timestamp).TotalMilliseconds;
+
+    internal void TracePadAction(string cause, string phase, bool visible)
+    {
+        if (!IsDev) return;
         _padActionCause = cause;
         _padActionAt = Stopwatch.GetTimestamp();
-        Trace($"pad action={phase} cause={cause} visible={visible}");
+        Write($"pad action={phase} cause={cause} visible={visible}");
     }
 
-    internal static string PadActionContext()
+    internal string PadActionContext()
     {
-        if (!Program.IsDev || _padActionAt == 0) return "cause=unknown age=na";
+        if (!IsDev || _padActionAt == 0) return "cause=unknown age=na";
         return $"cause={_padActionCause} age={Stopwatch.GetElapsedTime(_padActionAt).TotalMilliseconds:F1}ms";
     }
 }
@@ -93,6 +109,8 @@ internal sealed class TaskbarProxy : IDisposable
     private readonly Window _pad;
     private readonly Window _window;
     private readonly Action<bool, string> _taskbarClick;
+    private readonly bool _isDev;
+    private readonly TaskbarTrace _trace;
     private readonly uint _taskbarCreated = RegisterWindowMessage("TaskbarCreated");
     private Win32Properties.CustomWndProcHookCallback? _hook;
     private Win32Properties.CustomWndProcHookCallback? _padHook;
@@ -112,10 +130,12 @@ internal sealed class TaskbarProxy : IDisposable
     private long _lastDecisionAt;
     private ClickSnapshot _clickSnapshot;
 
-    internal TaskbarProxy(Window pad, string title, WindowIcon? icon, Action<bool, string> taskbarClick)
+    internal TaskbarProxy(Window pad, string title, WindowIcon? icon, Action<bool, string> taskbarClick, bool isDev, TaskbarTrace trace)
     {
         _pad = pad;
         _taskbarClick = taskbarClick;
+        _isDev = isDev;
+        _trace = trace;
         _window = new Window
         {
             Title = title,
@@ -140,7 +160,7 @@ internal sealed class TaskbarProxy : IDisposable
         _window.Activated += (_, _) =>
         {
             if (!_shown || _disposed || SessionEnd.IsEnding) return;
-            if (Program.IsDev) TaskbarPresence.Trace("proxy Avalonia.Activated fallback");
+            if (_isDev) _trace.Write("proxy Avalonia.Activated fallback");
             QueueTaskbarClick(IntPtr.Zero, "Avalonia.Activated");
             ShowNativeMinimized();
         };
@@ -162,7 +182,7 @@ internal sealed class TaskbarProxy : IDisposable
         if (_disposed || _shown) return;
         _presenceGeneration++;
         _shown = true;
-        if (Program.IsDev) TaskbarPresence.Trace($"proxy presence=show generation={_presenceGeneration}");
+        if (_isDev) _trace.Write($"proxy presence=show generation={_presenceGeneration}");
         ShowNativeMinimized();
     }
 
@@ -171,7 +191,7 @@ internal sealed class TaskbarProxy : IDisposable
         if (_disposed || !_shown) return;
         _shown = false;
         _presenceGeneration++;
-        if (Program.IsDev) TaskbarPresence.Trace($"proxy presence=hide generation={_presenceGeneration}");
+        if (_isDev) _trace.Write($"proxy presence=hide generation={_presenceGeneration}");
         var hwnd = Handle;
         if (hwnd != IntPtr.Zero) NativeShowWindow(hwnd, SwHide);
     }
@@ -183,7 +203,7 @@ internal sealed class TaskbarProxy : IDisposable
     {
         var hwnd = Handle;
         if (hwnd != IntPtr.Zero) NativeShowWindow(hwnd, SwShowMinNoActive);
-        else if (Program.IsDev) TaskbarPresence.Trace("proxy native handle is unavailable");
+        else if (_isDev) _trace.Write("proxy native handle is unavailable");
     }
 
     private void NativeShowWindow(IntPtr hwnd, int command)
@@ -199,8 +219,8 @@ internal sealed class TaskbarProxy : IDisposable
         if (message == WmActivate)
         {
             var state = (int)(wParam.ToInt64() & 0xFFFF);
-            var other = Program.IsDev ? DescribeWindow(lParam) : "not-logged";
-            if (Program.IsDev) TaskbarPresence.Trace($"pad WM_ACTIVATE state={ActivationName(state)} wParam=0x{wParam.ToInt64():X} counterpart={other} visible={_pad.IsVisible} active={_pad.IsActive} {TaskbarPresence.PadActionContext()}");
+            var other = _isDev ? DescribeWindow(lParam) : "not-logged";
+            if (_isDev) _trace.Write($"pad WM_ACTIVATE state={ActivationName(state)} wParam=0x{wParam.ToInt64():X} counterpart={other} visible={_pad.IsVisible} active={_pad.IsActive} {_trace.PadActionContext()}");
             if (state == WaInactive && _shown)
             {
                 // Preserve the loss while the native message still identifies its counterpart.
@@ -232,20 +252,20 @@ internal sealed class TaskbarProxy : IDisposable
                     _suppressNextPadDeactivation = false;
                     _focusSnapshotGeneration++;
                 }
-                if (Program.IsDev) TaskbarPresence.Trace($"pad foreground-loss kind={lossKind} at={TaskbarPresence.SinceTraceStart(lossAt):F1}ms counterpart={other} included={!_clickSnapshotConsumed}");
+                if (_isDev) _trace.Write($"pad foreground-loss kind={lossKind} at={_trace.SinceTraceStart(lossAt):F1}ms counterpart={other} included={!_clickSnapshotConsumed}");
             }
         }
         else if (message == WmShowWindow)
         {
-            if (Program.IsDev) TaskbarPresence.Trace($"pad WM_SHOWWINDOW show={wParam != IntPtr.Zero} reason={lParam.ToInt64()} visible={_pad.IsVisible} {TaskbarPresence.PadActionContext()}");
+            if (_isDev) _trace.Write($"pad WM_SHOWWINDOW show={wParam != IntPtr.Zero} reason={lParam.ToInt64()} visible={_pad.IsVisible} {_trace.PadActionContext()}");
         }
         else if (message == WmNcActivate)
         {
-            if (Program.IsDev) TaskbarPresence.Trace($"pad WM_NCACTIVATE active={wParam != IntPtr.Zero} lParam=0x{lParam.ToInt64():X} visible={_pad.IsVisible} {TaskbarPresence.PadActionContext()}");
+            if (_isDev) _trace.Write($"pad WM_NCACTIVATE active={wParam != IntPtr.Zero} lParam=0x{lParam.ToInt64():X} visible={_pad.IsVisible} {_trace.PadActionContext()}");
         }
         else if (message == WmActivateApp)
         {
-            if (Program.IsDev) TaskbarPresence.Trace($"pad WM_ACTIVATEAPP active={wParam != IntPtr.Zero} thread={lParam.ToInt64()} visible={_pad.IsVisible} {TaskbarPresence.PadActionContext()}");
+            if (_isDev) _trace.Write($"pad WM_ACTIVATEAPP active={wParam != IntPtr.Zero} thread={lParam.ToInt64()} visible={_pad.IsVisible} {_trace.PadActionContext()}");
         }
         return IntPtr.Zero;
     }
@@ -274,7 +294,7 @@ internal sealed class TaskbarProxy : IDisposable
                 NativeShowWindow(hwnd, SwHide);
                 ShowNativeMinimized();
             }
-            if (Program.IsDev) TaskbarPresence.Trace($"proxy TaskbarCreated shown={_shown}");
+            if (_isDev) _trace.Write($"proxy TaskbarCreated shown={_shown}");
             return IntPtr.Zero;
         }
 
@@ -294,7 +314,7 @@ internal sealed class TaskbarProxy : IDisposable
             handled = true;
             if (!_clickSnapshotAvailable || _clickSnapshotConsumed || IsSnapshotStale())
                 StartClickSnapshot("WM_SYSCOMMAND/SC_RESTORE", fresh: true);
-            else if (Program.IsDev) TaskbarPresence.Trace("proxy click snapshot reused for SC_RESTORE");
+            else if (_isDev) _trace.Write("proxy click snapshot reused for SC_RESTORE");
             QueueTaskbarClick(IntPtr.Zero, "SC_RESTORE", explicitRestore: true);
             return IntPtr.Zero;
         }
@@ -319,36 +339,36 @@ internal sealed class TaskbarProxy : IDisposable
 
     private void TraceProxyMessage(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam)
     {
-        if (!Program.IsDev) return;
+        if (!_isDev) return;
         var prefix = $"proxy hwnd={FormatHwnd(hwnd)}";
         if (message == WmSysCommand)
         {
             var command = wParam.ToInt64() & 0xFFF0;
-            TaskbarPresence.Trace($"{prefix} WM_SYSCOMMAND wParam=0x{wParam.ToInt64():X} command=0x{command:X} name={(command == ScRestore ? "SC_RESTORE" : "other")} lParam=0x{lParam.ToInt64():X}");
+            _trace.Write($"{prefix} WM_SYSCOMMAND wParam=0x{wParam.ToInt64():X} command=0x{command:X} name={(command == ScRestore ? "SC_RESTORE" : "other")} lParam=0x{lParam.ToInt64():X}");
         }
         else if (message == WmActivate)
         {
             var state = (int)(wParam.ToInt64() & 0xFFFF);
             var minimized = ((wParam.ToInt64() >> 16) & 0xFFFF) != 0;
-            TaskbarPresence.Trace($"{prefix} WM_ACTIVATE state={ActivationName(state)} minimized={minimized} counterpart={DescribeWindow(lParam)} wParam=0x{wParam.ToInt64():X}");
+            _trace.Write($"{prefix} WM_ACTIVATE state={ActivationName(state)} minimized={minimized} counterpart={DescribeWindow(lParam)} wParam=0x{wParam.ToInt64():X}");
         }
         else if (message == WmActivateApp)
         {
-            TaskbarPresence.Trace($"{prefix} WM_ACTIVATEAPP active={wParam != IntPtr.Zero} thread={lParam.ToInt64()}");
+            _trace.Write($"{prefix} WM_ACTIVATEAPP active={wParam != IntPtr.Zero} thread={lParam.ToInt64()}");
         }
         else if (message == WmNcActivate)
         {
-            TaskbarPresence.Trace($"{prefix} WM_NCACTIVATE active={wParam != IntPtr.Zero} lParam=0x{lParam.ToInt64():X}");
+            _trace.Write($"{prefix} WM_NCACTIVATE active={wParam != IntPtr.Zero} lParam=0x{lParam.ToInt64():X}");
         }
         else if (message == WmShowWindow)
         {
-            TaskbarPresence.Trace($"{prefix} WM_SHOWWINDOW show={wParam != IntPtr.Zero} reason={lParam.ToInt64()}");
+            _trace.Write($"{prefix} WM_SHOWWINDOW show={wParam != IntPtr.Zero} reason={lParam.ToInt64()}");
         }
         else if (message == WmWindowPosChanging)
         {
             if (TryGetWindowPosFlags(lParam, out var flags))
-                TaskbarPresence.Trace($"{prefix} WM_WINDOWPOSCHANGING flags=0x{flags:X8} names={WindowPosFlagNames(flags)} internal={_nativeVisibilityChange > 0}");
-            else TaskbarPresence.Trace($"{prefix} WM_WINDOWPOSCHANGING flags=unavailable internal={_nativeVisibilityChange > 0}");
+                _trace.Write($"{prefix} WM_WINDOWPOSCHANGING flags=0x{flags:X8} names={WindowPosFlagNames(flags)} internal={_nativeVisibilityChange > 0}");
+            else _trace.Write($"{prefix} WM_WINDOWPOSCHANGING flags=unavailable internal={_nativeVisibilityChange > 0}");
         }
     }
 
@@ -364,8 +384,8 @@ internal sealed class TaskbarProxy : IDisposable
         var now = Stopwatch.GetTimestamp();
         var suppress = TaskbarPresence.ShouldSuppressPostHideActivation(_clickSnapshotConsumed, _lastDecisionWasHide,
             freshClickStart: false, explicitRestore: false, hideDecisionAt: _lastDecisionAt, now: now);
-        if (Program.IsDev && suppress)
-            TaskbarPresence.Trace($"fallback suppressed source={source} reason=post-hide duplicate elapsed={Stopwatch.GetElapsedTime(_lastDecisionAt, now).TotalMilliseconds:F1}ms");
+        if (_isDev && suppress)
+            _trace.Write($"fallback suppressed source={source} reason=post-hide duplicate elapsed={Stopwatch.GetElapsedTime(_lastDecisionAt, now).TotalMilliseconds:F1}ms");
         return suppress;
     }
 
@@ -378,15 +398,15 @@ internal sealed class TaskbarProxy : IDisposable
         var padHandle = PadHandle;
         var padVisible = _pad.IsVisible;
         var padActive = _pad.IsActive;
-        var foregroundLossAge = Program.IsDev ? LossAgeMilliseconds(now) : null;
+        var foregroundLossAge = _isDev ? LossAgeMilliseconds(now) : null;
         var recentlyLostToTaskbar = TaskbarPresence.WasPadRecentlyForeground(_lastForegroundLoss, now, _lastForegroundLossCounterpart);
         var padWasForeground = padVisible && (padActive || (padHandle != IntPtr.Zero && foreground == padHandle)
             || _padWasForegroundBeforeProxyActivation || recentlyLostToTaskbar);
-        _clickSnapshot = new ClickSnapshot(now, padVisible, padActive, foreground, Program.IsDev ? GetWindowClass(foreground) : string.Empty,
+        _clickSnapshot = new ClickSnapshot(now, padVisible, padActive, foreground, _isDev ? GetWindowClass(foreground) : string.Empty,
             _lastForegroundLoss, _lastForegroundLossCounterpart, foregroundLossAge, padWasForeground);
         _clickSnapshotAvailable = true;
         _clickSnapshotConsumed = false;
-        if (Program.IsDev) TaskbarPresence.Trace($"click snapshot source={source} padVisible={padVisible} padActive={padActive} fg={DescribeWindow(foreground)} lossKind={_lastForegroundLossCounterpart} lossAt={LossTimestampText(_lastForegroundLoss)} lossAge={AgeText(foregroundLossAge)} padWasForeground={padWasForeground}");
+        if (_isDev) _trace.Write($"click snapshot source={source} padVisible={padVisible} padActive={padActive} fg={DescribeWindow(foreground)} lossKind={_lastForegroundLossCounterpart} lossAt={LossTimestampText(_lastForegroundLoss)} lossAge={AgeText(foregroundLossAge)} padWasForeground={padWasForeground}");
         // Keep the loss available through the decision; only QueueTaskbarClick consumes it.
         _padWasForegroundBeforeProxyActivation = false;
     }
@@ -397,12 +417,12 @@ internal sealed class TaskbarProxy : IDisposable
     {
         if (_disposed || !_shown)
         {
-            if (Program.IsDev) TaskbarPresence.Trace($"decision skipped source={source} disposed={_disposed} proxyShown={_shown}");
+            if (_isDev) _trace.Write($"decision skipped source={source} disposed={_disposed} proxyShown={_shown}");
             return;
         }
         if (_activationPending)
         {
-            if (Program.IsDev) TaskbarPresence.Trace($"decision duplicate-suppressed source={source} reason=activation-pending");
+            if (_isDev) _trace.Write($"decision duplicate-suppressed source={source} reason=activation-pending");
             return;
         }
         if (_clickSnapshotConsumed && !explicitRestore && ShouldSuppressPostHideFallback(source)) return;
@@ -413,7 +433,7 @@ internal sealed class TaskbarProxy : IDisposable
         var foreground = GetForegroundWindow();
         var padHandle = PadHandle;
         var padVisible = _pad.IsVisible;
-        var lossAge = Program.IsDev ? LossAgeMilliseconds(now) : null;
+        var lossAge = _isDev ? LossAgeMilliseconds(now) : null;
         var recentlyLost = TaskbarPresence.WasPadRecentlyForeground(_lastForegroundLoss, now, _lastForegroundLossCounterpart);
         var padWasForeground = (_clickSnapshot.PadVisible && _clickSnapshot.PadWasForeground)
             || (padVisible && padHandle != IntPtr.Zero && previousForeground == padHandle)
@@ -422,8 +442,8 @@ internal sealed class TaskbarProxy : IDisposable
             || (padVisible && recentlyLost);
         var hide = TaskbarPresence.ShouldHideOnClick(padVisible, padWasForeground);
         var decision = hide ? "hide" : padVisible ? "focus" : "show";
-        var snapshotAge = Program.IsDev ? Stopwatch.GetElapsedTime(_clickSnapshot.Timestamp, now).TotalMilliseconds : 0;
-        if (Program.IsDev) TaskbarPresence.Trace($"decision source={source} result={decision} padVisible={padVisible} padActive={_pad.IsActive} fg={DescribeWindow(foreground)} previousForeground={DescribeWindow(previousForeground)} lossKind={_lastForegroundLossCounterpart} lossAt={LossTimestampText(_lastForegroundLoss)} lossAge={AgeText(lossAge)} recentTaskbarLoss={recentlyLost} earlySnapshotPadVisible={_clickSnapshot.PadVisible} earlySnapshotPadActive={_clickSnapshot.PadActive} earlySnapshotForeground={FormatHwnd(_clickSnapshot.Foreground)} earlySnapshotClass={_clickSnapshot.ForegroundClass} earlySnapshotLossKind={_clickSnapshot.ForegroundLossKind} earlySnapshotLossAt={LossTimestampText(_clickSnapshot.ForegroundLossTimestamp)} earlySnapshotLossAge={AgeText(_clickSnapshot.ForegroundLossAgeMilliseconds)} earlySnapshotPadWasForeground={_clickSnapshot.PadWasForeground} earlySnapshotAge={snapshotAge:F1}ms");
+        var snapshotAge = _isDev ? Stopwatch.GetElapsedTime(_clickSnapshot.Timestamp, now).TotalMilliseconds : 0;
+        if (_isDev) _trace.Write($"decision source={source} result={decision} padVisible={padVisible} padActive={_pad.IsActive} fg={DescribeWindow(foreground)} previousForeground={DescribeWindow(previousForeground)} lossKind={_lastForegroundLossCounterpart} lossAt={LossTimestampText(_lastForegroundLoss)} lossAge={AgeText(lossAge)} recentTaskbarLoss={recentlyLost} earlySnapshotPadVisible={_clickSnapshot.PadVisible} earlySnapshotPadActive={_clickSnapshot.PadActive} earlySnapshotForeground={FormatHwnd(_clickSnapshot.Foreground)} earlySnapshotClass={_clickSnapshot.ForegroundClass} earlySnapshotLossKind={_clickSnapshot.ForegroundLossKind} earlySnapshotLossAt={LossTimestampText(_clickSnapshot.ForegroundLossTimestamp)} earlySnapshotLossAge={AgeText(_clickSnapshot.ForegroundLossAgeMilliseconds)} earlySnapshotPadWasForeground={_clickSnapshot.PadWasForeground} earlySnapshotAge={snapshotAge:F1}ms");
         _lastForegroundLoss = 0;
         _lastForegroundLossCounterpart = TaskbarActivationCounterpart.Other;
 
@@ -438,10 +458,10 @@ internal sealed class TaskbarProxy : IDisposable
             {
                 if (_disposed || !_shown || presenceGeneration != _presenceGeneration)
                 {
-                    if (Program.IsDev) TaskbarPresence.Trace($"decision dispatch discarded source={source} disposed={_disposed} proxyShown={_shown} generation={presenceGeneration}/{_presenceGeneration}");
+                    if (_isDev) _trace.Write($"decision dispatch discarded source={source} disposed={_disposed} proxyShown={_shown} generation={presenceGeneration}/{_presenceGeneration}");
                     return;
                 }
-                if (Program.IsDev) TaskbarPresence.Trace($"decision dispatch source={source} result={decision} padVisible={_pad.IsVisible}");
+                if (_isDev) _trace.Write($"decision dispatch source={source} result={decision} padVisible={_pad.IsVisible}");
                 if (hide) _lastDecisionAt = Stopwatch.GetTimestamp();
                 _taskbarClick(hide, source);
             }
@@ -458,7 +478,7 @@ internal sealed class TaskbarProxy : IDisposable
             ? Stopwatch.GetElapsedTime(_lastForegroundLoss, now).TotalMilliseconds
             : null;
 
-    private static string LossTimestampText(long timestamp) => timestamp == 0 ? "none" : $"{TaskbarPresence.SinceTraceStart(timestamp):F1}ms";
+    private string LossTimestampText(long timestamp) => timestamp == 0 ? "none" : $"{_trace.SinceTraceStart(timestamp):F1}ms";
     private static string AgeText(double? age) => age is { } value ? $"{value:F1}ms" : "na";
     private static string ActivationName(int value) => value switch { WaInactive => "WA_INACTIVE", WaActive => "WA_ACTIVE", WaClickActive => "WA_CLICKACTIVE", _ => $"0x{value:X}" };
     private static string FormatHwnd(IntPtr hwnd) => $"0x{hwnd.ToInt64():X}";
@@ -526,7 +546,7 @@ internal sealed class TaskbarProxy : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        if (Program.IsDev) TaskbarPresence.Trace($"proxy dispose shown={_shown}");
+        if (_isDev) _trace.Write($"proxy dispose shown={_shown}");
         if (_shown) NativeShowWindow(Handle, SwHide);
         _shown = false;
         if (_hook is { } hook)

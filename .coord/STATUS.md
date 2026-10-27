@@ -34,7 +34,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Reorg series, one at a time from the latest dev, in order: A40-settings-change-event, A41-padwindow-split,
   A42-padview-commands, A43-app-context, A44-platform-seam. Read-only investigator sessions wrote each plan on its own
   branch (`reorg/<ID-slug>`: `.coord/tasks/<ID-slug>-plan.md` + impact report); they never implement. Implementation
-  starts per task on the user's go, from that plan, with the user's hand test before merge. Next: A43a-runtime-log-and-launch.
+  starts per task on the user's go, from that plan, with the user's hand test before merge. Next: A43b-notes-session.
   Rule (user, 2026-10-26): after each task merges, the next task's investigator merges the latest dev into its branch and
   re-runs a read-only Codex delta audit (`<ID-slug>-impact-r2`), updating its plan with a "Recommendation on handling"
   (scope, split into sub-tasks or not, riskiest parts and hand checks). The user decides from that before implementation.
@@ -57,7 +57,8 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   A42c-checkbox-indent and A42d-list-commands not started (user moved on to A43).
 - A43-app-context re-audit done (3fe4004 on `reorg/A43-app-context`): smaller scope, no broad AppRuntime. User's sequence
   (2026-10-26): A43a-runtime-log-and-launch -> hand test -> merge -> A43b-notes-session re-audit -> implement -> hand test
-  -> merge. A43a dispatched on `reorg/A43a-runtime-log-and-launch`. Doc fix pending: `docs/dev-loop.md:11` (custom
+  -> merge. A43a-runtime-log-and-launch implemented on `reorg/A43a-runtime-log-and-launch` (8c60766: `RuntimeLog`, `TaskbarTrace`, `AppLaunch`; `Program.` tokens 75 -> 21; 80 LAYERS lines, `RUNTIME LOG`/`TASKBAR TRACE` selftests; gate passed, guards proven); user hand test passed
+  2026-10-26; merged into dev (5245a62, 0 warnings, SELFTEST PASS). Next: A43b-notes-session re-audit by the A43 investigator. Doc fix pending: `docs/dev-loop.md:11` (custom
   ANTINOTEPAD_DATA follows its own location.json after an in-app move).
 - A40-settings-change-event merged into dev (565a1e5, user-approved live 2026-10-26): SettingsService + one Changed event,
   SettingsWindow on ISettingsHost, all writers migrated; guards now 12 LAYERS lines + `SETTINGS Changed`; 0 warnings, SELFTEST PASS.

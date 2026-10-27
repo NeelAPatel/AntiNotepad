@@ -139,8 +139,8 @@ internal sealed partial class PadWindow
         _icons.Children.Clear();
         // The repo launch route is the only copy with a badge.
         _badges.Children.Clear();
-        if (Program.IsDev) _badges.Children.Add(Chip("dev", p.Number));
-        _badges.IsVisible = Program.IsDev;
+        if (_isDev) _badges.Children.Add(Chip("dev", p.Number));
+        _badges.IsVisible = _isDev;
         _icons.Children.Add(Kit.IconButton(Glyph.Search, "Search notes (Ctrl+F)", p, () => OpenSearch()));
         _icons.Children.Add(Kit.IconButton(Glyph.Split, "Split view with a slot (Ctrl+\\)", p, ToggleSplit));
         // Pinned: the pin is filled with the accent, so the state reads at a glance.

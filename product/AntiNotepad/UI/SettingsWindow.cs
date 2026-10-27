@@ -36,6 +36,7 @@ internal sealed partial class SettingsWindow : Window
 
     private readonly SettingsService _settings;
     private readonly ISettingsHost _host;
+    private readonly bool _softwareRendering;
     private Palette _p;
     private readonly MotionPreview _preview;
     private readonly ScrollViewer _scroll = new() { HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
@@ -51,10 +52,11 @@ internal sealed partial class SettingsWindow : Window
     private string? _searchQuery;
     private Settings S => _settings.Current;
 
-    public SettingsWindow(SettingsService settings, ISettingsHost host)
+    public SettingsWindow(SettingsService settings, ISettingsHost host, bool softwareRendering)
     {
         _settings = settings;
         _host = host;
+        _softwareRendering = softwareRendering;
         _p = host.CurrentPalette;
         Title = $"{AppInfo.DisplayName} Settings";
         Icon = host.Icon;
@@ -377,7 +379,7 @@ internal sealed partial class SettingsWindow : Window
     private string MaterialHint()
     {
         var wantSoftware = S.Material == "solid";
-        if (wantSoftware != Program.SoftwareRendering) return wantSoftware ? $"Restart {AppInfo.Name} to save about 80 MB" : $"Restart {AppInfo.Name} to get the glass back";
+        if (wantSoftware != _softwareRendering) return wantSoftware ? $"Restart {AppInfo.Name} to save about 80 MB" : $"Restart {AppInfo.Name} to get the glass back";
         return "Acrylic and Mica use the GPU (~125 MB)\nSolid uses about 80 MB less";
     }
 
