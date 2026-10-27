@@ -34,7 +34,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Reorg series, one at a time from the latest dev, in order: A40-settings-change-event, A41-padwindow-split,
   A42-padview-commands, A43-app-context, A44-platform-seam. Read-only investigator sessions wrote each plan on its own
   branch (`reorg/<ID-slug>`: `.coord/tasks/<ID-slug>-plan.md` + impact report); they never implement. Implementation
-  starts per task on the user's go, from that plan, with the user's hand test before merge. Next: A43-app-context re-audit by its investigator.
+  starts per task on the user's go, from that plan, with the user's hand test before merge. Next: A43a-runtime-log-and-launch.
   Rule (user, 2026-10-26): after each task merges, the next task's investigator merges the latest dev into its branch and
   re-runs a read-only Codex delta audit (`<ID-slug>-impact-r2`), updating its plan with a "Recommendation on handling"
   (scope, split into sub-tasks or not, riskiest parts and hand checks). The user decides from that before implementation.
@@ -55,6 +55,10 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   (7f845be, 0 warnings, SELFTEST PASS, 57 LAYERS rows). 
 - A42b-note-analysis-file (`reorg/A42b-note-analysis-file`): `NoteAnalysis` moved verbatim; `PadView.cs` 1,132 -> 864 lines; build 0 warnings/errors and `SELFTEST PASS`, all 16 new LAYERS rows 0 refs. Report: `.coord/reports/A42b-note-analysis-file.md`. Guard probes (PadView, Window, TextArea, Dispatcher fields) each failed the selftest. User hand test passed 2026-10-26 (about half-second lag in a 6,000-line note, accepted; see A49-large-note-perf in Backlog); merged into dev (6230aa9, 0 warnings, SELFTEST PASS, 73 LAYERS rows). A42 stopped at the gate:
   A42c-checkbox-indent and A42d-list-commands not started (user moved on to A43).
+- A43-app-context re-audit done (3fe4004 on `reorg/A43-app-context`): smaller scope, no broad AppRuntime. User's sequence
+  (2026-10-26): A43a-runtime-log-and-launch -> hand test -> merge -> A43b-notes-session re-audit -> implement -> hand test
+  -> merge. A43a dispatched on `reorg/A43a-runtime-log-and-launch`. Doc fix pending: `docs/dev-loop.md:11` (custom
+  ANTINOTEPAD_DATA follows its own location.json after an in-app move).
 - A40-settings-change-event merged into dev (565a1e5, user-approved live 2026-10-26): SettingsService + one Changed event,
   SettingsWindow on ISettingsHost, all writers migrated; guards now 12 LAYERS lines + `SETTINGS Changed`; 0 warnings, SELFTEST PASS.
   Fix: SearchGrid/SplitSlot/Split now saved. Folding/InlineMath apply only on note bind/analysis (pre-existing; backlog).
