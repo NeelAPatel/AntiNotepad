@@ -153,7 +153,7 @@ internal sealed partial class PadWindow
 
     internal void OpenSearch(string query = "", bool trash = false)
     {
-        var search = new SearchOverlay(this, _palette, query, trash);
+        var search = new SearchOverlay(this, _palette, _store, query, trash);
         ShowOverlay(search);
         search.FocusQuery();
     }
@@ -166,7 +166,7 @@ internal sealed partial class PadWindow
         // From the tray the pad may be hidden: show it too, so changes are visible on a real note.
         if (!IsVisible) ShowResident();
         if (_settingsWindow is { } open) { open.Activate(); return; }
-        var window = new SettingsWindow(_settingsService, this, _softwareRendering);
+        var window = new SettingsWindow(_settingsService, this, _softwareRendering, _notes);
         _settingsWindow = window;
         _settingsGone = new WeakReference(window);
         window.Closed += (_, _) =>

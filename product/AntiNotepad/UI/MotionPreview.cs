@@ -100,14 +100,14 @@ internal sealed class MotionPreview : StackPanel
 
     private static string Clean(string text) => text.Replace("\r\n", "\n");
 
-    public MotionPreview(Palette palette, Settings settings)
+    public MotionPreview(Palette palette, Settings settings, INotesLocation notesLocation)
     {
         _p = palette; _s = settings;
         Spacing = 6;
         Margin = new Thickness(0, 0, 0, 4);
         // Same size and place on both pages, so switching tabs never moves it.
         _timers = new Timers();
-        _pad = new PadView(palette, settings, _timers) { Height = 220, ClipToBounds = true, Private = true };
+        _pad = new PadView(palette, settings, _timers, notesLocation) { Height = 220, ClipToBounds = true, Private = true };
         _frame = new Border { Child = _pad, CornerRadius = new CornerRadius(10), ClipToBounds = true, BorderThickness = new Thickness(1) };
         Children.Add(_frame);
 

@@ -10,13 +10,6 @@ namespace AntiNotepad;
 
 internal static class Program
 {
-    /// <summary>The resolved user-visible notes directory.</summary>
-    public static string DataFolder { get; private set; } = "";
-    /// <summary>The per-user app directory for logs and the notes-folder pointer.</summary>
-    public static string AppHome { get; private set; } = "";
-    public static string? NotesLocationError { get; private set; }
-    public static Store Store { get; private set; } = null!;
-    public static SettingsService SettingsService { get; private set; } = null!;
     private static long GpuCacheBytes => long.TryParse(Environment.GetEnvironmentVariable(AppInfo.Env("GPU_CACHE_MB")), out var mb) ? mb * 1048576 : 8 * 1048576;
     private static PadWindow? _window;
     private static readonly StartupRequestLatch _pendingRequests = new();
@@ -33,7 +26,6 @@ internal static class Program
 
     private static int RunApplication(string[] args, RuntimeLog log)
     {
-        _runtimeLog = log;
         Environment.SetEnvironmentVariable("AVALONIA_TELEMETRY_OPTOUT", "1");
         // Any crash leaves its stack in the data folder's product log.
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
@@ -60,52 +52,57 @@ internal static class Program
 
         // The new identity lock is held before moving the default folder, so two new launches cannot race.
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var dataFolder = DefaultDataFolderMigration.Resolve(localAppData, customDataFolder);
-        AppHome = dataFolder.Folder;
-        log.SetHome(AppHome);
-        if (dataFolder.Error is { } migrationError) log.Write(migrationError);
+        var migratedHome = DefaultDataFolderMigration.Resolve(localAppData, customDataFolder);
+        var appHome = migratedHome.Folder;
+        log.SetHome(appHome);
+        if (migratedHome.Error is { } migrationError) log.Write(migrationError);
         if (!usesCustomData) Startup.MigrateLegacy(log.Write);
 
         var documents = usesCustomData ? "" : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         NotesLocationResolution notes;
         try
         {
-            if (usesCustomData) notes = NotesLocation.Resolve(AppHome, documents, customDataFolder);
-            else if (string.IsNullOrWhiteSpace(documents)) notes = new(AppHome, AppHome, "Windows did not provide a Documents folder path.");
-            else notes = NotesLocation.Resolve(AppHome, documents);
+            if (usesCustomData) notes = NotesLocation.Resolve(appHome, documents, customDataFolder);
+            else if (string.IsNullOrWhiteSpace(documents)) notes = new(appHome, appHome, "Windows did not provide a Documents folder path.");
+            else notes = NotesLocation.Resolve(appHome, documents);
         }
-        catch (Exception ex) { notes = new(AppHome, AppHome, $"Could not resolve the notes folder: {ex.Message}"); }
-        AppHome = notes.AppHome;
-        log.SetHome(AppHome);
-        DataFolder = notes.NotesFolder;
-        NotesLocationError = notes.Error;
+        catch (Exception ex) { notes = new(appHome, appHome, $"Could not resolve the notes folder: {ex.Message}"); }
+        appHome = notes.AppHome;
+        log.SetHome(appHome);
+        var dataFolder = notes.NotesFolder;
+        var notesLocationError = notes.Error;
         var startupNotice = notes.Notice;
         if (notes.Error is { } locationError) log.Write(locationError);
         if (startupNotice is { } notice) log.Write(notice);
 
         // The store is plain files, so it loads before Avalonia: the renderer depends on a setting.
-        try { Store = new Store(DataFolder, createDirectories: usesCustomData && notes.Error is null); }
+        Store store;
+        try
+        {
+            store = new Store(dataFolder, createDirectories: usesCustomData && notes.Error is null);
+        }
         catch (Exception ex)
         {
-            Store = new Store(DataFolder, createDirectories: false);
-            notes = notes with { Error = $"The notes folder is unavailable: {DataFolder}. {ex.Message}" };
-            NotesLocationError = notes.Error;
-            Store.MarkUnavailable(notes.Error);
+            store = new Store(dataFolder, createDirectories: false);
+            notes = notes with { Error = $"The notes folder is unavailable: {dataFolder}. {ex.Message}" };
+            notesLocationError = notes.Error;
+            store.MarkUnavailable(notes.Error);
         }
-        SettingsService = Store.SettingsService;
-        if (notes.Error is { } unavailable) Store.MarkUnavailable(unavailable);
-        Store.Load();
-        if (!Store.IsAvailable && NotesLocationError is null) NotesLocationError = Store.LastError ?? $"The notes folder is unavailable: {DataFolder}";
-        if (Store.IsAvailable)
+        var settingsService = store.SettingsService;
+        if (notes.Error is { } unavailable) store.MarkUnavailable(unavailable);
+        store.Load();
+        if (!store.IsAvailable && notesLocationError is null) notesLocationError = store.LastError ?? $"The notes folder is unavailable: {dataFolder}";
+        if (store.IsAvailable)
         {
-            Welcome.SeedIfNew(Store.Data, SettingsService);
-            Showcase.EnsureInDev(Store.Data, isDev);
+            Welcome.SeedIfNew(store.Data, settingsService);
+            Showcase.EnsureInDev(store.Data, isDev);
         }
-        if (Store.LastError is { } storeError) log.Write(storeError);
+        if (store.LastError is { } storeError) log.Write(storeError);
         // Solid windows need no GPU compositing: software rendering uses about 80 MB less memory.
-        var softwareRendering = Environment.GetEnvironmentVariable(AppInfo.Env("RENDER")) is { } r ? r == "software" : SettingsService.Current.Material == "solid";
+        var softwareRendering = Environment.GetEnvironmentVariable(AppInfo.Env("RENDER")) is { } r ? r == "software" : settingsService.Current.Material == "solid";
         var launch = new AppLaunch(log, isDev, startHidden, startupNotice, softwareRendering, Attach);
-        var builder = AppBuilder.Configure<App>(() => new App(launch)).UsePlatformDetect().LogToTrace()
+        var notesSession = new NotesSession(store, appHome, dataFolder, notesLocationError, log.Write);
+        var builder = AppBuilder.Configure<App>(() => new App(launch, store, settingsService, notesSession)).UsePlatformDetect().LogToTrace()
             // A scratchpad redraws little: a small GPU resource cache instead of Skia's default.
             .With(new Avalonia.SkiaOptions { MaxGpuResourceSizeBytes = GpuCacheBytes });
         if (softwareRendering) builder = builder.With(new Win32PlatformOptions { RenderingMode = [Win32RenderingMode.Software] });
@@ -128,33 +125,6 @@ internal static class Program
             var window = _window ?? throw new InvalidOperationException("The window must be attached before dispatching a quit request.");
             Dispatcher.UIThread.Post(window.Quit);
         });
-    }
-
-    private static RuntimeLog? _runtimeLog;
-
-    public static bool MoveNotes(string target, out string message)
-    {
-        if (Store is null || !Store.IsAvailable || NotesLocationError is not null)
-        {
-            message = NotesLocationError ?? $"The current notes folder is unavailable: {DataFolder}";
-            return false;
-        }
-        if (!Store.Save())
-        {
-            message = Store.LastError is { } saveError
-                ? $"The current notes could not be saved before moving them. {saveError}"
-                : "The current notes could not be saved before moving them.";
-            return false;
-        }
-        var result = NotesLocation.Move(AppHome, DataFolder, target);
-        if (!result.Success) { message = result.Error ?? "The notes folder could not be changed."; return false; }
-        Store.SwitchFolder(result.Folder);
-        DataFolder = result.Folder;
-        var unavailable = $"The notes folder is unavailable: {result.Folder}";
-        NotesLocationError = Store.IsAvailable ? null : unavailable;
-        message = result.Warning ?? (Store.IsAvailable ? $"Notes moved to {result.Folder}." : unavailable);
-        if (result.Warning is { } warning) _runtimeLog?.Write(warning);
-        return true;
     }
 
     public static void Attach(PadWindow window)
@@ -215,9 +185,18 @@ internal sealed record AppLaunch(RuntimeLog Log, bool IsDev, bool StartHidden, s
 public sealed class App : Application
 {
     private readonly AppLaunch _launch;
+    private readonly Store _store;
+    private readonly SettingsService _settingsService;
+    private readonly NotesSession _notes;
     private Tray? _tray;
 
-    internal App(AppLaunch launch) => _launch = launch;
+    internal App(AppLaunch launch, Store store, SettingsService settingsService, NotesSession notes)
+    {
+        _launch = launch;
+        _store = store;
+        _settingsService = settingsService;
+        _notes = notes;
+    }
 
     public override void Initialize()
     {
@@ -230,10 +209,9 @@ public sealed class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
-            var store = Program.Store;
-            var window = new PadWindow(store, Program.SettingsService, _launch.Log, _launch.IsDev, _launch.SoftwareRendering);
+            var window = new PadWindow(_store, _settingsService, _launch.Log, _launch.IsDev, _launch.SoftwareRendering, _notes);
             // One composition-root subscription preserves the ordered pad effects and persistence debounce.
-            Program.SettingsService.Changed += window.HandleSettingsChanged;
+            _settingsService.Changed += window.HandleSettingsChanged;
             // Win32 raises this on WM_QUERYENDSESSION, before Closing. In 12.1.4 the OS reason
             // is internal, and sign-out is labeled ApplicationShutdown rather than OSShutdown.
             // Our explicit Quit uses forced Shutdown(), which does not raise this event.
@@ -244,8 +222,8 @@ public sealed class App : Application
             };
             window.QuitRequested = () => { _tray?.Dispose(); desktop.Shutdown(); };
             _tray = new Tray(window.ShowResident, () => { window.ShowResident(); window.NewNote(); }, window.OpenSettings, window.Quit,
-                () => store.Data.Slots.Select(n => (n.Title, !n.IsEmpty)).ToList(),
-                slot => { window.ShowResident(); if (store.Data.ViewSlot != slot) window.OpenSlot(slot); });
+                () => _store.Data.Slots.Select(n => (n.Title, !n.IsEmpty)).ToList(),
+                slot => { window.ShowResident(); if (_store.Data.ViewSlot != slot) window.OpenSlot(slot); });
             window.HotkeyStatusChanged += status => _tray.Tooltip = $"{AppInfo.DisplayName} · {status}";
             window.InstallHooks();
             _launch.Attach(window);

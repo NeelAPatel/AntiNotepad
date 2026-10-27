@@ -15,6 +15,7 @@ internal sealed class SearchOverlay : Grid
 {
     private readonly PadWindow _window;
     private readonly Palette _p;
+    private readonly Store _store;
     private readonly TextBox _query;
     private readonly ScrollViewer _scroll;
     private readonly Panel _results;
@@ -36,9 +37,9 @@ internal sealed class SearchOverlay : Grid
     public bool ShowingTrash { get; private set; }
     private bool GridView => _window.Settings.SearchGrid;
 
-    public SearchOverlay(PadWindow window, Palette palette, string query, bool trash)
+    public SearchOverlay(PadWindow window, Palette palette, Store store, string query, bool trash)
     {
-        _window = window; _p = palette; ShowingTrash = trash;
+        _window = window; _p = palette; _store = store; ShowingTrash = trash;
         _debounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(125) };
         _debounce.Tick += (_, _) => { _debounce.Stop(); StartSearch(); };
         DetachedFromVisualTree += (_, _) => { _disposed = true; _debounce.Stop(); _searchGeneration.Dispose(); };
@@ -105,9 +106,8 @@ internal sealed class SearchOverlay : Grid
         _debounce.Stop();
         var source = Source().ToList();
         _snapshotNotes = source.ToDictionary(note => note.Id, StringComparer.Ordinal);
-        var store = Program.Store;
-        var snapshot = store.CreateSearchSnapshot(source);
-        var context = store.CreateSearchContext(snapshot);
+        var snapshot = _store.CreateSearchSnapshot(source);
+        var context = _store.CreateSearchContext(snapshot);
         var query = Query;
         _resultsPending = true;
         var request = _searchGeneration.Begin();

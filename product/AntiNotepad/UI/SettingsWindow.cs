@@ -37,6 +37,7 @@ internal sealed partial class SettingsWindow : Window
     private readonly SettingsService _settings;
     private readonly ISettingsHost _host;
     private readonly bool _softwareRendering;
+    private readonly NotesSession _notes;
     private Palette _p;
     private readonly MotionPreview _preview;
     private readonly ScrollViewer _scroll = new() { HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
@@ -48,15 +49,17 @@ internal sealed partial class SettingsWindow : Window
     private string? _notesError;
     private string? _notesSuccess;
     private string? _notesNotice;
+    private bool _notesFolderRestartPending;
     private Palette? _stylesPalette;
     private string? _searchQuery;
     private Settings S => _settings.Current;
 
-    public SettingsWindow(SettingsService settings, ISettingsHost host, bool softwareRendering)
+    public SettingsWindow(SettingsService settings, ISettingsHost host, bool softwareRendering, NotesSession notes)
     {
         _settings = settings;
         _host = host;
         _softwareRendering = softwareRendering;
+        _notes = notes;
         _p = host.CurrentPalette;
         Title = $"{AppInfo.DisplayName} Settings";
         Icon = host.Icon;
@@ -68,7 +71,7 @@ internal sealed partial class SettingsWindow : Window
         Background = Brushes.Transparent;
         FontFamily = new FontFamily("Segoe UI Variable Text, Segoe UI");
         TextOptions.SetTextRenderingMode(this, TextRenderingMode.Antialias);
-        _preview = new MotionPreview(_p, S);
+        _preview = new MotionPreview(_p, S, _notes);
         ApplyLook();
         Build();
         Show(_section, animate: false);
@@ -591,7 +594,7 @@ internal sealed partial class SettingsWindow : Window
         Control NotesFolderDetails()
         {
             var details = new StackPanel { Spacing = 8 };
-            details.Children.Add(ReadOnlyPath(Program.DataFolder));
+            details.Children.Add(ReadOnlyPath(_notes.DataFolder));
 
             if (_pendingNotesFolder is { } target)
             {
@@ -600,7 +603,7 @@ internal sealed partial class SettingsWindow : Window
                 details.Children.Add(pending);
             }
 
-            var error = _notesError ?? Program.NotesLocationError;
+            var error = _notesError ?? (_notesFolderRestartPending ? null : _notes.NotesLocationError);
             if (!string.IsNullOrWhiteSpace(error)) details.Children.Add(InlineNote(error, _p.Error));
             if (!string.IsNullOrWhiteSpace(_notesSuccess)) details.Children.Add(InlineNote(_notesSuccess, _p.Confirm));
             if (!string.IsNullOrWhiteSpace(_notesNotice)) details.Children.Add(InlineNote(_notesNotice, _p.Muted));
@@ -608,15 +611,17 @@ internal sealed partial class SettingsWindow : Window
             var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
             if (_pendingNotesFolder is { } destination)
             {
-                // The pending move: Cancel, then the accent Migrate button at the right edge.
+                // The pending folder action: Cancel, then the accent action button at the right edge.
                 actions.HorizontalAlignment = HorizontalAlignment.Right;
-                actions.Children.Add(TextButton("Cancel", () => { _pendingNotesFolder = null; _notesError = null; _notesNotice = null; Refresh(); }));
-                actions.Children.Add(TextButton("Migrate notes", () => MoveNotes(destination), primary: true));
+                actions.Children.Add(TextButton("Cancel", () => { _pendingNotesFolder = null; _notesError = null; _notesNotice = null; _notesFolderRestartPending = false; Refresh(); }));
+                var unavailable = _notes.NotesLocationError is not null;
+                actions.Children.Add(TextButton(unavailable ? "Use this folder" : "Migrate notes",
+                    () => { if (unavailable) UseFolder(destination); else MoveNotes(destination); }, primary: true));
             }
             else
             {
-                if (Program.NotesLocationError is null) actions.Children.Add(TextButton("Open", OpenNotesFolder));
-                actions.Children.Add(TextButton(Program.NotesLocationError is null ? "Change location…" : "Choose folder", ChooseNotesFolder));
+                if (_notes.NotesLocationError is null) actions.Children.Add(TextButton("Open", OpenNotesFolder));
+                actions.Children.Add(TextButton(_notes.NotesLocationError is null ? "Change location…" : "Choose folder", ChooseNotesFolder));
             }
             details.Children.Add(actions);
             return details;
@@ -626,7 +631,7 @@ internal sealed partial class SettingsWindow : Window
             SubRow(null, NotesFolderDetails, wide: true, searchTag: "sub Notes folder location and move notes")));
 
         page.Children.Add(Group("Other locations"));
-        var recovered = Path.Combine(Program.DataFolder, "recovered");
+        var recovered = Path.Combine(_notes.DataFolder, "recovered");
         int? recoveredCount = null;
         string? recoveredDescription = null;
         string RecoveryDescription()
@@ -648,8 +653,8 @@ internal sealed partial class SettingsWindow : Window
             Row(() => Fl(0xf418), "Recovered notes", null,
                 () => recoveredCount is > 0 ? TextButton("Open", () => OpenFolder(recovered)) : null,
                 RecoveryDescription, RecoveryDescriptionMatches),
-            Row(() => Fl(0xf359), "App data", $"{Program.AppHome}\nLog file and the pointer to your notes folder.",
-                () => TextButton("Open", () => OpenFolder(Program.AppHome)))));
+            Row(() => Fl(0xf359), "App data", $"{_notes.AppHome}\nLog file and the pointer to your notes folder.",
+                () => TextButton("Open", () => OpenFolder(_notes.AppHome)))));
     }
 
     private Control InlineNote(string text, Color color)
@@ -666,11 +671,12 @@ internal sealed partial class SettingsWindow : Window
             var folder = selected.FirstOrDefault()?.Path.LocalPath;
             if (string.IsNullOrWhiteSpace(folder)) return;
             folder = Path.GetFullPath(folder);
-            if (SamePath(folder, Program.DataFolder)) return;
+            if (SamePath(folder, _notes.DataFolder)) return;
             _pendingNotesFolder = folder;
             _notesError = null;
             _notesSuccess = null;
             _notesNotice = null;
+            _notesFolderRestartPending = false;
             Refresh();
         }
         catch (Exception ex) { _notesError = "Couldn't choose a notes folder · " + ex.Message; Refresh(); }
@@ -679,19 +685,19 @@ internal sealed partial class SettingsWindow : Window
     private void MoveNotes(string target)
     {
         _host.Save();
-        if (Program.Store.LastError is { } saveError)
+        if (_notes.Store.LastError is { } saveError)
         {
             _notesError = "Couldn't save notes · " + saveError;
             Refresh();
             return;
         }
 
-        var oldFolder = Program.DataFolder;
-        var appHome = Program.AppHome;
+        var oldFolder = _notes.DataFolder;
+        var appHome = _notes.AppHome;
         var fileCount = NotesFileCount(oldFolder);
         var backupRoot = SamePath(oldFolder, appHome) ? appHome : Path.GetDirectoryName(oldFolder)!;
         var before = DirectorySet(backupRoot);
-        if (!Program.MoveNotes(target, out var message))
+        if (!_notes.MoveNotes(target, out var message))
         {
             _notesError = message;
             _notesNotice = null;
@@ -704,6 +710,27 @@ internal sealed partial class SettingsWindow : Window
         _notesError = null;
         _notesSuccess = $"Moved {fileCount} {(fileCount == 1 ? "file" : "files")}. The old folder was kept as {backup ?? Path.GetFileName(oldFolder)}.";
         _notesNotice = message.StartsWith("Notes moved to ", StringComparison.OrdinalIgnoreCase) ? null : message;
+        Refresh();
+    }
+
+    private void UseFolder(string target)
+    {
+        if (_notes.UseFolderOnNextStart(target, out var message))
+        {
+            _notesError = null;
+            _notesSuccess = message;
+            _notesNotice = null;
+            _notesFolderRestartPending = true;
+        }
+        else
+        {
+            _notesError = message;
+            _notesSuccess = null;
+            _notesNotice = null;
+            _notesFolderRestartPending = false;
+        }
+
+        _pendingNotesFolder = null;
         Refresh();
     }
 
@@ -767,7 +794,7 @@ internal sealed partial class SettingsWindow : Window
         catch { return false; }
     }
 
-    private void OpenNotesFolder() => OpenFolder(Program.DataFolder);
+    private void OpenNotesFolder() => OpenFolder(_notes.DataFolder);
 
     private void OpenFolder(string path)
     {

@@ -20,6 +20,14 @@ internal static class SelfTest
         foreach (var line in layerCheck.Lines) Console.WriteLine(line);
         foreach (var failure in layerCheck.Failures) Check(false, failure);
 
+        var staticExposurePass = StaticServiceExposureChecks(out var staticExposureReport);
+        Console.WriteLine(staticExposurePass ? "STATIC service exposure " + staticExposureReport : "STATIC service exposure FAIL " + staticExposureReport);
+        Check(staticExposurePass, "static service exposure: " + staticExposureReport);
+
+        var environmentReadPass = EnvironmentReadConfinementChecks(out var environmentReadReport);
+        Console.WriteLine(environmentReadPass ? "ENV DATA/DEV confinement " + environmentReadReport : "ENV DATA/DEV confinement FAIL " + environmentReadReport);
+        Check(environmentReadPass, "environment DATA/DEV confinement: " + environmentReadReport);
+
         var settingsChangedPass = SettingsChangedChecks(out var settingsChangedReport);
         Console.WriteLine(settingsChangedPass ? "SETTINGS Changed" : "SETTINGS Changed FAIL " + settingsChangedReport);
         Check(settingsChangedPass, "settings Changed: " + settingsChangedReport);
@@ -98,6 +106,15 @@ internal static class SelfTest
         Check(DefaultDataMigrationSelfTest(out var migrationReport), "default data folder migration: " + migrationReport);
         Check(InputLimitChecks(out var inputReport), "input limits: " + inputReport);
         Check(NotesLocationChecks(out var notesReport), "notes location and recovery: " + notesReport);
+        var notesSessionPass = NotesMoveChecks(out var notesSessionReport);
+        Console.WriteLine(notesSessionPass ? "NOTES SESSION move " + notesSessionReport : "NOTES SESSION move FAIL " + notesSessionReport);
+        Check(notesSessionPass, "notes session move: " + notesSessionReport);
+        var notesUseFolderPass = NotesUseFolderChecks(out var notesUseFolderReport);
+        Console.WriteLine(notesUseFolderPass ? "NOTES SESSION use-folder " + notesUseFolderReport : "NOTES SESSION use-folder FAIL " + notesUseFolderReport);
+        Check(notesUseFolderPass, "notes session use-folder: " + notesUseFolderReport);
+        var unavailableStorePass = UnavailableStoreStartupChecks(out var unavailableStoreReport);
+        Console.WriteLine(unavailableStorePass ? "UNAVAILABLE STORE startup " + unavailableStoreReport : "UNAVAILABLE STORE startup FAIL " + unavailableStoreReport);
+        Check(unavailableStorePass, "unavailable store startup: " + unavailableStoreReport);
         Check(StartupRequestLatchChecks(out var startupRequestReport), "startup request latch: " + startupRequestReport);
         Check(NoteSwipeChecks(out var swipeReport), "note swipe: " + swipeReport);
         Check(WelcomeSlotsSelfTest(out var welcomeReport), "welcome slots: " + welcomeReport);
@@ -118,7 +135,8 @@ internal static class SelfTest
         string? To,
         bool AnyAntiNotepadNamespace = false,
         Type? ExactFrom = null,
-        Type? ExactTo = null)
+        Type? ExactTo = null,
+        bool AnyApplicationTypeExceptTarget = false)
     {
         public string Label => AnyAntiNotepadNamespace ? $"{From}->*any other AntiNotepad namespace*" : $"{From}->{To}";
     }
@@ -509,7 +527,9 @@ internal static class SelfTest
         return failures.Count == 0;
     }
 
-    private static readonly LayerRule[] LayerRules =
+    private static readonly LayerRule[] LayerRules = CreateLayerRules();
+
+    private static LayerRule[] CreateLayerRules() =>
     [
         new("Editor", "UI"),
         new("Model", "UI"),
@@ -590,6 +610,15 @@ internal static class SelfTest
         new("SettingsWindow", "PadWindow", ExactFrom: typeof(SettingsWindow), ExactTo: typeof(PadWindow)),
         new("SettingsService", "UI", ExactFrom: typeof(SettingsService)),
         new("SettingsService", "Editor", ExactFrom: typeof(SettingsService)),
+        new("Editor", "Program", ExactTo: typeof(Program)),
+        new("UI", "Program", ExactTo: typeof(Program)),
+        new("App", "Program", ExactFrom: typeof(App), ExactTo: typeof(Program)),
+        new("Model", "NotesSession", ExactTo: typeof(NotesSession)),
+        new("Editor", "NotesSession", ExactTo: typeof(NotesSession)),
+        new("INotesLocation", "UI", ExactFrom: typeof(INotesLocation)),
+        new("INotesLocation", "Editor", ExactFrom: typeof(INotesLocation)),
+        new("INotesLocation", "Platform", ExactFrom: typeof(INotesLocation)),
+        new("*except Program", "Program", ExactTo: typeof(Program), AnyApplicationTypeExceptTarget: true),
     ];
 
     // Setter calls from these exact methods are passed to SettingsService.Update, except ResetSettings' defaults initializer.
@@ -640,7 +669,13 @@ internal static class SelfTest
                 foreach (var ev in type.GetEvents(declared)) AddType(ev.EventHandlerType, found);
                 foreach (var constructor in type.GetConstructors(declared)) ScanMethod(constructor, found, scanErrors);
                 if (type.TypeInitializer is { } initializer) ScanMethod(initializer, found, scanErrors);
-                foreach (var method in type.GetMethods(declared)) ScanMethod(method, found, scanErrors);
+                foreach (var method in type.GetMethods(declared))
+                {
+                    var allowedProgramTypeToken = type == typeof(SelfTest) && method.Name == nameof(CreateLayerRules)
+                        ? LayerRules.Single(rule => rule.AnyApplicationTypeExceptTarget).ExactTo
+                        : null;
+                    ScanMethod(method, found, scanErrors, allowedProgramTypeToken: allowedProgramTypeToken);
+                }
             }
             catch (Exception ex) { scanErrors.Add($"{type.FullName}: reflection {ex.GetType().Name}"); }
         }
@@ -705,9 +740,98 @@ internal static class SelfTest
         return SettingsSetterAllowances.Any(allowance => allowance.CallerType == type && allowance.Methods.Contains(method, StringComparer.Ordinal));
     }
 
-    private static bool MatchesSource(LayerRule rule, Type source) => rule.ExactFrom is { } exact
-        ? IsExactOrNested(source, exact)
-        : InNamespace(source.Namespace, rule.From);
+    private static bool MatchesSource(LayerRule rule, Type source)
+    {
+        if (rule.AnyApplicationTypeExceptTarget)
+            return rule.ExactTo is { } target && source.Assembly == target.Assembly && !IsExactOrNested(source, target);
+        return rule.ExactFrom is { } exact
+            ? IsExactOrNested(source, exact)
+            : InNamespace(source.Namespace, rule.From);
+    }
+
+    private static Type ProgramRuleTarget => LayerRules.Single(rule => rule.AnyApplicationTypeExceptTarget).ExactTo!;
+
+    private static bool StaticServiceExposureChecks(out string report)
+    {
+        var programType = ProgramRuleTarget;
+        Type[] types;
+        try { types = programType.Assembly.GetTypes(); }
+        catch (ReflectionTypeLoadException ex) { types = ex.Types.OfType<Type>().ToArray(); }
+
+        var serviceTypes = new HashSet<Type> { typeof(Store), typeof(SettingsService), typeof(RuntimeLog), typeof(NotesSession) };
+        var exposures = new HashSet<string>(StringComparer.Ordinal);
+        const BindingFlags declaredStatic = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly;
+
+        // This typed reflection guard covers static fields and properties, including compiler backing fields.
+        // Delegates, dictionaries and object-typed locators are outside its bound.
+        foreach (var type in types)
+            CheckType(type);
+
+        report = exposures.Count == 0 ? "0 refs" : string.Join("; ", exposures.OrderBy(value => value, StringComparer.Ordinal));
+        return exposures.Count == 0;
+
+        void CheckType(Type type)
+        {
+            foreach (var field in type.GetFields(declaredStatic))
+                if (serviceTypes.Contains(field.FieldType)) exposures.Add($"{type.FullName}.{field.Name}: {field.FieldType.Name}");
+            foreach (var property in type.GetProperties(declaredStatic))
+            {
+                var isStatic = property.GetAccessors(nonPublic: true).Any(accessor => accessor.IsStatic);
+                if (isStatic && serviceTypes.Contains(property.PropertyType))
+                    exposures.Add($"{type.FullName}.{property.Name}: {property.PropertyType.Name}");
+            }
+        }
+    }
+
+    private static bool EnvironmentReadConfinementChecks(out string report)
+    {
+        var programType = ProgramRuleTarget;
+        Type[] types;
+        try { types = programType.Assembly.GetTypes(); }
+        catch (ReflectionTypeLoadException ex) { types = ex.Types.OfType<Type>().ToArray(); }
+
+        var violations = new HashSet<string>(StringComparer.Ordinal);
+        var observed = new HashSet<string>(StringComparer.Ordinal);
+        var scanErrors = new List<string>();
+        const BindingFlags declared = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
+            | BindingFlags.Static | BindingFlags.DeclaredOnly;
+        foreach (var type in types)
+        {
+            var methods = type.GetConstructors(declared).Cast<MethodBase>().ToList();
+            if (type.TypeInitializer is { } initializer) methods.Add(initializer);
+            methods.AddRange(type.GetMethods(declared));
+            foreach (var method in methods)
+            {
+                var readsEnvironment = false;
+                var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                ScanMethod(method, [], scanErrors,
+                    inspectCall: (caller, opcode, target) =>
+                    {
+                        if ((opcode == OpCodes.Call || opcode == OpCodes.Callvirt)
+                            && target.DeclaringType == typeof(Environment) && target.Name == nameof(Environment.GetEnvironmentVariable))
+                            readsEnvironment = true;
+                    },
+                    inspectString: (_, value) =>
+                    {
+                        if (value is "DATA" or "DEV" || value.EndsWith("_DATA", StringComparison.OrdinalIgnoreCase)
+                            || value.EndsWith("_DEV", StringComparison.OrdinalIgnoreCase))
+                            keys.Add(value);
+                    });
+                if (!readsEnvironment || keys.Count == 0) continue;
+                if (!IsExactOrNested(method.DeclaringType!, programType))
+                    foreach (var key in keys) violations.Add($"{method.DeclaringType?.FullName}.{method.Name} reads {key}");
+                else
+                    foreach (var key in keys)
+                        observed.Add(key is "DATA" || key.EndsWith("_DATA", StringComparison.OrdinalIgnoreCase) ? "DATA" : "DEV");
+            }
+        }
+
+        foreach (var error in scanErrors.Distinct(StringComparer.Ordinal)) violations.Add("scan: " + error);
+        foreach (var key in new[] { "DATA", "DEV" })
+            if (!observed.Contains(key)) violations.Add($"ANTINOTEPAD_{key} read not found in Program");
+        report = violations.Count == 0 ? "0 refs" : string.Join("; ", violations.OrderBy(value => value, StringComparer.Ordinal));
+        return violations.Count == 0;
+    }
 
     private static bool MatchesRule(LayerRule rule, Type from, Type to)
     {
@@ -845,7 +969,9 @@ internal static class SelfTest
     }
 
     private static void ScanMethod(MethodBase method, HashSet<Type> found, List<string> errors,
-        Action<MethodBase, OpCode, MethodBase>? inspectCall = null)
+        Action<MethodBase, OpCode, MethodBase>? inspectCall = null,
+        Type? allowedProgramTypeToken = null,
+        Action<MethodBase, string>? inspectString = null)
     {
         AddType(method.DeclaringType, found);
         foreach (var parameter in method.GetParameters()) AddType(parameter.ParameterType, found);
@@ -919,6 +1045,13 @@ internal static class SelfTest
             if (!HasBytes(il, position, operandSize))
             { errors.Add($"{method.DeclaringType?.FullName}.{method.Name}: truncated IL at {instructionOffset}"); return; }
 
+            if (opcode == OpCodes.Ldstr && tokenKind == OperandType.InlineString && inspectString is not null)
+            {
+                var token = BitConverter.ToInt32(il, operandStart);
+                try { inspectString(method, module.ResolveString(token)); }
+                catch (Exception ex) { errors.Add($"{method.DeclaringType?.FullName}.{method.Name}: string token 0x{token:x8} {ex.GetType().Name}"); }
+            }
+
             if (operandSize == 4 && tokenKind is OperandType.InlineType or OperandType.InlineMethod or OperandType.InlineField or OperandType.InlineTok)
             {
                 var token = BitConverter.ToInt32(il, operandStart);
@@ -940,7 +1073,11 @@ internal static class SelfTest
                     }
                     else if (module.ResolveMember(token, typeArguments, methodArguments) is { } member)
                     {
-                        if (member is Type resolvedType) AddType(resolvedType, found);
+                        if (member is Type resolvedType)
+                        {
+                            if (opcode != OpCodes.Ldtoken || resolvedType != allowedProgramTypeToken)
+                                AddType(resolvedType, found);
+                        }
                         else if (member is MethodBase resolvedMethod) AddMethodReference(resolvedMethod, found);
                         else if (member is FieldInfo resolvedField)
                         { AddType(resolvedField.DeclaringType, found); AddType(resolvedField.FieldType, found); }
@@ -1316,6 +1453,237 @@ internal static class SelfTest
             return false;
         }
         finally { try { if (Directory.Exists(root)) Directory.Delete(root, true); } catch { } }
+    }
+
+    private static bool NotesMoveChecks(out string report)
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"{AppInfo.Name.ToLowerInvariant()}-notes-session-selftest-{Guid.NewGuid():N}");
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+
+        Store? store = null;
+        Store? unavailableStore = null;
+        try
+        {
+            var source = Path.Combine(root, "source");
+            var target = Path.Combine(root, "target");
+            store = new Store(source);
+            store.Load();
+            var data = store.Data;
+            var settingsService = store.SettingsService;
+            var note = store.Data.Stack[0];
+            note.Text = "notes session before move";
+            CheckCase(store.Save(), "source note saves before move");
+
+            var session = new NotesSession(store, source, source, null, _ => { });
+            var moved = session.MoveNotes(target, out _);
+            CheckCase(moved && ReferenceEquals(session.Store, store) && ReferenceEquals(store.Data, data)
+                && ReferenceEquals(store.SettingsService, settingsService) && session.DataFolder == store.Folder
+                && session.DataFolder == target && session.NotesLocationError is null && store.IsAvailable
+                && Path.GetFullPath(NotesLocation.ReadPointer(source) ?? "") == Path.GetFullPath(target),
+                "empty sibling move keeps Store, Data, and SettingsService and follows pointer");
+
+            note.Text = "later save after move";
+            var savedAfterMove = store.Save();
+            var movedBody = Path.Combine(target, "notes", note.Id + ".md");
+            CheckCase(savedAfterMove && ReferenceEquals(session.Store, store) && ReferenceEquals(store.Data, data)
+                && ReferenceEquals(store.SettingsService, settingsService) && File.ReadAllText(movedBody) == "later save after move",
+                "later save uses the original Store in the target folder");
+
+            var occupied = Path.Combine(root, "occupied");
+            Directory.CreateDirectory(occupied);
+            File.WriteAllText(Path.Combine(occupied, "index.json"), "occupied");
+            var pointerBeforeFailure = NotesLocation.ReadPointer(source);
+            var folderBeforeFailure = session.DataFolder;
+            var errorBeforeFailure = session.NotesLocationError;
+            var occupiedRefused = !session.MoveNotes(occupied, out _);
+            CheckCase(occupiedRefused && session.DataFolder == folderBeforeFailure && session.NotesLocationError == errorBeforeFailure
+                && ReferenceEquals(session.Store, store) && ReferenceEquals(store.Data, data)
+                && ReferenceEquals(store.SettingsService, settingsService) && NotesLocation.ReadPointer(source) == pointerBeforeFailure,
+                "occupied target refusal leaves folder, error, identities, and pointer unchanged");
+
+            var nested = Path.Combine(target, "nested");
+            folderBeforeFailure = session.DataFolder;
+            errorBeforeFailure = session.NotesLocationError;
+            var nestedRefused = !session.MoveNotes(nested, out _);
+            CheckCase(nestedRefused && !Directory.Exists(nested) && session.DataFolder == folderBeforeFailure
+                && session.NotesLocationError == errorBeforeFailure && ReferenceEquals(session.Store, store)
+                && ReferenceEquals(store.Data, data) && ReferenceEquals(store.SettingsService, settingsService)
+                && NotesLocation.ReadPointer(source) == pointerBeforeFailure,
+                "nested target refusal creates nothing and leaves session state unchanged");
+
+            var unavailableFolder = Path.Combine(root, "unavailable-source");
+            var unavailableTarget = Path.Combine(root, "unavailable-target");
+            unavailableStore = new Store(unavailableFolder, createDirectories: false);
+            unavailableStore.Load();
+            var unavailableData = unavailableStore.Data;
+            var unavailableSettings = unavailableStore.SettingsService;
+            var unavailableError = unavailableStore.LastError ?? "unavailable";
+            var unavailableSession = new NotesSession(unavailableStore, root, unavailableFolder, unavailableError, _ => { });
+            var unavailableRefused = !unavailableSession.MoveNotes(unavailableTarget, out _);
+            CheckCase(unavailableRefused && !unavailableStore.IsAvailable && !Directory.Exists(unavailableFolder) && !Directory.Exists(unavailableTarget)
+                && unavailableSession.DataFolder == unavailableFolder && unavailableSession.NotesLocationError == unavailableError
+                && ReferenceEquals(unavailableSession.Store, unavailableStore) && ReferenceEquals(unavailableStore.Data, unavailableData)
+                && ReferenceEquals(unavailableStore.SettingsService, unavailableSettings),
+                "unavailable store refuses without creating either folder");
+
+            report = failures.Count == 0 ? "passed" : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+        catch (Exception ex)
+        {
+            report = string.Join("; ", failures.Append(ex.Message));
+            return false;
+        }
+        finally
+        {
+            try { store?.Flush(); } catch { }
+            try { unavailableStore?.Flush(); } catch { }
+            try { if (Directory.Exists(root)) Directory.Delete(root, true); } catch { }
+        }
+    }
+
+    private static bool NotesUseFolderChecks(out string report)
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"{AppInfo.Name.ToLowerInvariant()}-notes-use-folder-selftest-{Guid.NewGuid():N}");
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+
+        Store? unavailableStore = null;
+        Store? availableStore = null;
+        try
+        {
+            var appHome = Path.Combine(root, "app-home");
+            var missingFolder = Path.Combine(root, "missing-notes");
+            var targetFolder = Path.Combine(root, "existing-notes");
+            var untouchedFolder = Path.Combine(root, "untouched-notes");
+            Directory.CreateDirectory(appHome);
+            Directory.CreateDirectory(targetFolder);
+            Directory.CreateDirectory(untouchedFolder);
+            var targetStore = new Store(targetFolder);
+            targetStore.Load();
+            targetStore.Data.Stack[0].Text = "adopt this folder";
+            CheckCase(targetStore.Save(), "existing target index is written");
+            targetStore.Flush();
+            NotesLocation.WritePointer(appHome, untouchedFolder);
+
+            unavailableStore = new Store(missingFolder, createDirectories: false);
+            unavailableStore.Load();
+            var unavailableError = unavailableStore.LastError ?? $"The notes folder is unavailable: {missingFolder}";
+            var unavailableData = unavailableStore.Data;
+            var session = new NotesSession(unavailableStore, appHome, missingFolder, unavailableError, _ => { });
+            var changed = session.UseFolderOnNextStart(targetFolder, out var message);
+            CheckCase(changed && message == $"Notes folder set to {targetFolder}. Quit and start AntiNotepad again to load it."
+                && NotesLocation.ReadPointer(appHome) == targetFolder && !Directory.Exists(missingFolder) && Directory.Exists(targetFolder)
+                && session.DataFolder == missingFolder && session.NotesLocationError == unavailableError
+                && ReferenceEquals(session.Store, unavailableStore) && ReferenceEquals(unavailableStore.Data, unavailableData),
+                "unavailable session sets pointer without changing session or creating a folder");
+
+            var resolved = NotesLocation.Resolve(appHome, Path.Combine(root, "unused-documents"));
+            CheckCase(resolved.Error is null && resolved.NotesFolder == targetFolder,
+                "fresh resolution follows the selected folder pointer");
+
+            var availableFolder = Path.Combine(root, "available-notes");
+            availableStore = new Store(availableFolder);
+            availableStore.Load();
+            var availableSession = new NotesSession(availableStore, appHome, availableFolder, null, _ => { });
+            var pointerBeforeAvailable = NotesLocation.ReadPointer(appHome);
+            var availableRefused = !availableSession.UseFolderOnNextStart(targetFolder, out _);
+            CheckCase(availableRefused && NotesLocation.ReadPointer(appHome) == pointerBeforeAvailable
+                && availableSession.DataFolder == availableFolder && availableSession.NotesLocationError is null
+                && ReferenceEquals(availableSession.Store, availableStore),
+                "available session refuses and leaves the pointer untouched");
+
+            var missingTarget = Path.Combine(root, "missing-target");
+            var pointerBeforeMissing = NotesLocation.ReadPointer(appHome);
+            var missingRefused = !session.UseFolderOnNextStart(missingTarget, out _);
+            CheckCase(missingRefused && !Directory.Exists(missingTarget) && NotesLocation.ReadPointer(appHome) == pointerBeforeMissing
+                && session.DataFolder == missingFolder && session.NotesLocationError == unavailableError
+                && ReferenceEquals(session.Store, unavailableStore) && ReferenceEquals(unavailableStore.Data, unavailableData),
+                "missing target is refused without creation or pointer changes");
+
+            var fileTarget = Path.Combine(root, "not-a-folder");
+            File.WriteAllText(fileTarget, "file target");
+            var pointerBeforeFile = NotesLocation.ReadPointer(appHome);
+            var fileRefused = !session.UseFolderOnNextStart(fileTarget, out _);
+            CheckCase(fileRefused && File.Exists(fileTarget) && !Directory.Exists(fileTarget)
+                && NotesLocation.ReadPointer(appHome) == pointerBeforeFile && session.DataFolder == missingFolder
+                && session.NotesLocationError == unavailableError && ReferenceEquals(session.Store, unavailableStore)
+                && ReferenceEquals(unavailableStore.Data, unavailableData),
+                "file target is refused without pointer or session changes");
+
+            report = failures.Count == 0 ? "passed" : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+        catch (Exception ex)
+        {
+            report = string.Join("; ", failures.Append(ex.Message));
+            return false;
+        }
+        finally
+        {
+            try { unavailableStore?.Flush(); } catch { }
+            try { availableStore?.Flush(); } catch { }
+            try { if (Directory.Exists(root)) Directory.Delete(root, true); } catch { }
+        }
+    }
+
+    private static bool UnavailableStoreStartupChecks(out string report)
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"{AppInfo.Name.ToLowerInvariant()}-unavailable-store-selftest-{Guid.NewGuid():N}");
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+
+        Store? missingStore = null;
+        Store? fallbackStore = null;
+        try
+        {
+            var missingFolder = Path.Combine(root, "missing-load");
+            missingStore = new Store(missingFolder, createDirectories: false);
+            missingStore.Load();
+            var missingSelection = missingStore.Data.Stack.Count == 1 && missingStore.Data.Stack[0].IsEmpty
+                && missingStore.Data.Current >= 0 && missingStore.Data.Current < missingStore.Data.Stack.Count;
+            var missingData = missingStore.Data;
+            var missingSave = missingStore.Save();
+            CheckCase(!missingStore.IsAvailable && missingSelection && missingSave && missingStore.LastError is not null
+                && !Directory.Exists(missingFolder), "missing-folder Load leaves a blank current note and Save creates nothing");
+
+            var fallbackFolder = Path.Combine(root, "missing-fallback");
+            fallbackStore = new Store(fallbackFolder, createDirectories: false);
+            fallbackStore.MarkUnavailable("fixture constructor fallback");
+            fallbackStore.Load();
+            var fallbackSelection = fallbackStore.Data.Stack.Count == 1 && fallbackStore.Data.Stack[0].IsEmpty
+                && fallbackStore.Data.Current >= 0 && fallbackStore.Data.Current < fallbackStore.Data.Stack.Count;
+            var fallbackSave = fallbackStore.Save();
+            CheckCase(!fallbackStore.IsAvailable && fallbackSelection && fallbackSave && fallbackStore.LastError is not null
+                && !Directory.Exists(fallbackFolder), "MarkUnavailable constructor fallback leaves a blank current note and Save creates nothing");
+
+            var validFolder = Path.Combine(root, "valid-folder");
+            var source = new Store(validFolder);
+            source.Load();
+            source.Data.Stack[0].Text = "loaded from valid folder";
+            var sourceSaved = source.Save();
+            var placeholderData = missingStore.Data;
+            missingStore.SwitchFolder(validFolder);
+            missingStore.Load();
+            CheckCase(sourceSaved && missingStore.IsAvailable && !ReferenceEquals(placeholderData, missingStore.Data)
+                && missingStore.Data.Stack[missingStore.Data.Current].Text == "loaded from valid folder"
+                && !ReferenceEquals(missingData, missingStore.Data), "SwitchFolder then Load replaces the placeholder with valid-folder data");
+
+            report = failures.Count == 0 ? "missing-folder load, constructor fallback, no-write Save, and valid-folder reload" : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+        catch (Exception ex)
+        {
+            report = string.Join("; ", failures.Append(ex.Message));
+            return false;
+        }
+        finally
+        {
+            try { missingStore?.Flush(); } catch { }
+            try { fallbackStore?.Flush(); } catch { }
+            try { if (Directory.Exists(root)) Directory.Delete(root, true); } catch { }
+        }
     }
 
     private static bool StartupRequestLatchChecks(out string report)

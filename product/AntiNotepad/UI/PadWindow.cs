@@ -20,7 +20,8 @@ internal sealed partial class PadWindow : Window, ISettingsHost
 {
     private readonly Store _store;
     private readonly SettingsService _settingsService;
-    private readonly Timers _timers = new(id => Program.Store.Data.Stack.Any(n => n.Id == id) || Program.Store.Data.Slots.Any(n => n.Id == id));
+    private readonly NotesSession _notes;
+    private readonly Timers _timers;
     private readonly RuntimeLog _log;
     private readonly bool _isDev;
     private readonly bool _softwareRendering;
@@ -46,10 +47,12 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     internal Settings Settings => _settingsService.Current;
     internal SettingsService SettingsService => _settingsService;
 
-    public PadWindow(Store store, SettingsService settingsService, RuntimeLog log, bool isDev, bool softwareRendering)
+    public PadWindow(Store store, SettingsService settingsService, RuntimeLog log, bool isDev, bool softwareRendering, NotesSession notes)
     {
         _store = store;
         _settingsService = settingsService;
+        _notes = notes;
+        _timers = new(id => store.Data.Stack.Any(n => n.Id == id) || store.Data.Slots.Any(n => n.Id == id));
         _log = log;
         _isDev = isDev;
         _softwareRendering = softwareRendering;

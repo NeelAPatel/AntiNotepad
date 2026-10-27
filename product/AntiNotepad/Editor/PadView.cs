@@ -30,6 +30,7 @@ internal sealed class PadView : Grid
     private static readonly Dictionary<string, TextDocument> Documents = [];
 
     private readonly Timers _timers;
+    private readonly INotesLocation _notesLocation;
     private Action? _timerTick;
     private readonly TextBlock _hint;
     private readonly ResultRenderer _results;
@@ -76,9 +77,9 @@ internal sealed class PadView : Grid
     public Func<IEnumerable<MenuEntry>>? AppMenu { get; set; }
     public Action<Control, IReadOnlyList<MenuEntry>>? ShowMenu { get; set; }
 
-    public PadView(Palette palette, Settings settings, Timers timers)
+    public PadView(Palette palette, Settings settings, Timers timers, INotesLocation notesLocation)
     {
-        Palette = palette; Settings = settings; _timers = timers;
+        Palette = palette; Settings = settings; _timers = timers; _notesLocation = notesLocation;
         Editor = new ScrollableTopInsetTextEditor
         {
             WordWrap = true,
@@ -271,12 +272,12 @@ internal sealed class PadView : Grid
         _analysis.Reset();
         ClearPendingAnalysis();
         Note = note;
-        var locationError = Program.NotesLocationError;
+        var locationError = _notesLocation.NotesLocationError;
         if (locationError is null) _ = note.PeekText();
         var unavailable = locationError is not null || note.BodyUnavailable;
         _loadHintError = unavailable;
         _loadHint = locationError is not null
-            ? $"Error: Notes folder not found\n\n{Program.DataFolder}\n\nChoose a folder in Settings › Storage"
+            ? $"Error: Notes folder not found\n\n{_notesLocation.DataFolder}\n\nChoose a folder in Settings › Storage"
             : note.BodyUnavailable ? "Error: Note not found\n\nCheck recovered folder in Settings › Storage" : null;
         _hint.Foreground = _loadHintError ? new SolidColorBrush(Palette.Error, .78) : new SolidColorBrush(Palette.Faint);
         Editor.IsReadOnly = unavailable;

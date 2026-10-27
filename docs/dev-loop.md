@@ -8,7 +8,7 @@
 | Display name | `AntiNotepad` | `AntiNotepad (dev)` |
 | Icon | Primary AntiNotepad icon | Distinct dev icon |
 | App home | `%LOCALAPPDATA%\AntiNotepad` (log and `location.json`) | `build/testdata` (throwaway log and pointer) |
-| Notes folder | `Documents\AntiNotepad` by default; selected path is recorded in app home's `location.json` | `build/testdata` (`ANTINOTEPAD_DATA` bypasses Documents and the pointer) |
+| Notes folder | `Documents\AntiNotepad` by default; selected path is recorded in app home's `location.json` | `build/testdata` initially; after an in-app move, the folder selected by `build/testdata/location.json` (`ANTINOTEPAD_DATA` bypasses Documents and first-run migration, and follows its own pointer) |
 | Hotkey | Ctrl+Alt+Shift+S (default; configurable in Settings) | Ctrl+Alt+Shift+D |
 | Badge in the top bar | None | dev |
 
@@ -43,7 +43,7 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
 - The first normal startup keeps the existing `DefaultDataFolderMigration` as its first step, then moves any app-home notes to
   `Documents\AntiNotepad`. The pointer in app home selects the notes folder; the product log always stays in app home.
   `Documents` is resolved with `SpecialFolder.MyDocuments`, including OneDrive redirection. If a pointer's target is unavailable,
-  the app does not create it or save into it. `ANTINOTEPAD_DATA` bypasses this startup resolution for dev and selftest fixtures.
+  the app does not create it or save into it. `ANTINOTEPAD_DATA` uses the custom folder as app home, bypasses Documents and first-run migration, and follows that home's `location.json` after an in-app move.
 - First transition: save and exit any old Antipad/AntiQuickPad or repo-built real-data copy through its own tray menu before
   installing. The old identity cannot be controlled by the new executable. Retire its old shortcuts/autostart entries and
   remove obsolete binary folders (such as `build/antipad` or `build/antinotepad`) manually after verifying the installed copy.

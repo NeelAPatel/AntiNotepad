@@ -187,7 +187,7 @@ internal static class NotesLocation
         return CryptographicOperations.FixedTimeEquals(SHA256.HashData(a), SHA256.HashData(b));
     }
 
-    private static void WritePointer(string appHome, string notesFolder)
+    internal static void WritePointer(string appHome, string notesFolder)
     {
         Directory.CreateDirectory(appHome);
         var pointer = Path.Combine(appHome, PointerFileName);

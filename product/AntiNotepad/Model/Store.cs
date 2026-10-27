@@ -530,12 +530,17 @@ public sealed class Store
     public void Load()
     {
         DrainSaveQueue();
-        if (_forcedUnavailable) return;
+        if (_forcedUnavailable)
+        {
+            EnsureUsableSelection();
+            return;
+        }
         ClearSearchBodyCache();
         if (!Directory.Exists(_folder))
         {
             IsAvailable = false;
             LastError = $"Notes folder is unavailable: {_folder}";
+            EnsureUsableSelection();
             return;
         }
         IsAvailable = true;
@@ -565,6 +570,7 @@ public sealed class Store
         if (!loaded && _indexReadUnavailable)
         {
             IsAvailable = false;
+            EnsureUsableSelection();
             return;
         }
         if (!loaded)
@@ -633,6 +639,14 @@ public sealed class Store
         var expired = d.Trash.Where(n => n.Deleted is { } when && (DateTime.Now - when).TotalDays > 30).Select(n => n.Id).ToList();
         d.Trash.RemoveAll(n => n.Deleted is { } when && (DateTime.Now - when).TotalDays > 30);
         return expired;
+    }
+
+    private void EnsureUsableSelection()
+    {
+        Data.Stack ??= [];
+        Data.Stack.RemoveAll(note => note is null);
+        if (Data.Stack.Count == 0) Data.Stack.Add(new Note());
+        Data.Current = Math.Clamp(Data.Current < 0 ? Data.Stack.Count - 1 : Data.Current, 0, Data.Stack.Count - 1);
     }
 
     /// <summary>Moves unknown Markdown bodies aside. Note lifecycle deletions are handled from the saved model, not by this sweep.</summary>
@@ -979,6 +993,7 @@ public sealed class Store
         _forcedUnavailable = true;
         IsAvailable = false;
         LastError = reason;
+        EnsureUsableSelection();
     }
 
     private static void Atomic(string path, string content, bool backup)

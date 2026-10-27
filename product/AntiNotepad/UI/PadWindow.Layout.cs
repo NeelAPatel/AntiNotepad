@@ -112,7 +112,7 @@ internal sealed partial class PadWindow
 
     private PadView NewPane()
     {
-        var pane = new PadView(_palette, Settings, _timers);
+        var pane = new PadView(_palette, Settings, _timers, _notes);
         pane.Edited += () => { _undoArmed = false; Edited(); };
         pane.ModeChanged += UpdateChrome;
         pane.Toast += t => Toast(t);
