@@ -69,6 +69,10 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   user-checked live): 0 warnings, SELFTEST PASS (`NOTES SESSION move/use-folder`, `UNAVAILABLE STORE startup`), `Program.`
   tokens outside Program.cs 0. A43 done. Reorg A39-A43b all merged; only A44-platform-seam (plan only) and
   `feat/A38-mvvm-audit` (audit doc) hold commits not in dev.
+- A44-platform-seam re-audit done (6c7f5e6 on `reorg/A44-platform-seam`): split A44a-native-facade -> A44b-interop-guards
+  -> A44c-shell-folder (optional), facade `DesktopPlatform`, dev metrics move skipped. User (2026-10-27): "start 44a, no
+  computer use". A44a-native-facade dispatched on `reorg/A44a-native-facade` (Sonnet manager, Codex luna xhigh); hand test
+  by the user only (Computer Use paused for now; may resume later).
 - A40-settings-change-event merged into dev (565a1e5, user-approved live 2026-10-26): SettingsService + one Changed event,
   SettingsWindow on ISettingsHost, all writers migrated; guards now 12 LAYERS lines + `SETTINGS Changed`; 0 warnings, SELFTEST PASS.
   Fix: SearchGrid/SplitSlot/Split now saved. Folding/InlineMath apply only on note bind/analysis (pre-existing; backlog).
