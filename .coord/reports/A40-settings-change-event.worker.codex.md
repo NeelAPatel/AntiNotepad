@@ -1,5 +1,0 @@
-**A40-settings-change-event r1 is complete** on `reorg/A40-settings-change-event-impl`; no commit was made. The service and host interface are implemented, SettingsWindow updates use `Update`, and reset/undo use `Replace`. The report includes the property-to-flags table, r2 writer inventory, open Folding/InlineMath gaps, and both guard proofs: [A40-settings-change-event.md](</F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/.coord/reports/A40-settings-change-event.md>).
-
-The final build succeeded with **0 warnings and 0 errors**. `--selftest` printed the original and new `LAYERS` lines at `0 refs`, `SETTINGS Changed`, and `SELFTEST PASS`. Static checks found no `PadWindow` references in the settings files; the remaining `SettingsChanged()` references are SmoothCaret’s.
-
-The cleanup command for `build/A40-check` was rejected by command policy as “blocked by policy,” even after I verified its exact workspace path, so that folder remains. I did not launch or stop the GUI or installed copy. r2 remains separate and gated.
