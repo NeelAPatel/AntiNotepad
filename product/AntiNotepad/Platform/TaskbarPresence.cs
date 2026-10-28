@@ -111,7 +111,7 @@ internal sealed class TaskbarProxy : IDisposable
     private readonly Action<bool, string> _taskbarClick;
     private readonly bool _isDev;
     private readonly TaskbarTrace _trace;
-    private readonly uint _taskbarCreated = RegisterWindowMessage("TaskbarCreated");
+    private readonly uint _taskbarCreated = Win32.RegisterWindowMessage("TaskbarCreated");
     private Win32Properties.CustomWndProcHookCallback? _hook;
     private Win32Properties.CustomWndProcHookCallback? _padHook;
     private bool _disposed;
@@ -209,7 +209,7 @@ internal sealed class TaskbarProxy : IDisposable
     private void NativeShowWindow(IntPtr hwnd, int command)
     {
         _nativeVisibilityChange++;
-        try { ShowWindow(hwnd, command); }
+        try { Win32.ShowWindow(hwnd, command); }
         finally { _nativeVisibilityChange--; }
     }
 
@@ -236,7 +236,7 @@ internal sealed class TaskbarProxy : IDisposable
                 if (proxyHwnd != IntPtr.Zero && lParam == proxyHwnd)
                 {
                     if (!_clickSnapshotConsumed)
-                        _padWasForegroundBeforeProxyActivation = _pad.IsActive || GetForegroundWindow() == hwnd;
+                        _padWasForegroundBeforeProxyActivation = _pad.IsActive || Win32.GetForegroundWindow() == hwnd;
                     _suppressNextPadDeactivation = true;
                     var generation = ++_focusSnapshotGeneration;
                     Dispatcher.UIThread.Post(() =>
@@ -394,7 +394,7 @@ internal sealed class TaskbarProxy : IDisposable
         if (!fresh && _clickSnapshotAvailable && !_clickSnapshotConsumed && !IsSnapshotStale()) return;
 
         var now = Stopwatch.GetTimestamp();
-        var foreground = GetForegroundWindow();
+        var foreground = Win32.GetForegroundWindow();
         var padHandle = PadHandle;
         var padVisible = _pad.IsVisible;
         var padActive = _pad.IsActive;
@@ -430,7 +430,7 @@ internal sealed class TaskbarProxy : IDisposable
             StartClickSnapshot(source, fresh: true);
 
         var now = Stopwatch.GetTimestamp();
-        var foreground = GetForegroundWindow();
+        var foreground = Win32.GetForegroundWindow();
         var padHandle = PadHandle;
         var padVisible = _pad.IsVisible;
         var lossAge = _isDev ? LossAgeMilliseconds(now) : null;
@@ -491,7 +491,7 @@ internal sealed class TaskbarProxy : IDisposable
     {
         if (hwnd == IntPtr.Zero) return "none";
         var className = new StringBuilder(128);
-        var length = GetClassName(hwnd, className, className.Capacity);
+        var length = Win32.GetClassName(hwnd, className, className.Capacity);
         return length > 0 ? className.ToString() : "unknown";
     }
 
@@ -562,15 +562,16 @@ internal sealed class TaskbarProxy : IDisposable
         _window.Close();
     }
 
-    [DllImport("user32.dll")]
-    private static extern bool ShowWindow(IntPtr hwnd, int command);
+    private static class Win32
+    {
+        [DllImport("user32.dll")] internal static extern bool ShowWindow(IntPtr hwnd, int command);
 
-    [DllImport("user32.dll")]
-    private static extern IntPtr GetForegroundWindow();
+        [DllImport("user32.dll")] internal static extern IntPtr GetForegroundWindow();
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    private static extern int GetClassName(IntPtr hwnd, StringBuilder className, int maxCount);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        internal static extern int GetClassName(IntPtr hwnd, StringBuilder className, int maxCount);
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    private static extern uint RegisterWindowMessage(string message);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        internal static extern uint RegisterWindowMessage(string message);
+    }
 }

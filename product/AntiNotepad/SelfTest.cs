@@ -24,6 +24,10 @@ internal static class SelfTest
         Console.WriteLine(desktopPlatformSurfacePass ? "PLATFORM DesktopPlatform surface" : "PLATFORM DesktopPlatform surface FAIL " + desktopPlatformSurfaceReport);
         Check(desktopPlatformSurfacePass, "platform DesktopPlatform surface: " + desktopPlatformSurfaceReport);
 
+        var pinvokeHolderPass = PInvokeHolderChecks(out var pinvokeHolderReport);
+        Console.WriteLine(pinvokeHolderPass ? "PLATFORM P/Invoke holders" : "PLATFORM P/Invoke holders FAIL " + pinvokeHolderReport);
+        Check(pinvokeHolderPass, "platform P/Invoke holders: " + pinvokeHolderReport);
+
         var staticExposurePass = StaticServiceExposureChecks(out var staticExposureReport);
         Console.WriteLine(staticExposurePass ? "STATIC service exposure " + staticExposureReport : "STATIC service exposure FAIL " + staticExposureReport);
         Check(staticExposurePass, "static service exposure: " + staticExposureReport);
@@ -140,10 +144,20 @@ internal static class SelfTest
         bool AnyAntiNotepadNamespace = false,
         Type? ExactFrom = null,
         Type? ExactTo = null,
-        bool AnyApplicationTypeExceptTarget = false)
+        bool AnyApplicationTypeExceptTarget = false,
+        LayerTargetKind TargetKind = LayerTargetKind.Namespace,
+        string? RawTypeName = null)
     {
-        public string Label => AnyAntiNotepadNamespace ? $"{From}->*any other AntiNotepad namespace*" : $"{From}->{To}";
+        public string Label => TargetKind switch
+        {
+            LayerTargetKind.PInvokeHolder => $"{From}->pinvoke-holder",
+            LayerTargetKind.RawType => $"{From}->{RawTypeName}",
+            LayerTargetKind.WindowsNamespace => $"{From}->Windows.*",
+            _ => AnyAntiNotepadNamespace ? $"{From}->*any other AntiNotepad namespace*" : $"{From}->{To}"
+        };
     }
+
+    private enum LayerTargetKind { Namespace, PInvokeHolder, RawType, WindowsNamespace }
 
     private sealed record SettingsSetterAllowance(Type CallerType, string[] Methods);
 
@@ -623,6 +637,18 @@ internal static class SelfTest
         new("INotesLocation", "Editor", ExactFrom: typeof(INotesLocation)),
         new("INotesLocation", "Platform", ExactFrom: typeof(INotesLocation)),
         new("*except Program", "Program", ExactTo: typeof(Program), AnyApplicationTypeExceptTarget: true),
+        new("UI", null, TargetKind: LayerTargetKind.PInvokeHolder),
+        new("Editor", null, TargetKind: LayerTargetKind.PInvokeHolder),
+        new("UI", null, TargetKind: LayerTargetKind.RawType, RawTypeName: "Marshal"),
+        new("Editor", null, TargetKind: LayerTargetKind.RawType, RawTypeName: "Marshal"),
+        new("UI", null, TargetKind: LayerTargetKind.RawType, RawTypeName: "IntPtr"),
+        new("Editor", null, TargetKind: LayerTargetKind.RawType, RawTypeName: "IntPtr"),
+        new("UI", null, TargetKind: LayerTargetKind.RawType, RawTypeName: "UIntPtr"),
+        new("Editor", null, TargetKind: LayerTargetKind.RawType, RawTypeName: "UIntPtr"),
+        new("UI", null, TargetKind: LayerTargetKind.RawType, RawTypeName: "Win32Properties"),
+        new("Editor", null, TargetKind: LayerTargetKind.RawType, RawTypeName: "Win32Properties"),
+        new("UI", null, TargetKind: LayerTargetKind.WindowsNamespace),
+        new("Editor", null, TargetKind: LayerTargetKind.WindowsNamespace),
     ];
 
     // Setter calls from these exact methods are passed to SettingsService.Update, except ResetSettings' defaults initializer.
@@ -677,6 +703,30 @@ internal static class SelfTest
         return failures.Count == 0;
     }
 
+    private static bool PInvokeHolderChecks(out string report)
+    {
+        var failures = new List<string>();
+        try
+        {
+            CheckNestedPrivate(typeof(GlobalHotkey), "GlobalHotkey.Win32");
+            CheckNestedPrivate(typeof(TaskbarProxy), "TaskbarProxy.Win32");
+            CheckNestedPrivate(typeof(DesktopPlatform), "DesktopPlatform.Native");
+        }
+        catch (Exception ex) { failures.Add(ex.GetType().Name); }
+
+        report = failures.Count == 0 ? "passed" : string.Join(", ", failures);
+        return failures.Count == 0;
+
+        void CheckNestedPrivate(Type parent, string label)
+        {
+            var name = label[(label.LastIndexOf('.') + 1)..];
+            var nested = parent.GetNestedType(name, BindingFlags.NonPublic);
+            if (nested is null) failures.Add(label + " missing");
+            else if (!nested.IsNestedPrivate) failures.Add(label + " is not private");
+            else if (name != "Native" && !IsPInvokeHolder(nested)) failures.Add(label + " has no P/Invoke methods");
+        }
+    }
+
     private static (List<string> Lines, List<string> Failures) CheckLayers()
     {
         var lines = new List<string>();
@@ -691,33 +741,54 @@ internal static class SelfTest
         }
 
         var references = new Dictionary<Type, HashSet<Type>>();
+        var rawReferences = new Dictionary<Type, HashSet<Type>>();
         foreach (var type in types.Where(t => LayerRules.Any(rule => MatchesSource(rule, t))))
         {
             var found = new HashSet<Type>();
+            var rawFound = new HashSet<Type>();
             references[type] = found;
+            rawReferences[type] = rawFound;
             try
             {
                 AddType(type, found);
                 AddType(type.BaseType, found);
-                foreach (var iface in type.GetInterfaces()) AddType(iface, found);
+                AddType(type.BaseType, found, rawFound);
+                foreach (var iface in type.GetInterfaces())
+                {
+                    AddType(iface, found);
+                    AddType(iface, found, rawFound);
+                }
 
                 const BindingFlags declared = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
                     | BindingFlags.Static | BindingFlags.DeclaredOnly;
-                foreach (var field in type.GetFields(declared)) AddType(field.FieldType, found);
+                foreach (var field in type.GetFields(declared))
+                {
+                    AddType(field.FieldType, found);
+                    AddType(field.FieldType, rawFound);
+                }
                 foreach (var property in type.GetProperties(declared))
                 {
                     AddType(property.PropertyType, found);
-                    foreach (var parameter in property.GetIndexParameters()) AddType(parameter.ParameterType, found);
+                    AddType(property.PropertyType, rawFound);
+                    foreach (var parameter in property.GetIndexParameters())
+                    {
+                        AddType(parameter.ParameterType, found);
+                        AddType(parameter.ParameterType, rawFound);
+                    }
                 }
-                foreach (var ev in type.GetEvents(declared)) AddType(ev.EventHandlerType, found);
-                foreach (var constructor in type.GetConstructors(declared)) ScanMethod(constructor, found, scanErrors);
-                if (type.TypeInitializer is { } initializer) ScanMethod(initializer, found, scanErrors);
+                foreach (var ev in type.GetEvents(declared))
+                {
+                    AddType(ev.EventHandlerType, found);
+                    AddType(ev.EventHandlerType, rawFound);
+                }
+                foreach (var constructor in type.GetConstructors(declared)) ScanMethod(constructor, found, scanErrors, directReferences: rawFound);
+                if (type.TypeInitializer is { } initializer) ScanMethod(initializer, found, scanErrors, directReferences: rawFound);
                 foreach (var method in type.GetMethods(declared))
                 {
                     var allowedProgramTypeToken = type == typeof(SelfTest) && method.Name == nameof(CreateLayerRules)
                         ? LayerRules.Single(rule => rule.AnyApplicationTypeExceptTarget).ExactTo
                         : null;
-                    ScanMethod(method, found, scanErrors, allowedProgramTypeToken: allowedProgramTypeToken);
+                    ScanMethod(method, found, scanErrors, allowedProgramTypeToken: allowedProgramTypeToken, directReferences: rawFound);
                 }
             }
             catch (Exception ex) { scanErrors.Add($"{type.FullName}: reflection {ex.GetType().Name}"); }
@@ -725,7 +796,8 @@ internal static class SelfTest
 
         foreach (var rule in LayerRules)
         {
-            var offenders = references.SelectMany(pair => pair.Value
+            var sourceReferences = rule.TargetKind == LayerTargetKind.RawType ? rawReferences : references;
+            var offenders = sourceReferences.SelectMany(pair => pair.Value
                     .Where(target => MatchesRule(rule, pair.Key, target))
                     .Select(target => (Source: pair.Key, Target: target)))
                 .Distinct()
@@ -736,6 +808,24 @@ internal static class SelfTest
             foreach (var offender in offenders)
                 failures.Add($"layer violation {rule.Label}: {offender.Source.FullName} -> {offender.Target.FullName}");
         }
+
+        var outsidePlatform = new List<MethodInfo>();
+        foreach (var type in types)
+        {
+            try
+            {
+                const BindingFlags declared = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
+                    | BindingFlags.Static | BindingFlags.DeclaredOnly;
+                foreach (var method in type.GetMethods(declared).Where(IsPInvokeMethod))
+                    if (!InNamespace(TopLevelDeclaringType(method.DeclaringType!).Namespace, "Platform"))
+                        outsidePlatform.Add(method);
+            }
+            catch (Exception ex) { scanErrors.Add($"{type.FullName}: P/Invoke reflection {ex.GetType().Name}"); }
+        }
+        lines.Add($"LAYERS pinvoke-outside-Platform {outsidePlatform.Count}");
+        foreach (var method in outsidePlatform.OrderBy(method => method.DeclaringType?.FullName, StringComparer.Ordinal)
+            .ThenBy(method => method.Name, StringComparer.Ordinal))
+            failures.Add($"P/Invoke outside Platform: {method.DeclaringType?.FullName}.{method.Name}");
 
         var setterCheck = CheckSettingsSetters(types);
         lines.Add($"LAYERS Settings.set_* outside owner {setterCheck.Violations.Count}");
@@ -879,6 +969,10 @@ internal static class SelfTest
     private static bool MatchesRule(LayerRule rule, Type from, Type to)
     {
         if (!MatchesSource(rule, from)) return false;
+        if (rule.TargetKind == LayerTargetKind.PInvokeHolder) return IsPInvokeHolder(to);
+        if (rule.TargetKind == LayerTargetKind.RawType) return IsRawInteropType(to, rule.RawTypeName!);
+        if (rule.TargetKind == LayerTargetKind.WindowsNamespace)
+            return to.Namespace == "Windows" || to.Namespace?.StartsWith("Windows.", StringComparison.Ordinal) == true;
         if (rule.AnyAntiNotepadNamespace)
             return IsAntiNotepadNamespace(to.Namespace) && !InNamespace(to.Namespace, rule.From);
         if (rule.ExactTo is { } exact) return IsExactOrNested(to, exact);
@@ -991,41 +1085,70 @@ internal static class SelfTest
     private static bool IsAntiNotepadNamespace(string? value) =>
         value == "AntiNotepad" || value?.StartsWith("AntiNotepad.", StringComparison.Ordinal) == true;
 
-    private static void AddType(Type? type, HashSet<Type> found)
+    private static Type TopLevelDeclaringType(Type type)
     {
-        if (type is null || !found.Add(type)) return;
-        if (type.HasElementType) AddType(type.GetElementType(), found);
+        while (type.DeclaringType is { } parent) type = parent;
+        return type;
+    }
+
+    private static bool IsPInvokeHolder(Type type)
+    {
+        if (type.Assembly != typeof(SelfTest).Assembly) return false;
+        const BindingFlags declared = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
+            | BindingFlags.Static | BindingFlags.DeclaredOnly;
+        return type.GetMethods(declared).Any(IsPInvokeMethod);
+    }
+
+    private static bool IsPInvokeMethod(MethodInfo method) => (method.Attributes & MethodAttributes.PinvokeImpl) != 0;
+
+    private static bool IsRawInteropType(Type type, string rawTypeName) => rawTypeName switch
+    {
+        "Marshal" => type == typeof(System.Runtime.InteropServices.Marshal),
+        "IntPtr" => type.FullName == "System.IntPtr",
+        "UIntPtr" => type.FullName == "System.UIntPtr",
+        "Win32Properties" => type.Name == "Win32Properties",
+        _ => false
+    };
+
+    private static void AddType(Type? type, HashSet<Type> found, HashSet<Type>? directReferences = null)
+    {
+        if (type is null) return;
+        var added = found.Add(type);
+        var directAdded = directReferences?.Add(type) ?? false;
+        if (!added && !directAdded) return;
+        if (type.HasElementType) AddType(type.GetElementType(), found, directReferences);
         if (type.IsGenericParameter)
         {
-            foreach (var constraint in type.GetGenericParameterConstraints()) AddType(constraint, found);
+            foreach (var constraint in type.GetGenericParameterConstraints()) AddType(constraint, found, directReferences);
         }
         if (type.IsGenericType)
         {
-            AddType(type.GetGenericTypeDefinition(), found);
-            foreach (var argument in type.GetGenericArguments()) AddType(argument, found);
+            AddType(type.GetGenericTypeDefinition(), found, directReferences);
+            foreach (var argument in type.GetGenericArguments()) AddType(argument, found, directReferences);
         }
         if (type.IsFunctionPointer)
         {
-            AddType(type.GetFunctionPointerReturnType(), found);
-            foreach (var parameter in type.GetFunctionPointerParameterTypes()) AddType(parameter, found);
+            AddType(type.GetFunctionPointerReturnType(), found, directReferences);
+            foreach (var parameter in type.GetFunctionPointerParameterTypes()) AddType(parameter, found, directReferences);
         }
     }
 
     private static void ScanMethod(MethodBase method, HashSet<Type> found, List<string> errors,
         Action<MethodBase, OpCode, MethodBase>? inspectCall = null,
         Type? allowedProgramTypeToken = null,
-        Action<MethodBase, string>? inspectString = null)
+        Action<MethodBase, string>? inspectString = null,
+        HashSet<Type>? directReferences = null)
     {
-        AddType(method.DeclaringType, found);
-        foreach (var parameter in method.GetParameters()) AddType(parameter.ParameterType, found);
-        if (method is MethodInfo info) AddType(info.ReturnType, found);
+        AddType(method.DeclaringType, found, directReferences);
+        foreach (var parameter in method.GetParameters()) AddType(parameter.ParameterType, found, directReferences);
+        if (method is MethodInfo info) AddType(info.ReturnType, found, directReferences);
         if (method is MethodInfo methodInfo)
         {
             foreach (var argument in methodInfo.GetGenericArguments())
             {
-                AddType(argument, found);
+                AddType(argument, found, directReferences);
                 if (argument.IsGenericParameter)
-                    foreach (var constraint in argument.GetGenericParameterConstraints()) AddType(constraint, found);
+                    foreach (var constraint in argument.GetGenericParameterConstraints()) AddType(constraint, found, directReferences);
             }
         }
 
@@ -1100,30 +1223,49 @@ internal static class SelfTest
                 var token = BitConverter.ToInt32(il, operandStart);
                 try
                 {
-                    if (tokenKind == OperandType.InlineType) AddType(module.ResolveType(token, typeArguments, methodArguments), found);
+                    if (tokenKind == OperandType.InlineType)
+                        AddType(module.ResolveType(token, typeArguments, methodArguments), found, directReferences);
                     else if (tokenKind == OperandType.InlineMethod)
                     {
                         if (module.ResolveMethod(token, typeArguments, methodArguments) is { } target)
                         {
                             AddMethodReference(target, found);
+                            AddType(target.DeclaringType, found, directReferences);
                             inspectCall?.Invoke(method, opcode, target);
                         }
                     }
                     else if (tokenKind == OperandType.InlineField)
                     {
                         if (module.ResolveField(token, typeArguments, methodArguments) is { } field)
-                        { AddType(field.DeclaringType, found); AddType(field.FieldType, found); }
+                        {
+                            AddType(field.DeclaringType, found);
+                            AddType(field.FieldType, found);
+                            AddType(field.DeclaringType, found, directReferences);
+                            AddType(field.FieldType, found, directReferences);
+                        }
                     }
                     else if (module.ResolveMember(token, typeArguments, methodArguments) is { } member)
                     {
                         if (member is Type resolvedType)
                         {
                             if (opcode != OpCodes.Ldtoken || resolvedType != allowedProgramTypeToken)
+                            {
                                 AddType(resolvedType, found);
+                                AddType(resolvedType, found, directReferences);
+                            }
                         }
-                        else if (member is MethodBase resolvedMethod) AddMethodReference(resolvedMethod, found);
+                        else if (member is MethodBase resolvedMethod)
+                        {
+                            AddMethodReference(resolvedMethod, found);
+                            AddType(resolvedMethod.DeclaringType, found, directReferences);
+                        }
                         else if (member is FieldInfo resolvedField)
-                        { AddType(resolvedField.DeclaringType, found); AddType(resolvedField.FieldType, found); }
+                        {
+                            AddType(resolvedField.DeclaringType, found);
+                            AddType(resolvedField.FieldType, found);
+                            AddType(resolvedField.DeclaringType, found, directReferences);
+                            AddType(resolvedField.FieldType, found, directReferences);
+                        }
                     }
                 }
                 catch (Exception ex)

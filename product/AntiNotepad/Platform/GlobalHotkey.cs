@@ -57,7 +57,7 @@ public sealed class GlobalHotkey : IDisposable
 
         Win32Properties.AddWndProcHookCallback(_window, WndProc);
         _hookAdded = true;
-        IsRegistered = RegisterHotKey(_hwnd, _id, _gesture.Modifiers | ModNoRepeat, _gesture.VirtualKey);
+        IsRegistered = Win32.RegisterHotKey(_hwnd, _id, _gesture.Modifiers | ModNoRepeat, _gesture.VirtualKey);
         RegistrationError = IsRegistered ? 0 : Marshal.GetLastWin32Error();
         if (!IsRegistered)
         {
@@ -86,7 +86,7 @@ public sealed class GlobalHotkey : IDisposable
         _window.Closed -= OnClosed;
         if (OperatingSystem.IsWindows())
         {
-            if (IsRegistered) UnregisterHotKey(_hwnd, _id);
+            if (IsRegistered) Win32.UnregisterHotKey(_hwnd, _id);
             if (_hookAdded) Win32Properties.RemoveWndProcHookCallback(_window, WndProc);
         }
         IsRegistered = false;
@@ -132,6 +132,9 @@ public sealed class GlobalHotkey : IDisposable
         }
     }
 
-    [DllImport("user32.dll", SetLastError = true)] private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint modifiers, int key);
-    [DllImport("user32.dll", SetLastError = true)] private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+    private static class Win32
+    {
+        [DllImport("user32.dll", SetLastError = true)] internal static extern bool RegisterHotKey(IntPtr hWnd, int id, uint modifiers, int key);
+        [DllImport("user32.dll", SetLastError = true)] internal static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+    }
 }

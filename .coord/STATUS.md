@@ -1,6 +1,6 @@
 # STATUS
 
-Updated: 2026-10-27
+Updated: 2026-10-28
 Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 
 ## Working rules right now
@@ -76,6 +76,12 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   name changed; short URLs are never clickable) -> A54-link-hover-click. Merged into dev (67b5031): 0 warnings, SELFTEST
   PASS, 89 LAYERS lines + `PLATFORM DesktopPlatform surface`, `Native.` outside Platform 0. A44b-interop-guards dispatched
   2026-10-28 (user: "Start A44b") on `reorg/A44b-interop-guards` (Sonnet manager, Codex luna xhigh, no computer use).
+- A44b-interop-guards committed on `reorg/A44b-interop-guards` (98d91f8), user signed off 2026-10-28 (computer-use hand test passed; Explorer restart and tray right-click menu not exercised): GlobalHotkey/TaskbarProxy externs
+  nested in private `Win32`; LAYERS +13 lines (102 total: P/Invoke-holder, raw-type, pinvoke-outside-Platform) + `PLATFORM P/Invoke holders`;
+  `tools/check-platform-seam.ps1` (manager gate, 0 violations in 54 files). Manager gate: 0 warnings, SELFTEST PASS, script fails
+  on a temp UI IntPtr in an interpolation hole. Report: `.coord/reports/A44b-interop-guards.md`. Merged into dev (45f7ebe): 0 warnings, SELFTEST PASS,
+  102 LAYERS lines, `tools/check-platform-seam.ps1` 0 violations. Not yet exercised by hand: Explorer restart, tray
+  right-click menu. Next: A44c-shell-folder (optional) on the user's go.
 - A40-settings-change-event merged into dev (565a1e5, user-approved live 2026-10-26): SettingsService + one Changed event,
   SettingsWindow on ISettingsHost, all writers migrated; guards now 12 LAYERS lines + `SETTINGS Changed`; 0 warnings, SELFTEST PASS.
   Fix: SearchGrid/SplitSlot/Split now saved. Folding/InlineMath apply only on note bind/analysis (pre-existing; backlog).
