@@ -3,6 +3,7 @@ using AntiNotepad.Platform;
 using AntiNotepad.Theme;
 using AntiNotepad.UI;
 using Avalonia.Platform;
+using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -683,6 +684,7 @@ internal static class SelfTest
                 ("ConfigurePopupWindow", typeof(void), [typeof(Avalonia.Controls.TopLevel)]),
                 ("Flash", typeof(void), [typeof(Avalonia.Controls.Window)]),
                 ("OpenUrl", typeof(void), [typeof(string)]),
+                ("OpenFolder", typeof(void), [typeof(string)]),
                 ("StartScreenSnip", typeof(void), Type.EmptyTypes),
             ];
             const BindingFlags declaredStatic = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly;
@@ -834,7 +836,48 @@ internal static class SelfTest
 
         foreach (var error in scanErrors.Distinct(StringComparer.Ordinal)) failures.Add("layer scan: " + error);
         foreach (var error in setterCheck.ScanErrors) failures.Add("settings setter scan: " + error);
+        foreach (var layer in new[] { "UI", "Editor" })
+        {
+            var processStartCheck = CheckProcessStartCalls(types, layer);
+            lines.Add($"LAYERS {layer}->Process.Start {processStartCheck.Violations.Count}");
+            foreach (var violation in processStartCheck.Violations)
+                failures.Add($"Process.Start layer violation: {violation.Caller.DeclaringType?.FullName}.{violation.Caller.Name} -> {violation.Target.DeclaringType?.FullName}.{violation.Target.Name}");
+            foreach (var error in processStartCheck.ScanErrors)
+                failures.Add("Process.Start scan: " + error);
+        }
         return (lines, failures);
+    }
+
+    private static (List<(MethodBase Caller, MethodBase Target)> Violations, List<string> ScanErrors)
+        CheckProcessStartCalls(Type[] types, string layer)
+    {
+        var violations = new List<(MethodBase Caller, MethodBase Target)>();
+        var scanErrors = new List<string>();
+        const BindingFlags declared = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
+            | BindingFlags.Static | BindingFlags.DeclaredOnly;
+
+        foreach (var type in types.Where(type => InNamespace(type.Namespace, layer)))
+        {
+            try
+            {
+                foreach (var constructor in type.GetConstructors(declared))
+                    ScanMethod(constructor, [], scanErrors, InspectCall);
+                if (type.TypeInitializer is { } initializer)
+                    ScanMethod(initializer, [], scanErrors, InspectCall);
+                foreach (var method in type.GetMethods(declared))
+                    ScanMethod(method, [], scanErrors, InspectCall);
+            }
+            catch (Exception ex) { scanErrors.Add($"{type.FullName}: reflection {ex.GetType().Name}"); }
+        }
+
+        return (violations.Distinct().ToList(), scanErrors.Distinct(StringComparer.Ordinal).ToList());
+
+        void InspectCall(MethodBase caller, OpCode opcode, MethodBase target)
+        {
+            if ((opcode == OpCodes.Call || opcode == OpCodes.Callvirt)
+                && target.DeclaringType == typeof(Process) && target.Name == "Start")
+                violations.Add((caller, target));
+        }
     }
 
     private static (List<SettingsSetterViolation> Violations, List<string> ScanErrors) CheckSettingsSetters(Type[] types)

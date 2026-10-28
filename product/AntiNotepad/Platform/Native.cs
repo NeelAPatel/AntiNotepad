@@ -93,6 +93,13 @@ internal static partial class DesktopPlatform
         Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
     }
 
+    internal static void OpenFolder(string path)
+    {
+        var start = new ProcessStartInfo("explorer.exe") { UseShellExecute = true };
+        start.ArgumentList.Add(path);
+        Process.Start(start);
+    }
+
     internal static void StartScreenSnip()
     {
         try { Process.Start(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true }); } catch { }

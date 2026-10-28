@@ -7,7 +7,6 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.Platform.Storage;
-using System.Diagnostics;
 using AntiNotepad;
 using AntiNotepad.Model;
 using AntiNotepad.Motion;
@@ -801,9 +800,7 @@ internal sealed partial class SettingsWindow : Window
         try
         {
             if (!Directory.Exists(path)) { _host.Toast($"Folder is unavailable · {path}"); return; }
-            var start = new ProcessStartInfo("explorer.exe") { UseShellExecute = true };
-            start.ArgumentList.Add(path);
-            Process.Start(start);
+            DesktopPlatform.OpenFolder(path);
         }
         catch (Exception ex) { _host.Toast("Couldn't open folder · " + ex.Message); }
     }

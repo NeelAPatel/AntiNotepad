@@ -218,7 +218,7 @@ $files = [IO.Directory]::EnumerateFiles($productRoot, '*.cs', [IO.SearchOption]:
     } |
     Sort-Object
 
-$tokens = @('DllImport', 'LibraryImport', 'TryGetPlatformHandle', 'Win32Properties', 'DwmSetWindowAttribute', 'IntPtr', 'UIntPtr', 'nint', 'nuint')
+$tokens = @('DllImport', 'LibraryImport', 'TryGetPlatformHandle', 'Win32Properties', 'DwmSetWindowAttribute', 'IntPtr', 'UIntPtr', 'nint', 'nuint', 'Process.Start', 'ProcessStartInfo')
 $tokenPattern = '(?<![A-Za-z0-9_])(?:' + (($tokens | ForEach-Object { [Regex]::Escape($_) }) -join '|') + ')(?![A-Za-z0-9_])'
 $violations = [Collections.Generic.List[string]]::new()
 

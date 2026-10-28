@@ -12,5 +12,6 @@ internal static partial class DesktopPlatform
     internal static void ConfigurePopupWindow(TopLevel popup) => Native.ConfigurePopupWindow(popup);
     internal static void Flash(Window window) => Native.Flash(window);
     internal static void OpenUrl(string url) => Native.OpenUrl(url);
+    internal static void OpenFolder(string path) => Native.OpenFolder(path);
     internal static void StartScreenSnip() => Native.StartScreenSnip();
 }

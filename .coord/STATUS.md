@@ -83,6 +83,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   102 LAYERS lines, `tools/check-platform-seam.ps1` 0 violations. Not yet exercised by hand: Explorer restart, tray
   right-click menu. A44c-shell-folder dispatched 2026-10-28 (user: "okay do a44c") on
   `reorg/A44c-shell-folder` (Sonnet manager, Codex luna xhigh, no computer use).
+  A44c-shell-folder implemented (a0af213): `DesktopPlatform.OpenFolder`, SettingsWindow keeps Exists/catch/toasts; LAYERS +2 (`UI/Editor->Process.Start`, 104 total), seam script also bans `Process.Start`/`ProcessStartInfo`; guard proven with a temp probe. Manager gate: 0 warnings, SELFTEST PASS, script 0 violations. User hand test passed 2026-10-28 (Open notes/recovered folder, spaces, missing-folder toast, after move); merged into dev (adc9302): 0 warnings, SELFTEST PASS, 104 LAYERS lines, seam script 0 violations. A44 and the A39-A44 reorg series done. Next: release marker dev -> main (Plan step 0), on the user's go.
 - A40-settings-change-event merged into dev (565a1e5, user-approved live 2026-10-26): SettingsService + one Changed event,
   SettingsWindow on ISettingsHost, all writers migrated; guards now 12 LAYERS lines + `SETTINGS Changed`; 0 warnings, SELFTEST PASS.
   Fix: SearchGrid/SplitSlot/Split now saved. Folding/InlineMath apply only on note bind/analysis (pre-existing; backlog).
