@@ -81,12 +81,60 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `tools/check-platform-seam.ps1` (manager gate, 0 violations in 54 files). Manager gate: 0 warnings, SELFTEST PASS, script fails
   on a temp UI IntPtr in an interpolation hole. Report: `.coord/reports/A44b-interop-guards.md`. Merged into dev (45f7ebe): 0 warnings, SELFTEST PASS,
   102 LAYERS lines, `tools/check-platform-seam.ps1` 0 violations. Not yet exercised by hand: Explorer restart, tray
-  right-click menu. Next: A44c-shell-folder (optional) on the user's go.
+  right-click menu. A44c-shell-folder dispatched 2026-10-28 (user: "okay do a44c") on
+  `reorg/A44c-shell-folder` (Sonnet manager, Codex luna xhigh, no computer use).
 - A40-settings-change-event merged into dev (565a1e5, user-approved live 2026-10-26): SettingsService + one Changed event,
   SettingsWindow on ISettingsHost, all writers migrated; guards now 12 LAYERS lines + `SETTINGS Changed`; 0 warnings, SELFTEST PASS.
   Fix: SearchGrid/SplitSlot/Split now saved. Folding/InlineMath apply only on note bind/analysis (pre-existing; backlog).
 - Native-window work (A32/A34) parked; any retry must not change the window's frame styles and
   goes lab-first. A34 (lab) was dropped: thick native border, bars broken in all three styles.
+
+## Plan (user order, 2026-10-28)
+Loop per line item (user): master session -> audit sub-session (read-only Codex) -> back to master (user decides) ->
+implementation sub-session (Codex luna, gate, user hand test) -> back to master (merge into dev, re-gate, STATUS).
+Release markers: dev -> main with a tag, each on the user's go (next tag proposed: `antinotepad-v0.6.0-untested-r7`).
+Held until the user brings them back: "Open (needs the user)" below and the A44b leftover hand checks (Explorer
+restart, tray right-click menu).
+
+**Step 0:** A44c-shell-folder hand test -> merge into dev -> release marker dev -> main (closes the A39-A44 reorg series).
+
+**Priority 1: re-evaluate the project** (after step 0, back on dev)
+| # | Step | Notes |
+|---|---|---|
+| 1.1 | Confirm the reorg goal from chat history | Believed: stop "adjusting something breaks something else, found ages later" and keep features modular (A38). Fewer god files was a means; behavior-neutral, not speed. |
+| 1.2 | Measure the result | Remaining god files and sizes, what LAYERS and the seam script catch and miss, remaining coupling |
+| 1.3 | Decide further reorg | Feeds the reorg leftovers block |
+
+**Priority 2: pending work**, by block in the user's order; inside a block, low risk / high payoff first.
+| # | Slug | What | Risk | Effort |
+|---|---|---|---|---|
+| **Bugs** | | | | |
+| 2.1 | A52-move-old-folder-rename-warning | Old folder not renamed after a move; wrong message | Low | Small |
+| 2.2 | A58-split-divider-height | Split divider stops short of the bottom | Low | Small |
+| 2.3 | A54-link-hover-click | Confirm long links open with Ctrl+click; short links clickable is a design change (lab-first) | Low | Small |
+| 2.4 | A57-split-view-clip | Text bleeds across the split divider while scrolling | Medium | Medium |
+| **Release marker** | | dev -> main, tag | | |
+| **Reorg leftovers** | | | | |
+| 2.5 | A42c-checkbox-indent | Checkbox indent logic out of PadView | Low | Small |
+| 2.6 | A42d-list-commands | List commands out of PadView | Medium | Medium |
+| 2.7 | (from Priority 1) | New items from the re-evaluation | | |
+| **Cleanup** | | | | |
+| 2.8 | Untracked reports | Commit or delete the stray `.coord/reports/` files | None | Small |
+| 2.9 | `feat/A38-mvvm-audit` | Merge the audit doc or drop the branch | None | Small |
+| 2.10 | Worktrees and `reorg/*` branches | Remove investigator worktrees and finished branches | None | Small |
+| 2.11 | Sessions | Archive finished A39-A44 sessions | None | Small |
+| **Release marker** | | dev -> main, tag | | |
+| **Performance** | | | | |
+| 2.12 | Settings threads | Why the Settings window runs about 90 threads | Low | Small |
+| 2.13 | A49-large-note-perf | Typing lag in a 6,000-line note; measure first (ideas in Backlog) | Medium | Large |
+| **Features and polish** (lab-first where visible) | | | | |
+| 2.14 | A51-recovered-folder-always-open | Recovered folder always exists, Open always works | Low | Small |
+| 2.15 | A48-answers-toggle-clarity | Clearer "Answers" label, applies live | Low | Small |
+| 2.16 | A45-dev-build-badge | Dev badge shows the live task, e.g. "dev · A44c" | Low | Small |
+| 2.17 | A55-native-timer-notification | Windows notification when a timer ends | Medium | Medium |
+| 2.18 | A47-hotkey-recorder | Set a hotkey by pressing the keys | Medium | Medium |
+| 2.19 | A46-motion-timings | Windows 11 motion timings across the app | Medium | Medium |
+| 2.20 | A56-chime-picker | Chime choice (stretch) | Low | Medium |
 
 ## Open (needs the user)
 - Reinstall the installed copy with r6 (`tools/install.ps1` from Windows Terminal) to get the r4 window back.
