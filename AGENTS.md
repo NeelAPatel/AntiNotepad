@@ -6,7 +6,7 @@ The earlier AntiQuickPad project (spikes A/B, `src/AntiQuickPad`) is retired and
 tags `v0.1`, `antipad-v*` and `baseline/m8c-v1-compact`.
 
 ## Rules
-- Local git only. Branches: `main` (tagged releases only, on user say-so) > `dev` (integration) > `feat/<ID-slug>` (one per task,
+- Remote: private GitHub repo `NeelAPatel/AntiNotepad` (origin); the manager pushes after commits. Branches: `main` (tagged releases only, on user say-so) > `dev` (integration) > `feat/<ID-slug>` (one per task,
   off dev, merged back with --no-ff). Commit per completed task. Tags: `antinotepad-vN`.
 - Name items and tasks `<ID>-<short-slug>` everywhere (chat, briefs, commits, reports). Never a bare ID.
 - Design changes go lab-first: show them in a spike or lab build first, wait for the user's approval, then

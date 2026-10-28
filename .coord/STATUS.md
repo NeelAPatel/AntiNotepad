@@ -9,16 +9,19 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Never run `AntiNotepad.exe --quit` without `ANTINOTEPAD_DATA`: it targets the installed copy's instance.
 
 ## Where things are
-- `dev` reverted 2026-10-25 to just after A30 (user): A31, A32 and A33 reverted, A34 dropped. Product code = r4 +
-  A29-incremental-analysis + A30-background-save-and-log; windowing identical to r4 (Windows corners/shadow, bars, app's own
-  show fade, A22-A25 taskbar stand-in). Reason: A32/A34 forced caption-window styles onto the frameless pad, losing corners
-  and shadow and breaking Docked/Overlay/Float. 0 warnings, SELFTEST PASS.
-- `main`: tag `antinotepad-v0.6.0-untested-r6` (2026-10-25), the user-approved good version = reverted dev (r4 windowing
-  + A29 + A30). Installed copy: r5 (broken frame) until the user reinstalls r6 with `tools/install.ps1`.
+- `main`: tag `antinotepad-v0.6.0-untested-r7` (f4b8aee, 2026-10-28, user: "Yes, release r7") = r6 + A37-caret-drag-jump
+  + the A39-A44 modularity reorg (one-way layering, 104 LAYERS rows, `tools/check-platform-seam.ps1`) + A43b missing-folder
+  fix and recovery. Release build 0 warnings, SELFTEST PASS; tree identical to dev at release.
+- r6 (2026-10-25) was dev reverted to just after A30 (A31-A33 reverted, A34 dropped: A32/A34 forced caption-window styles
+  onto the frameless pad, losing corners and shadow). Windowing is still r4's.
+- Installed copy: r5 (broken frame) until the user reinstalls with `tools/install.ps1` (on hold; r7 is now the latest).
 - Finished briefs, reports and the A1 audit doc were removed from the tree on 2026-10-25; they live in git under tag
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- GitHub (user, 2026-10-28): private repo `NeelAPatel/AntiNotepad` created as origin; all branches and tags pushed,
+  default branch `main`. History scanned first (no secrets, largest blob 2.9 MB font). The older WinUI repo is
+  `Archived-AntiNotepad` (untouched). Public release stays with N3. Next: Priority 1 audit (can add a CI gate).
 - A35-bar-insets merged into dev (fad7d61, user-approved live): design tokens + insets, ink-centered glyphs, scrollable
   top gap, top-bar blur behind; one commit per feature. 
   A35 branches and worktree deleted (user). Lab history no longer kept. Installed copy not upgraded.
@@ -83,7 +86,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   102 LAYERS lines, `tools/check-platform-seam.ps1` 0 violations. Not yet exercised by hand: Explorer restart, tray
   right-click menu. A44c-shell-folder dispatched 2026-10-28 (user: "okay do a44c") on
   `reorg/A44c-shell-folder` (Sonnet manager, Codex luna xhigh, no computer use).
-  A44c-shell-folder implemented (a0af213): `DesktopPlatform.OpenFolder`, SettingsWindow keeps Exists/catch/toasts; LAYERS +2 (`UI/Editor->Process.Start`, 104 total), seam script also bans `Process.Start`/`ProcessStartInfo`; guard proven with a temp probe. Manager gate: 0 warnings, SELFTEST PASS, script 0 violations. User hand test passed 2026-10-28 (Open notes/recovered folder, spaces, missing-folder toast, after move); merged into dev (adc9302): 0 warnings, SELFTEST PASS, 104 LAYERS lines, seam script 0 violations. A44 and the A39-A44 reorg series done. Next: release marker dev -> main (Plan step 0), on the user's go.
+  A44c-shell-folder implemented (a0af213): `DesktopPlatform.OpenFolder`, SettingsWindow keeps Exists/catch/toasts; LAYERS +2 (`UI/Editor->Process.Start`, 104 total), seam script also bans `Process.Start`/`ProcessStartInfo`; guard proven with a temp probe. Manager gate: 0 warnings, SELFTEST PASS, script 0 violations. User hand test passed 2026-10-28 (Open notes/recovered folder, spaces, missing-folder toast, after move); merged into dev (adc9302): 0 warnings, SELFTEST PASS, 104 LAYERS lines, seam script 0 violations. A44 and the A39-A44 reorg series done. Released to main as `antinotepad-v0.6.0-untested-r7` (Plan step 0 done). Next: Plan Priority 1.
 - A40-settings-change-event merged into dev (565a1e5, user-approved live 2026-10-26): SettingsService + one Changed event,
   SettingsWindow on ISettingsHost, all writers migrated; guards now 12 LAYERS lines + `SETTINGS Changed`; 0 warnings, SELFTEST PASS.
   Fix: SearchGrid/SplitSlot/Split now saved. Folding/InlineMath apply only on note bind/analysis (pre-existing; backlog).
@@ -97,7 +100,7 @@ Release markers: dev -> main with a tag, each on the user's go (next tag propose
 Held until the user brings them back: "Open (needs the user)" below and the A44b leftover hand checks (Explorer
 restart, tray right-click menu).
 
-**Step 0:** A44c-shell-folder hand test -> merge into dev -> release marker dev -> main (closes the A39-A44 reorg series).
+**Step 0 (done 2026-10-28, r7):** A44c-shell-folder hand test -> merge into dev -> release marker dev -> main (closes the A39-A44 reorg series).
 
 **Priority 1: re-evaluate the project** (after step 0, back on dev)
 | # | Step | Notes |
