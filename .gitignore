@@ -8,3 +8,6 @@ product/**/obj/
 .claude/settings.local.json
 .vs/
 *.user
+
+# Gate reports are regenerated on every run; results live in the task report
+.coord/reports/*.gate.md

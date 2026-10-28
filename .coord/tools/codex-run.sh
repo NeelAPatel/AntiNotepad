@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Route one headless Codex run: model tier, usage cap, failover, log + ledger.
-# Usage: .coord/tools/codex-run.sh <director|worker|backup> <task-id> <task-file> [extra codex args]
-# Env:   CODEX_BUDGET_TAG  budget bucket (default: today). CODEX_MAX_DIRECTOR (20), CODEX_MAX_WORKER (10), CODEX_MAX_BACKUP (5)
+# Usage: .coord/tools/codex-run.sh <director|worker|backup|reviewer> <task-id> <task-file> [extra codex args]
+# Env:   CODEX_BUDGET_TAG  budget bucket (default: today). CODEX_MAX_DIRECTOR (20), CODEX_MAX_WORKER (10), CODEX_MAX_BACKUP (5), CODEX_MAX_REVIEWER (10), CODEX_REVIEW_EFFORT (medium)
 #        CODEX_TIMEOUT_MIN per-run wall limit (default 45). CODEX_WORKDIR (default: repo root). CODEX_DRY=1 prints the plan only.
 set -u
 ROOT="$(cd "$(dirname "$0")/../.." && pwd -W)"
-role="${1:?role: director|worker|backup}"; task="${2:?task id, e.g. M9-function-contract-separation}"; file="${3:?task file}"; shift 3
+role="${1:?role: director|worker|backup|reviewer}"; task="${2:?task id, e.g. M9-function-contract-separation}"; file="${3:?task file}"; shift 3
 EXTRA=("$@")
 if [[ ! "$task" =~ ^[A-Z][A-Za-z0-9]*(-[a-z0-9]+)+$ ]]; then
   echo "invalid task name '$task': expected <ID>-<slug> using ASCII letters, digits, and hyphens (slug lowercase)" >&2
@@ -18,8 +18,9 @@ tier() { case "$1" in
   director) echo "gpt-6.1-sol medium ${CODEX_MAX_DIRECTOR:-20}";;
   worker)   echo "gpt-6-luna xhigh ${CODEX_MAX_WORKER:-10}";;
   backup)   echo "gpt-5.6-luna xhigh ${CODEX_MAX_BACKUP:-5}";;
-  *) echo "unknown role $1" >&2; return 1;; esac; }
-next() { case "$1" in director) echo worker;; worker) echo backup;; *) echo "";; esac; }  # failover chain
+  reviewer) echo "gpt-6.1-sol ${CODEX_REVIEW_EFFORT:-medium} ${CODEX_MAX_REVIEWER:-10}";;
+  *) echo "unknown role $1 (expected director|worker|backup|reviewer)" >&2; return 1;; esac; }
+next() { case "$1" in director) echo worker;; worker) echo backup;; reviewer) echo backup;; *) echo "";; esac; }  # failover chain
 
 attempt() {  # $1=role -> 0 ok, 3 cap reached, 4 limit-type failure (try next tier), else codex exit code
   local r="$1" model effort cap used log out start rc

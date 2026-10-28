@@ -19,6 +19,16 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- C13-dev-loop-kit (user, 2026-10-28): new dev loop, runbook `docs/loop.md`. Tiers, `tools/gate.ps1`, `CONTRACTS`
+  selftest (6 rows, 5 pass, 1 manual), Codex `lens-review` skill + `lens_reviewer` role + `reviewer` tier, Claude
+  `design-reviewer` agent + `/next-task`, `/review-task`, `/merge-task` skills, manual CI workflow `gate`. Dogfooded:
+  in-run lens review accepted; fresh Codex review found a gate false PASS (no exe -> selftest skipped) -> r2 fixed it,
+  plus `-Offline` (sandbox NU1900) and `-SizeGrowth`. Manager gate online PASS; false-pass probe FAIL as intended.
+  Detected by a fresh Claude (agent + skills) and a fresh Codex (skill + role). Claude `design-reviewer` smoke run:
+  accept-with-followup (rework rounds' scope/report paths, stale committed gate reports, contract checks run twice) ->
+  manager fixed docs/skills and ignored `*.gate.md`; r3 fixed rework-round scope and made CONTRACTS the only caller of its
+  four checks. Merged into dev (9bf5581, user: "Yes, merge it"), gate on dev PASS. Not yet exercised: Codex role loading
+  inside a worktree, GitHub-hosted CI. Next: new Opus session resumes Priority 1 with this loop (`/next-task`).
 - GitHub (user, 2026-10-28): private repo `NeelAPatel/AntiNotepad` created as origin; all branches and tags pushed,
   default branch `main`. History scanned first (no secrets, largest blob 2.9 MB font). The older WinUI repo is
   `Archived-AntiNotepad` (untouched). Public release stays with N3. Next: Priority 1 audit (can add a CI gate).

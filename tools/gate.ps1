@@ -1,0 +1,494 @@
+[CmdletBinding()]
+param(
+    [string]$Task,
+    [string]$Base = 'dev',
+    [switch]$StrictScope,
+    [ValidateRange(1, 2147483647)][int]$SizeWarn = 600,
+    [ValidateRange(0, 2147483647)][int]$SizeGrowth = 25,
+    [switch]$Keep,
+    [switch]$Offline,
+    [switch]$Ci
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+if ([string]::IsNullOrWhiteSpace($Task)) {
+    if ($Ci) { $Task = 'ci' }
+    else { throw 'Specify -Task <ID-slug> (or use -Ci for the ci task name).' }
+}
+if (-not ($Ci -and $Task -ceq 'ci') -and $Task -cnotmatch '^[A-Z][A-Za-z0-9]*(-[a-z0-9]+)+$') {
+    throw "Invalid task name '$Task'; expected <ID>-<lowercase-slug>."
+}
+if ($Base -cnotmatch '^[A-Za-z0-9][A-Za-z0-9._/-]*$') {
+    throw "Invalid base ref '$Base'."
+}
+
+$script:repoRoot = [IO.Path]::GetFullPath((& git -C $PSScriptRoot rev-parse --show-toplevel).Trim())
+$script:buildRoot = [IO.Path]::GetFullPath((Join-Path $script:repoRoot 'build'))
+$script:buildPath = [IO.Path]::GetFullPath((Join-Path $script:buildRoot "$Task-gate"))
+$script:dataPath = [IO.Path]::GetFullPath((Join-Path $script:buildRoot "$Task-gate-data"))
+$script:exePath = Join-Path $script:buildPath 'AntiNotepad.exe'
+$script:projectPath = Join-Path $script:repoRoot 'product/AntiNotepad/AntiNotepad.csproj'
+$script:seamPath = Join-Path $script:repoRoot 'tools/check-platform-seam.ps1'
+$script:baseName = $Base
+$script:baseRevision = $null
+$script:steps = [Collections.Generic.List[object]]::new()
+$script:buildExitCode = $null
+$script:reportPath = Join-Path $script:repoRoot ".coord/reports/$Task.gate.md"
+
+function Add-Step {
+    param(
+        [Parameter(Mandatory)][string]$Name,
+        [Parameter(Mandatory)][ValidateSet('PASS', 'FAIL', 'WARN', 'SKIP')][string]$Status,
+        [Parameter(Mandatory)][string]$Summary,
+        [string[]]$Lines = @()
+    )
+
+    $entry = [pscustomobject]@{
+        Name = $Name
+        Status = $Status
+        Summary = $Summary
+        Lines = @($Lines | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    }
+    $script:steps.Add($entry)
+    Write-Host "[$Status] ${Name}: $Summary"
+    foreach ($line in $entry.Lines) { Write-Host "  $line" }
+}
+
+function Invoke-CapturedProcess {
+    param(
+        [Parameter(Mandatory)][string]$FileName,
+        [Parameter(Mandatory)][string[]]$Arguments,
+        [Parameter(Mandatory)][string]$WorkingDirectory,
+        [hashtable]$Environment = @{},
+        [string[]]$RemoveEnvironment = @()
+    )
+
+    $startInfo = [Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = $FileName
+    $startInfo.WorkingDirectory = $WorkingDirectory
+    $startInfo.UseShellExecute = $false
+    $startInfo.CreateNoWindow = $true
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    foreach ($argument in $Arguments) { [void]$startInfo.ArgumentList.Add([string]$argument) }
+    foreach ($name in $RemoveEnvironment) { [void]$startInfo.Environment.Remove($name) }
+    foreach ($name in $Environment.Keys) { $startInfo.Environment[[string]$name] = [string]$Environment[$name] }
+
+    $process = [Diagnostics.Process]::Start($startInfo)
+    if ($null -eq $process) { throw "Could not start $FileName." }
+    $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+    $stderrTask = $process.StandardError.ReadToEndAsync()
+    $process.WaitForExit()
+    [pscustomobject]@{
+        ExitCode = $process.ExitCode
+        StdOut = $stdoutTask.GetAwaiter().GetResult()
+        StdErr = $stderrTask.GetAwaiter().GetResult()
+    }
+}
+
+function Get-CombinedOutput {
+    param([Parameter(Mandatory)]$Result)
+    $outputs = @($Result.StdOut, $Result.StdErr) | Where-Object { -not [string]::IsNullOrEmpty($_) }
+    return ($outputs -join [Environment]::NewLine)
+}
+
+function Get-OutputLines {
+    param([AllowEmptyString()][string]$Text)
+    if ([string]::IsNullOrEmpty($Text)) { return @() }
+    return @($Text -split '\r?\n')
+}
+
+function Get-KeyLines {
+    param(
+        [AllowEmptyString()][string]$Text,
+        [Parameter(Mandatory)][string]$Pattern,
+        [int]$Limit = 20
+    )
+
+    $matches = @(Get-OutputLines $Text | Where-Object { $_ -match $Pattern } | Select-Object -Last $Limit)
+    if ($matches.Count -gt 0) { return $matches }
+    return @(Get-OutputLines $Text | Select-Object -Last ([Math]::Min(8, $Limit)))
+}
+
+function Get-ItemIfPresent {
+    param([Parameter(Mandatory)][string]$LiteralPath)
+    if (Test-Path -LiteralPath $LiteralPath) { return Get-Item -LiteralPath $LiteralPath -Force }
+    return $null
+}
+
+function Assert-NoReparsePoint {
+    param([Parameter(Mandatory)][string]$LiteralPath, [Parameter(Mandatory)][string]$Description)
+    $item = Get-ItemIfPresent $LiteralPath
+    if ($null -ne $item -and (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0)) {
+        throw "$Description must not be a symbolic link or reparse point: $LiteralPath"
+    }
+}
+
+function Ensure-BuildRoot {
+    $rootItem = Get-ItemIfPresent $script:repoRoot
+    if ($null -eq $rootItem -or -not $rootItem.PSIsContainer) { throw "Repository root is unavailable: $script:repoRoot" }
+    Assert-NoReparsePoint -LiteralPath $script:repoRoot -Description 'Repository root'
+
+    $buildItem = Get-ItemIfPresent $script:buildRoot
+    if ($null -eq $buildItem) {
+        New-Item -ItemType Directory -Path $script:buildRoot -Force | Out-Null
+        $buildItem = Get-Item -LiteralPath $script:buildRoot -Force
+    }
+    if (-not $buildItem.PSIsContainer) { throw "Build path is not a directory: $script:buildRoot" }
+    Assert-NoReparsePoint -LiteralPath $script:buildRoot -Description 'Build directory'
+}
+
+function Remove-BuildEntry {
+    param([Parameter(Mandatory)][string]$LiteralPath, [Parameter(Mandatory)][string]$BuildParent)
+
+    $fullPath = [IO.Path]::GetFullPath($LiteralPath)
+    $parentPrefix = $BuildParent.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+    if (-not $fullPath.StartsWith($parentPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Refusing to remove a path outside build/: $fullPath"
+    }
+
+    $item = Get-Item -LiteralPath $fullPath -Force
+    $isReparsePoint = (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0)
+    if ($item.PSIsContainer -and -not $isReparsePoint) {
+        foreach ($child in @(Get-ChildItem -LiteralPath $fullPath -Force)) {
+            Remove-BuildEntry -LiteralPath $child.FullName -BuildParent $BuildParent
+        }
+    }
+    # Removing a reparse point removes the link itself; its target is never enumerated.
+    Remove-Item -LiteralPath $fullPath -Force
+}
+
+function Clear-BuildTarget {
+    param([Parameter(Mandatory)][string]$LiteralPath)
+
+    Ensure-BuildRoot
+    $fullPath = [IO.Path]::GetFullPath($LiteralPath)
+    $buildPrefix = $script:buildRoot.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+    if (-not $fullPath.StartsWith($buildPrefix, [StringComparison]::OrdinalIgnoreCase) -or
+        [IO.Path]::GetDirectoryName($fullPath) -ne $script:buildRoot) {
+        throw "Refusing to remove anything outside a direct child of build/: $fullPath"
+    }
+
+    $item = Get-ItemIfPresent $fullPath
+    if ($null -ne $item) { Remove-BuildEntry -LiteralPath $fullPath -BuildParent $script:buildRoot }
+}
+
+function Ensure-BuildDirectory {
+    param([Parameter(Mandatory)][string]$LiteralPath)
+    Ensure-BuildRoot
+    $fullPath = [IO.Path]::GetFullPath($LiteralPath)
+    $buildPrefix = $script:buildRoot.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+    if (-not $fullPath.StartsWith($buildPrefix, [StringComparison]::OrdinalIgnoreCase) -or
+        [IO.Path]::GetDirectoryName($fullPath) -ne $script:buildRoot) {
+        throw "Refusing to create anything outside a direct child of build/: $fullPath"
+    }
+
+    New-Item -ItemType Directory -Path $fullPath -Force | Out-Null
+    Assert-NoReparsePoint -LiteralPath $fullPath -Description 'Managed build directory'
+}
+
+function Get-GitNames {
+    param([Parameter(Mandatory)][string[]]$Arguments)
+    $result = Invoke-CapturedProcess -FileName 'git' -Arguments (@('-C', $script:repoRoot) + $Arguments) -WorkingDirectory $script:repoRoot
+    if ($result.ExitCode -ne 0) {
+        $output = Get-CombinedOutput $result
+        throw "git $($Arguments -join ' ') failed with exit $($result.ExitCode): $output"
+    }
+    return @(Get-OutputLines $result.StdOut | Where-Object { $_.Length -gt 0 })
+}
+
+function Resolve-BaseRevision {
+    if ($script:baseRevision) { return $script:baseRevision }
+
+    foreach ($candidate in @($script:baseName, "origin/$($script:baseName)")) {
+        $result = Invoke-CapturedProcess -FileName 'git' -Arguments @('-C', $script:repoRoot, 'rev-parse', '--verify', '--quiet', "$candidate^{commit}") -WorkingDirectory $script:repoRoot
+        if ($result.ExitCode -eq 0 -and -not [string]::IsNullOrWhiteSpace($result.StdOut)) {
+            $script:baseRevision = $result.StdOut.Trim()
+            return $script:baseRevision
+        }
+    }
+    throw "Cannot resolve base ref '$($script:baseName)' locally or as origin/$($script:baseName)."
+}
+
+function Get-ChangedFiles {
+    $names = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    $baseRevision = Resolve-BaseRevision
+    foreach ($name in (Get-GitNames @('diff', '--name-only', "$baseRevision...HEAD", '--'))) { [void]$names.Add($name.Replace('\', '/')) }
+    foreach ($name in (Get-GitNames @('diff', '--name-only', '--'))) { [void]$names.Add($name.Replace('\', '/')) }
+    foreach ($name in (Get-GitNames @('diff', '--cached', '--name-only', '--'))) { [void]$names.Add($name.Replace('\', '/')) }
+    foreach ($name in (Get-GitNames @('ls-files', '--others', '--exclude-standard'))) { [void]$names.Add($name.Replace('\', '/')) }
+    return @($names | Where-Object { $_ -notmatch '^\.coord/' } | Sort-Object)
+}
+
+function Get-FileLines {
+    param([AllowEmptyString()][string]$Text)
+    if ([string]::IsNullOrEmpty($Text)) { return 0 }
+    $lineBreaks = [regex]::Matches($Text, "`r`n|`n|`r").Count
+    if ($Text -match '(?:\r\n|\n|\r)$') { return $lineBreaks }
+    return $lineBreaks + 1
+}
+
+function Write-GateReport {
+    $failed = @($script:steps | Where-Object Status -eq 'FAIL').Count -gt 0 -or
+        @($script:steps | Where-Object { $_.Name -eq 'Selftest' -and $_.Status -ne 'PASS' }).Count -gt 0
+    $gateStatus = if ($failed) { 'FAIL' } else { 'PASS' }
+    $lines = [Collections.Generic.List[string]]::new()
+    $lines.Add('## Summary')
+    $lines.Add("GATE: $gateStatus")
+    foreach ($step in $script:steps) { $lines.Add("$($step.Name): $($step.Status) - $($step.Summary)") }
+    foreach ($step in $script:steps) {
+        $lines.Add('')
+        $lines.Add("## $($step.Name)")
+        $lines.Add("$($step.Status) - $($step.Summary)")
+        foreach ($line in $step.Lines) { $lines.Add("- $line") }
+    }
+
+    $reportsDirectory = Split-Path -Parent $script:reportPath
+    New-Item -ItemType Directory -Path $reportsDirectory -Force | Out-Null
+    [IO.File]::WriteAllText($script:reportPath, ($lines -join [Environment]::NewLine) + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
+    Write-Host "GATE: $gateStatus"
+    Write-Host "Report: $script:reportPath"
+    return $failed
+}
+
+$buildPassed = $false
+$cleanupFailed = $false
+if ($Offline) {
+    Add-Step -Name 'Offline' -Status 'WARN' -Summary 'NuGet audit disabled for this build only' `
+        -Lines @('Offline: NuGet audit off (sandbox)')
+}
+try {
+    try {
+        Clear-BuildTarget -LiteralPath $script:buildPath
+        Clear-BuildTarget -LiteralPath $script:dataPath
+        $buildArguments = @('build', $script:projectPath, '-c', 'Debug', '-o', $script:buildPath)
+        if ($Offline) { $buildArguments += '-p:NuGetAudit=false' }
+        $build = Invoke-CapturedProcess -FileName 'dotnet' -Arguments $buildArguments `
+            -WorkingDirectory $script:repoRoot -Environment @{ AVALONIA_TELEMETRY_OPTOUT = '1' } -RemoveEnvironment @('ANTINOTEPAD_DEV', 'ANTINOTEPAD_DATA')
+        $script:buildExitCode = $build.ExitCode
+        $buildOutput = Get-CombinedOutput $build
+        $warningSummary = [regex]::Matches($buildOutput, '(?im)^\s*(\d+)\s+Warning\(s\)\s*$')
+        $errorSummary = [regex]::Matches($buildOutput, '(?im)^\s*(\d+)\s+Error\(s\)\s*$')
+        if ($warningSummary.Count -gt 0) {
+            $warningCount = [int]$warningSummary[$warningSummary.Count - 1].Groups[1].Value
+        }
+        else {
+            $warningCount = @(Get-OutputLines $buildOutput | Where-Object { $_ -match '(?i)\bwarning(?:\s+[A-Z]+\d+)?\s*:' }).Count
+        }
+        if ($errorSummary.Count -gt 0) {
+            $errorCount = [int]$errorSummary[$errorSummary.Count - 1].Groups[1].Value
+        }
+        else {
+            $errorCount = @(Get-OutputLines $buildOutput | Where-Object { $_ -match '(?i)\berror(?:\s+[A-Z]+\d+)?\s*:' }).Count
+        }
+        $buildPassed = $build.ExitCode -eq 0 -and $warningCount -eq 0 -and $errorCount -eq 0
+        $buildStatus = if ($buildPassed) { 'PASS' } else { 'FAIL' }
+        $buildLines = @(Get-KeyLines -Text $buildOutput -Pattern '(?i)(Build (succeeded|FAILED)|Warning\(s\)|Error\(s\)|\bwarning\s+[A-Z]+\d+\s*:|\berror\s+[A-Z]+\d+\s*:)')
+        Add-Step -Name 'Build' -Status $buildStatus -Summary "dotnet exit $($build.ExitCode), $warningCount warning(s), $errorCount error(s)" -Lines $buildLines
+    }
+    catch {
+        Add-Step -Name 'Build' -Status 'FAIL' -Summary $_.Exception.Message
+    }
+
+    if ($null -ne $script:buildExitCode -and $script:buildExitCode -eq 0 -and (Test-Path -LiteralPath $script:exePath -PathType Leaf)) {
+        try {
+            Clear-BuildTarget -LiteralPath $script:dataPath
+            Ensure-BuildDirectory -LiteralPath $script:dataPath
+            $selftest = Invoke-CapturedProcess -FileName $script:exePath -Arguments @('--selftest') -WorkingDirectory $script:buildPath `
+                -Environment @{ ANTINOTEPAD_DATA = $script:dataPath } -RemoveEnvironment @('ANTINOTEPAD_DEV')
+            $selftestOutput = Get-CombinedOutput $selftest
+            $selftestHasPass = $selftestOutput -match '(?m)^SELFTEST PASS\s*$'
+            $selftestPassed = $selftest.ExitCode -eq 0 -and $selftestHasPass
+            $selftestStatus = if ($selftestPassed) { 'PASS' } else { 'FAIL' }
+            $selftestLines = @(Get-KeyLines -Text $selftestOutput -Pattern '^(LAYERS\s|CONTRACTS:|SELFTEST (PASS|FAIL))' -Limit 200)
+            if (-not $selftestPassed) { $selftestLines = @(Get-OutputLines $selftestOutput) }
+            $selftestNote = if ($selftestPassed) { 'contains SELFTEST PASS' } else { 'requires exit 0 and SELFTEST PASS' }
+            Add-Step -Name 'Selftest' -Status $selftestStatus -Summary "exe exit $($selftest.ExitCode); $selftestNote" -Lines $selftestLines
+        }
+        catch {
+            Add-Step -Name 'Selftest' -Status 'FAIL' -Summary $_.Exception.Message
+        }
+    }
+    elseif ($buildPassed) {
+        Add-Step -Name 'Selftest' -Status 'FAIL' -Summary 'successful build did not produce a runnable AntiNotepad.exe'
+    }
+    else {
+        Add-Step -Name 'Selftest' -Status 'SKIP' -Summary 'build did not produce a runnable AntiNotepad.exe'
+    }
+
+    try {
+        $seam = Invoke-CapturedProcess -FileName 'pwsh' -Arguments @('-NoProfile', '-File', $script:seamPath) -WorkingDirectory $script:repoRoot
+        $seamOutput = Get-CombinedOutput $seam
+        $seamPassed = $seam.ExitCode -eq 0
+        $seamStatus = if ($seamPassed) { 'PASS' } else { 'FAIL' }
+        Add-Step -Name 'Seam' -Status $seamStatus -Summary "check-platform-seam.ps1 exit $($seam.ExitCode)" -Lines @(Get-KeyLines -Text $seamOutput -Pattern '(?i)(PLATFORM-SEAM|violation|error)')
+    }
+    catch {
+        Add-Step -Name 'Seam' -Status 'FAIL' -Summary $_.Exception.Message
+    }
+
+    if ($Ci) {
+        Add-Step -Name 'Scope' -Status 'SKIP' -Summary 'scope is skipped in CI mode'
+    }
+    else {
+        try {
+            $changedFiles = @(Get-ChangedFiles)
+            $roundMatch = [regex]::Match($Task, '^(?<base>.+)-r(?<number>[0-9]+)$')
+            [long]$roundNumber = 0
+            $isReworkRound = $roundMatch.Success -and
+                [long]::TryParse($roundMatch.Groups['number'].Value, [ref]$roundNumber) -and $roundNumber -ge 2
+            if (-not $isReworkRound) {
+                $briefPath = Join-Path $script:repoRoot ".coord/tasks/$Task.md"
+                if (-not (Test-Path -LiteralPath $briefPath -PathType Leaf)) {
+                    Add-Step -Name 'Scope' -Status 'WARN' -Summary "brief not found: .coord/tasks/$Task.md"
+                }
+                else {
+                    $brief = [IO.File]::ReadAllText($briefPath)
+                    $filesSection = [regex]::Match($brief, '(?ms)^## Files\s*\r?\n(.*?)(?=^##\s|\z)')
+                    if (-not $filesSection.Success) {
+                        Add-Step -Name 'Scope' -Status 'WARN' -Summary 'brief has no ## Files section'
+                    }
+                    else {
+                        $allowed = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+                        foreach ($match in [regex]::Matches($filesSection.Groups[1].Value, '(?m)^\s*-\s+`([^`]+)`')) {
+                            $path = $match.Groups[1].Value.Trim().Replace('\', '/')
+                            if ($path.StartsWith('./', [StringComparison]::Ordinal)) { $path = $path.Substring(2) }
+                            if ($path.Length -gt 0) { [void]$allowed.Add($path) }
+                        }
+                        if ($allowed.Count -eq 0) {
+                            Add-Step -Name 'Scope' -Status 'WARN' -Summary '## Files contains no backticked file paths'
+                        }
+                        else {
+                            $outOfScope = @($changedFiles | Where-Object { -not $allowed.Contains($_) })
+                            if ($outOfScope.Count -eq 0) {
+                                Add-Step -Name 'Scope' -Status 'PASS' -Summary "$($changedFiles.Count) changed file(s); all are allowed by the brief"
+                            }
+                            else {
+                                $scopeStatus = if ($StrictScope) { 'FAIL' } else { 'WARN' }
+                                Add-Step -Name 'Scope' -Status $scopeStatus -Summary "$($outOfScope.Count) changed file(s) outside the brief's Files list" -Lines $outOfScope
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                $baseTask = $roundMatch.Groups['base'].Value
+                $tasksDirectory = Join-Path $script:repoRoot '.coord/tasks'
+                $baseBriefName = "$baseTask.md"
+                $baseBriefPath = Join-Path $tasksDirectory $baseBriefName
+                if (-not (Test-Path -LiteralPath $baseBriefPath -PathType Leaf)) {
+                    Add-Step -Name 'Scope' -Status 'WARN' -Summary "base brief not found: .coord/tasks/$baseBriefName"
+                }
+                else {
+                    $briefsToRead = [Collections.Generic.List[object]]::new()
+                    $briefsToRead.Add([pscustomobject]@{ Number = 0L; Name = $baseBriefName; Path = $baseBriefPath })
+                    $roundPattern = '^' + [regex]::Escape($baseTask) + '-r(?<number>[0-9]+)\.md$'
+                    foreach ($candidate in (Get-ChildItem -LiteralPath $tasksDirectory -File)) {
+                        $candidateMatch = [regex]::Match($candidate.Name, $roundPattern, [Text.RegularExpressions.RegexOptions]::IgnoreCase)
+                        if (-not $candidateMatch.Success) { continue }
+                        [long]$candidateNumber = 0
+                        if ([long]::TryParse($candidateMatch.Groups['number'].Value, [ref]$candidateNumber) -and
+                            $candidateNumber -le $roundNumber) {
+                            $briefsToRead.Add([pscustomobject]@{
+                                Number = $candidateNumber
+                                Name = $candidate.Name
+                                Path = $candidate.FullName
+                            })
+                        }
+                    }
+                    $orderedBriefs = @($briefsToRead | Sort-Object Number, Name)
+                    $allowed = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+                    $briefLines = [Collections.Generic.List[string]]::new()
+                    $briefsWithoutFiles = [Collections.Generic.List[string]]::new()
+                    foreach ($briefEntry in $orderedBriefs) {
+                        $relativeBrief = ".coord/tasks/$($briefEntry.Name)"
+                        $briefLines.Add("read $relativeBrief")
+                        $brief = [IO.File]::ReadAllText($briefEntry.Path)
+                        $filesSection = [regex]::Match($brief, '(?ms)^## Files\s*\r?\n(.*?)(?=^##\s|\z)')
+                        if (-not $filesSection.Success) {
+                            $briefsWithoutFiles.Add("$relativeBrief has no ## Files section")
+                            continue
+                        }
+                        foreach ($match in [regex]::Matches($filesSection.Groups[1].Value, '(?m)^\s*-\s+`([^`]+)`')) {
+                            $path = $match.Groups[1].Value.Trim().Replace('\', '/')
+                            if ($path.StartsWith('./', [StringComparison]::Ordinal)) { $path = $path.Substring(2) }
+                            if ($path.Length -gt 0) { [void]$allowed.Add($path) }
+                        }
+                    }
+                    if ($allowed.Count -eq 0) {
+                        Add-Step -Name 'Scope' -Status 'WARN' -Summary 'rework briefs contain no backticked ## Files paths' -Lines @($briefLines + $briefsWithoutFiles)
+                    }
+                    else {
+                        $outOfScope = @($changedFiles | Where-Object { -not $allowed.Contains($_) })
+                        $scopeLines = @($briefLines + $briefsWithoutFiles + $outOfScope)
+                        if ($briefsWithoutFiles.Count -gt 0) {
+                            Add-Step -Name 'Scope' -Status 'WARN' -Summary "$($briefsWithoutFiles.Count) brief(s) have no Files list; checked allowed paths from the other briefs" -Lines $scopeLines
+                        }
+                        elseif ($outOfScope.Count -eq 0) {
+                            Add-Step -Name 'Scope' -Status 'PASS' -Summary "$($changedFiles.Count) changed file(s); all are allowed by $($orderedBriefs.Count) rework brief(s)" -Lines $scopeLines
+                        }
+                        else {
+                            $scopeStatus = if ($StrictScope) { 'FAIL' } else { 'WARN' }
+                            Add-Step -Name 'Scope' -Status $scopeStatus -Summary "$($outOfScope.Count) changed file(s) outside the rework briefs' Files lists" -Lines $scopeLines
+                        }
+                    }
+                }
+            }
+        }
+        catch {
+            Add-Step -Name 'Scope' -Status 'FAIL' -Summary $_.Exception.Message
+        }
+    }
+
+    try {
+        $changedFiles = if ($Ci) { @(Get-ChangedFiles) } else { $changedFiles }
+        $sizeWarnings = [Collections.Generic.List[string]]::new()
+        foreach ($relativePath in $changedFiles) {
+            if ($relativePath -notmatch '^product/.+\.cs$') { continue }
+            $currentPath = Join-Path $script:repoRoot ($relativePath.Replace('/', [IO.Path]::DirectorySeparatorChar))
+            if (-not (Test-Path -LiteralPath $currentPath -PathType Leaf)) { continue }
+            $newLines = Get-FileLines ([IO.File]::ReadAllText($currentPath))
+            $baseRevision = Resolve-BaseRevision
+            $baseResult = Invoke-CapturedProcess -FileName 'git' -Arguments @('-C', $script:repoRoot, 'show', "${baseRevision}:$relativePath") -WorkingDirectory $script:repoRoot
+            $oldLines = if ($baseResult.ExitCode -eq 0) { Get-FileLines $baseResult.StdOut } else { 0 }
+            $crossedLimit = $oldLines -le $SizeWarn -and $newLines -gt $SizeWarn
+            $largeOverLimitGrowth = $oldLines -gt $SizeWarn -and ($newLines - $oldLines) -gt $SizeGrowth
+            if ($crossedLimit -or $largeOverLimitGrowth) {
+                $sizeWarnings.Add("${relativePath}: $oldLines -> $newLines lines")
+            }
+        }
+        if ($sizeWarnings.Count -eq 0) {
+            Add-Step -Name 'Size' -Status 'PASS' -Summary "no changed product C# file crossed $SizeWarn lines or grew by more than $SizeGrowth while already over it"
+        }
+        else {
+            Add-Step -Name 'Size' -Status 'WARN' -Summary "$($sizeWarnings.Count) changed product C# file(s) crossed $SizeWarn lines or grew by more than $SizeGrowth while already over it" -Lines @($sizeWarnings)
+        }
+    }
+    catch {
+        Add-Step -Name 'Size' -Status 'FAIL' -Summary $_.Exception.Message
+    }
+}
+finally {
+    $alreadyFailed = @($script:steps | Where-Object Status -eq 'FAIL').Count -gt 0
+    if ($Keep -or $alreadyFailed) {
+        $reason = if ($alreadyFailed) { 'kept build and data folders because the gate failed' } else { 'kept build and data folders by -Keep' }
+        Add-Step -Name 'Cleanup' -Status 'SKIP' -Summary $reason
+    }
+    else {
+        try {
+            Clear-BuildTarget -LiteralPath $script:buildPath
+            Clear-BuildTarget -LiteralPath $script:dataPath
+            Add-Step -Name 'Cleanup' -Status 'PASS' -Summary 'removed only the task build and data folders under build/'
+        }
+        catch {
+            $cleanupFailed = $true
+            Add-Step -Name 'Cleanup' -Status 'FAIL' -Summary $_.Exception.Message
+        }
+    }
+}
+
+$failed = Write-GateReport
+if ($failed -or $cleanupFailed) { exit 1 }
+exit 0

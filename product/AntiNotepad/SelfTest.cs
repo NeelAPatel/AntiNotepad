@@ -10,7 +10,7 @@ using System.Reflection.Emit;
 namespace AntiNotepad;
 
 /// <summary>Disposable capability smoke: calculator, mode detection, timer parsing, store round trip. `AntiNotepad --selftest`.</summary>
-internal static class SelfTest
+internal static partial class SelfTest
 {
     public static int Run()
     {
@@ -36,10 +36,6 @@ internal static class SelfTest
         var environmentReadPass = EnvironmentReadConfinementChecks(out var environmentReadReport);
         Console.WriteLine(environmentReadPass ? "ENV DATA/DEV confinement " + environmentReadReport : "ENV DATA/DEV confinement FAIL " + environmentReadReport);
         Check(environmentReadPass, "environment DATA/DEV confinement: " + environmentReadReport);
-
-        var settingsChangedPass = SettingsChangedChecks(out var settingsChangedReport);
-        Console.WriteLine(settingsChangedPass ? "SETTINGS Changed" : "SETTINGS Changed FAIL " + settingsChangedReport);
-        Check(settingsChangedPass, "settings Changed: " + settingsChangedReport);
 
         var hotkeySwapPass = HotkeySwapChecks(out var hotkeySwapReport);
         Console.WriteLine(hotkeySwapPass ? "HOTKEYS swap " + hotkeySwapReport : "HOTKEYS swap FAIL " + hotkeySwapReport);
@@ -121,19 +117,15 @@ internal static class SelfTest
         var notesUseFolderPass = NotesUseFolderChecks(out var notesUseFolderReport);
         Console.WriteLine(notesUseFolderPass ? "NOTES SESSION use-folder " + notesUseFolderReport : "NOTES SESSION use-folder FAIL " + notesUseFolderReport);
         Check(notesUseFolderPass, "notes session use-folder: " + notesUseFolderReport);
-        var unavailableStorePass = UnavailableStoreStartupChecks(out var unavailableStoreReport);
-        Console.WriteLine(unavailableStorePass ? "UNAVAILABLE STORE startup " + unavailableStoreReport : "UNAVAILABLE STORE startup FAIL " + unavailableStoreReport);
-        Check(unavailableStorePass, "unavailable store startup: " + unavailableStoreReport);
         Check(StartupRequestLatchChecks(out var startupRequestReport), "startup request latch: " + startupRequestReport);
         Check(NoteSwipeChecks(out var swipeReport), "note swipe: " + swipeReport);
         Check(WelcomeSlotsSelfTest(out var welcomeReport), "welcome slots: " + welcomeReport);
         Check(SearchSpeedChecks(out var searchReport), "search speed: " + searchReport);
         Check(SettingsSearchMatchingChecks(out var settingsSearchReport), "A27-settings-search-build-matches: " + settingsSearchReport);
-        Check(FenceCacheChecks(out var fenceCacheReport), "A28-fence-cache: " + fenceCacheReport);
         Check(IncrementalAnalysisChecks(out var analysisReport), "A29-incremental-analysis: " + analysisReport);
         Check(TaskbarChecks(out var taskbarReport), "taskbar: " + taskbarReport);
         Check(SessionEndCloseChecks(out var sessionEndReport), "session-end close: " + sessionEndReport);
-        Check(BackgroundSaveAndLogChecks(out var backgroundSaveAndLogReport), "background save and log: " + backgroundSaveAndLogReport);
+        ContractsChecks(failures);
 
         Console.WriteLine(failures.Count == 0 ? "SELFTEST PASS" : "SELFTEST FAIL\n" + string.Join("\n", failures));
         return failures.Count == 0 ? 0 : 1;

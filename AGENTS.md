@@ -25,6 +25,7 @@ tags `v0.1`, `antipad-v*` and `baseline/m8c-v1-compact`.
 ## Read when
 - Starting or resuming work: `.coord/STATUS.md`.
 - Building, installing/upgrading the user's copy, dev instance, hotkeys, data folders: `docs/dev-loop.md`.
+- The per-task loop (tiers, gate, reviews, who triggers what): `docs/loop.md`.
 - Launching or briefing Codex: `docs/agents.md`. Briefs go in `.coord/tasks/<ID-slug>.md`, reports in `.coord/reports/`.
 - Why something is the way it is (locked choices): `docs/decisions.md`.
 - Code layout: `product/AntiNotepad` — `Model/` (store, settings, notes), `Editor/` (PadView, colorizers, renderers, motion),
