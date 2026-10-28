@@ -22,6 +22,10 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - GitHub (user, 2026-10-28): private repo `NeelAPatel/AntiNotepad` created as origin; all branches and tags pushed,
   default branch `main`. History scanned first (no secrets, largest blob 2.9 MB font). The older WinUI repo is
   `Archived-AntiNotepad` (untouched). Public release stays with N3. Next: Priority 1 audit (can add a CI gate).
+- C4-coord-archive (user, 2026-10-28): finished A35-A44 briefs, Codex reports and the A35 handoff committed, tagged
+  `archive/coord-2026-10-28` and removed from the tree (kept: A42-padview-commands plan/impact-r2 for A42c/A42d, N3
+  brief). Report paths in the entries below now resolve under that tag. `.gitignore` adds settings.local.json, `.vs/`,
+  `*.user`. Plan 2.8 done.
 - A35-bar-insets merged into dev (fad7d61, user-approved live): design tokens + insets, ink-centered glyphs, scrollable
   top gap, top-bar blur behind; one commit per feature. 
   A35 branches and worktree deleted (user). Lab history no longer kept. Installed copy not upgraded.
@@ -123,7 +127,7 @@ restart, tray right-click menu).
 | 2.6 | A42d-list-commands | List commands out of PadView | Medium | Medium |
 | 2.7 | (from Priority 1) | New items from the re-evaluation | | |
 | **Cleanup** | | | | |
-| 2.8 | Untracked reports | Commit or delete the stray `.coord/reports/` files | None | Small |
+| 2.8 | Untracked reports | Done 2026-10-28: archived under tag `archive/coord-2026-10-28` | None | Small |
 | 2.9 | `feat/A38-mvvm-audit` | Merge the audit doc or drop the branch | None | Small |
 | 2.10 | Worktrees and `reorg/*` branches | Remove investigator worktrees and finished branches | None | Small |
 | 2.11 | Sessions | Archive finished A39-A44 sessions | None | Small |
