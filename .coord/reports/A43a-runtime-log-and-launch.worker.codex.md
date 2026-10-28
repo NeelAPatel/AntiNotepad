@@ -1,0 +1,8 @@
+**A43a-runtime-log-and-launch is implemented** on `reorg/A43a-runtime-log-and-launch`; no commit was made.
+
+- Avalonia 12.1.4 has the `AppBuilder.Configure<TApp>(Func<TApp>)` overload, and the injected `AppLaunch` factory is in use.
+- Build succeeded with **0 warnings and 0 errors**. `--selftest` printed **`SELFTEST PASS`**; `RUNTIME LOG` and `TASKBAR TRACE` each passed 5 checks, and all seven new LAYERS rows reported 0 references.
+- `Program.*` references went from **75 to 21** across product C# files; the removed launch/log tokens are now zero outside `Program.cs`. `TaskbarPresence.cs` has no `Program` references.
+- The check output was removed. The user-controlled dev hand check remains pending.
+
+Details and per-token counts are in the [A43a report](</F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/.coord/reports/A43a-runtime-log-and-launch.md>). The report notes that taskbar trace timing now starts at `TaskbarTrace` construction, as required. Source changes are in [RuntimeLog.cs](</F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/product/AntiNotepad/RuntimeLog.cs>), [Program.cs](</F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/product/AntiNotepad/Program.cs>), [TaskbarPresence.cs](</F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/product/AntiNotepad/Platform/TaskbarPresence.cs>), and [SelfTest.cs](</F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/product/AntiNotepad/SelfTest.cs>).
