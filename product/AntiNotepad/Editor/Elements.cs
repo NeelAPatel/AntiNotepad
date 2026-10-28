@@ -139,7 +139,7 @@ internal sealed class LinkGenerator(PadView pad) : VisualLineElementGenerator
             Hand = true,
             Pressed = e =>
             {
-                if (e.KeyModifiers.HasFlag(KeyModifiers.Control)) { e.Handled = true; Platform.Native.OpenUrl(url); }
+                if (e.KeyModifiers.HasFlag(KeyModifiers.Control)) { e.Handled = true; Platform.DesktopPlatform.OpenUrl(url); }
             }
         };
     }

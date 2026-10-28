@@ -130,7 +130,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     {
         if (Settings.Taskbar != "never") EnsureTaskbarProxy();
         RegisterHotkey(Settings.Hotkey);
-        RegisterNewNoteHotkey(Settings.NewNoteHotkey);        _clipboardHook = Native.ListenClipboard(this, () => Dispatcher.UIThread.Post(() => _ = OnClipboardChanged()));
+        RegisterNewNoteHotkey(Settings.NewNoteHotkey);        _clipboardHook = DesktopPlatform.ListenClipboard(this, () => Dispatcher.UIThread.Post(() => _ = OnClipboardChanged()));
         ApplyTaskbarSetting();
     }
 
@@ -185,7 +185,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     private PixelPoint? PlaceForOpen()
     {
         if (Settings.OpenAt == "remember") return null;
-        var cursor = Native.CursorPosition();
+        var cursor = DesktopPlatform.CursorPosition();
         var screen = Settings.OpenAt is "mouse" or "dropdown" ? Screens.ScreenFromPoint(cursor) ?? Screens.Primary : Screens.Primary;
         if (screen is null) return null;
         var a = screen.WorkingArea; var scale = screen.Scaling;
@@ -440,7 +440,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
         GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
         GC.WaitForPendingFinalizers();
-        Native.TrimWorkingSet();
+        DesktopPlatform.TrimWorkingSet();
         if (_isDev) _log.Write($"trimmed docs={PadView.CachedDocuments} managed={GC.GetTotalMemory(false) / 1048576.0:F1}MB");
     }
 

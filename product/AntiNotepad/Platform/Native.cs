@@ -7,8 +7,10 @@ using Microsoft.Win32;
 namespace AntiNotepad.Platform;
 
 /// <summary>Small Win32 helpers: clipboard listener, attention cues, run-at-login.</summary>
-internal static class Native
+internal static partial class DesktopPlatform
 {
+    private static class Native
+    {
     private const uint WmClipboardUpdate = 0x031D;
     private const uint DwmwaWindowCornerPreference = 33;
     private const uint DwmwaBorderColor = 34;
@@ -16,7 +18,7 @@ internal static class Native
     private const uint DwmwaColorNone = 0xFFFFFFFE;
 
     /// <summary>Raises <paramref name="changed"/> on every clipboard update while the window handle lives.</summary>
-    public static IDisposable ListenClipboard(Window window, Action changed)
+    internal static IDisposable ListenClipboard(Window window, Action changed)
     {
         var hwnd = window.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
         if (hwnd == IntPtr.Zero) return new Disposer(() => { });
@@ -30,10 +32,10 @@ internal static class Native
         return new Disposer(() => { RemoveClipboardFormatListener(hwnd); Win32Properties.RemoveWndProcHookCallback(window, hook); });
     }
 
-    public static Avalonia.PixelPoint CursorPosition() => GetCursorPos(out var p) ? new Avalonia.PixelPoint(p.X, p.Y) : default;
+    internal static Avalonia.PixelPoint CursorPosition() => GetCursorPos(out var p) ? new Avalonia.PixelPoint(p.X, p.Y) : default;
 
     /// <summary>True when the clipboard owner asked monitors/history to skip this content (password managers do).</summary>
-    public static bool ClipboardIsPrivate()
+    internal static bool ClipboardIsPrivate()
     {
         try
         {
@@ -54,15 +56,15 @@ internal static class Native
     }
 
     /// <summary>Hands this process's unused pages back to Windows (they fault back in on demand).</summary>
-    public static void TrimWorkingSet()
+    internal static void TrimWorkingSet()
     {
         try { using var self = Process.GetCurrentProcess(); SetProcessWorkingSetSize(self.Handle, -1, -1); } catch { }
     }
 
-    public static void Chime() { try { MessageBeep(0x40); } catch { } }
+    internal static void Chime() { try { MessageBeep(0x40); } catch { } }
 
     /// <summary>Removes Windows 11's automatic popup rounding and border from a transparent popup host.</summary>
-    public static void ConfigurePopupWindow(TopLevel popup)
+    internal static void ConfigurePopupWindow(TopLevel popup)
     {
         var hwnd = popup.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
         if (hwnd == IntPtr.Zero) return;
@@ -77,7 +79,7 @@ internal static class Native
         }
     }
 
-    public static void Flash(Window window)
+    internal static void Flash(Window window)
     {
         var hwnd = window.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
         if (hwnd == IntPtr.Zero) return;
@@ -85,13 +87,13 @@ internal static class Native
         FlashWindowEx(ref info);
     }
 
-    public static void OpenUrl(string url)
+    internal static void OpenUrl(string url)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https")) return;
         Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
     }
 
-    public static void StartScreenSnip()
+    internal static void StartScreenSnip()
     {
         try { Process.Start(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true }); } catch { }
     }
@@ -122,6 +124,7 @@ internal static class Native
 
     private static void SetDwmWindowAttribute(IntPtr hwnd, uint attribute, uint value) =>
         _ = DwmSetWindowAttribute(hwnd, attribute, ref value, sizeof(uint));
+    }
 }
 
 /// <summary>HKCU Run entry for this product, with a one-time migration from the legacy value name.</summary>

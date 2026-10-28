@@ -298,7 +298,7 @@ internal sealed partial class PadWindow
             popup.RequestedThemeVariant = RequestedThemeVariant;
             popup.TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
             popup.TransparencyBackgroundFallback = Brushes.Transparent;
-            Native.ConfigurePopupWindow(popup);
+            DesktopPlatform.ConfigurePopupWindow(popup);
         }, DispatcherPriority.Loaded);
     }
 

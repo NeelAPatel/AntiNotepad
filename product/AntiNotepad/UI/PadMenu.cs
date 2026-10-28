@@ -37,7 +37,7 @@ internal static class PadMenu
             {
                 host.TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
                 host.Background = Brushes.Transparent;
-                Native.ConfigurePopupWindow(host);
+                DesktopPlatform.ConfigurePopupWindow(host);
             }
             content.Focus();
         };

@@ -303,7 +303,7 @@ internal sealed partial class PadWindow
         var target = Data.Stack.Concat(Data.Slots).Where(n => n.ModeCache == NoteMode.Clipboard).MaxBy(n => n.Modified);
         if (target is null || Clipboard is not { } clipboard) return;
         // Password managers mark secrets as not-for-history; never capture those.
-        if (Native.ClipboardIsPrivate()) return;
+        if (DesktopPlatform.ClipboardIsPrivate()) return;
         string? text;
         try { text = await clipboard.TryGetTextAsync(); } catch { return; }
         if (_clipboardPolicy.CheckText(text) != ClipboardCapturePolicy.TextCheck.Eligible) return;
@@ -319,7 +319,7 @@ internal sealed partial class PadWindow
 
     private void OnTimerFinished(Timers.Entry entry)
     {
-        Native.Chime();
+        DesktopPlatform.Chime();
         var name = entry.Label.Length > 0 ? entry.Label : Timers.Format(entry.Duration) + " timer";
         ShowQuietly();
         Toast($"⏰ {name} is done");
@@ -339,7 +339,7 @@ internal sealed partial class PadWindow
         _snipTarget = CaptureOcrTarget(pad);
         _awaitingSnip = DateTime.Now; _snipPane = pad;
         Toast("Snip an area · the text lands here");
-        Native.StartScreenSnip();
+        DesktopPlatform.StartScreenSnip();
         return Task.CompletedTask;
     }
 

@@ -305,7 +305,7 @@ internal sealed partial class PadWindow
         var root = (Control)_scaler.Child!;
         var h = root.Bounds.Height;
         var window = new PixelRect(Position, PixelSize.FromSize(Bounds.Size, RenderScaling));
-        var inside = window.Contains(Native.CursorPosition());
+        var inside = window.Contains(DesktopPlatform.CursorPosition());
         // Over the drag area Windows stops sending moves, so "inside but no fresh position" means the top bar.
         var y = inside ? (double.IsNaN(_pointerY) ? 0 : _pointerY) : double.NaN;
         if (!(y < ChromeTokens.TopRevealZone) && !_top.IsPointerOver) SlideBar(top: true, show: false);

@@ -20,6 +20,10 @@ internal static class SelfTest
         foreach (var line in layerCheck.Lines) Console.WriteLine(line);
         foreach (var failure in layerCheck.Failures) Check(false, failure);
 
+        var desktopPlatformSurfacePass = DesktopPlatformSurfaceChecks(out var desktopPlatformSurfaceReport);
+        Console.WriteLine(desktopPlatformSurfacePass ? "PLATFORM DesktopPlatform surface" : "PLATFORM DesktopPlatform surface FAIL " + desktopPlatformSurfaceReport);
+        Check(desktopPlatformSurfacePass, "platform DesktopPlatform surface: " + desktopPlatformSurfaceReport);
+
         var staticExposurePass = StaticServiceExposureChecks(out var staticExposureReport);
         Console.WriteLine(staticExposurePass ? "STATIC service exposure " + staticExposureReport : "STATIC service exposure FAIL " + staticExposureReport);
         Check(staticExposurePass, "static service exposure: " + staticExposureReport);
@@ -552,7 +556,7 @@ internal static class SelfTest
         new("MathNotes", "PadWindow", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(PadWindow)),
         new("MathNotes", "PadView", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(Editor.PadView)),
         new("MathNotes", "Program", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(Program)),
-        new("MathNotes", "Native", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(Native)),
+        new("MathNotes", "DesktopPlatform", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(DesktopPlatform)),
         new("MathNotes", "Window", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(Avalonia.Controls.Window)),
         new("MathNotes", "Control", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(Avalonia.Controls.Control)),
         new("MathNotes", "Dispatcher", ExactFrom: typeof(Editor.MathNotes), ExactTo: typeof(Avalonia.Threading.Dispatcher)),
@@ -567,7 +571,7 @@ internal static class SelfTest
         new("ListEditing", "PadWindow", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(PadWindow)),
         new("ListEditing", "PadView", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Editor.PadView)),
         new("ListEditing", "Program", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Program)),
-        new("ListEditing", "Native", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Native)),
+        new("ListEditing", "DesktopPlatform", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(DesktopPlatform)),
         new("ListEditing", "Window", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Avalonia.Controls.Window)),
         new("ListEditing", "Control", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Avalonia.Controls.Control)),
         new("ListEditing", "Dispatcher", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Avalonia.Threading.Dispatcher)),
@@ -583,7 +587,7 @@ internal static class SelfTest
         new("NoteAnalysis", "Theme", ExactFrom: typeof(Editor.NoteAnalysis)),
         new("NoteAnalysis", "PadWindow", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(PadWindow)),
         new("NoteAnalysis", "Program", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(Program)),
-        new("NoteAnalysis", "Native", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(Native)),
+        new("NoteAnalysis", "DesktopPlatform", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(DesktopPlatform)),
         new("NoteAnalysis", "Window", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(Avalonia.Controls.Window)),
         new("NoteAnalysis", "Control", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(Avalonia.Controls.Control)),
         new("NoteAnalysis", "Dispatcher", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(Avalonia.Threading.Dispatcher)),
@@ -595,7 +599,7 @@ internal static class SelfTest
         new("ClipboardCapturePolicy", "PadWindow", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(PadWindow)),
         new("ClipboardCapturePolicy", "PadView", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Editor.PadView)),
         new("ClipboardCapturePolicy", "Program", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Program)),
-        new("ClipboardCapturePolicy", "Native", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Native)),
+        new("ClipboardCapturePolicy", "DesktopPlatform", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(DesktopPlatform)),
         new("ClipboardCapturePolicy", "Window", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Avalonia.Controls.Window)),
         new("ClipboardCapturePolicy", "Control", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Avalonia.Controls.Control)),
         new("ClipboardCapturePolicy", "Dispatcher", ExactFrom: typeof(Editor.ClipboardCapturePolicy), ExactTo: typeof(Avalonia.Threading.Dispatcher)),
@@ -633,6 +637,45 @@ internal static class SelfTest
         new(typeof(SettingsWindow), ["ThemePage", "AccentDots", "UiPage", "EditorPage", "FeelPage", "TuningRows", "SystemPage"]),
         new(typeof(SearchOverlay), ["ToggleGrid"]),
     ];
+
+    private static bool DesktopPlatformSurfaceChecks(out string report)
+    {
+        var failures = new List<string>();
+        try
+        {
+            var platform = typeof(DesktopPlatform);
+            if (!platform.IsNotPublic || !platform.IsAbstract || !platform.IsSealed)
+                failures.Add("DesktopPlatform is not an internal static class");
+
+            (string Name, Type ReturnType, Type[] ParameterTypes)[] expected =
+            [
+                ("CursorPosition", typeof(Avalonia.PixelPoint), Type.EmptyTypes),
+                ("ListenClipboard", typeof(IDisposable), [typeof(Avalonia.Controls.Window), typeof(Action)]),
+                ("ClipboardIsPrivate", typeof(bool), Type.EmptyTypes),
+                ("Chime", typeof(void), Type.EmptyTypes),
+                ("TrimWorkingSet", typeof(void), Type.EmptyTypes),
+                ("ConfigurePopupWindow", typeof(void), [typeof(Avalonia.Controls.TopLevel)]),
+                ("Flash", typeof(void), [typeof(Avalonia.Controls.Window)]),
+                ("OpenUrl", typeof(void), [typeof(string)]),
+                ("StartScreenSnip", typeof(void), Type.EmptyTypes),
+            ];
+            const BindingFlags declaredStatic = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly;
+            foreach (var member in expected)
+            {
+                var method = platform.GetMethod(member.Name, declaredStatic, binder: null, types: member.ParameterTypes, modifiers: null);
+                if (method is null || !method.IsStatic || method.ReturnType != member.ReturnType)
+                    failures.Add("missing or mismatched " + member.Name);
+            }
+
+            var native = platform.GetNestedType("Native", BindingFlags.NonPublic);
+            if (native is null) failures.Add("nested Native is missing");
+            else if (!native.IsNestedPrivate) failures.Add("nested Native is not private");
+        }
+        catch (Exception ex) { failures.Add(ex.GetType().Name); }
+
+        report = failures.Count == 0 ? "passed" : string.Join(", ", failures);
+        return failures.Count == 0;
+    }
 
     private static (List<string> Lines, List<string> Failures) CheckLayers()
     {

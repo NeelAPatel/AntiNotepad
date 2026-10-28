@@ -70,9 +70,12 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   tokens outside Program.cs 0. A43 done. Reorg A39-A43b all merged; only A44-platform-seam (plan only) and
   `feat/A38-mvvm-audit` (audit doc) hold commits not in dev.
 - A44-platform-seam re-audit done (6c7f5e6 on `reorg/A44-platform-seam`): split A44a-native-facade -> A44b-interop-guards
-  -> A44c-shell-folder (optional), facade `DesktopPlatform`, dev metrics move skipped. User (2026-10-27): "start 44a, no
-  computer use". A44a-native-facade dispatched on `reorg/A44a-native-facade` (Sonnet manager, Codex luna xhigh); hand test
-  by the user only (Computer Use paused for now; may resume later).
+  -> A44c-shell-folder (optional), facade `DesktopPlatform`, dev metrics move skipped. A44a-native-facade implemented on
+  `reorg/A44a-native-facade` (01c01c6): build 0 warnings/errors, `SELFTEST PASS` with 89 LAYERS lines; compile and layer
+  guard probes passed. Report: `.coord/reports/A44a-native-facade.md`. Gated by the manager (own build 0 warnings, SELFTEST PASS, `Native.` outside Platform 0). User hand test 2026-10-28: 9 of 10 passed; #10 link click failed but is not from A44a (only the call
+  name changed; short URLs are never clickable) -> A54-link-hover-click. Merged into dev (67b5031): 0 warnings, SELFTEST
+  PASS, 89 LAYERS lines + `PLATFORM DesktopPlatform surface`, `Native.` outside Platform 0. Next: A44b-interop-guards on
+  the user's go.
 - A40-settings-change-event merged into dev (565a1e5, user-approved live 2026-10-26): SettingsService + one Changed event,
   SettingsWindow on ISettingsHost, all writers migrated; guards now 12 LAYERS lines + `SETTINGS Changed`; 0 warnings, SELFTEST PASS.
   Fix: SearchGrid/SplitSlot/Split now saved. Folding/InlineMath apply only on note bind/analysis (pre-existing; backlog).
@@ -86,6 +89,12 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   for antinotepad"): publishing, GitHub repo, license, signing, version label, installer.
 
 ## Backlog (someday)
+- A44a hand test (user, 2026-10-28), proposed backlog IDs (parent may renumber):
+  - A54-link-hover-click (open, blocks A44a sign-off decision): Ctrl+click on a link does nothing and links show no hand cursor. Only shortened URLs (over 34 chars, caret off the line) become `LinkGenerator` elements with Hand and Pressed (`Editor/Elements.cs`); short URLs are plain colored text. Not changed by A44a (its diff is only the OpenUrl name); confirm on the dev baseline.
+  - A55-native-timer-notification: a native Windows popup notification when a timer ends.
+  - A56-chime-picker (stretch): chime picker, native sound plus two more.
+  - A57-split-view-clip (after current tasks): in split view, scrolling text overlaps across the divider; the divider should crop the visual of each pane.
+  - A58-split-divider-height (after current tasks): the split divider does not reach the bottom edge.
 - Settings window runs about 90 threads (memory is stable, freed 5 of 5 cycles).
 - A45-dev-build-badge (user wish, 2026-10-26): the dev badge shows which task/build is live (e.g. "dev · A39"), so the user
   knows exactly what is being checked. Lab-first.

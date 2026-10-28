@@ -199,7 +199,7 @@ internal sealed partial class PadWindow
             GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
             GC.WaitForPendingFinalizers();
             GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
-            Native.TrimWorkingSet();
+            DesktopPlatform.TrimWorkingSet();
             if (_isDev)
             {
                 using var self = System.Diagnostics.Process.GetCurrentProcess();
