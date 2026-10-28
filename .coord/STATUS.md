@@ -74,8 +74,8 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `reorg/A44a-native-facade` (01c01c6): build 0 warnings/errors, `SELFTEST PASS` with 89 LAYERS lines; compile and layer
   guard probes passed. Report: `.coord/reports/A44a-native-facade.md`. Gated by the manager (own build 0 warnings, SELFTEST PASS, `Native.` outside Platform 0). User hand test 2026-10-28: 9 of 10 passed; #10 link click failed but is not from A44a (only the call
   name changed; short URLs are never clickable) -> A54-link-hover-click. Merged into dev (67b5031): 0 warnings, SELFTEST
-  PASS, 89 LAYERS lines + `PLATFORM DesktopPlatform surface`, `Native.` outside Platform 0. Next: A44b-interop-guards on
-  the user's go.
+  PASS, 89 LAYERS lines + `PLATFORM DesktopPlatform surface`, `Native.` outside Platform 0. A44b-interop-guards dispatched
+  2026-10-28 (user: "Start A44b") on `reorg/A44b-interop-guards` (Sonnet manager, Codex luna xhigh, no computer use).
 - A40-settings-change-event merged into dev (565a1e5, user-approved live 2026-10-26): SettingsService + one Changed event,
   SettingsWindow on ISettingsHost, all writers migrated; guards now 12 LAYERS lines + `SETTINGS Changed`; 0 warnings, SELFTEST PASS.
   Fix: SearchGrid/SplitSlot/Split now saved. Folding/InlineMath apply only on note bind/analysis (pre-existing; backlog).
