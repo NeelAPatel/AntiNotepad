@@ -1,6 +1,6 @@
 # STATUS
 
-Updated: 2026-10-28
+Updated: 2026-10-29
 Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 
 ## Working rules right now
@@ -125,9 +125,9 @@ Held until the user brings them back: "Open (needs the user)" below and the A44b
 ### Priority 1: re-evaluate the project
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
-| Decision: approve goals and targets | Four goals (one owner per job, less duplicated code, one central design system, look and feel identical unless you approve a change in a lab) and the success targets in the P1 plan, section 3 (reworded 2026-10-29: tokens keep today's values) | - | - | needs you |
-| A59-design-ownership-audit | Read-only Codex audit: confirm large files, draft the ownership map, sweep duplication, catalog every design value with file:line. No code | Medium | Medium | proposed |
-| Decision: pick the design-system items and order | From the A59-design-ownership-audit report. P1 plan decisions (user, 2026-10-28): 4 spacing = count may not grow, watched closely; 5 no Calculator/PadWindow splits for now; 6 A46-motion-timings folds into A64-design-unify-lab; 7 exact file paths for now; 8 two release markers. Open: 1 goals wording, 2 order, 3 visible changes | - | - | needs you |
+| Decision: approve goals and targets | Four goals (one owner per job, less duplicated code, one central design system, look and feel identical unless you approve a change in a lab) and the success targets in the P1 plan, section 3 (reworded 2026-10-29: tokens keep today's values). Approved by the user 2026-10-29 | - | - | done |
+| A59-design-ownership-audit | Read-only Codex audit: confirm large files, draft the ownership map, sweep duplication, catalog every design value with file:line. No code. Runs alongside the Bugs block (decision 2A) | Medium | Medium | implementing |
+| Decision: pick the design-system items and order | From the A59-design-ownership-audit report. P1 plan decisions (user, 2026-10-28): 4 spacing = count may not grow, watched closely; 5 no Calculator/PadWindow splits for now; 6 A46-motion-timings folds into A64-design-unify-lab; 7 exact file paths for now; 8 two release markers; 1 goals approved, 2A bugs first with A59-design-ownership-audit alongside, 3 visible changes in scope (lab-first) with A75-design-system-reference before the lab (2026-10-29). Left: which items run, after the A59 report | - | - | planned |
 
 ### Priority 2: pending work
 | Item | Scope | Tier | Effort | State |
@@ -150,6 +150,7 @@ Held until the user brings them back: "Open (needs the user)" below and the A44b
 | A62-settings-tokens | Settings window uses the tokens, plus page, card and row layout tokens; looks identical | Medium | Medium | proposed |
 | A63-motion-tokens | One named duration per animation role at today's values; behavior timers get named constants; timing identical | Medium | Small | proposed |
 | Release marker | dev -> main after the look-identical work (proposed second marker), on your go | - | - | proposed |
+| A75-design-system-reference | Claude Design System artifact built from today's real token values, plus a Design canvas comparing proposed radius, type and shadow options with today's. No code; final picks happen in A64-design-unify-lab | Low | Small | proposed |
 | A64-design-unify-lab | Lab build only: today's look next to a proposed radius scale, type ramp, shadow tiers and Windows 11 motion timings (absorbs A46-motion-timings); you pick values | Medium | Medium | proposed |
 | A65a-radius-scale | Apply the corner-radius scale you picked in A64-design-unify-lab; visible change | Medium | Small | proposed |
 | A65b-type-ramp | Apply the font-size ramp you picked in A64-design-unify-lab; visible change | Medium | Small | proposed |

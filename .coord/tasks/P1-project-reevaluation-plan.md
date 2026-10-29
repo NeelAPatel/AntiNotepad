@@ -139,7 +139,13 @@ Also adopted: no parallel Claude and Codex audits on the same question; one STAT
 
 Its open question for the user: should the gate's scope check accept whole folders in a brief's file list? (Decision 7 below.)
 
-## 7. Open decisions for the user
+## 7. Decisions (user, 2026-10-28/29)
+1 goals and reworded targets approved; 2A bugs first, A59-design-ownership-audit alongside; 3 visible changes in scope,
+lab-first, with A75-design-system-reference (Claude Design System artifact and comparison canvas) before A64; 4 spacing
+count may not grow; 5 no splits for now; 6 A46 folded into A64; 7 exact file paths for now, gate re-checked at releases
+(C18-tag-scheme); 8 two release markers plus a tag scheme (C18-tag-scheme).
+
+Original questions:
 1. Goals and success targets in sections 1.1 and 3: OK as written?
 2. Order: P1 items after the Bugs block (proposed) or before it?
 3. Visual unification (A64/A65): in scope now, or keep the design system pixel-identical only (stop after A63)?
