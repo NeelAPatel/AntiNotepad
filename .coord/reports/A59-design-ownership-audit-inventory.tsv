@@ -1,0 +1,643 @@
+category	file	line	value	context (short code excerpt)	proposed token
+spacing/size	product/AntiNotepad/Editor/ChevronGutter.cs	129	new Rect(0, top, GutterWidth, line.TextLines[0].Height)	yield return (folding, new Rect(0, top, GutterWidth, line.TextLines[0].Height));	Size.Editor.ChevronGutter.Line129
+stroke style	product/AntiNotepad/Editor/ChevronGutter.cs	44	Cap.Round; Join.Round	ImmutablePen(... PenLineCap.Round, PenLineJoin.Round, 10)	Stroke.Chevron.Round
+font style	product/AntiNotepad/Editor/Colorizers.cs	103	Italic	inline comment text style	Typography.Style.Italic
+color construction	product/AntiNotepad/Editor/Colorizers.cs	112	six RGB triples 0xC6/0x3A/0x33; 0xC4/0x66/0x14; 0x9C/0x7C/0x0C; 0x2F/0x8A/0x4A; 0x2A/0x6C/0xB8; 0x80/0x4C/0xB8	RainbowLight is a six-color hard-coded heading palette	Paint.HeadingRainbowLight
+color construction	product/AntiNotepad/Editor/Colorizers.cs	113	six RGB triples 0xF0/0x7A/0x70; 0xF0/0xA0/0x5A; 0xE6/0xCC/0x60; 0x7C/0xCF/0x8C; 0x76/0xB0/0xF0; 0xC2/0x96/0xF0	RainbowDark is a six-color hard-coded heading palette	Paint.HeadingRainbowDark
+font style	product/AntiNotepad/Editor/Colorizers.cs	154	Italic	Italic typeface used for highlighted spans	Typography.Style.Italic
+font style	product/AntiNotepad/Editor/Colorizers.cs	206	Italic	Italic typeface for detected source comments	Typography.Style.Italic
+font weight	product/AntiNotepad/Editor/Colorizers.cs	48	SemiBold	Paint(o, o + Math.Min(pad.ModeKeywordLength, line.Length), p.Keyword, FontWeight.SemiBold);	Typography.Weight.SemiBold
+font style	product/AntiNotepad/Editor/Colorizers.cs	60	Italic	comment text style	Typography.Style.Italic
+font style	product/AntiNotepad/Editor/Colorizers.cs	61	Italic	blockquote text style	Typography.Style.Italic
+font weight	product/AntiNotepad/Editor/Colorizers.cs	70	Bold	1 => (1.32, FontWeight.Bold),	Typography.Weight.Bold
+font weight	product/AntiNotepad/Editor/Colorizers.cs	71	Bold	2 => (1.16, FontWeight.Bold),	Typography.Weight.Bold
+font weight	product/AntiNotepad/Editor/Colorizers.cs	72	SemiBold	3 => (1.06, FontWeight.SemiBold),	Typography.Weight.SemiBold
+font weight	product/AntiNotepad/Editor/Colorizers.cs	73	SemiBold	_ => (1.0, FontWeight.SemiBold),	Typography.Weight.SemiBold
+font weight	product/AntiNotepad/Editor/Colorizers.cs	91	Bold	foreach (Match m in Bold.Matches(text)) { Markers(o + m.Index, m.Length, 2); Weight(o + m.Index + 2, o + m.Index + m.Length - 2, FontWeight.Bold); }	Typography.Weight.Bold
+spacing/size	product/AntiNotepad/Editor/Completion.cs	106	10	Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10,	Size.Editor.Completion.Line106
+font weight	product/AntiNotepad/Editor/Completion.cs	109	SemiBold	new TextBlock { Text = word, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = 70 },	Typography.Weight.SemiBold
+spacing/size	product/AntiNotepad/Editor/Completion.cs	109	70	new TextBlock { Text = word, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = 70 },	Size.Editor.Completion.Line109
+font size	product/AntiNotepad/Editor/Completion.cs	110	12	new TextBlock { Text = name, Foreground = new SolidColorBrush(pad.Palette.Muted), FontSize = 12, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center },	Typography.Size.Editor.Completion.Line110
+spacing/size	product/AntiNotepad/Editor/Completion.cs	133	10	Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10,	Size.Editor.Completion.Line133
+font weight	product/AntiNotepad/Editor/Completion.cs	136	SemiBold	new TextBlock { Text = text, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = 86 },	Typography.Weight.SemiBold
+spacing/size	product/AntiNotepad/Editor/Completion.cs	136	86	new TextBlock { Text = text, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = 86 },	Size.Editor.Completion.Line136
+font size	product/AntiNotepad/Editor/Completion.cs	137	12	new TextBlock { Text = summary, Foreground = new SolidColorBrush(pad.Palette.Muted), FontSize = 12, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center },	Typography.Size.Editor.Completion.Line137
+spacing/size	product/AntiNotepad/Editor/Completion.cs	89	300	MinWidth = 300, Width = 340,	Size.Editor.Completion.Line89
+spacing/size	product/AntiNotepad/Editor/Completion.cs	89	340	MinWidth = 300, Width = 340,	Size.Editor.Completion.Line89
+font weight	product/AntiNotepad/Editor/Elements.cs	33	Normal	public static TextLine Prepare(ITextRunConstructionContext context, string text, IBrush brush, double? size = null, FontWeight weight = FontWeight.Normal, TextDecorationCollection? decora...	Typography.Weight.Normal
+font style	product/AntiNotepad/Editor/Elements.cs	36	Normal	new Typeface(..., FontStyle.Normal, weight)	Typography.Style.Normal
+physics constants	product/AntiNotepad/Editor/Motion.cs	102	boost base 6 clicks/s and rate span 24; output clamp 0 to 1	1 + boost * Math.Clamp((rate - 6) / 24, 0, 1)	SmoothScroll.RateBoostCurve
+physics constants	product/AntiNotepad/Editor/Motion.cs	107	rate boost multipliers 2.5 and 1.5	Boost(ClickRate(), 2.5 * s.ScrollBoost); Boost(rate, 1.5 * s.ScrollBoost)	SmoothScroll.RateBoostMax
+physics constants	product/AntiNotepad/Editor/Motion.cs	112	40 px slow click at 24 px line height	_target - delta * Line * 40 / 24 * s.ScrollDistance * gain	SmoothScroll.RateDistance
+physics constants	product/AntiNotepad/Editor/Motion.cs	113	omega 2.4; gap scale 0.9; clamp 45 to 160 ms; divide by 1000	_omega = 2.4 / (Math.Clamp(_gap * 0.9, 45, 160) / 1000)	SmoothScroll.RateSpring
+physics constants	product/AntiNotepad/Editor/Motion.cs	125	60 clicks/s over 24 px line height	rate * abs(delta) * Line * 60 / 24 * ScrollDistance * gain	SmoothScroll.WheelGoal
+physics constants	product/AntiNotepad/Editor/Motion.cs	126	hold factor 1.6; clamp hold 80 to 350 ms	Math.Clamp(_gap * 1.6, 80, 350)	SmoothScroll.WheelHold
+behavior timers	product/AntiNotepad/Editor/Motion.cs	152	dt clamp 0 to 0.05 seconds; fallback 1/60 second	Math.Clamp((time-last).TotalSeconds,0,0.05) else 1/60	SmoothScroll.FrameStep
+physics constants	product/AntiNotepad/Editor/Motion.cs	162	0.5 px target tolerance	Math.Abs(gap) < 0.5	SmoothScroll.TargetTolerance
+physics constants	product/AntiNotepad/Editor/Motion.cs	164	0.28 exponential approach; about 140 ms per notch	SetOffset(_editor, now + gap * 0.28)	SmoothScroll.GlideApproach
+physics constants	product/AntiNotepad/Editor/Motion.cs	171	2 px external-scroll interruption threshold	Math.Abs(_editor.VerticalOffset - _position) > 2	SmoothScroll.InterruptDistance
+physics constants	product/AntiNotepad/Editor/Motion.cs	180	15 px/s coast cutoff	Math.Abs(_velocity) < 15	SmoothScroll.CoastStopSpeed
+physics constants	product/AntiNotepad/Editor/Motion.cs	186	0.004 s integration substep	dt / 0.004	SmoothScroll.IntegrationStep
+physics constants	product/AntiNotepad/Editor/Motion.cs	190	0.3 px position and 4 px/s velocity settle thresholds	abs(target-position)<0.3 and abs(velocity)<4	SmoothScroll.SpringSettle
+physics constants	product/AntiNotepad/Editor/Motion.cs	196	damping coefficients 25 and 14	Math.Exp(-25*dt); Math.Exp(-14*dt)	SmoothScroll.Damping
+physics constants	product/AntiNotepad/Editor/Motion.cs	200	5 px/s wheel stop cutoff	Math.Abs(_velocity) < 5	SmoothScroll.WheelStopSpeed
+behavior timers	product/AntiNotepad/Editor/Motion.cs	217	530 ms	DispatcherTimer _blink interval	SmoothCaret.BlinkInterval
+behavior timers	product/AntiNotepad/Editor/Motion.cs	235	600 ms	Caret remains solid for 600 ms after movement	SmoothCaret.IdleBeforeBlink
+physics constants	product/AntiNotepad/Editor/Motion.cs	24	50 px per wheel unit	private const double PxPerUnit = 50	SmoothScroll.TouchpadPixelsPerUnit
+physics constants	product/AntiNotepad/Editor/Motion.cs	25	700 px/s impulse per notch	private const double Impulse = 700	SmoothScroll.FreeImpulse
+physics constants	product/AntiNotepad/Editor/Motion.cs	26	9000 px/s cap	private const double MaxSpeed = 9000	SmoothScroll.MaxSpeed
+behavior timers	product/AntiNotepad/Editor/Motion.cs	280	80 ms	Caret glide elapsed time divided by 80 ms	SmoothCaret.GlideDuration
+behavior timers	product/AntiNotepad/Editor/Motion.cs	291	90 ms	Continue caret animation while last movement is under 90 ms old	SmoothCaret.GlideIdleWindow
+brush alpha	product/AntiNotepad/Editor/Motion.cs	314	block ? 0.45 : 1	dc.DrawRectangle(new SolidColorBrush(_pad.Palette.Caret, block ? 0.45 : 1), null, rect, block ? 2 : 1, block ? 2 : 1);	Paint.Alpha.Editor.Motion.Line314
+radius	product/AntiNotepad/Editor/Motion.cs	314	block ? 2 : 1	DrawRectangle caret rounded rect radius follows caret style	Radius.CaretBlock
+spacing/size	product/AntiNotepad/Editor/Motion.cs	314	dc.DrawRectangle(new SolidColorBrush(_pad.Palette.Caret, block ? 0.45 : 1), null, rect, block ? 2 : 1, block ? 2 : 1)	dc.DrawRectangle(new SolidColorBrush(_pad.Palette.Caret, block ? 0.45 : 1), null, rect, block ? 2 : 1, block ? 2 : 1);	Size.Editor.Motion.Line314
+physics constants	product/AntiNotepad/Editor/Motion.cs	49	0.001 input deadzone	Math.Abs(e.Delta.Y) < 0.001	SmoothScroll.InputDeadzone
+physics constants	product/AntiNotepad/Editor/Motion.cs	57	0.01 fractional-wheel detection	Math.Abs(delta - Math.Round(delta)) > 0.01	SmoothScroll.FractionalWheelEpsilon
+physics constants	product/AntiNotepad/Editor/Motion.cs	61	3 lines per wheel notch	touchpad ? PxPerUnit : Line * 3	SmoothScroll.LinesPerNotch
+physics constants	product/AntiNotepad/Editor/Motion.cs	71	clamp lines per notch from 1 to 10	Math.Clamp(_settings().LinesPerNotch, 1, 10)	SmoothScroll.LineStepClamp
+physics constants	product/AntiNotepad/Editor/Motion.cs	97	gap smoothing factors 0.4 and 0.6	_gap = gap >= 400 ... : _gap * 0.4 + gap * 0.6	SmoothScroll.ClickRateSmoothing
+thickness	product/AntiNotepad/Editor/PadView.cs	121	Thickness(37, 7, 30, 0)	IsHitTestVisible = false, Margin = new Thickness(37, 7, 30, 0), TextWrapping = TextWrapping.Wrap,	Size.Thickness.Editor.PadView.Line121
+font family	product/AntiNotepad/Editor/PadView.cs	180	Settings.Font, Cascadia Mono, Consolas, monospace	Editor.FontFamily = new FontFamily($"{settings.Font}, Cascadia Mono, Consolas, monospace");	Typography.Font.EditorFallback
+radius	product/AntiNotepad/Editor/PadView.cs	186	3	Editor.TextArea.SelectionCornerRadius = 3;	Radius.Editor.PadView.Line186
+brush alpha	product/AntiNotepad/Editor/PadView.cs	190	.78	_hint.Foreground = _loadHintError ? new SolidColorBrush(palette.Error, .78) : new SolidColorBrush(palette.Faint);	Paint.Alpha.Editor.PadView.Line190
+brush alpha	product/AntiNotepad/Editor/PadView.cs	282	.78	_hint.Foreground = _loadHintError ? new SolidColorBrush(Palette.Error, .78) : new SolidColorBrush(Palette.Faint);	Paint.Alpha.Editor.PadView.Line282
+color construction	product/AntiNotepad/Editor/PadView.cs	381	Color.FromArgb(alpha, 0, 0, 0)	mask.GradientStops.Add(new GradientStop(Color.FromArgb(alpha, 0, 0, 0), y / h));	Paint.Color.Editor.PadView.Line381
+tween duration	product/AntiNotepad/Editor/PadView.cs	446	190 ms	_arrive = Anim.Run(this, 190, t => ...)	Motion.Duration.Note.Arrive
+opacity	product/AntiNotepad/Editor/PadView.cs	449	0.25 + 0.75 * t	Opacity = 0.25 + 0.75 * t;	Paint.Opacity.Editor.PadView.Line449
+opacity	product/AntiNotepad/Editor/PadView.cs	450	1	}, () => { RenderTransform = null; Opacity = 1; });	Paint.Opacity.Editor.PadView.Line450
+behavior timers	product/AntiNotepad/Editor/PadView.cs	491	TimeSpan.FromMilliseconds(140)	private readonly DispatcherTimer _analyse = new() { Interval = TimeSpan.FromMilliseconds(140) };	Behavior.Timer.Editor.PadView.Line491
+thickness	product/AntiNotepad/Editor/PadView.cs	831	Thickness(_gutter is not null ? left - 16 : left, 4, right, bottom)	Editor.Margin = new Thickness(_gutter is not null ? left - 16 : left, 4, right, bottom);	Size.Thickness.Editor.PadView.Line831
+thickness	product/AntiNotepad/Editor/PadView.cs	834	Thickness(left + 1, 7, right, 0)	_hint.Margin = new Thickness(left + 1, 7, right, 0);	Size.Thickness.Editor.PadView.Line834
+thickness	product/AntiNotepad/Editor/PadView.cs	89	Thickness(0)	Padding = new Thickness(0),	Size.Thickness.Editor.PadView.Line89
+thickness	product/AntiNotepad/Editor/PadView.cs	91	Thickness(36, 4, 30, ChromeTokens.PagerStripHeight)	Margin = new Thickness(36, 4, 30, ChromeTokens.PagerStripHeight),	Size.Thickness.Editor.PadView.Line91
+spacing/size	product/AntiNotepad/Editor/Renderers.cs	112	new Point(0, 0)	if (h <= 0 || view.TranslatePoint(new Point(0, 0), this) is not { } origin) return;	Size.Editor.Renderers.Line112
+font family	product/AntiNotepad/Editor/Renderers.cs	183	font, Cascadia Mono, Consolas	new FontFamily(font + ", Cascadia Mono, Consolas")	Typography.Font.RendererFallback
+font style	product/AntiNotepad/Editor/Renderers.cs	183	Normal	new Typeface(..., FontStyle.Normal, FontWeight.SemiBold)	Typography.Style.Normal
+font weight	product/AntiNotepad/Editor/Renderers.cs	183	SemiBold	var typeface = new Typeface(new FontFamily(font + ", Cascadia Mono, Consolas"), FontStyle.Normal, FontWeight.SemiBold);	Typography.Weight.SemiBold
+stroke style	product/AntiNotepad/Editor/Renderers.cs	21	Cap.Flat	RenderPaint.Pen default parameter PenLineCap.Flat	Stroke.Default.Cap
+stroke style	product/AntiNotepad/Editor/Renderers.cs	213	Join.Round	RenderPaint.Pen(... join: PenLineJoin.Round)	Stroke.Join.Round
+stroke style	product/AntiNotepad/Editor/Renderers.cs	214	Cap.Round; Join.Round	RenderPaint.Pen(... PenLineCap.Round, PenLineJoin.Round)	Stroke.Round
+stroke style	product/AntiNotepad/Editor/Renderers.cs	22	Join.Miter	RenderPaint.Pen default parameter PenLineJoin.Miter	Stroke.Default.Join
+font size	product/AntiNotepad/Editor/Renderers.cs	252	0.93	Timer text scales from editor FontSize	Typography.Size.TimerScale
+spacing/size	product/AntiNotepad/Editor/Renderers.cs	292	new Rect(x - 7, y - 2, width + 14, ft.Height + 4)	var rect = new Rect(x - 7, y - 2, width + 14, ft.Height + 4);	Size.Editor.Renderers.Line292
+radius	product/AntiNotepad/Editor/Renderers.cs	293	7	DrawRectangle timer chip corners 7, 7	Radius.EditorTimerChip
+spacing/size	product/AntiNotepad/Editor/Renderers.cs	294	new Rect(x, y, ft.Height * 0.62, ft.Height)	if (icon is not null) DrawTimerIcon(dc, icon, new Rect(x, y, ft.Height * 0.62, ft.Height), c.Color, scale);	Size.Editor.Renderers.Line294
+radius	product/AntiNotepad/Editor/Renderers.cs	311	1	DrawRectangle timer icon bar corners 1, 1	Radius.EditorTimerIconBar
+radius	product/AntiNotepad/Editor/Renderers.cs	312	1	DrawRectangle timer icon bar corners 1, 1	Radius.EditorTimerIconBar
+font size	product/AntiNotepad/Editor/Renderers.cs	395	0.86	Checkbox geometry scales from editor FontSize	Typography.Size.CheckboxScale
+stroke style	product/AntiNotepad/Editor/Renderers.cs	401	Cap.Round; Join.Round	RenderPaint.Pen(... PenLineCap.Round, PenLineJoin.Round)	Stroke.Round
+spacing/size	product/AntiNotepad/Editor/Renderers.cs	416	new Rect(cx - size / 2, cy - size / 2 + 0.5, size, size)	var rect = new Rect(cx - size / 2, cy - size / 2 + 0.5, size, size);	Size.Editor.Renderers.Line416
+radius	product/AntiNotepad/Editor/Renderers.cs	417	size * 0.28	DrawRectangle checkbox outline radius scales with font size	Radius.EditorCheckbox
+radius	product/AntiNotepad/Editor/Renderers.cs	420	size * 0.28	DrawRectangle filled checkbox radius scales with font size	Radius.EditorCheckbox
+spacing/size	product/AntiNotepad/Editor/Renderers.cs	84	new Rect(0, origin.Y, Bounds.Width, view.Bounds.Height)	using var clip = dc.PushClip(new Rect(0, origin.Y, Bounds.Width, view.Bounds.Height));	Size.Editor.Renderers.Line84
+radius	product/AntiNotepad/Editor/Renderers.cs	99	9	DrawRectangle code panel corner radii 9, 9	Radius.EditorCodePanel
+brush alpha	product/AntiNotepad/Editor/Structure.cs	460	0.35	var faint = new Pen(new SolidColorBrush(p.Marker, 0.35), 1);	Paint.Alpha.Editor.Structure.Line460
+thickness	product/AntiNotepad/Editor/Structure.cs	460	1	var faint = new Pen(new SolidColorBrush(p.Marker, 0.35), 1);	Size.StrokeThickness
+brush alpha	product/AntiNotepad/Editor/Structure.cs	463	0.8	var strong = new Pen(new SolidColorBrush(p.Marker, 0.8), 1);	Paint.Alpha.Editor.Structure.Line463
+thickness	product/AntiNotepad/Editor/Structure.cs	463	1	var strong = new Pen(new SolidColorBrush(p.Marker, 0.8), 1);	Size.StrokeThickness
+settings default	product/AntiNotepad/Model/Store.cs	269	system	Theme selection default	SettingsDefaults.Theme
+settings default	product/AntiNotepad/Model/Store.cs	270	paper	Light palette default	SettingsDefaults.LightPalette
+settings default	product/AntiNotepad/Model/Store.cs	271	ink	Dark palette default	SettingsDefaults.DarkPalette
+settings default	product/AntiNotepad/Model/Store.cs	272	blank	Paper pattern default	SettingsDefaults.Paper
+settings default	product/AntiNotepad/Model/Store.cs	273	PaperStrength default 1	public int PaperStrength { get; set; } = 1;            // 0 subtle, 1 clear, 2 bold	SettingsDefaults.PaperStrength
+settings default	product/AntiNotepad/Model/Store.cs	274	acrylic	Material default	SettingsDefaults.Material
+opacity	product/AntiNotepad/Model/Store.cs	275	Tint default 0.7	public double Tint { get; set; } = 0.7;	SettingsDefault.Tint
+font size	product/AntiNotepad/Model/Store.cs	276	FontSize default 15	public double FontSize { get; set; } = 15;	SettingsDefault.FontSize
+spacing/size	product/AntiNotepad/Model/Store.cs	278	LineSpacing default 1.32	public double LineSpacing { get; set; } = 1.32;	Spacing.Settings.LineSpacing
+settings default	product/AntiNotepad/Model/Store.cs	279	column	Answer bubble placement default	SettingsDefaults.Bubbles
+spacing/size	product/AntiNotepad/Model/Store.cs	280	UiScale default 1	public double UiScale { get; set; } = 1;              // scales chrome and text together	SettingsDefault.UiScale
+font family	product/AntiNotepad/Model/Store.cs	281	Cascadia Mono	public string Font { get; set; } = "Cascadia Mono";	Typography.Font.EditorDefault
+behavior timers	product/AntiNotepad/Model/Store.cs	284	FreshNoteAfterMinutes default 30	public int FreshNoteAfterMinutes { get; set; } = 30;   // 0 = never	SettingsDefault.FreshNoteAfterMinutes
+settings default	product/AntiNotepad/Model/Store.cs	286	true	DimWhenPinned default	SettingsDefaults.DimWhenPinned
+settings default	product/AntiNotepad/Model/Store.cs	288	default	Paper tone default	SettingsDefaults.Tone
+settings default	product/AntiNotepad/Model/Store.cs	289	same	Split palette default	SettingsDefaults.SplitPalette
+settings default	product/AntiNotepad/Model/Store.cs	290	remember	Window placement default	SettingsDefaults.OpenAt
+settings default	product/AntiNotepad/Model/Store.cs	291	false	ReduceMotion uses CLR false default	SettingsDefaults.ReduceMotion
+settings default	product/AntiNotepad/Model/Store.cs	292	rate	Scroll feel default	SettingsDefaults.Scrolling
+physics constants	product/AntiNotepad/Model/Store.cs	294	LinesPerNotch default 3	public int LinesPerNotch { get; set; } = 3;           // lines	SmoothScroll.Default.LinesPerNotch
+physics constants	product/AntiNotepad/Model/Store.cs	295	ScrollDistance default 1	public double ScrollDistance { get; set; } = 1;       // free, rate, wheel: distance per click, x the picked default	SmoothScroll.Default.Distance
+physics constants	product/AntiNotepad/Model/Store.cs	296	ScrollBoost default 1	public double ScrollBoost { get; set; } = 1;          // rate, wheel: extra distance when spinning fast, x the picked default	SmoothScroll.Default.Boost
+physics constants	product/AntiNotepad/Model/Store.cs	297	FreeFriction default 6	public double FreeFriction { get; set; } = 6;         // free: how quickly a coast stops	SmoothScroll.Default.FreeFriction
+physics constants	product/AntiNotepad/Model/Store.cs	298	SwipeLength default 220	public double SwipeLength { get; set; } = 220;        // progress: px of input for a whole note	NoteSwipe.Default.Length
+physics constants	product/AntiNotepad/Model/Store.cs	299	SwipeFiresAt default 0.35	public double SwipeFiresAt { get; set; } = 0.35;      // progress: share of a note where it changes	NoteSwipe.Default.FiresAt
+settings default	product/AntiNotepad/Model/Store.cs	300	progress	Swipe feel default	SettingsDefaults.Swipe
+settings default	product/AntiNotepad/Model/Store.cs	301	fade	Chrome mode default	SettingsDefaults.Chrome
+behavior timers	product/AntiNotepad/Model/Store.cs	302	FadeAfterMs default 1600	public int FadeAfterMs { get; set; } = 1600;          // how long the controls stay after the mouse stops	SettingsDefault.FadeAfterMs
+settings default	product/AntiNotepad/Model/Store.cs	303	docked	Bars mode default	SettingsDefaults.Bars
+settings default	product/AntiNotepad/Model/Store.cs	304	true	EdgeFade default	SettingsDefaults.EdgeFade
+settings default	product/AntiNotepad/Model/Store.cs	305	true	MenuActionRow default	SettingsDefaults.MenuActionRow
+settings default	product/AntiNotepad/Model/Store.cs	306	false	MenuColorIcons uses CLR false default	SettingsDefaults.MenuColorIcons
+settings default	product/AntiNotepad/Model/Store.cs	307	bar	Caret style default	SettingsDefaults.CaretStyle
+settings default	product/AntiNotepad/Model/Store.cs	308	true	Caret blink default	SettingsDefaults.CaretBlink
+settings default	product/AntiNotepad/Model/Store.cs	309	true	Caret glide default	SettingsDefaults.CaretGlide
+settings default	product/AntiNotepad/Model/Store.cs	310	true	InlineMath default	SettingsDefaults.InlineMath
+settings default	product/AntiNotepad/Model/Store.cs	311	true	ShortenLinks default	SettingsDefaults.ShortenLinks
+settings default	product/AntiNotepad/Model/Store.cs	312	true	CleanMarkdown default	SettingsDefaults.CleanMarkdown
+settings default	product/AntiNotepad/Model/Store.cs	313	true	IndentGuides default	SettingsDefaults.IndentGuides
+settings default	product/AntiNotepad/Model/Store.cs	314	true	Folding default	SettingsDefaults.Folding
+spacing/size	product/AntiNotepad/Model/Store.cs	318	Width default 460	public double Width { get; set; } = 460;	SettingsDefault.Width
+spacing/size	product/AntiNotepad/Model/Store.cs	319	Height default 560	public double Height { get; set; } = 560;	SettingsDefault.Height
+behavior timers	product/AntiNotepad/Model/Store.cs	356	TimeSpan.FromMilliseconds(50)	private static readonly TimeSpan SaveCoalesceWindow = TimeSpan.FromMilliseconds(50);	Behavior.Timer.Model.Store.Line356
+behavior timers	product/AntiNotepad/Model/Timers.cs	25	TimeSpan.FromSeconds(3_599_999)	private static readonly TimeSpan MaxDuration = TimeSpan.FromSeconds(3_599_999);	Behavior.Timer.Model.Timers.Line25
+behavior timers	product/AntiNotepad/Model/Timers.cs	29	TimeSpan.FromMilliseconds(250)	private readonly DispatcherTimer _tick = new() { Interval = TimeSpan.FromMilliseconds(250) };	Behavior.Timer.Model.Timers.Line29
+easing	product/AntiNotepad/Motion/Anim.cs	32	3	public static double EaseOut(double t) => 1 - Math.Pow(1 - t, 3);	easing.Motion.Anim.Line32
+behavior timers	product/AntiNotepad/Platform/SingleInstance.cs	108	Thread.Sleep(10)	catch (FileNotFoundException) { Thread.Sleep(10); }	Behavior.Timer.Platform.SingleInstance.Line108
+behavior timers	product/AntiNotepad/Platform/SingleInstance.cs	109	Thread.Sleep(10)	catch (WaitHandleCannotBeOpenedException) { Thread.Sleep(10); }	Behavior.Timer.Platform.SingleInstance.Line109
+behavior timers	product/AntiNotepad/Platform/SingleInstance.cs	89	5000	while (timer.ElapsedMilliseconds < 5000)	Behavior.Timer.Platform.SingleInstance.Line89
+behavior timers	product/AntiNotepad/Platform/SingleInstance.cs	96	Thread.Sleep(10)	if (pid <= 0) { Thread.Sleep(10); continue; }	Behavior.Timer.Platform.SingleInstance.Line96
+opacity	product/AntiNotepad/Platform/TaskbarPresence.cs	147	0	Opacity = 0,	Paint.Opacity.Platform.TaskbarPresence.Line147
+behavior timers	product/AntiNotepad/Platform/TaskbarPresence.cs	15	TimeSpan.FromMilliseconds(500)	private static readonly TimeSpan ForegroundLossGracePeriod = TimeSpan.FromMilliseconds(500);	Behavior.Timer.Platform.TaskbarPresence.Line15
+behavior timers	product/AntiNotepad/Platform/TaskbarPresence.cs	16	TimeSpan.FromSeconds(1)	private static readonly TimeSpan PostHideFallbackPeriod = TimeSpan.FromSeconds(1);	Behavior.Timer.Platform.TaskbarPresence.Line16
+behavior timers	product/AntiNotepad/Platform/TaskbarPresence.cs	414	1000	private bool IsSnapshotStale() => !_clickSnapshotAvailable || Stopwatch.GetElapsedTime(_clickSnapshot.Timestamp).TotalMilliseconds > 1000;	Behavior.Timer.Platform.TaskbarPresence.Line414
+thickness	product/AntiNotepad/UI/HelpOverlay.cs	26	Thickness(10, 14, 10, 40)	Margin = new Thickness(10, 14, 10, 40);	Size.Thickness.UI.HelpOverlay.Line26
+thickness	product/AntiNotepad/UI/HelpOverlay.cs	28	Thickness(8, 0, 14, 12)	var panel = new StackPanel { Margin = new Thickness(8, 0, 14, 12) };	Size.Thickness.UI.HelpOverlay.Line28
+thickness	product/AntiNotepad/UI/HelpOverlay.cs	35	Thickness(8, 3)	var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), Margin = new Thickness(8, 3) };	Size.Thickness.UI.HelpOverlay.Line35
+brush alpha	product/AntiNotepad/UI/HelpOverlay.cs	38	p.Dark ? .1 : .06	Background = new SolidColorBrush(p.Ink, p.Dark ? .1 : .06), CornerRadius = new CornerRadius(5), Padding = new Thickness(7, 2), MinWidth = 150,	Paint.Alpha.UI.HelpOverlay.Line38
+radius	product/AntiNotepad/UI/HelpOverlay.cs	38	5	Background = new SolidColorBrush(p.Ink, p.Dark ? .1 : .06), CornerRadius = new CornerRadius(5), Padding = new Thickness(7, 2), MinWidth = 150,	Radius.UI.HelpOverlay.Line38
+spacing/size	product/AntiNotepad/UI/HelpOverlay.cs	38	150	Background = new SolidColorBrush(p.Ink, p.Dark ? .1 : .06), CornerRadius = new CornerRadius(5), Padding = new Thickness(7, 2), MinWidth = 150,	Size.UI.HelpOverlay.Line38
+thickness	product/AntiNotepad/UI/HelpOverlay.cs	38	Thickness(7, 2)	Background = new SolidColorBrush(p.Ink, p.Dark ? .1 : .06), CornerRadius = new CornerRadius(5), Padding = new Thickness(7, 2), MinWidth = 150,	Size.Thickness.UI.HelpOverlay.Line38
+font family	product/AntiNotepad/UI/HelpOverlay.cs	39	Cascadia Mono, Consolas	FontFamily = new FontFamily("Cascadia Mono, Consolas")	Typography.Font.HelpKeys
+font size	product/AntiNotepad/UI/HelpOverlay.cs	39	11.5	Child = new TextBlock { Text = keys, FontFamily = new FontFamily("Cascadia Mono, Consolas"), FontSize = 11.5, Foreground = new SolidColorBrush(p.Ink) }	Typography.Size.UI.HelpOverlay.Line39
+font size	product/AntiNotepad/UI/HelpOverlay.cs	41	12.5	var text = new TextBlock { Text = what, Foreground = new SolidColorBrush(p.Muted), FontSize = 12.5, Margin = new Thickness(12, 0, 0, 0), TextWrapping = TextWrapping.Wrap, VerticalAlignmen...	Typography.Size.UI.HelpOverlay.Line41
+thickness	product/AntiNotepad/UI/HelpOverlay.cs	41	Thickness(12, 0, 0, 0)	var text = new TextBlock { Text = what, Foreground = new SolidColorBrush(p.Muted), FontSize = 12.5, Margin = new Thickness(12, 0, 0, 0), TextWrapping = TextWrapping.Wrap, VerticalAlignmen...	Size.Thickness.UI.HelpOverlay.Line41
+radius	product/AntiNotepad/UI/Kit.cs	110	7	public static Button Plain(... double radius = 7)	Radius.PlainButtonDefault
+brush alpha	product/AntiNotepad/UI/Kit.cs	112	p.Dark ? 0.09 : 0.06	var hover = new SolidColorBrush(p.Ink, p.Dark ? 0.09 : 0.06);	Paint.Alpha.UI.Kit.Line112
+brush alpha	product/AntiNotepad/UI/Kit.cs	113	p.Dark ? 0.15 : 0.11	var press = new SolidColorBrush(p.Ink, p.Dark ? 0.15 : 0.11);	Paint.Alpha.UI.Kit.Line113
+thickness	product/AntiNotepad/UI/Kit.cs	114	Thickness(0)	var border = new Border { CornerRadius = new CornerRadius(radius), Background = Brushes.Transparent, Child = content, Padding = new Thickness(0) };	Size.Thickness.UI.Kit.Line114
+thickness	product/AntiNotepad/UI/Kit.cs	117	Thickness(0)	Content = border, Padding = new Thickness(0), Background = Brushes.Transparent, BorderThickness = new Thickness(0),	Size.Thickness.UI.Kit.Line117
+font size	product/AntiNotepad/UI/Kit.cs	129	13	double size = 13	Typography.Size.TextDefault
+font weight	product/AntiNotepad/UI/Kit.cs	129	Normal	public static TextBlock Text(string text, Color color, double size = 13, FontWeight weight = FontWeight.Normal) =>	Typography.Weight.Normal
+font weight	product/AntiNotepad/UI/Kit.cs	139	Normal	var text = Text(label, on ? p.Ink : p.Faint, 12.5, on ? FontWeight.SemiBold : FontWeight.Normal);	Typography.Weight.Normal
+font weight	product/AntiNotepad/UI/Kit.cs	139	SemiBold	var text = Text(label, on ? p.Ink : p.Faint, 12.5, on ? FontWeight.SemiBold : FontWeight.Normal);	Typography.Weight.SemiBold
+thickness	product/AntiNotepad/UI/Kit.cs	140	Thickness(10, 4)	text.Margin = new Thickness(10, 4);	Size.Thickness.UI.Kit.Line140
+radius	product/AntiNotepad/UI/Kit.cs	141	8	Kit.Plain(text, p, radius: 8)	Radius.TogglePill
+thickness	product/AntiNotepad/UI/Kit.cs	142	Thickness(0, 0, 4, 4)	button.Margin = new Thickness(0, 0, 4, 4);	Size.Thickness.UI.Kit.Line142
+brush alpha	product/AntiNotepad/UI/Kit.cs	145	p.Dark ? .22 : .18	b.Background = new SolidColorBrush(p.Accent, p.Dark ? .22 : .18);	Paint.Alpha.UI.Kit.Line145
+brush alpha	product/AntiNotepad/UI/Kit.cs	146	p.Dark ? .22 : .18	button.PointerExited += (_, _) => b.Background = new SolidColorBrush(p.Accent, p.Dark ? .22 : .18);	Paint.Alpha.UI.Kit.Line146
+thickness	product/AntiNotepad/UI/Kit.cs	159	Thickness(8, 0, 0, 0)	var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(8, 0, 0, 0) };	Size.Thickness.UI.Kit.Line159
+font weight	product/AntiNotepad/UI/Kit.cs	160	SemiBold	var text = Text(title, p.Ink, 18, FontWeight.SemiBold);	Typography.Weight.SemiBold
+font size	product/AntiNotepad/UI/Kit.cs	170	11	new TextBlock { Text = title.ToUpperInvariant(), Foreground = new SolidColorBrush(p.Faint), FontSize = 11, FontWeight = FontWeight.SemiBold, LetterSpacing = 0.8, Margin = new Thickness(8,...	Typography.Size.UI.Kit.Line170
+font weight	product/AntiNotepad/UI/Kit.cs	170	SemiBold	new TextBlock { Text = title.ToUpperInvariant(), Foreground = new SolidColorBrush(p.Faint), FontSize = 11, FontWeight = FontWeight.SemiBold, LetterSpacing = 0.8, Margin = new Thickness(8,...	Typography.Weight.SemiBold
+spacing/size	product/AntiNotepad/UI/Kit.cs	170	0.8	new TextBlock { Text = title.ToUpperInvariant(), Foreground = new SolidColorBrush(p.Faint), FontSize = 11, FontWeight = FontWeight.SemiBold, LetterSpacing = 0.8, Margin = new Thickness(8,...	Size.UI.Kit.Line170
+thickness	product/AntiNotepad/UI/Kit.cs	170	Thickness(8, 22, 0, 2)	new TextBlock { Text = title.ToUpperInvariant(), Foreground = new SolidColorBrush(p.Faint), FontSize = 11, FontWeight = FontWeight.SemiBold, LetterSpacing = 0.8, Margin = new Thickness(8,...	Size.Thickness.UI.Kit.Line170
+brush alpha	product/AntiNotepad/UI/Kit.cs	188	state == ":focus" ? .9 : .5	style.Setters.Add(new Avalonia.Styling.Setter(Border.BorderBrushProperty, new SolidColorBrush(state == ":focus" ? p.Accent : p.Faint, state == ":focus" ? .9 : .5)));	Paint.Alpha.UI.Kit.Line188
+thickness	product/AntiNotepad/UI/Kit.cs	189	Thickness(state == ":focus" ? 1.5 : 1)	style.Setters.Add(new Avalonia.Styling.Setter(Border.BorderThicknessProperty, new Thickness(state == ":focus" ? 1.5 : 1)));	Size.Thickness.UI.Kit.Line189
+font family	product/AntiNotepad/UI/Kit.cs	19	Segoe Fluent Icons, Segoe MDL2 Assets	public static readonly FontFamily Font = new("Segoe Fluent Icons, Segoe MDL2 Assets");	Typography.Font.GlyphLegacy
+opacity	product/AntiNotepad/UI/Kit.cs	205	.5	bar.Setters.Add(new Avalonia.Styling.Setter(Visual.OpacityProperty, .5));	Paint.Opacity.UI.Kit.Line205
+font family	product/AntiNotepad/UI/Kit.cs	21	Assets/Fonts#FluentSystemIcons-Regular via AppInfo.ResourceUri	public static readonly FontFamily Fluent = new($"{AppInfo.ResourceUri}Assets/Fonts#FluentSystemIcons-Regular");	Typography.Font.GlyphFluent
+font size	product/AntiNotepad/UI/Kit.cs	27	double size = 13	internal sealed class GlyphIcon(string glyph, Color color, double size = 13, double weight = 0.15, FontFamily? font = null) : Control	Typography.Size.Glyph
+font weight	product/AntiNotepad/UI/Kit.cs	27	0.15 faux-bold glyph stroke default	GlyphIcon(..., double weight = 0.15, ...)	Typography.Weight.GlyphStroke
+font weight	product/AntiNotepad/UI/Kit.cs	93	0	new GlyphIcon(glyph, ink, ChromeTokens.IconGlyphSize, 0)	Typography.Weight.GlyphNoFakeBold
+color construction	product/AntiNotepad/UI/Kit.cs	99	Color.FromArgb(110, ink.R, ink.G, ink.B)	Children = { new GlyphIcon(Glyph.PinFilled, Color.FromArgb(110, ink.R, ink.G, ink.B), ChromeTokens.IconGlyphSize, 0), icon },	Paint.Color.UI.Kit.Line99
+font weight	product/AntiNotepad/UI/Kit.cs	99	0	new GlyphIcon(Glyph.PinFilled, Color.FromArgb(...), ChromeTokens.IconGlyphSize, 0)	Typography.Weight.GlyphNoFakeBold
+spacing/size	product/AntiNotepad/UI/MotionPreview.cs	106	6	Spacing = 6;	Size.UI.MotionPreview.Line106
+thickness	product/AntiNotepad/UI/MotionPreview.cs	107	Thickness(0, 0, 0, 4)	Margin = new Thickness(0, 0, 0, 4);	Size.Thickness.UI.MotionPreview.Line107
+spacing/size	product/AntiNotepad/UI/MotionPreview.cs	110	220	_pad = new PadView(palette, settings, _timers, notesLocation) { Height = 220, ClipToBounds = true, Private = true };	Size.UI.MotionPreview.Line110
+radius	product/AntiNotepad/UI/MotionPreview.cs	111	10	_frame = new Border { Child = _pad, CornerRadius = new CornerRadius(10), ClipToBounds = true, BorderThickness = new Thickness(1) };	Radius.UI.MotionPreview.Line111
+thickness	product/AntiNotepad/UI/MotionPreview.cs	111	Thickness(1)	_frame = new Border { Child = _pad, CornerRadius = new CornerRadius(10), ClipToBounds = true, BorderThickness = new Thickness(1) };	Size.Thickness.UI.MotionPreview.Line111
+spacing/size	product/AntiNotepad/UI/MotionPreview.cs	133	46	_trace = new Trace(palette) { Height = 46 };	Size.UI.MotionPreview.Line133
+brush alpha	product/AntiNotepad/UI/MotionPreview.cs	205	settings.Material == "solid" ? 1 : .6	_frame.Background = new SolidColorBrush(palette.Canvas, settings.Material == "solid" ? 1 : .6);	Paint.Alpha.UI.MotionPreview.Line205
+brush alpha	product/AntiNotepad/UI/MotionPreview.cs	206	palette.Dark ? .09 : .10	_frame.BorderBrush = new SolidColorBrush(palette.Ink, palette.Dark ? .09 : .10);	Paint.Alpha.UI.MotionPreview.Line206
+font size	product/AntiNotepad/UI/MotionPreview.cs	211	11.5	_legend.Children.Add(Kit.Text("last 2 seconds", palette.Muted, 11.5));	Typography.Size.UI.MotionPreview.Line211
+font size	product/AntiNotepad/UI/MotionPreview.cs	212	11.5	var hint = Kit.Text(_feel ? "Scroll up and down, or sideways to switch notes" : "Type, scroll or switch notes here", palette.Muted, 11.5);	Typography.Size.UI.MotionPreview.Line212
+thickness	product/AntiNotepad/UI/MotionPreview.cs	213	Thickness(12, 0, 0, 0)	hint.Margin = new Thickness(12, 0, 0, 0);	Size.Thickness.UI.MotionPreview.Line213
+spacing/size	product/AntiNotepad/UI/MotionPreview.cs	220	5	Orientation = Orientation.Horizontal, Spacing = 5,	Size.UI.MotionPreview.Line220
+radius	product/AntiNotepad/UI/MotionPreview.cs	223	1.5	new Border { Width = 14, Height = 3, CornerRadius = new CornerRadius(1.5), Background = new SolidColorBrush(color), VerticalAlignment = VerticalAlignment.Center },	Radius.UI.MotionPreview.Line223
+spacing/size	product/AntiNotepad/UI/MotionPreview.cs	223	14	new Border { Width = 14, Height = 3, CornerRadius = new CornerRadius(1.5), Background = new SolidColorBrush(color), VerticalAlignment = VerticalAlignment.Center },	Size.UI.MotionPreview.Line223
+spacing/size	product/AntiNotepad/UI/MotionPreview.cs	223	3	new Border { Width = 14, Height = 3, CornerRadius = new CornerRadius(1.5), Background = new SolidColorBrush(color), VerticalAlignment = VerticalAlignment.Center },	Size.UI.MotionPreview.Line223
+font size	product/AntiNotepad/UI/MotionPreview.cs	224	11.5	Kit.Text(label, color, 11.5),	Typography.Size.UI.MotionPreview.Line224
+behavior timers	product/AntiNotepad/UI/MotionPreview.cs	234	2000 ms	Trace window spans 2000 ms	MotionPreview.TraceSpan
+brush alpha	product/AntiNotepad/UI/MotionPreview.cs	267	_palette.Dark ? .06 : .045	_well = new SolidColorBrush(_palette.Ink, _palette.Dark ? .06 : .045);	Paint.Alpha.UI.MotionPreview.Line267
+stroke style	product/AntiNotepad/UI/MotionPreview.cs	268	Cap.Round	Pen(... lineCap: PenLineCap.Round)	Stroke.MotionPreview.RoundCap
+thickness	product/AntiNotepad/UI/MotionPreview.cs	268	1.8	_scrollPen = new Pen(new SolidColorBrush(_palette.Accent), 1.8, lineCap: PenLineCap.Round);	Size.StrokeThickness
+stroke style	product/AntiNotepad/UI/MotionPreview.cs	269	Cap.Round	Pen(... lineCap: PenLineCap.Round)	Stroke.MotionPreview.RoundCap
+thickness	product/AntiNotepad/UI/MotionPreview.cs	269	1.8	_notePen = new Pen(new SolidColorBrush(_palette.Number), 1.8, lineCap: PenLineCap.Round);	Size.StrokeThickness
+radius	product/AntiNotepad/UI/MotionPreview.cs	272	8	DrawRectangle preview well corner radii 8, 8	Radius.MotionPreviewWell
+spacing/size	product/AntiNotepad/UI/MotionPreview.cs	288	new Point(0, Y(values[_head]))	var previous = new Point(0, Y(values[_head]));	Size.UI.MotionPreview.Line288
+spacing/size	product/AntiNotepad/UI/MotionPreview.cs	292	new Point((1 - (now - _t[i]) / Span) * w, Y(values[i]))	var point = new Point((1 - (now - _t[i]) / Span) * w, Y(values[i]));	Size.UI.MotionPreview.Line292
+spacing/size	product/AntiNotepad/UI/MotionPreview.cs	84	14	private readonly StackPanel _legend = new() { Orientation = Orientation.Horizontal, Spacing = 14 };	Size.UI.MotionPreview.Line84
+behavior timers	product/AntiNotepad/UI/NoteSwipe.cs	123	dt clamp 0 to 0.05 seconds; fallback 1/60 second	Swipe frame delta calculation	NoteSwipe.FrameStep
+physics constants	product/AntiNotepad/UI/NoteSwipe.cs	127	22/s exponential input drain	swipe._owed * (1 - Math.Exp(-22 * dt))	NoteSwipe.InputDrain
+physics constants	product/AntiNotepad/UI/NoteSwipe.cs	128	0.5 px residual settle threshold	Math.Abs(swipe._owed - part) < 0.5	NoteSwipe.InputSettle
+physics constants	product/AntiNotepad/UI/NoteSwipe.cs	147	60 px minimum progress length	px / Math.Max(60, s.SwipeLength)	NoteSwipe.MinimumLength
+physics constants	product/AntiNotepad/UI/NoteSwipe.cs	148	fire clamp 0.1 to 0.9	Math.Clamp(s.SwipeFiresAt, 0.1, 0.9)	NoteSwipe.FiresAtClamp
+physics constants	product/AntiNotepad/UI/NoteSwipe.cs	151	progress curve coefficients 0.5 and 0.55	progress share remapping formula	NoteSwipe.ProgressCurve
+physics constants	product/AntiNotepad/UI/NoteSwipe.cs	19	48 px/unit; commit 90 px; commit speed 0.9 px/ms; far 200 px	SwipePxPerUnit, SwipeCommitPx, SwipeCommitSpeed, SwipeFarPx constants	NoteSwipe.DetentThresholds
+physics constants	product/AntiNotepad/UI/NoteSwipe.cs	21	progress click 26 px; 100 px/unit	ProgressClickPx and ProgressPxPerUnit constants	NoteSwipe.ProgressUnits
+behavior timers	product/AntiNotepad/UI/NoteSwipe.cs	22	110 ms	ProgressRearmMs = 110	NoteSwipe.ProgressRearm
+behavior timers	product/AntiNotepad/UI/NoteSwipe.cs	22	260 ms	ProgressQuietMs = 260	NoteSwipe.ProgressQuiet
+behavior timers	product/AntiNotepad/UI/NoteSwipe.cs	23	1000 ms	ProgressStallMs = 1000	NoteSwipe.ProgressStall
+behavior timers	product/AntiNotepad/UI/NoteSwipe.cs	51	350 ms	Reset swipe after 350 ms with no input	NoteSwipe.StaleInput
+behavior timers	product/AntiNotepad/UI/NoteSwipe.cs	57	90 ms	Retain samples no older than 90 ms	NoteSwipe.SampleRetention
+physics constants	product/AntiNotepad/UI/NoteSwipe.cs	60	260 px rubber-band divisor	_swipe / (1 + Math.Abs(_swipe) / 260)	NoteSwipe.RubberBand
+opacity	product/AntiNotepad/UI/NoteSwipe.cs	61	1 - abs(shown) / 420	Show(shown, 1 - Math.Abs(shown) / 420);	Paint.Opacity.SwipeDimming
+behavior timers	product/AntiNotepad/UI/NoteSwipe.cs	68	130 ms	Detent-settle DispatcherTimer interval	NoteSwipe.DetentSettle
+behavior timers	product/AntiNotepad/UI/NoteSwipe.cs	73	min 16 ms; fallback 90 ms	Minimum sampled span and single-sample fallback	NoteSwipe.SampleSpan
+physics constants	product/AntiNotepad/UI/NoteSwipe.cs	91	0.01 detent input epsilon	Math.Abs(units - Math.Round(units)) < 0.01	NoteSwipe.DetentEpsilon
+behavior timers	product/AntiNotepad/UI/NoteSwipe.cs	98	400 ms	Pause threshold for resetting smoothed click rate	NoteSwipe.ClickPause
+physics constants	product/AntiNotepad/UI/NoteSwipe.cs	99	gain 2x; rate scale 1000 ms/min; base 6 and span 24 clicks/s	1 + 2 * Math.Clamp((1000 / _gap - 6) / 24, 0, 1)	NoteSwipe.RateGain
+opacity	product/AntiNotepad/UI/NoteSwipe.cs	152	1 - min(0.7, abs(share) * 1.2)	Show(share * pane().Bounds.Width, 1 - Math.Min(0.7, Math.Abs(share) * 1.2));	Paint.Opacity.SwipeProgress
+physics constants	product/AntiNotepad/UI/NoteSwipe.cs	164	0.5 px owed-input threshold	Math.Abs(_owed) > 0.5	NoteSwipe.OwedInputThreshold
+tween duration	product/AntiNotepad/UI/NoteSwipe.cs	196	200 ms	var springBack = Anim.Run(target, 200, t => ...)	Motion.Duration.NoteSwipe.SpringBack
+opacity	product/AntiNotepad/UI/NoteSwipe.cs	200	opacity + (1 - opacity) * t	pane.Opacity = opacity + (1 - opacity) * t;	Paint.Opacity.UI.NoteSwipe.Line200
+opacity	product/AntiNotepad/UI/NoteSwipe.cs	204	1	if (weakTarget.TryGetTarget(out var pane)) { pane.RenderTransform = null; pane.Opacity = 1; }	Paint.Opacity.UI.NoteSwipe.Line204
+opacity	product/AntiNotepad/UI/NoteSwipe.cs	219	1	target.RenderTransform = null; target.Opacity = 1;	Paint.Opacity.UI.NoteSwipe.Line219
+opacity	product/AntiNotepad/UI/NoteSwipe.cs	244	1	target.Opacity = 1;	Paint.Opacity.UI.NoteSwipe.Line244
+spacing/size	product/AntiNotepad/UI/PadMenu.cs	100	224	var row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*,*"), MinWidth = 224 };	Size.UI.PadMenu.Line100
+spacing/size	product/AntiNotepad/UI/PadMenu.cs	106	2	Spacing = 2,	Size.UI.PadMenu.Line106
+font size	product/AntiNotepad/UI/PadMenu.cs	115	14	FontSize = 14,	Typography.Size.UI.PadMenu.Line115
+radius	product/AntiNotepad/UI/PadMenu.cs	120	4	MenuButton(face, p, entry.Enabled, 52, 4, margin)	Radius.MenuActionHover
+spacing/size	product/AntiNotepad/UI/PadMenu.cs	120	52	MenuButton height 52	Size.MenuActionButton.Height
+thickness	product/AntiNotepad/UI/PadMenu.cs	121	Thickness(i == 0 ? 0 : 2, 0, i == actions.Length - 1 ? 0 : 2, 0)	new Thickness(i == 0 ? 0 : 2, 0, i == actions.Length - 1 ? 0 : 2, 0));	Size.Thickness.UI.PadMenu.Line121
+spacing/size	product/AntiNotepad/UI/PadMenu.cs	126	52	return new Border { Height = 52, Child = row };	Size.UI.PadMenu.Line126
+spacing/size	product/AntiNotepad/UI/PadMenu.cs	131	28	ColumnDefinitions("28,*,Auto")	Size.MenuIconColumn.Width
+spacing/size	product/AntiNotepad/UI/PadMenu.cs	131	32	var row = new Grid { ColumnDefinitions = new ColumnDefinitions("28,*,Auto"), Height = 32 };	Size.UI.PadMenu.Line131
+font size	product/AntiNotepad/UI/PadMenu.cs	139	14	FontSize = 14,	Typography.Size.UI.PadMenu.Line139
+font size	product/AntiNotepad/UI/PadMenu.cs	150	13	FontSize = 13,	Typography.Size.UI.PadMenu.Line150
+brush alpha	product/AntiNotepad/UI/PadMenu.cs	151	.8	Foreground = new SolidColorBrush(p.Muted, .8),	Paint.Alpha.UI.PadMenu.Line151
+thickness	product/AntiNotepad/UI/PadMenu.cs	154	Thickness(24, 0, 8, 0)	Margin = new Thickness(24, 0, 8, 0),	Size.Thickness.UI.PadMenu.Line154
+radius	product/AntiNotepad/UI/PadMenu.cs	159	4	MenuButton(row, p, entry.Enabled, 32, 4)	Radius.MenuRowHover
+spacing/size	product/AntiNotepad/UI/PadMenu.cs	159	32	MenuButton height 32	Size.MenuRowButton.Height
+font family	product/AntiNotepad/UI/PadMenu.cs	17	Segoe UI Variable Text, Segoe UI	private static readonly FontFamily MenuFont = new("Segoe UI Variable Text, Segoe UI");	Typography.Font.Menu
+thickness	product/AntiNotepad/UI/PadMenu.cs	173	Thickness(0)	Padding = height == 32 ? new Thickness(8, 0) : new Thickness(0),	Size.Thickness.UI.PadMenu.Line173
+thickness	product/AntiNotepad/UI/PadMenu.cs	173	Thickness(8, 0)	Padding = height == 32 ? new Thickness(8, 0) : new Thickness(0),	Size.Thickness.UI.PadMenu.Line173
+thickness	product/AntiNotepad/UI/PadMenu.cs	182	Thickness(0)	Padding = new Thickness(0),	Size.Thickness.UI.PadMenu.Line182
+thickness	product/AntiNotepad/UI/PadMenu.cs	184	Thickness(0)	BorderThickness = new Thickness(0),	Size.Thickness.UI.PadMenu.Line184
+spacing/size	product/AntiNotepad/UI/PadMenu.cs	197	18	if (glyph is null) return new Border { Width = 18, Height = 18, VerticalAlignment = VerticalAlignment.Center };	Size.UI.PadMenu.Line197
+font size	product/AntiNotepad/UI/PadMenu.cs	204	16	return new GlyphIcon(glyph, color, 16, 0)	Typography.Size.Glyph
+font weight	product/AntiNotepad/UI/PadMenu.cs	204	0	new GlyphIcon(glyph, color, 16, 0)	Typography.Weight.GlyphNoFakeBold
+spacing/size	product/AntiNotepad/UI/PadMenu.cs	206	28	Width = 28,	Size.UI.PadMenu.Line206
+brush alpha	product/AntiNotepad/UI/PadMenu.cs	214	p.Dark ? .09 : .06	var hover = new SolidColorBrush(p.Ink, p.Dark ? .09 : .06);	Paint.Alpha.UI.PadMenu.Line214
+brush alpha	product/AntiNotepad/UI/PadMenu.cs	215	p.Dark ? .15 : .11	var pressed = new SolidColorBrush(p.Ink, p.Dark ? .15 : .11);	Paint.Alpha.UI.PadMenu.Line215
+spacing/size	product/AntiNotepad/UI/PadMenu.cs	226	1	Height = 1,	Size.UI.PadMenu.Line226
+thickness	product/AntiNotepad/UI/PadMenu.cs	227	Thickness(0, 4)	Margin = new Thickness(0, 4),	Size.Thickness.UI.PadMenu.Line227
+brush alpha	product/AntiNotepad/UI/PadMenu.cs	228	.4	Background = new SolidColorBrush(p.Faint, .4),	Paint.Alpha.UI.PadMenu.Line228
+thickness	product/AntiNotepad/UI/PadMenu.cs	81	Thickness(4)	Padding = new Thickness(4),	Size.Thickness.UI.PadMenu.Line81
+radius	product/AntiNotepad/UI/PadMenu.cs	82	8	CornerRadius = new CornerRadius(8),	Radius.UI.PadMenu.Line82
+brush alpha	product/AntiNotepad/UI/PadMenu.cs	84	.45	BorderBrush = new SolidColorBrush(p.Faint, .45),	Paint.Alpha.UI.PadMenu.Line84
+thickness	product/AntiNotepad/UI/PadMenu.cs	85	Thickness(1)	BorderThickness = new Thickness(1),	Size.Thickness.UI.PadMenu.Line85
+shadow	product/AntiNotepad/UI/PadMenu.cs	88	18	Blur = 18,	Elevation.UI.PadMenu.Line88
+shadow	product/AntiNotepad/UI/PadMenu.cs	89	4	OffsetY = 4,	Elevation.UI.PadMenu.Line89
+color construction	product/AntiNotepad/UI/PadMenu.cs	90	Color.FromArgb(p.Dark ? (byte)110 : (byte)40, 0, 0, 0)	Color = Color.FromArgb(p.Dark ? (byte)110 : (byte)40, 0, 0, 0),	Paint.Color.UI.PadMenu.Line90
+tween duration	product/AntiNotepad/UI/PadWindow.cs	177	150 ms	Anim.Run(this, 150, t => Position = ...)	Motion.Duration.PadWindow.Open
+opacity	product/AntiNotepad/UI/PadWindow.cs	210	0	Opacity = 0; ShowActivated = false;	Paint.Opacity.UI.PadWindow.Line210
+opacity	product/AntiNotepad/UI/PadWindow.cs	216	1	Opacity = 1; ShowActivated = true; _hiddenAt = DateTime.Now; _trim.Start();	Paint.Opacity.UI.PadWindow.Line216
+behavior timers	product/AntiNotepad/UI/PadWindow.cs	29	TimeSpan.FromMilliseconds(400)	private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(400) };	Behavior.Timer.UI.PadWindow.Line29
+opacity	product/AntiNotepad/UI/PadWindow.cs	315	0.35 + 0.65 * t	Anim.Run(this, 140, t => { _content.Opacity = 0.35 + 0.65 * t; shift.Y = 6 * (1 - t); },	Paint.Opacity.UI.PadWindow.Line315
+tween duration	product/AntiNotepad/UI/PadWindow.cs	315	140 ms	Anim.Run(this, 140, t => ...)	Motion.Duration.ContentEnter
+opacity	product/AntiNotepad/UI/PadWindow.cs	316	1	() => { _content.Opacity = 1; _content.RenderTransform = null; });	Paint.Opacity.UI.PadWindow.Line316
+tween duration	product/AntiNotepad/UI/PadWindow.cs	327	160 ms	_fade = Anim.Run(this, 160, t => ...)	Motion.Duration.PadWindow.Fade
+behavior timers	product/AntiNotepad/UI/PadWindow.cs	428	45 seconds env fallback	TrimDelaySeconds checks TRIM_SECONDS, else 45;	Behavior.SettingsTrim.Delay
+spacing/size	product/AntiNotepad/UI/PadWindow.cs	453	settings.Split ? Width / 2 : Width	settings.Width = settings.Split ? Width / 2 : Width; settings.Height = Height;	Size.UI.PadWindow.Line453
+brush alpha	product/AntiNotepad/UI/PadWindow.cs	501	Settings.Material == "solid" ? 1 : Math.Clamp(Settings.Tint + .08, 0, 1)	if (_right is not null) _right.Background = Settings.SplitPalette == "same" ? null : new SolidColorBrush(SplitPalette().Canvas, Settings.Material == "solid" ? 1 : Math.Clamp(Settings.Tint...	Paint.Alpha.UI.PadWindow.Line501
+spacing/size	product/AntiNotepad/UI/PadWindow.cs	71	Math.Max(260	Width = Math.Max(320, Settings.Width) * (Settings.Split ? 2 : 1); Height = Math.Max(260, Settings.Height);	Size.UI.PadWindow.Line71
+spacing/size	product/AntiNotepad/UI/PadWindow.cs	71	Math.Max(320	Width = Math.Max(320, Settings.Width) * (Settings.Split ? 2 : 1); Height = Math.Max(260, Settings.Height);	Size.UI.PadWindow.Line71
+spacing/size	product/AntiNotepad/UI/PadWindow.cs	72	260	MinWidth = 320; MinHeight = 260;	Size.UI.PadWindow.Line72
+spacing/size	product/AntiNotepad/UI/PadWindow.cs	72	320	MinWidth = 320; MinHeight = 260;	Size.UI.PadWindow.Line72
+font family	product/AntiNotepad/UI/PadWindow.cs	81	Segoe UI Variable Text, Segoe UI	FontFamily = new FontFamily("Segoe UI Variable Text, Segoe UI");	Typography.Font.PadUi
+font size	product/AntiNotepad/UI/PadWindow.Keys.cs	107	clamp 10 to 28	settings.FontSize = Math.Clamp(settings.FontSize + step, 10, 28)	Typography.Size.EditorKeyboardRange
+opacity	product/AntiNotepad/UI/PadWindow.Keys.cs	125	0.0	_panes.Opacity = 0.0;	Paint.Opacity.UI.PadWindow.Keys.Line125
+tween duration	product/AntiNotepad/UI/PadWindow.Keys.cs	128	130 ms	Anim.Run(_overlayHost, 130, t => _overlayHost.Opacity = t)	Motion.Duration.PadOverlay.Enter
+opacity	product/AntiNotepad/UI/PadWindow.Keys.cs	139	1	_panes.Opacity = 1;	Paint.Opacity.UI.PadWindow.Keys.Line139
+behavior timers	product/AntiNotepad/UI/PadWindow.Keys.cs	193	TimeSpan.FromSeconds(1.5)	var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.5) };	Behavior.Timer.UI.PadWindow.Keys.Line193
+behavior timers	product/AntiNotepad/UI/PadWindow.Keys.cs	216	Task.Delay(1500)	await Task.Delay(1500);	Behavior.Timer.UI.PadWindow.Keys.Line216
+behavior timers	product/AntiNotepad/UI/PadWindow.Keys.cs	227	Task.Delay(300)	await Task.Delay(300);	Behavior.Timer.UI.PadWindow.Keys.Line227
+behavior timers	product/AntiNotepad/UI/PadWindow.Keys.cs	230	Task.Delay(1000)	for (var s = 1; s <= 6; s++) { await Task.Delay(1000); Mem($"{i + 1} open {s}s"); }	Behavior.Timer.UI.PadWindow.Keys.Line230
+behavior timers	product/AntiNotepad/UI/PadWindow.Keys.cs	232	Task.Delay(2500)	await Task.Delay(2500);	Behavior.Timer.UI.PadWindow.Keys.Line232
+color construction	product/AntiNotepad/UI/PadWindow.Layout.cs	154	Color.FromArgb(p.Dark ? ChromeTokens.PillShadowDarkAlpha : ChromeTokens.PillShadowLightAlpha, 0, 0, 0)	_pill.BoxShadow = new BoxShadows(new BoxShadow { Blur = ChromeTokens.PillShadowBlur, OffsetY = ChromeTokens.PillShadowOffsetY, Color = Color.FromArgb(p.Dark ? ChromeTokens.PillShadowDarkA...	Paint.Color.UI.PadWindow.Layout.Line154
+brush alpha	product/AntiNotepad/UI/PadWindow.Layout.cs	155	.92	_toast.Background = new SolidColorBrush(p.Ink, .92);	Paint.Alpha.UI.PadWindow.Layout.Line155
+brush alpha	product/AntiNotepad/UI/PadWindow.Layout.cs	157	Settings.Material == "solid" ? 1 : .55	_overlayHost.Background = new SolidColorBrush(p.Canvas, Settings.Material == "solid" ? 1 : .55);	Paint.Alpha.UI.PadWindow.Layout.Line157
+font weight	product/AntiNotepad/UI/PadWindow.Layout.cs	189	SemiBold	Child = Kit.Text(text, color, ChromeTokens.BadgeFontSize, FontWeight.SemiBold), VerticalAlignment = VerticalAlignment.Center	Typography.Weight.SemiBold
+font weight	product/AntiNotepad/UI/PadWindow.Layout.cs	198	SemiBold	var count = Kit.Text(onStack ? $"{Data.Current + 1} / {Data.Stack.Count}" : "stack", onStack ? p.Muted : p.Faint, ChromeTokens.PagerCountFontSize, FontWeight.SemiBold);	Typography.Weight.SemiBold
+thickness	product/AntiNotepad/UI/PadWindow.Layout.cs	208	Thickness(ChromeTokens.PagerSeparatorMargin, 0)	row.Children.Add(new Border { Width = ChromeTokens.PagerSeparatorWidth, Height = ChromeTokens.PagerSeparatorHeight, Background = new SolidColorBrush(p.Faint, ChromeTokens.PagerSeparatorAl...	Size.Thickness.UI.PadWindow.Layout.Line208
+thickness	product/AntiNotepad/UI/PadWindow.Layout.cs	218	Thickness(filled || current ? 0 : ChromeTokens.PagerDotBorderThickness)	BorderBrush = new SolidColorBrush(current ? p.Accent : p.Faint), BorderThickness = new Thickness(filled || current ? 0 : ChromeTokens.PagerDotBorderThickness),	Size.Thickness.UI.PadWindow.Layout.Line218
+opacity	product/AntiNotepad/UI/PadWindow.Layout.cs	253	_bottomLayer.Opacity = 1	_topLayer.Opacity = _bottomLayer.Opacity = 1;	Paint.Opacity.UI.PadWindow.Layout.Line253
+opacity	product/AntiNotepad/UI/PadWindow.Layout.cs	254	_pill.Opacity = _badges.Opacity = 1	_icons.Opacity = _pill.Opacity = _badges.Opacity = 1;	Paint.Opacity.UI.PadWindow.Layout.Line254
+thickness	product/AntiNotepad/UI/PadWindow.Layout.cs	256	Thickness(0, 0, 0, Settings.Bars == "float" ? 0 : ChromeTokens.PillBottomInset)	_pill.Margin = new Thickness(0, 0, 0, Settings.Bars == "float" ? 0 : ChromeTokens.PillBottomInset);	Size.Thickness.UI.PadWindow.Layout.Line256
+thickness	product/AntiNotepad/UI/PadWindow.Layout.cs	26	Thickness(0, 0, ChromeTokens.BadgeRightInset, 0)	private readonly StackPanel _badges = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.BadgeSpacing, Margin = new Thickness(0, 0, ChromeTokens.BadgeRightInset, 0), Ver...	Size.Thickness.UI.PadWindow.Layout.Line26
+spacing/size	product/AntiNotepad/UI/PadWindow.Layout.cs	266	new GridLength(0)	_content.RowDefinitions[0].Height = new GridLength(0);	Size.UI.PadWindow.Layout.Line266
+thickness	product/AntiNotepad/UI/PadWindow.Layout.cs	28	Thickness(ChromeTokens.FirstItemInset, 0, 0, 0)	private readonly StackPanel _meta = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.MetaSpacing, Margin = new Thickness(ChromeTokens.FirstItemInset, 0, 0, 0), Vertica...	Size.Thickness.UI.PadWindow.Layout.Line28
+thickness	product/AntiNotepad/UI/PadWindow.Layout.cs	29	Thickness(0, 0, ChromeTokens.BarEdgeInset, 0)	private readonly StackPanel _icons = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.IconSpacing, Margin = new Thickness(0, 0, ChromeTokens.BarEdgeInset, 0), Vertical...	Size.Thickness.UI.PadWindow.Layout.Line29
+thickness	product/AntiNotepad/UI/PadWindow.Layout.cs	31	Thickness(0, ChromeTokens.DividerTopMargin, 0, ChromeTokens.DividerBottomMargin)	private readonly Border _divider = new() { Width = ChromeTokens.DividerWidth, Margin = new Thickness(0, ChromeTokens.DividerTopMargin, 0, ChromeTokens.DividerBottomMargin) };	Size.Thickness.UI.PadWindow.Layout.Line31
+thickness	product/AntiNotepad/UI/PadWindow.Layout.cs	32	Thickness(0, 0, 0, ChromeTokens.PillBottomInset)	private readonly Border _pill = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 0, ChromeTokens.PillBo...	Size.Thickness.UI.PadWindow.Layout.Line32
+tween duration	product/AntiNotepad/UI/PadWindow.Layout.cs	328	170 ms	Anim.Run(layer, 170, t => ...)	Motion.Duration.Chrome.Layer
+radius	product/AntiNotepad/UI/PadWindow.Layout.cs	33	10	private readonly Border _toast = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(16, 0, 16, ChromeTokens.Toa...	Radius.UI.PadWindow.Layout.Line33
+spacing/size	product/AntiNotepad/UI/PadWindow.Layout.cs	33	380	private readonly Border _toast = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(16, 0, 16, ChromeTokens.Toa...	Size.UI.PadWindow.Layout.Line33
+thickness	product/AntiNotepad/UI/PadWindow.Layout.cs	33	Thickness(12, 7)	private readonly Border _toast = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(16, 0, 16, ChromeTokens.Toa...	Size.Thickness.UI.PadWindow.Layout.Line33
+thickness	product/AntiNotepad/UI/PadWindow.Layout.cs	33	Thickness(16, 0, 16, ChromeTokens.ToastBottomMargin)	private readonly Border _toast = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(16, 0, 16, ChromeTokens.Toa...	Size.Thickness.UI.PadWindow.Layout.Line33
+opacity	product/AntiNotepad/UI/PadWindow.Layout.cs	334	0	if (show) { _pill.Opacity = 0; _floatPager.IsOpen = true; }	Paint.Opacity.UI.PadWindow.Layout.Line334
+opacity	product/AntiNotepad/UI/PadWindow.Layout.cs	335	show ? 1 : 0	if (instant || Anim.Reduced) { _pill.Opacity = show ? 1 : 0; if (!show) _floatPager.IsOpen = false; return; }	Paint.Opacity.UI.PadWindow.Layout.Line335
+tween duration	product/AntiNotepad/UI/PadWindow.Layout.cs	337	150 ms	Anim.Run(_pill, 150, t => ...)	Motion.Duration.PagerPill
+behavior timers	product/AntiNotepad/UI/PadWindow.Layout.cs	345	TimeSpan.FromMilliseconds(Math.Max(300, Settings.FadeAfterMs))	if (!hold && Settings.Chrome == "fade") { _chromeSleep.Interval = TimeSpan.FromMilliseconds(Math.Max(300, Settings.FadeAfterMs)); _chromeSleep.Start(); }	Behavior.Timer.UI.PadWindow.Layout.Line345
+tween duration	product/AntiNotepad/UI/PadWindow.Layout.cs	366	180 ms	_chromeAnim = Anim.Run(this, 180, t =>	Motion.Duration.Chrome.Toggle
+spacing/size	product/AntiNotepad/UI/PadWindow.Layout.cs	378	12	var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };	Size.UI.PadWindow.Layout.Line378
+font size	product/AntiNotepad/UI/PadWindow.Layout.cs	379	12.5	row.Children.Add(new TextBlock { Text = text, Foreground = new SolidColorBrush(p.Canvas), FontSize = 12.5, TextWrapping = TextWrapping.Wrap, MaxWidth = 300, VerticalAlignment = VerticalAl...	Typography.Size.UI.PadWindow.Layout.Line379
+spacing/size	product/AntiNotepad/UI/PadWindow.Layout.cs	379	300	row.Children.Add(new TextBlock { Text = text, Foreground = new SolidColorBrush(p.Canvas), FontSize = 12.5, TextWrapping = TextWrapping.Wrap, MaxWidth = 300, VerticalAlignment = VerticalAl...	Size.UI.PadWindow.Layout.Line379
+font size	product/AntiNotepad/UI/PadWindow.Layout.cs	384	12.5	var label = Kit.Text(action, p.Accent, 12.5, FontWeight.SemiBold);	Typography.Size.UI.PadWindow.Layout.Line384
+font weight	product/AntiNotepad/UI/PadWindow.Layout.cs	384	SemiBold	var label = Kit.Text(action, p.Accent, 12.5, FontWeight.SemiBold);	Typography.Weight.SemiBold
+thickness	product/AntiNotepad/UI/PadWindow.Layout.cs	385	Thickness(6, 1)	label.Margin = new Thickness(6, 1);	Size.Thickness.UI.PadWindow.Layout.Line385
+tween duration	product/AntiNotepad/UI/PadWindow.Layout.cs	392	120 ms	Anim.Run(_toast, 120, t => _toast.Opacity = t)	Motion.Duration.Toast.Enter
+behavior timers	product/AntiNotepad/UI/PadWindow.Layout.cs	394	TimeSpan.FromMilliseconds(action is not null ? 7000 : brief ? 1300 : 2400)	_toastTimer.Interval = TimeSpan.FromMilliseconds(action is not null ? 7000 : brief ? 1300 : 2400);	Behavior.Timer.UI.PadWindow.Layout.Line394
+opacity	product/AntiNotepad/UI/PadWindow.Layout.cs	401	1 - t	Anim.Run(_toast, 160, t => _toast.Opacity = 1 - t, () => _toast.IsVisible = false);	Paint.Opacity.UI.PadWindow.Layout.Line401
+tween duration	product/AntiNotepad/UI/PadWindow.Layout.cs	401	160 ms	Anim.Run(_toast, 160, t => _toast.Opacity = 1 - t)	Motion.Duration.Toast.Leave
+font size	product/AntiNotepad/UI/PadWindow.Layout.cs	415	17	var title = Kit.Text("Couldn't save your notes", p.Ink, 17, FontWeight.SemiBold);	Typography.Size.UI.PadWindow.Layout.Line415
+font weight	product/AntiNotepad/UI/PadWindow.Layout.cs	415	SemiBold	var title = Kit.Text("Couldn't save your notes", p.Ink, 17, FontWeight.SemiBold);	Typography.Weight.SemiBold
+font size	product/AntiNotepad/UI/PadWindow.Layout.cs	419	12.5	Text = message, Foreground = new SolidColorBrush(p.Muted), FontSize = 12.5,	Typography.Size.UI.PadWindow.Layout.Line419
+spacing/size	product/AntiNotepad/UI/PadWindow.Layout.cs	420	380	TextWrapping = TextWrapping.Wrap, MaxWidth = 380,	Size.UI.PadWindow.Layout.Line420
+font size	product/AntiNotepad/UI/PadWindow.Layout.cs	424	12.5	var retryButton = Kit.Plain(Kit.Text("Retry", p.Accent, 12.5, FontWeight.SemiBold), p, 88, 34);	Typography.Size.UI.PadWindow.Layout.Line424
+font weight	product/AntiNotepad/UI/PadWindow.Layout.cs	424	SemiBold	var retryButton = Kit.Plain(Kit.Text("Retry", p.Accent, 12.5, FontWeight.SemiBold), p, 88, 34);	Typography.Weight.SemiBold
+spacing/size	product/AntiNotepad/UI/PadWindow.Layout.cs	424	88 x 34	Kit.Plain Retry width/height	Size.SaveErrorRetryButton
+font size	product/AntiNotepad/UI/PadWindow.Layout.cs	427	12.5	var quitButton = Kit.Plain(Kit.Text("Quit anyway", p.Muted, 12.5), p, 104, 34);	Typography.Size.UI.PadWindow.Layout.Line427
+spacing/size	product/AntiNotepad/UI/PadWindow.Layout.cs	427	104 x 34	Kit.Plain Quit width/height	Size.SaveErrorQuitButton
+spacing/size	product/AntiNotepad/UI/PadWindow.Layout.cs	432	6	Orientation = Orientation.Horizontal, Spacing = 6, HorizontalAlignment = HorizontalAlignment.Right,	Size.UI.PadWindow.Layout.Line432
+thickness	product/AntiNotepad/UI/PadWindow.Layout.cs	433	Thickness(0, 6, 0, 0)	Margin = new Thickness(0, 6, 0, 0), Children = { retryButton, quitButton },	Size.Thickness.UI.PadWindow.Layout.Line433
+spacing/size	product/AntiNotepad/UI/PadWindow.Layout.cs	435	9	var content = new StackPanel { Spacing = 9, Children = { title, detail, buttons } };	Size.UI.PadWindow.Layout.Line435
+spacing/size	product/AntiNotepad/UI/PadWindow.Layout.cs	438	240	Child = content, MaxWidth = 420, MinWidth = 240, Margin = new Thickness(12), Padding = new Thickness(18),	Size.UI.PadWindow.Layout.Line438
+spacing/size	product/AntiNotepad/UI/PadWindow.Layout.cs	438	420	Child = content, MaxWidth = 420, MinWidth = 240, Margin = new Thickness(12), Padding = new Thickness(18),	Size.UI.PadWindow.Layout.Line438
+thickness	product/AntiNotepad/UI/PadWindow.Layout.cs	438	Thickness(12)	Child = content, MaxWidth = 420, MinWidth = 240, Margin = new Thickness(12), Padding = new Thickness(18),	Size.Thickness.UI.PadWindow.Layout.Line438
+thickness	product/AntiNotepad/UI/PadWindow.Layout.cs	438	Thickness(18)	Child = content, MaxWidth = 420, MinWidth = 240, Margin = new Thickness(12), Padding = new Thickness(18),	Size.Thickness.UI.PadWindow.Layout.Line438
+radius	product/AntiNotepad/UI/PadWindow.Layout.cs	439	12	CornerRadius = new CornerRadius(12), Background = new SolidColorBrush(p.Surface),	Radius.UI.PadWindow.Layout.Line439
+brush alpha	product/AntiNotepad/UI/PadWindow.Layout.cs	440	.45	BorderBrush = new SolidColorBrush(p.Faint, .45), BorderThickness = new Thickness(1), BoxShadow = _pill.BoxShadow,	Paint.Alpha.UI.PadWindow.Layout.Line440
+thickness	product/AntiNotepad/UI/PadWindow.Layout.cs	440	Thickness(1)	BorderBrush = new SolidColorBrush(p.Faint, .45), BorderThickness = new Thickness(1), BoxShadow = _pill.BoxShadow,	Size.Thickness.UI.PadWindow.Layout.Line440
+behavior timers	product/AntiNotepad/UI/PadWindow.Layout.cs	47	TimeSpan.FromMilliseconds(450)	private readonly DispatcherTimer _barsSleep = new() { Interval = TimeSpan.FromMilliseconds(450) };	Behavior.Timer.UI.PadWindow.Layout.Line47
+behavior timers	product/AntiNotepad/UI/PadWindow.Layout.cs	48	TimeSpan.FromMilliseconds(1600)	private readonly DispatcherTimer _chromeSleep = new() { Interval = TimeSpan.FromMilliseconds(1600) };	Behavior.Timer.UI.PadWindow.Layout.Line48
+behavior timers	product/AntiNotepad/UI/PadWindow.Layout.cs	49	TimeSpan.FromMilliseconds(2600)	private readonly DispatcherTimer _toastTimer = new() { Interval = TimeSpan.FromMilliseconds(2600) };	Behavior.Timer.UI.PadWindow.Layout.Line49
+tween duration	product/AntiNotepad/UI/PadWindow.Layout.cs	491	180 ms	Anim.Run(_active, 180, t => ...)	Motion.Duration.NoteSwitch
+spacing/size	product/AntiNotepad/UI/PadWindow.Navigation.cs	165	Math.Min(single * 2	Width = Math.Min(single * 2, (screen?.WorkingArea.Width ?? 4000) / scale - 24);	Size.UI.PadWindow.Navigation.Line165
+color construction	product/AntiNotepad/UI/PadWindow.TopBlur.cs	221	Color.FromArgb((byte)(255 * ChromeTokens.TopBackdrop.DenseMaskAlpha), 255, 255, 255)	new GradientStop(Color.FromArgb((byte)(255 * ChromeTokens.TopBackdrop.DenseMaskAlpha), 255, 255, 255), 0),	Paint.Color.UI.PadWindow.TopBlur.Line221
+spacing/size	product/AntiNotepad/UI/PadWindow.TopBlur.cs	221	gradient stop at 0	Top blur mask starts at normalized 0	Geometry.TopBlur.MaskStart
+color construction	product/AntiNotepad/UI/PadWindow.TopBlur.cs	222	Color.FromArgb((byte)(255 * ChromeTokens.TopBackdrop.DenseMaskAlpha), 255, 255, 255)	new GradientStop(Color.FromArgb((byte)(255 * ChromeTokens.TopBackdrop.DenseMaskAlpha), 255, 255, 255), ChromeTokens.TopBackdrop.DensePosition),	Paint.Color.UI.PadWindow.TopBlur.Line222
+color construction	product/AntiNotepad/UI/PadWindow.TopBlur.cs	223	Color.FromArgb((byte)(255 * ChromeTokens.TopBackdrop.MidpointMaskAlpha), 255, 255, 255)	new GradientStop(Color.FromArgb((byte)(255 * ChromeTokens.TopBackdrop.MidpointMaskAlpha), 255, 255, 255), ChromeTokens.TopBackdrop.MidpointPosition),	Paint.Color.UI.PadWindow.TopBlur.Line223
+color construction	product/AntiNotepad/UI/PadWindow.TopBlur.cs	224	Color.FromArgb((byte)(255 * ChromeTokens.TopBackdrop.ClearMaskAlpha), 255, 255, 255)	new GradientStop(Color.FromArgb((byte)(255 * ChromeTokens.TopBackdrop.ClearMaskAlpha), 255, 255, 255), 1),	Paint.Color.UI.PadWindow.TopBlur.Line224
+spacing/size	product/AntiNotepad/UI/PadWindow.TopBlur.cs	224	gradient stop at 1	Top blur mask ends at normalized 1	Geometry.TopBlur.MaskEnd
+thickness	product/AntiNotepad/UI/SearchOverlay.cs	164	Thickness(6, 16)	_results.Children.Add(new TextBlock { Text = ShowingTrash ? "The trash is empty." : query.Length > 0 ? "No notes match." : "No notes yet.", Foreground = new SolidColorBrush(_p.Faint), Mar...	Size.Thickness.UI.SearchOverlay.Line164
+font size	product/AntiNotepad/UI/SearchOverlay.cs	177	13.5	var title = Kit.Text(match.Title, _p.Ink, 13.5, FontWeight.SemiBold);	Typography.Size.UI.SearchOverlay.Line177
+font weight	product/AntiNotepad/UI/SearchOverlay.cs	177	SemiBold	var title = Kit.Text(match.Title, _p.Ink, 13.5, FontWeight.SemiBold);	Typography.Weight.SemiBold
+font size	product/AntiNotepad/UI/SearchOverlay.cs	181	12	Foreground = new SolidColorBrush(_p.Muted), FontSize = 12, TextWrapping = TextWrapping.Wrap,	Typography.Size.UI.SearchOverlay.Line181
+font family	product/AntiNotepad/UI/SearchOverlay.cs	182	Cascadia Mono, Consolas	FontFamily = new FontFamily("Cascadia Mono, Consolas")	Typography.Font.SearchMetadata
+spacing/size	product/AntiNotepad/UI/SearchOverlay.cs	185	8	var meta = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };	Size.UI.SearchOverlay.Line185
+font size	product/AntiNotepad/UI/SearchOverlay.cs	186	11	if (note.Slot > 0) meta.Children.Add(Kit.Text($"slot {note.Slot}", _p.Accent, 11, FontWeight.SemiBold));	Typography.Size.UI.SearchOverlay.Line186
+font weight	product/AntiNotepad/UI/SearchOverlay.cs	186	SemiBold	if (note.Slot > 0) meta.Children.Add(Kit.Text($"slot {note.Slot}", _p.Accent, 11, FontWeight.SemiBold));	Typography.Weight.SemiBold
+font size	product/AntiNotepad/UI/SearchOverlay.cs	187	11	if (match.Mode != NoteMode.Plain) meta.Children.Add(Kit.Text(Modes.Label(match.Mode, match.ModeArgument), _p.Keyword, 11, FontWeight.SemiBold));	Typography.Size.UI.SearchOverlay.Line187
+font weight	product/AntiNotepad/UI/SearchOverlay.cs	187	SemiBold	if (match.Mode != NoteMode.Plain) meta.Children.Add(Kit.Text(Modes.Label(match.Mode, match.ModeArgument), _p.Keyword, 11, FontWeight.SemiBold));	Typography.Weight.SemiBold
+font size	product/AntiNotepad/UI/SearchOverlay.cs	188	11	meta.Children.Add(Kit.Text(ShowingTrash && note.Deleted is { } del ? "deleted " + Kit.Ago(del) : Kit.Ago(note.Modified), _p.Faint, 11));	Typography.Size.UI.SearchOverlay.Line188
+spacing/size	product/AntiNotepad/UI/SearchOverlay.cs	189	3	var body = new StackPanel { Spacing = 3, Children = { title, snippet, meta } };	Size.UI.SearchOverlay.Line189
+radius	product/AntiNotepad/UI/SearchOverlay.cs	192	10	Child = body, Padding = new Thickness(12, 9), CornerRadius = new CornerRadius(10),	Radius.UI.SearchOverlay.Line192
+thickness	product/AntiNotepad/UI/SearchOverlay.cs	192	Thickness(12, 9)	Child = body, Padding = new Thickness(12, 9), CornerRadius = new CornerRadius(10),	Size.Thickness.UI.SearchOverlay.Line192
+brush alpha	product/AntiNotepad/UI/SearchOverlay.cs	193	.55	Background = new SolidColorBrush(_p.Surface, .55),	Paint.Alpha.UI.SearchOverlay.Line193
+brush alpha	product/AntiNotepad/UI/SearchOverlay.cs	194	.25	BorderBrush = new SolidColorBrush(_p.Faint, .25), BorderThickness = new Thickness(1),	Paint.Alpha.UI.SearchOverlay.Line194
+thickness	product/AntiNotepad/UI/SearchOverlay.cs	194	Thickness(1)	BorderBrush = new SolidColorBrush(_p.Faint, .25), BorderThickness = new Thickness(1),	Size.Thickness.UI.SearchOverlay.Line194
+spacing/size	product/AntiNotepad/UI/SearchOverlay.cs	195	GridView ? 150 : double.NaN	Width = GridView ? CardWidth() : double.NaN, Height = GridView ? 150 : double.NaN, Margin = GridView ? new Thickness(0, 0, 8, 8) : new Thickness(0),	Size.UI.SearchOverlay.Line195
+thickness	product/AntiNotepad/UI/SearchOverlay.cs	195	Thickness(0, 0, 8, 8)	Width = GridView ? CardWidth() : double.NaN, Height = GridView ? 150 : double.NaN, Margin = GridView ? new Thickness(0, 0, 8, 8) : new Thickness(0),	Size.Thickness.UI.SearchOverlay.Line195
+thickness	product/AntiNotepad/UI/SearchOverlay.cs	195	Thickness(0)	Width = GridView ? CardWidth() : double.NaN, Height = GridView ? 150 : double.NaN, Margin = GridView ? new Thickness(0, 0, 8, 8) : new Thickness(0),	Size.Thickness.UI.SearchOverlay.Line195
+opacity	product/AntiNotepad/UI/SearchOverlay.cs	213	.55	border.Opacity = .55;	Paint.Opacity.UI.SearchOverlay.Line213
+opacity	product/AntiNotepad/UI/SearchOverlay.cs	223	1	border.Opacity = 1; border.RenderTransform = null;	Paint.Opacity.UI.SearchOverlay.Line223
+brush alpha	product/AntiNotepad/UI/SearchOverlay.cs	238	picked || current ? 1 : .55	border.Background = new SolidColorBrush(picked ? _p.Selection : _p.Surface, picked || current ? 1 : .55);	Paint.Alpha.UI.SearchOverlay.Line238
+brush alpha	product/AntiNotepad/UI/SearchOverlay.cs	239	current ? .9 : .25	border.BorderBrush = new SolidColorBrush(current ? _p.Accent : _p.Faint, current ? .9 : .25);	Paint.Alpha.UI.SearchOverlay.Line239
+thickness	product/AntiNotepad/UI/SearchOverlay.cs	240	Thickness(current ? 1.5 : 1)	border.BorderThickness = new Thickness(current ? 1.5 : 1);	Size.Thickness.UI.SearchOverlay.Line240
+font weight	product/AntiNotepad/UI/SearchOverlay.cs	301	SemiBold	Foreground = new SolidColorBrush(_p.Ink), FontWeight = FontWeight.SemiBold, Background = new SolidColorBrush(_p.Selection),	Typography.Weight.SemiBold
+behavior timers	product/AntiNotepad/UI/SearchOverlay.cs	43	TimeSpan.FromMilliseconds(125)	_debounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(125) };	Behavior.Timer.UI.SearchOverlay.Line43
+thickness	product/AntiNotepad/UI/SearchOverlay.cs	47	Thickness(14, 14, 14, 46)	Margin = new Thickness(14, 14, 14, 46);	Size.Thickness.UI.SearchOverlay.Line47
+font size	product/AntiNotepad/UI/SearchOverlay.cs	51	15	Text = query, PlaceholderText = trash ? "Search the trash" : "Search notes", FontSize = 15,	Typography.Size.UI.SearchOverlay.Line51
+thickness	product/AntiNotepad/UI/SearchOverlay.cs	52	Thickness(1)	Background = new SolidColorBrush(_p.Surface), Foreground = new SolidColorBrush(_p.Ink), BorderThickness = new Thickness(1),	Size.Thickness.UI.SearchOverlay.Line52
+brush alpha	product/AntiNotepad/UI/SearchOverlay.cs	53	.5	BorderBrush = new SolidColorBrush(_p.Faint, .5), CornerRadius = new CornerRadius(10), Padding = new Thickness(12, 8),	Paint.Alpha.UI.SearchOverlay.Line53
+radius	product/AntiNotepad/UI/SearchOverlay.cs	53	10	BorderBrush = new SolidColorBrush(_p.Faint, .5), CornerRadius = new CornerRadius(10), Padding = new Thickness(12, 8),	Radius.UI.SearchOverlay.Line53
+thickness	product/AntiNotepad/UI/SearchOverlay.cs	53	Thickness(12, 8)	BorderBrush = new SolidColorBrush(_p.Faint, .5), CornerRadius = new CornerRadius(10), Padding = new Thickness(12, 8),	Size.Thickness.UI.SearchOverlay.Line53
+font size	product/AntiNotepad/UI/SearchOverlay.cs	57	11.5	_status = Kit.Text("", _p.Faint, 11.5);	Typography.Size.UI.SearchOverlay.Line57
+thickness	product/AntiNotepad/UI/SearchOverlay.cs	58	Thickness(4, 8, 0, 0)	_status.Margin = new Thickness(4, 8, 0, 0);	Size.Thickness.UI.SearchOverlay.Line58
+spacing/size	product/AntiNotepad/UI/SearchOverlay.cs	72	2	var tools = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, Margin = new Thickness(6, 0, 0, 0) };	Size.UI.SearchOverlay.Line72
+thickness	product/AntiNotepad/UI/SearchOverlay.cs	72	Thickness(6, 0, 0, 0)	var tools = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, Margin = new Thickness(6, 0, 0, 0) };	Size.Thickness.UI.SearchOverlay.Line72
+spacing/size	product/AntiNotepad/UI/SearchOverlay.cs	73	32	Kit.IconButton size 32	Size.SearchIconButton
+spacing/size	product/AntiNotepad/UI/SearchOverlay.cs	74	32	Kit.IconButton size 32	Size.SearchIconButton
+spacing/size	product/AntiNotepad/UI/SearchOverlay.cs	75	32	Kit.IconButton size 32	Size.SearchIconButton
+thickness	product/AntiNotepad/UI/SearchOverlay.cs	76	Thickness(0, 0, 0, 8)	var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(0, 0, 0, 8) };	Size.Thickness.UI.SearchOverlay.Line76
+spacing/size	product/AntiNotepad/UI/SearchOverlay.cs	81	2	_results = GridView ? new WrapPanel { Orientation = Orientation.Horizontal } : new StackPanel { Spacing = 2 };	Size.UI.SearchOverlay.Line81
+thickness	product/AntiNotepad/UI/SettingsParts.cs	113	Thickness(16, 0, 0, 0)	content.Margin = new Thickness(16, 0, 0, 0);	Size.Thickness.UI.SettingsParts.Line113
+brush alpha	product/AntiNotepad/UI/SettingsParts.cs	119	_p.Dark ? .03 : .025	MinHeight = 54, Padding = new Thickness(52, 10, 16, 10), Background = new SolidColorBrush(_p.Ink, _p.Dark ? .03 : .025),	Paint.Alpha.UI.SettingsParts.Line119
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	119	54	MinHeight = 54, Padding = new Thickness(52, 10, 16, 10), Background = new SolidColorBrush(_p.Ink, _p.Dark ? .03 : .025),	Size.UI.SettingsParts.Line119
+thickness	product/AntiNotepad/UI/SettingsParts.cs	119	Thickness(52, 10, 16, 10)	MinHeight = 54, Padding = new Thickness(52, 10, 16, 10), Background = new SolidColorBrush(_p.Ink, _p.Dark ? .03 : .025),	Size.Thickness.UI.SettingsParts.Line119
+font size	product/AntiNotepad/UI/SettingsParts.cs	132	16	chevron = new GlyphIcon(char.ConvertFromUtf32(0xf2a3), _p.Muted, 16, 0, Glyph.Fluent) { RenderTransform = new RotateTransform(open ? 180 : 0), VerticalAlignment = VerticalAlignment.Center };	Typography.Size.Glyph
+font weight	product/AntiNotepad/UI/SettingsParts.cs	132	0	new GlyphIcon(..., 16, 0, Glyph.Fluent)	Typography.Weight.GlyphNoFakeBold
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	133	12	var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };	Size.UI.SettingsParts.Line133
+font size	product/AntiNotepad/UI/SettingsParts.cs	134	13	right.Children.Add(Kit.Text(value, _p.Muted, 13));	Typography.Size.UI.SettingsParts.Line134
+radius	product/AntiNotepad/UI/SettingsParts.cs	143	0	Kit.Plain(face, _p, radius: 0)	Radius.SettingsDisclosureButton
+thickness	product/AntiNotepad/UI/SettingsParts.cs	145	Thickness(-16, -10)	button.Margin = new Thickness(-16, -10);	Size.Thickness.UI.SettingsParts.Line145
+thickness	product/AntiNotepad/UI/SettingsParts.cs	146	Thickness(16, 10)	if (button.Content is Border inner) inner.Padding = new Thickness(16, 10);	Size.Thickness.UI.SettingsParts.Line146
+brush alpha	product/AntiNotepad/UI/SettingsParts.cs	174	_p.Dark ? .22 : .18	face.Background = on ? new SolidColorBrush(_p.Accent, _p.Dark ? .22 : .18) : Brushes.Transparent;	Paint.Alpha.UI.SettingsParts.Line174
+font weight	product/AntiNotepad/UI/SettingsParts.cs	176	Normal	text.FontWeight = on ? FontWeight.SemiBold : FontWeight.Normal;	Typography.Weight.Normal
+font weight	product/AntiNotepad/UI/SettingsParts.cs	176	SemiBold	text.FontWeight = on ? FontWeight.SemiBold : FontWeight.Normal;	Typography.Weight.SemiBold
+font size	product/AntiNotepad/UI/SettingsParts.cs	182	13	var text = Kit.Text(label, _p.Muted, 13);	Typography.Size.UI.SettingsParts.Line182
+thickness	product/AntiNotepad/UI/SettingsParts.cs	183	Thickness(12, 5)	text.Margin = new Thickness(12, 5);	Size.Thickness.UI.SettingsParts.Line183
+radius	product/AntiNotepad/UI/SettingsParts.cs	184	7	Kit.Plain(text, _p, radius: 7)	Radius.SettingsSegmentButton
+thickness	product/AntiNotepad/UI/SettingsParts.cs	185	Thickness(0, 0, 2, 0)	button.Margin = new Thickness(0, 0, 2, 0);	Size.Thickness.UI.SettingsParts.Line185
+color construction	product/AntiNotepad/UI/SettingsParts.cs	20	Color.FromArgb(220, _p.Ink.R, _p.Ink.G, _p.Ink.B)	private Color IconInk => Color.FromArgb(220, _p.Ink.R, _p.Ink.G, _p.Ink.B);	Paint.Color.UI.SettingsParts.Line20
+font size	product/AntiNotepad/UI/SettingsParts.cs	201	13	var word = Kit.Text(on ? "On" : "Off", _p.Muted, 13);	Typography.Size.UI.SettingsParts.Line201
+radius	product/AntiNotepad/UI/SettingsParts.cs	202	7	var knob = new Border { Width = 14, Height = 14, CornerRadius = new CornerRadius(7), Margin = new Thickness(3, 0) };	Radius.UI.SettingsParts.Line202
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	202	14	var knob = new Border { Width = 14, Height = 14, CornerRadius = new CornerRadius(7), Margin = new Thickness(3, 0) };	Size.UI.SettingsParts.Line202
+thickness	product/AntiNotepad/UI/SettingsParts.cs	202	Thickness(3, 0)	var knob = new Border { Width = 14, Height = 14, CornerRadius = new CornerRadius(7), Margin = new Thickness(3, 0) };	Size.Thickness.UI.SettingsParts.Line202
+radius	product/AntiNotepad/UI/SettingsParts.cs	203	10	var track = new Border { Width = 40, Height = 20, CornerRadius = new CornerRadius(10), Child = knob, VerticalAlignment = VerticalAlignment.Center };	Radius.UI.SettingsParts.Line203
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	203	20	var track = new Border { Width = 40, Height = 20, CornerRadius = new CornerRadius(10), Child = knob, VerticalAlignment = VerticalAlignment.Center };	Size.UI.SettingsParts.Line203
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	203	40	var track = new Border { Width = 40, Height = 20, CornerRadius = new CornerRadius(10), Child = knob, VerticalAlignment = VerticalAlignment.Center };	Size.UI.SettingsParts.Line203
+thickness	product/AntiNotepad/UI/SettingsParts.cs	211	Thickness(on ? 0 : 1.5)	track.BorderThickness = new Thickness(on ? 0 : 1.5);	Size.Thickness.UI.SettingsParts.Line211
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	214	12	var face = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(8, 4) };	Size.UI.SettingsParts.Line214
+thickness	product/AntiNotepad/UI/SettingsParts.cs	214	Thickness(8, 4)	var face = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(8, 4) };	Size.Thickness.UI.SettingsParts.Line214
+radius	product/AntiNotepad/UI/SettingsParts.cs	217	8	Kit.Plain(face, _p, radius: 8)	Radius.SettingsToggleButton
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	224	160	Dropdown(... double minWidth = 160)	Size.SettingsDropdown.MinimumWidth
+font size	product/AntiNotepad/UI/SettingsParts.cs	226	13	var label = Kit.Text(options.FirstOrDefault(o => o.Value == current).Label ?? current, _p.Ink, 13);	Typography.Size.UI.SettingsParts.Line226
+thickness	product/AntiNotepad/UI/SettingsParts.cs	227	Thickness(12, 0, 10, 0)	var face = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(12, 0, 10, 0) };	Size.Thickness.UI.SettingsParts.Line227
+font size	product/AntiNotepad/UI/SettingsParts.cs	229	14	var chevron = new GlyphIcon(char.ConvertFromUtf32(0xf2a3), _p.Muted, 14, 0, Glyph.Fluent) { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0) };	Typography.Size.Glyph
+font weight	product/AntiNotepad/UI/SettingsParts.cs	229	0	new GlyphIcon(..., 14, 0, Glyph.Fluent)	Typography.Weight.GlyphNoFakeBold
+thickness	product/AntiNotepad/UI/SettingsParts.cs	229	Thickness(12, 0, 0, 0)	var chevron = new GlyphIcon(char.ConvertFromUtf32(0xf2a3), _p.Muted, 14, 0, Glyph.Fluent) { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0) };	Size.Thickness.UI.SettingsParts.Line229
+radius	product/AntiNotepad/UI/SettingsParts.cs	231	7	var box = new Border { Height = 32, MinWidth = minWidth, CornerRadius = new CornerRadius(7), BorderBrush = Line, BorderThickness = new Thickness(1), Background = new SolidColorBrush(_p.Su...	Radius.UI.SettingsParts.Line231
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	231	32	var box = new Border { Height = 32, MinWidth = minWidth, CornerRadius = new CornerRadius(7), BorderBrush = Line, BorderThickness = new Thickness(1), Background = new SolidColorBrush(_p.Su...	Size.UI.SettingsParts.Line231
+thickness	product/AntiNotepad/UI/SettingsParts.cs	231	Thickness(1)	var box = new Border { Height = 32, MinWidth = minWidth, CornerRadius = new CornerRadius(7), BorderBrush = Line, BorderThickness = new Thickness(1), Background = new SolidColorBrush(_p.Su...	Size.Thickness.UI.SettingsParts.Line231
+radius	product/AntiNotepad/UI/SettingsParts.cs	232	7	Kit.Plain(box, _p, radius: 7)	Radius.SettingsDropdownButton
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	233	1	var list = new StackPanel { Spacing = 1 };	Size.UI.SettingsParts.Line233
+radius	product/AntiNotepad/UI/SettingsParts.cs	239	8	Background = new SolidColorBrush(_p.Surface), BorderBrush = Line, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(8),	Radius.UI.SettingsParts.Line239
+thickness	product/AntiNotepad/UI/SettingsParts.cs	239	Thickness(1)	Background = new SolidColorBrush(_p.Surface), BorderBrush = Line, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(8),	Size.Thickness.UI.SettingsParts.Line239
+thickness	product/AntiNotepad/UI/SettingsParts.cs	240	Thickness(4)	Padding = new Thickness(4), MinWidth = minWidth, Child = list,	Size.Thickness.UI.SettingsParts.Line240
+color construction	product/AntiNotepad/UI/SettingsParts.cs	241	Color.FromArgb(_p.Dark ? (byte)110 : (byte)40, 0, 0, 0)	BoxShadow = new BoxShadows(new BoxShadow { Blur = 16, OffsetY = 4, Color = Color.FromArgb(_p.Dark ? (byte)110 : (byte)40, 0, 0, 0) }),	Paint.Color.UI.SettingsParts.Line241
+shadow	product/AntiNotepad/UI/SettingsParts.cs	241	16	BoxShadow = new BoxShadows(new BoxShadow { Blur = 16, OffsetY = 4, Color = Color.FromArgb(_p.Dark ? (byte)110 : (byte)40, 0, 0, 0) }),	Elevation.UI.SettingsParts.Line241
+shadow	product/AntiNotepad/UI/SettingsParts.cs	241	4	BoxShadow = new BoxShadows(new BoxShadow { Blur = 16, OffsetY = 4, Color = Color.FromArgb(_p.Dark ? (byte)110 : (byte)40, 0, 0, 0) }),	Elevation.UI.SettingsParts.Line241
+font size	product/AntiNotepad/UI/SettingsParts.cs	246	13	var item = Kit.Text(text, value == current ? _p.Ink : _p.Muted, 13, value == current ? FontWeight.SemiBold : FontWeight.Normal);	Typography.Size.UI.SettingsParts.Line246
+font weight	product/AntiNotepad/UI/SettingsParts.cs	246	Normal	var item = Kit.Text(text, value == current ? _p.Ink : _p.Muted, 13, value == current ? FontWeight.SemiBold : FontWeight.Normal);	Typography.Weight.Normal
+font weight	product/AntiNotepad/UI/SettingsParts.cs	246	SemiBold	var item = Kit.Text(text, value == current ? _p.Ink : _p.Muted, 13, value == current ? FontWeight.SemiBold : FontWeight.Normal);	Typography.Weight.SemiBold
+thickness	product/AntiNotepad/UI/SettingsParts.cs	247	Thickness(10, 6)	item.Margin = new Thickness(10, 6);	Size.Thickness.UI.SettingsParts.Line247
+radius	product/AntiNotepad/UI/SettingsParts.cs	248	6	Kit.Plain(item, _p, radius: 6)	Radius.SettingsDropdownItem
+brush alpha	product/AntiNotepad/UI/SettingsParts.cs	250	_p.Dark ? .22 : .18	if (value == current && row.Content is Border b) b.Background = new SolidColorBrush(_p.Accent, _p.Dark ? .22 : .18);	Paint.Alpha.UI.SettingsParts.Line250
+font size	product/AntiNotepad/UI/SettingsParts.cs	26	26	Text = text, FontSize = 26, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(_p.Heading), Margin = new Thickness(2, 0, 0, 10)	Typography.Size.UI.SettingsParts.Line26
+font weight	product/AntiNotepad/UI/SettingsParts.cs	26	SemiBold	Text = text, FontSize = 26, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(_p.Heading), Margin = new Thickness(2, 0, 0, 10)	Typography.Weight.SemiBold
+thickness	product/AntiNotepad/UI/SettingsParts.cs	26	Thickness(2, 0, 0, 10)	Text = text, FontSize = 26, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(_p.Heading), Margin = new Thickness(2, 0, 0, 10)	Size.Thickness.UI.SettingsParts.Line26
+color construction	product/AntiNotepad/UI/SettingsParts.cs	265	Color.FromRgb(0x1A, 0x1A, 0x1A)	var onAccent = 0.2126 * a.R + 0.7152 * a.G + 0.0722 * a.B > 150 ? Color.FromRgb(0x1A, 0x1A, 0x1A) : Colors.White;	Paint.Color.UI.SettingsParts.Line265
+font size	product/AntiNotepad/UI/SettingsParts.cs	266	13	var label = Kit.Text(text, primary ? onAccent : _p.Ink, 13, primary ? FontWeight.SemiBold : FontWeight.Normal);	Typography.Size.UI.SettingsParts.Line266
+font weight	product/AntiNotepad/UI/SettingsParts.cs	266	Normal	var label = Kit.Text(text, primary ? onAccent : _p.Ink, 13, primary ? FontWeight.SemiBold : FontWeight.Normal);	Typography.Weight.Normal
+font weight	product/AntiNotepad/UI/SettingsParts.cs	266	SemiBold	var label = Kit.Text(text, primary ? onAccent : _p.Ink, 13, primary ? FontWeight.SemiBold : FontWeight.Normal);	Typography.Weight.SemiBold
+thickness	product/AntiNotepad/UI/SettingsParts.cs	267	Thickness(12, 5)	label.Margin = new Thickness(12, 5);	Size.Thickness.UI.SettingsParts.Line267
+radius	product/AntiNotepad/UI/SettingsParts.cs	269	7	? new Border { Background = new SolidColorBrush(a), CornerRadius = new CornerRadius(7), Child = label }	Radius.UI.SettingsParts.Line269
+radius	product/AntiNotepad/UI/SettingsParts.cs	270	7	: new Border { BorderBrush = Line, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(7), Child = label };	Radius.UI.SettingsParts.Line270
+thickness	product/AntiNotepad/UI/SettingsParts.cs	270	Thickness(1)	: new Border { BorderBrush = Line, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(7), Child = label };	Size.Thickness.UI.SettingsParts.Line270
+radius	product/AntiNotepad/UI/SettingsParts.cs	271	7	Kit.Plain(face, _p, radius: 7)	Radius.SettingsTextButton
+opacity	product/AntiNotepad/UI/SettingsParts.cs	275	0.86	button.PointerEntered += (_, _) => face.Opacity = 0.86;	Paint.Opacity.UI.SettingsParts.Line275
+opacity	product/AntiNotepad/UI/SettingsParts.cs	276	1	button.PointerExited += (_, _) => face.Opacity = 1;	Paint.Opacity.UI.SettingsParts.Line276
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	289	38	MinHeight = 38,	Size.UI.SettingsParts.Line289
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	290	68	MaxHeight = 68,	Size.UI.SettingsParts.Line290
+font size	product/AntiNotepad/UI/SettingsParts.cs	291	13	FontSize = 13,	Typography.Size.UI.SettingsParts.Line291
+thickness	product/AntiNotepad/UI/SettingsParts.cs	292	Thickness(10, 7)	Padding = new Thickness(10, 7),	Size.Thickness.UI.SettingsParts.Line292
+radius	product/AntiNotepad/UI/SettingsParts.cs	295	7	CornerRadius = new CornerRadius(7),	Radius.UI.SettingsParts.Line295
+radius	product/AntiNotepad/UI/SettingsParts.cs	306	8	Width = width, CornerRadius = new CornerRadius(8), Padding = new Thickness(ring),	Radius.UI.SettingsParts.Line306
+radius	product/AntiNotepad/UI/SettingsParts.cs	309	8 - ring	Child = new Border { CornerRadius = new CornerRadius(8 - ring), ClipToBounds = true, Child = picture },	Radius.UI.SettingsParts.Line309
+font size	product/AntiNotepad/UI/SettingsParts.cs	31	13	Text = text, FontSize = 13, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(_p.Ink), Margin = new Thickness(2, 20, 0, 8)	Typography.Size.UI.SettingsParts.Line31
+font weight	product/AntiNotepad/UI/SettingsParts.cs	31	SemiBold	Text = text, FontSize = 13, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(_p.Ink), Margin = new Thickness(2, 20, 0, 8)	Typography.Weight.SemiBold
+thickness	product/AntiNotepad/UI/SettingsParts.cs	31	Thickness(2, 20, 0, 8)	Text = text, FontSize = 13, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(_p.Ink), Margin = new Thickness(2, 20, 0, 8)	Size.Thickness.UI.SettingsParts.Line31
+thickness	product/AntiNotepad/UI/SettingsParts.cs	43	first ? default : new Thickness(0,1,0,0)	row.BorderThickness = first ? default : new Thickness(0, 1, 0, 0);	Size.Thickness.UI.SettingsParts.Line43
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	311	5	var stack = new StackPanel { Spacing = 5, HorizontalAlignment = HorizontalAlignment.Center };	Size.UI.SettingsParts.Line311
+font size	product/AntiNotepad/UI/SettingsParts.cs	313	12	var text = Kit.Text(label, selected ? _p.Ink : _p.Muted, 12, selected ? FontWeight.SemiBold : FontWeight.Normal);	Typography.Size.UI.SettingsParts.Line313
+font weight	product/AntiNotepad/UI/SettingsParts.cs	313	Normal	var text = Kit.Text(label, selected ? _p.Ink : _p.Muted, 12, selected ? FontWeight.SemiBold : FontWeight.Normal);	Typography.Weight.Normal
+font weight	product/AntiNotepad/UI/SettingsParts.cs	313	SemiBold	var text = Kit.Text(label, selected ? _p.Ink : _p.Muted, 12, selected ? FontWeight.SemiBold : FontWeight.Normal);	Typography.Weight.SemiBold
+radius	product/AntiNotepad/UI/SettingsParts.cs	317	8	Kit.Plain(stack, _p, radius: 8)	Radius.SettingsTileButton
+thickness	product/AntiNotepad/UI/SettingsParts.cs	318	Thickness(4)	if (button.Content is Border b) b.Padding = new Thickness(4);	Size.Thickness.UI.SettingsParts.Line318
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	329	3	var dots = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 3, HorizontalAlignment = HorizontalAlignment.Center };	Size.UI.SettingsParts.Line329
+radius	product/AntiNotepad/UI/SettingsParts.cs	331	3.5	dots.Children.Add(new Border { Width = 7, Height = 7, CornerRadius = new CornerRadius(3.5), Background = new SolidColorBrush(c) });	Radius.UI.SettingsParts.Line331
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	331	7	dots.Children.Add(new Border { Width = 7, Height = 7, CornerRadius = new CornerRadius(3.5), Background = new SolidColorBrush(c) });	Size.UI.SettingsParts.Line331
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	332	5	var face = new StackPanel { Spacing = 5, Margin = new Thickness(6, 8) };	Size.UI.SettingsParts.Line332
+thickness	product/AntiNotepad/UI/SettingsParts.cs	332	Thickness(6, 8)	var face = new StackPanel { Spacing = 5, Margin = new Thickness(6, 8) };	Size.Thickness.UI.SettingsParts.Line332
+font size	product/AntiNotepad/UI/SettingsParts.cs	333	12	face.Children.Add(new TextBlock { Text = palette.Name, FontSize = 12, Foreground = new SolidColorBrush(palette.Ink), HorizontalAlignment = HorizontalAlignment.Center });	Typography.Size.UI.SettingsParts.Line333
+radius	product/AntiNotepad/UI/SettingsParts.cs	338	9	Background = new SolidColorBrush(palette.Canvas), CornerRadius = new CornerRadius(9), Margin = new Thickness(0, 0, 8, 0), Child = face,	Radius.UI.SettingsParts.Line338
+thickness	product/AntiNotepad/UI/SettingsParts.cs	338	Thickness(0, 0, 8, 0)	Background = new SolidColorBrush(palette.Canvas), CornerRadius = new CornerRadius(9), Margin = new Thickness(0, 0, 8, 0), Child = face,	Size.Thickness.UI.SettingsParts.Line338
+thickness	product/AntiNotepad/UI/SettingsParts.cs	340	Thickness(selected ? 2 : 1)	BorderBrush = selected ? new SolidColorBrush(_p.Accent) : Line, BorderThickness = new Thickness(selected ? 2 : 1), Cursor = new Cursor(StandardCursorType.Hand),	Size.Thickness.UI.SettingsParts.Line340
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	352	7	var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 7 };	Size.UI.SettingsParts.Line352
+radius	product/AntiNotepad/UI/SettingsParts.cs	358	9	Width = 18, Height = 18, CornerRadius = new CornerRadius(9), Background = new SolidColorBrush(color), Cursor = new Cursor(StandardCursorType.Hand),	Radius.UI.SettingsParts.Line358
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	358	18	Width = 18, Height = 18, CornerRadius = new CornerRadius(9), Background = new SolidColorBrush(color), Cursor = new Cursor(StandardCursorType.Hand),	Size.UI.SettingsParts.Line358
+brush alpha	product/AntiNotepad/UI/SettingsParts.cs	359	selected ? .9 : .3	BorderBrush = new SolidColorBrush(selected ? _p.Ink : _p.Faint, selected ? .9 : .3), BorderThickness = new Thickness(selected ? 2.5 : 1),	Paint.Alpha.UI.SettingsParts.Line359
+thickness	product/AntiNotepad/UI/SettingsParts.cs	359	Thickness(selected ? 2.5 : 1)	BorderBrush = new SolidColorBrush(selected ? _p.Ink : _p.Faint, selected ? .9 : .3), BorderThickness = new Thickness(selected ? 2.5 : 1),	Size.Thickness.UI.SettingsParts.Line359
+font family	product/AntiNotepad/UI/SettingsParts.cs	376	Cascadia Mono, Consolas	FontFamily = new FontFamily("Cascadia Mono, Consolas")	Typography.Font.SettingsPreview
+font size	product/AntiNotepad/UI/SettingsParts.cs	376	14	row.Children.Add(new TextBlock { Text = "a", FontFamily = new FontFamily("Cascadia Mono, Consolas"), FontSize = 14, Foreground = new SolidColorBrush(_p.Ink), VerticalAlignment = VerticalA...	Typography.Size.UI.SettingsParts.Line376
+radius	product/AntiNotepad/UI/SettingsParts.cs	379	1	Width = block ? 8 : 2, Height = 16, Margin = new Thickness(1, 0, 0, 0), CornerRadius = new CornerRadius(1),	Radius.UI.SettingsParts.Line379
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	379	16	Width = block ? 8 : 2, Height = 16, Margin = new Thickness(1, 0, 0, 0), CornerRadius = new CornerRadius(1),	Size.UI.SettingsParts.Line379
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	379	block ? 8 : 2	Width = block ? 8 : 2, Height = 16, Margin = new Thickness(1, 0, 0, 0), CornerRadius = new CornerRadius(1),	Size.UI.SettingsParts.Line379
+thickness	product/AntiNotepad/UI/SettingsParts.cs	379	Thickness(1, 0, 0, 0)	Width = block ? 8 : 2, Height = 16, Margin = new Thickness(1, 0, 0, 0), CornerRadius = new CornerRadius(1),	Size.Thickness.UI.SettingsParts.Line379
+brush alpha	product/AntiNotepad/UI/SettingsParts.cs	380	block ? .45 : 1	Background = new SolidColorBrush(_p.Caret, block ? .45 : 1), VerticalAlignment = VerticalAlignment.Center,	Paint.Alpha.UI.SettingsParts.Line380
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	382	34	return new Border { Height = 34, Background = new SolidColorBrush(_p.Canvas), Child = row };	Size.UI.SettingsParts.Line382
+color construction	product/AntiNotepad/UI/SettingsParts.cs	392	Color.FromArgb(90, _p.Identifier.R, _p.Identifier.G, _p.Identifier.B)	GradientStops = { new GradientStop(Color.FromArgb(90, _p.Keyword.R, _p.Keyword.G, _p.Keyword.B), 0), new GradientStop(Color.FromArgb(90, _p.Identifier.R, _p.Identifier.G, _p.Identifier.B)...	Paint.Color.UI.SettingsParts.Line392
+color construction	product/AntiNotepad/UI/SettingsParts.cs	392	Color.FromArgb(90, _p.Keyword.R, _p.Keyword.G, _p.Keyword.B)	GradientStops = { new GradientStop(Color.FromArgb(90, _p.Keyword.R, _p.Keyword.G, _p.Keyword.B), 0), new GradientStop(Color.FromArgb(90, _p.Identifier.R, _p.Identifier.G, _p.Identifier.B)...	Paint.Color.UI.SettingsParts.Line392
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	392	gradient stops at 0 and 1	Keyword and identifier preview gradient endpoints	Geometry.ColorPreview.GradientEndpoints
+color construction	product/AntiNotepad/UI/SettingsParts.cs	397	Color.FromArgb(40, _p.Ink.R, _p.Ink.G, _p.Ink.B)	GradientStops = { new GradientStop(Color.FromArgb(40, _p.Ink.R, _p.Ink.G, _p.Ink.B), 0), new GradientStop(Colors.Transparent, 1) },	Paint.Color.UI.SettingsParts.Line397
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	397	gradient stops at 0 and 1	Ink preview gradient endpoints	Geometry.ColorPreview.GradientEndpoints
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	401	46	return new Border { Height = 46, Background = new SolidColorBrush(_p.Canvas), Child = new Border { Background = fill } };	Size.UI.SettingsParts.Line401
+font size	product/AntiNotepad/UI/SettingsParts.cs	407	20	private Control Fl(int codepoint) => new GlyphIcon(char.ConvertFromUtf32(codepoint), IconInk, 20, 0, Glyph.Fluent)	Typography.Size.Glyph
+font weight	product/AntiNotepad/UI/SettingsParts.cs	407	0	new GlyphIcon(..., 20, 0, Glyph.Fluent)	Typography.Weight.GlyphNoFakeBold
+radius	product/AntiNotepad/UI/SettingsParts.cs	433	1.8	DrawRectangle folder icon corner radii 1.8, 1.8	Radius.SettingsIcon.Folder
+radius	product/AntiNotepad/UI/SettingsParts.cs	438	2.2	DrawRectangle calendar icon corner radii 2.2, 2.2	Radius.SettingsIcon.Calendar
+radius	product/AntiNotepad/UI/SettingsParts.cs	453	0.9	DrawRectangle cursor icon corner radii 0.9, 0.9	Radius.SettingsIcon.TextCursor
+font family	product/AntiNotepad/UI/SettingsParts.cs	455	Segoe UI Variable Text, Segoe UI	new Typeface("Segoe UI Variable Text, Segoe UI", FontStyle.Normal, FontWeight.SemiBold)	Typography.Font.SettingsCursor
+font size	product/AntiNotepad/UI/SettingsParts.cs	455	12.5	new FormattedText(..., new Typeface(...), 12.5, ink)	Typography.Size.SettingsCursor
+font style	product/AntiNotepad/UI/SettingsParts.cs	455	Normal	new Typeface("Segoe UI Variable Text, Segoe UI", FontStyle.Normal, ...)	Typography.Style.Normal
+font weight	product/AntiNotepad/UI/SettingsParts.cs	455	SemiBold	new Typeface("Segoe UI Variable Text, Segoe UI", FontStyle.Normal, FontWeight.SemiBold), 12.5, ink);	Typography.Weight.SemiBold
+thickness	product/AntiNotepad/UI/SettingsParts.cs	458	1.1	var thin = new Pen(ink, 1.1);	Size.StrokeThickness
+brush alpha	product/AntiNotepad/UI/SettingsParts.cs	471	kind == "biggrid" ? 1 : .9	var pen = new Pen(new SolidColorBrush(p.Paper, kind == "biggrid" ? 1 : .9), 1);	Paint.Alpha.UI.SettingsParts.Line471
+thickness	product/AntiNotepad/UI/SettingsParts.cs	471	1	var pen = new Pen(new SolidColorBrush(p.Paper, kind == "biggrid" ? 1 : .9), 1);	Size.StrokeThickness
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	474	8.5 start y; 8 px row step	Lined paper preview geometry	Geometry.PatternSwatch.Lines
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	477	4 px origin; 8 px step; 0.9 px dot radii	Dotted paper preview geometry	Geometry.PatternSwatch.Dots
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	482	0.5 px inset; strength-derived step	Grid paper preview horizontal line placement	Geometry.PatternSwatch.GridInset
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	483	0.5 px inset; strength-derived step	Grid paper preview vertical line placement	Geometry.PatternSwatch.GridInset
+brush alpha	product/AntiNotepad/UI/SettingsParts.cs	49	_p.Dark ? .92 : .9	Background = new SolidColorBrush(_p.Surface, _p.Dark ? .92 : .9), BorderBrush = Line, BorderThickness = new Thickness(1),	Paint.Alpha.UI.SettingsParts.Line49
+thickness	product/AntiNotepad/UI/SettingsParts.cs	49	Thickness(1)	Background = new SolidColorBrush(_p.Surface, _p.Dark ? .92 : .9), BorderBrush = Line, BorderThickness = new Thickness(1),	Size.Thickness.UI.SettingsParts.Line49
+brush alpha	product/AntiNotepad/UI/SettingsParts.cs	496	.10	dc.DrawRectangle(new SolidColorBrush(p.Ink, .10), null, new Rect(0, h - 7, w, 7));	Paint.Alpha.UI.SettingsParts.Line496
+brush alpha	product/AntiNotepad/UI/SettingsParts.cs	497	.8	var pad = new SolidColorBrush(p.Accent, .8);	Paint.Alpha.UI.SettingsParts.Line497
+radius	product/AntiNotepad/UI/SettingsParts.cs	50	10	CornerRadius = new CornerRadius(10), ClipToBounds = true, Child = stack, Tag = "card",	Radius.UI.SettingsParts.Line50
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	500	new Rect(w / 2 - 13, h / 2 - 13, 26, 20)	center => new Rect(w / 2 - 13, h / 2 - 13, 26, 20),	Size.UI.SettingsParts.Line500
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	501	new Rect(w * 0.46, h * 0.38, 26, 20)	mouse => new Rect(w * 0.46, h * 0.38, 26, 20),	Size.UI.SettingsParts.Line501
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	502	new Rect(w - 32, h - 7 - 24, 26, 20)	tray => new Rect(w - 32, h - 7 - 24, 26, 20),	Size.UI.SettingsParts.Line502
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	503	new Rect(w / 2 - 13, 0, 26, 20)	dropdown => new Rect(w / 2 - 13, 0, 26, 20),	Size.UI.SettingsParts.Line503
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	504	new Rect(12, 10, 26, 20)	_ => new Rect(12, 10, 26, 20),	Size.UI.SettingsParts.Line504
+radius	product/AntiNotepad/UI/SettingsParts.cs	506	where == "dropdown" ? 0 : 4	DrawRectangle OpenAt preview corners 0 or 4	Radius.SettingsOpenAtPicture
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	511	new Point(r.X - 2, r.Y - 3)	var o = new Point(r.X - 2, r.Y - 3);	Size.UI.SettingsParts.Line511
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	513	points (0,10),(3,7),(5.5,11.5),(7,10.7),(4.6,6.4),(8.5,6.4)	Fixed tray pointer polygon coordinates	Geometry.ScreenPicture.TrayPointer
+thickness	product/AntiNotepad/UI/SettingsParts.cs	516	1	dc.DrawGeometry(new SolidColorBrush(p.Ink), new Pen(new SolidColorBrush(p.Surface), 1), arrow);	Size.StrokeThickness
+stroke style	product/AntiNotepad/UI/SettingsParts.cs	527	Cap.Round; Join.Round	new Pen(... PenLineCap.Round, PenLineJoin.Round)	Stroke.SettingsIcons.Round
+thickness	product/AntiNotepad/UI/SettingsParts.cs	527	1.4	draw(dc, new Pen(brush, 1.4, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round), brush);	Size.StrokeThickness
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	80	20	grid.Children.Add(new Border { Width = 20, Height = 20, Margin = new Thickness(0, 0, 16, 0), Child = icon?.Invoke(), VerticalAlignment = VerticalAlignment.Center });	Size.UI.SettingsParts.Line80
+thickness	product/AntiNotepad/UI/SettingsParts.cs	80	Thickness(0, 0, 16, 0)	grid.Children.Add(new Border { Width = 20, Height = 20, Margin = new Thickness(0, 0, 16, 0), Child = icon?.Invoke(), VerticalAlignment = VerticalAlignment.Center });	Size.Thickness.UI.SettingsParts.Line80
+thickness	product/AntiNotepad/UI/SettingsParts.cs	86	Thickness(16, 0, 0, 0)	right.Margin = new Thickness(16, 0, 0, 0);	Size.Thickness.UI.SettingsParts.Line86
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	90	62	return new Border { MinHeight = 62, Padding = new Thickness(16, 10), Child = grid, Tag = title + " " + shownDescription };	Size.UI.SettingsParts.Line90
+thickness	product/AntiNotepad/UI/SettingsParts.cs	90	Thickness(16, 10)	return new Border { MinHeight = 62, Padding = new Thickness(16, 10), Child = grid, Tag = title + " " + shownDescription };	Size.Thickness.UI.SettingsParts.Line90
+spacing/size	product/AntiNotepad/UI/SettingsParts.cs	95	2	var text = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center };	Size.UI.SettingsParts.Line95
+font size	product/AntiNotepad/UI/SettingsParts.cs	96	14	text.Children.Add(new TextBlock { Text = title, FontSize = 14, Foreground = new SolidColorBrush(_p.Ink), TextWrapping = TextWrapping.Wrap });	Typography.Size.UI.SettingsParts.Line96
+font size	product/AntiNotepad/UI/SettingsParts.cs	98	12	text.Children.Add(new TextBlock { Text = description, FontSize = 12, Foreground = new SolidColorBrush(_p.Muted), TextWrapping = TextWrapping.Wrap });	Typography.Size.UI.SettingsParts.Line98
+font size	product/AntiNotepad/UI/SettingsWindow.cs	170	12	var title = Kit.Text($"{AppInfo.Name} Settings", _p.Muted, 12);	Typography.Size.UI.SettingsWindow.Line170
+thickness	product/AntiNotepad/UI/SettingsWindow.cs	171	Thickness(18, 0, 0, 0)	title.Margin = new Thickness(18, 0, 0, 0);	Size.Thickness.UI.SettingsWindow.Line171
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	174	34	Kit.IconButton close size 34	Size.SettingsCloseButton
+thickness	product/AntiNotepad/UI/SettingsWindow.cs	175	Thickness(0, 0, 6, 0)	close.Margin = new Thickness(0, 0, 6, 0);	Size.Thickness.UI.SettingsWindow.Line175
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	182	12	var railHost = new StackPanel { Margin = new Thickness(10, 4, 10, 10), Spacing = 12 };	Size.UI.SettingsWindow.Line182
+thickness	product/AntiNotepad/UI/SettingsWindow.cs	182	Thickness(10, 4, 10, 10)	var railHost = new StackPanel { Margin = new Thickness(10, 4, 10, 10), Spacing = 12 };	Size.Thickness.UI.SettingsWindow.Line182
+font size	product/AntiNotepad/UI/SettingsWindow.cs	185	13	PlaceholderText = "Find a setting", FontSize = 13, Height = 34, CornerRadius = new CornerRadius(8), Padding = new Thickness(8, 7, 8, 0),	Typography.Size.UI.SettingsWindow.Line185
+radius	product/AntiNotepad/UI/SettingsWindow.cs	185	8	PlaceholderText = "Find a setting", FontSize = 13, Height = 34, CornerRadius = new CornerRadius(8), Padding = new Thickness(8, 7, 8, 0),	Radius.UI.SettingsWindow.Line185
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	185	34	PlaceholderText = "Find a setting", FontSize = 13, Height = 34, CornerRadius = new CornerRadius(8), Padding = new Thickness(8, 7, 8, 0),	Size.UI.SettingsWindow.Line185
+thickness	product/AntiNotepad/UI/SettingsWindow.cs	185	Thickness(8, 7, 8, 0)	PlaceholderText = "Find a setting", FontSize = 13, Height = 34, CornerRadius = new CornerRadius(8), Padding = new Thickness(8, 7, 8, 0),	Size.Thickness.UI.SettingsWindow.Line185
+font size	product/AntiNotepad/UI/SettingsWindow.cs	187	15	InnerLeftContent = new GlyphIcon(char.ConvertFromUtf32(0xf68f), _p.Muted, 15, 0, Glyph.Fluent) { Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center },	Typography.Size.Glyph
+font weight	product/AntiNotepad/UI/SettingsWindow.cs	187	0	new GlyphIcon(..., 15, 0, Glyph.Fluent)	Typography.Weight.GlyphNoFakeBold
+thickness	product/AntiNotepad/UI/SettingsWindow.cs	187	Thickness(10, 0, 0, 0)	InnerLeftContent = new GlyphIcon(char.ConvertFromUtf32(0xf68f), _p.Muted, 15, 0, Glyph.Fluent) { Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center },	Size.Thickness.UI.SettingsWindow.Line187
+behavior timers	product/AntiNotepad/UI/SettingsWindow.cs	191	TimeSpan.FromMilliseconds(150)	var findPause = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };	Behavior.Timer.UI.SettingsWindow.Line191
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	218	12	var face = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(12, 0), VerticalAlignment = VerticalAlignment.Center };	Size.UI.SettingsWindow.Line218
+thickness	product/AntiNotepad/UI/SettingsWindow.cs	218	Thickness(12, 0)	var face = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(12, 0), VerticalAlignment = VerticalAlignment.Center };	Size.Thickness.UI.SettingsWindow.Line218
+font size	product/AntiNotepad/UI/SettingsWindow.cs	219	18	face.Children.Add(new GlyphIcon(char.ConvertFromUtf32(glyph), on ? IconInk : _p.Muted, 18, 0, Glyph.Fluent) { VerticalAlignment = VerticalAlignment.Center });	Typography.Size.Glyph
+font weight	product/AntiNotepad/UI/SettingsWindow.cs	219	0	new GlyphIcon(..., 18, 0, Glyph.Fluent)	Typography.Weight.GlyphNoFakeBold
+font size	product/AntiNotepad/UI/SettingsWindow.cs	220	14	face.Children.Add(Kit.Text(name, on ? _p.Ink : _p.Muted, 14, on ? FontWeight.SemiBold : FontWeight.Normal));	Typography.Size.UI.SettingsWindow.Line220
+font weight	product/AntiNotepad/UI/SettingsWindow.cs	220	Normal	face.Children.Add(Kit.Text(name, on ? _p.Ink : _p.Muted, 14, on ? FontWeight.SemiBold : FontWeight.Normal));	Typography.Weight.Normal
+font weight	product/AntiNotepad/UI/SettingsWindow.cs	220	SemiBold	face.Children.Add(Kit.Text(name, on ? _p.Ink : _p.Muted, 14, on ? FontWeight.SemiBold : FontWeight.Normal));	Typography.Weight.SemiBold
+radius	product/AntiNotepad/UI/SettingsWindow.cs	221	8	Kit.Plain(face, _p, height: 36, radius: 8)	Radius.SettingsOptionButton
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	221	36	Kit.Plain(... height: 36)	Size.SettingsOptionButton.Height
+brush alpha	product/AntiNotepad/UI/SettingsWindow.cs	225	_p.Dark ? .22 : .18	var fill = new SolidColorBrush(_p.Accent, _p.Dark ? .22 : .18);	Paint.Alpha.UI.SettingsWindow.Line225
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	242	780	private StackPanel NewPage() => new() { Margin = new Thickness(16, 2, 28, 32), MaxWidth = 780, HorizontalAlignment = HorizontalAlignment.Stretch };	Size.UI.SettingsWindow.Line242
+thickness	product/AntiNotepad/UI/SettingsWindow.cs	242	Thickness(16, 2, 28, 32)	private StackPanel NewPage() => new() { Margin = new Thickness(16, 2, 28, 32), MaxWidth = 780, HorizontalAlignment = HorizontalAlignment.Stretch };	Size.Thickness.UI.SettingsWindow.Line242
+opacity	product/AntiNotepad/UI/SettingsWindow.cs	257	0	page.Opacity = 0;	Paint.Opacity.UI.SettingsWindow.Line257
+opacity	product/AntiNotepad/UI/SettingsWindow.cs	258	1	Anim.Run(page, 150, t => { var e = Anim.EaseOut(t); page.Opacity = e; shift.Y = 10 * (1 - e); }, () => { page.Opacity = 1; page.RenderTransform = null; });	Paint.Opacity.UI.SettingsWindow.Line258
+tween duration	product/AntiNotepad/UI/SettingsWindow.cs	258	150 ms	Anim.Run(page, 150, t => ...)	Motion.Duration.SettingsPage.Enter
+font size	product/AntiNotepad/UI/SettingsWindow.cs	307	13	if (!any) page.Children.Add(Kit.Text($"No setting matches “{query}”.", _p.Muted, 13));	Typography.Size.UI.SettingsWindow.Line307
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	327	6	var cells = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };	Size.UI.SettingsWindow.Line327
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	348	4	var materials = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };	Size.UI.SettingsWindow.Line348
+font family	product/AntiNotepad/UI/SettingsWindow.cs	394	Cascadia Mono; Cascadia Code; Consolas; Segoe UI	Font family selector choices	Typography.Font.EditorChoices
+font size	product/AntiNotepad/UI/SettingsWindow.cs	396	13,14,15,16,18,20	Font-size selector choices	Typography.Size.EditorChoices
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	398	0,60,72,88,110	Text width selector values	Settings.TextWidth.Options
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	400	1.15,1.32,1.5,1.7	Line spacing selector values	Settings.LineSpacing.Options
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	407	40	backings.Children.Add(Tile(new PatternSwatch(id, _p) { Height = 40 }, name, S.Paper == id, () => Set(() => S.Paper = id, rows: true), 60));	Size.UI.SettingsWindow.Line407
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	407	60	Tile(..., 60)	Size.SettingsPaperTile.Width
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	43	2	private readonly StackPanel _rail = new() { Spacing = 2 };	Size.UI.SettingsWindow.Line43
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	505	104	Tile(..., 104)	Size.SettingsOpenAtTile.Width
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	505	62	tiles.Children.Add(Tile(new ScreenPicture(id, _p) { Height = 62 }, name, S.OpenAt == id, () => Set(() => S.OpenAt = id, rows: true), 104));	Size.UI.SettingsWindow.Line505
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	540	4	var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, VerticalAlignment = VerticalAlignment.Center };	Size.UI.SettingsWindow.Line540
+font size	product/AntiNotepad/UI/SettingsWindow.cs	542	13	if (label is "off" or "") row.Children.Add(Kit.Text("None", _p.Muted, 13));	Typography.Size.UI.SettingsWindow.Line542
+radius	product/AntiNotepad/UI/SettingsWindow.cs	547	5	BorderBrush = Line, BorderThickness = new Thickness(1, 1, 1, 2), CornerRadius = new CornerRadius(5), Padding = new Thickness(8, 2),	Radius.UI.SettingsWindow.Line547
+thickness	product/AntiNotepad/UI/SettingsWindow.cs	547	Thickness(1, 1, 1, 2)	BorderBrush = Line, BorderThickness = new Thickness(1, 1, 1, 2), CornerRadius = new CornerRadius(5), Padding = new Thickness(8, 2),	Size.Thickness.UI.SettingsWindow.Line547
+thickness	product/AntiNotepad/UI/SettingsWindow.cs	547	Thickness(8, 2)	BorderBrush = Line, BorderThickness = new Thickness(1, 1, 1, 2), CornerRadius = new CornerRadius(5), Padding = new Thickness(8, 2),	Size.Thickness.UI.SettingsWindow.Line547
+font size	product/AntiNotepad/UI/SettingsWindow.cs	548	12	Background = new SolidColorBrush(_p.Surface), Child = Kit.Text(key, _p.Ink, 12),	Typography.Size.UI.SettingsWindow.Line548
+thickness	product/AntiNotepad/UI/SettingsWindow.cs	551	Thickness(8, 0, 0, 0)	change.Margin = new Thickness(8, 0, 0, 0);	Size.Thickness.UI.SettingsWindow.Line551
+font size	product/AntiNotepad/UI/SettingsWindow.cs	560	13	Text = label is "off" ? "" : label, Width = 200, FontSize = 13, PlaceholderText = allowEmpty ? "Empty for none" : "e.g. Ctrl+Alt+Shift+S",	Typography.Size.UI.SettingsWindow.Line560
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	560	200	Text = label is "off" ? "" : label, Width = 200, FontSize = 13, PlaceholderText = allowEmpty ? "Empty for none" : "e.g. Ctrl+Alt+Shift+S",	Size.UI.SettingsWindow.Line560
+radius	product/AntiNotepad/UI/SettingsWindow.cs	561	7	Foreground = new SolidColorBrush(_p.Ink), CaretBrush = new SolidColorBrush(_p.Caret), CornerRadius = new CornerRadius(7),	Radius.UI.SettingsWindow.Line561
+font size	product/AntiNotepad/UI/SettingsWindow.cs	563	11.5	var status = Kit.Text("Enter to apply, Esc to cancel", _p.Muted, 11.5);	Typography.Size.UI.SettingsWindow.Line563
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	574	4	host.Content = new StackPanel { Spacing = 4, Children = { box, status } };	Size.UI.SettingsWindow.Line574
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	595	8	var details = new StackPanel { Spacing = 8 };	Size.UI.SettingsWindow.Line595
+font size	product/AntiNotepad/UI/SettingsWindow.cs	600	12	var pending = Kit.Text($"New location: {target}", _p.Muted, 12);	Typography.Size.UI.SettingsWindow.Line600
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	610	6	var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };	Size.UI.SettingsWindow.Line610
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	65	460	Width = 900; Height = 720; MinWidth = 640; MinHeight = 460;	Size.UI.SettingsWindow.Line65
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	65	640	Width = 900; Height = 720; MinWidth = 640; MinHeight = 460;	Size.UI.SettingsWindow.Line65
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	65	720	Width = 900; Height = 720; MinWidth = 640; MinHeight = 460;	Size.UI.SettingsWindow.Line65
+spacing/size	product/AntiNotepad/UI/SettingsWindow.cs	65	900	Width = 900; Height = 720; MinWidth = 640; MinHeight = 460;	Size.UI.SettingsWindow.Line65
+font size	product/AntiNotepad/UI/SettingsWindow.cs	661	12	var label = new TextBlock { Text = text, FontSize = 12, Foreground = new SolidColorBrush(color), TextWrapping = TextWrapping.Wrap };	Typography.Size.UI.SettingsWindow.Line661
+font family	product/AntiNotepad/UI/SettingsWindow.cs	71	Segoe UI Variable Text, Segoe UI	FontFamily = new FontFamily("Segoe UI Variable Text, Segoe UI");	Typography.Font.SettingsUi
+brush alpha	product/AntiNotepad/UI/SettingsWindow.cs	98	S.Material == "solid" ? 1 : Math.Max(0.86, S.Tint)	if (_tint is not null) _tint.Background = new SolidColorBrush(_p.Canvas, S.Material == "solid" ? 1 : Math.Max(0.86, S.Tint));	Paint.Alpha.UI.SettingsWindow.Line98
+thickness	product/AntiNotepad/Editor/Renderers.cs	117	1	Pen(color, Math.Min(1, alpha), 1) width	Stroke.PaperFrame
+thickness	product/AntiNotepad/Editor/Renderers.cs	213	1	RenderPaint.Pen(brush, 1, join: PenLineJoin.Round) width	Stroke.TimerReady
+thickness	product/AntiNotepad/Editor/Renderers.cs	214	1.6	RenderPaint.Pen(brush, 1.6, PenLineCap.Round, PenLineJoin.Round) width	Stroke.TimerDone
+thickness	product/AntiNotepad/Editor/Renderers.cs	355	1	RenderPaint.Pen(RenderPaint.Brush(key.Color, .55), 1) width	Stroke.MarkerLine
+thickness	product/AntiNotepad/Editor/Renderers.cs	400	1.6	RenderPaint.Pen(RenderPaint.Brush(p.Accent, .9), 1.6) width	Stroke.CheckboxOutline
+thickness	product/AntiNotepad/Editor/Renderers.cs	401	1.9	RenderPaint.Pen(RenderPaint.Brush(p.Canvas), 1.9, PenLineCap.Round, PenLineJoin.Round) width	Stroke.CheckboxMark
+thickness	product/AntiNotepad/Editor/ChevronGutter.cs	44	1.6	ImmutablePen(..., 1.6, ...) width	Stroke.Chevron
+font size	product/AntiNotepad/Editor/Colorizers.cs	70	1.32	1 => (1.32, FontWeight.Bold),	Typography.HeadingScale.H1
+font size	product/AntiNotepad/Editor/Colorizers.cs	71	1.16	2 => (1.16, FontWeight.Bold),	Typography.HeadingScale.H2
+font size	product/AntiNotepad/Editor/Colorizers.cs	72	1.06	3 => (1.06, FontWeight.SemiBold),	Typography.HeadingScale.H3
+font size	product/AntiNotepad/Editor/Colorizers.cs	73	1.0	_ => (1.0, FontWeight.SemiBold),	Typography.HeadingScale.Rest
+opacity	product/AntiNotepad/UI/PadWindow.cs	105	0.72	else if (Topmost && Settings.DimWhenPinned) FadeWindow(0.72);	Paint.Opacity.PinnedInactive
+opacity	product/AntiNotepad/UI/PadWindow.cs	111	1	CancelQueuedHideOnBlur(); WakeChrome(); FadeWindow(1);	Paint.Opacity.Active
+opacity	product/AntiNotepad/UI/PadWindow.Keys.cs	245	0.72	else if (Topmost && Settings.DimWhenPinned) FadeWindow(0.72);	Paint.Opacity.PinnedInactive
