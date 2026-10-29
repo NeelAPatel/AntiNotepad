@@ -44,6 +44,9 @@ Read the `VERDICT:` line and "Findings (proven)" of the Codex review, and the de
   scope/size warnings accepted and why).
 
 ## 5. Hand over
-Update `.coord/STATUS.md` (state `accepted`, `rework rN`, or `ask-user`). For an accepted task give the user the report's
-"Hand checks for the user" list for the dev copy (`tools/dev.ps1`), or say none is needed (Low tier and not visible).
+Update `.coord/STATUS.md` (state `accepted`, `rework rN`, or `ask-user`). For an accepted task needing hand checks, the implementation
+sub-session runs `tools/dev.ps1` from the task worktree immediately before giving the user the report's "Hand checks for
+the user" list. Verify the dev badge, printed EXE and DATA paths, and app log under that DATA before interaction or
+reporting ready. Never launch during review or rework. If launch/verification fails, report that failure and do not claim
+the build is ready. For Low tier and not visible, say no hand test is needed.
 Merging into dev is the master session's step 9, after the user's hand test passes.

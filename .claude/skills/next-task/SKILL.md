@@ -44,4 +44,6 @@ The branch and worktree already exist (step 2). Start the implementation sub-ses
 use_worktree false) with a brief that says: work only in `.claude/worktrees/<ID-slug>` with absolute paths; launch
 `bash .coord/tools/codex-run.sh director <ID-slug> .coord/tasks/<ID-slug>.md` there, then run `/review-task <ID-slug>` when
 it exits, relaunch rework itself, commit each round on `feat/<ID-slug>` and push the branch, never touch dev or STATUS,
-give the user the hand checks (`tools/dev.ps1` from the worktree), and report back here. STATUS: `implementing`.
+only after the round's gate and required reviews accept, run `tools/dev.ps1` from that worktree immediately before
+giving the user the hand checks; verify the dev badge, EXE, DATA and app log paths first, and report back here. Never
+launch during review or rework. STATUS: `implementing`.

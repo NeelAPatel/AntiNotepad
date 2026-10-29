@@ -2,8 +2,8 @@
 
 Role: director (gpt-6.1-sol medium). Repo tooling; product `product/AntiNotepad` is not changed.
 Branch: `feat/C25-dev-instance-handoff` (already checked out; never switch, merge or commit: you cannot write to `.git`).
-Tier: Medium (rules: `docs/loop.md`; tooling, but it stops processes)
-Read first: `AGENTS.md`, `docs/dev-loop.md`, then the files below. Line numbers are from the current tree; re-read before editing.
+Tier: High (rules: `docs/loop.md`: startup and quit; raised by the audit)
+Read first: `AGENTS.md`, `docs/dev-loop.md`, `.coord/reports/C25-dev-instance-handoff-audit.md` (accepted; its Risks and safety table are requirements), then the files below. Line numbers are from the current tree; re-read before editing.
 
 ## Goal
 User: "when we work on these A##, it does not seem to be aware another instance, possibly from another worktree's dev build
@@ -19,17 +19,23 @@ Wanted:
 1. `tools/dev.ps1` (and `tools/dev.sh`, kept in parity) closes any running dev copy, whichever checkout started it, then
    launches this checkout's build and confirms the launched process is the primary instance (still running after a short
    wait, image path = this checkout's `build/dev/AntiNotepad.exe`). Fail loudly if the old copy cannot be closed.
-2. Preferred mechanism, if it holds: after the build, run this checkout's freshly built exe with `--quit` and the dev env
-   (`ANTINOTEPAD_DEV=1`, `ANTINOTEPAD_DATA` set to this checkout's `build/testdata`), which signals whoever holds the
-   `AntiNotepad-dev` mutex to quit gracefully (it saves its notes); then wait until the dev mutex is free (bounded, about 5 s).
-   Only if that fails: a machine-wide record of the running dev copy (pid, exe path, start time), kept in the MAIN checkout's
-   `build/` (resolve it with `git rev-parse --git-common-dir`), verified the same way the current `build/dev.pid` record is
-   verified before any kill. Keep the per-checkout record logic working or replace it; no orphaned records.
+2. Mechanism (from the audit, accepted): hold a per-user launcher mutex shared by all worktrees for the whole
+   transaction (bounded wait, released in finally). Build a helper exe into a separate staging folder (not `build/dev`, which a
+   running same-checkout copy locks), run it with exactly `--quit` and the explicit dev env (`ANTINOTEPAD_DEV=1`, absolute
+   nonempty `ANTINOTEPAD_DATA` = this checkout's `build/testdata`), require exit 0 and then verify the `AntiNotepad-dev` mutex
+   is vacant. Only then: `-Fresh` cleanup if asked, the canonical build into `build/dev`, launch, and verify the launched PID
+   is the published owner, the image is this checkout's exe, and it is still alive after a short wait. Write the local
+   record last. User (2026-10-29): "the only Installed copy i worry about is the prod/main branch copy with the yellow
+   icon. The other dev versions are meant to be always changing." So dev copies are disposable: if the graceful quit times
+   out or fails, force-close the dev resident, but only the process the dev mutex names as owner, and only after verifying
+   its image is a repo dev build (`<repo or .claude/worktrees/*>/build/dev/AntiNotepad.exe`) and is NOT under
+   `%LOCALAPPDATA%\Programs\AntiNotepad`. Never enumerate or kill by process name. Anything ambiguous: fail with a clear message.
 3. The installed copy must never be touched: `--quit` without `ANTINOTEPAD_DATA` targets it (`docs/dev-loop.md`), so the
    script must set `ANTINOTEPAD_DATA` on every `--quit` call and never kill a process whose image is not a repo
    `build/dev/AntiNotepad.exe`.
-4. Loop docs: the implementation sub-session starts its own dev copy (`tools/dev.ps1` from the worktree) right after the gate
-   passes, so the build the user is asked to hand test is already open. Update the rows/lines that say how the hand test is
+4. Loop docs: the implementation sub-session starts its own dev copy (`tools/dev.ps1` from the worktree) once the gate and
+   reviews have accepted the round, right before it hands the user the checks, so the build to hand test is already open
+   (never during review or rework). It checks the dev badge, exe and data paths before telling the user. Update the rows/lines that say how the hand test is
    run.
 
 Must not change: product code, selftest, data cleanup behavior of `-Fresh`, the dev hotkey, the dev data folder per checkout.
@@ -55,10 +61,12 @@ None of the product `CONTRACTS` rows change. New promise (documented in `docs/de
 - Gate: `pwsh -NoProfile -File tools/gate.ps1 -Task C25-dev-instance-handoff -Offline` inside the sandbox.
 
 ## Done means
+(`tools/dev.sh` already forwards to PowerShell; keep it a wrapper that passes arguments and exit status.)
 - From worktree B, with a dev copy from checkout A running: `tools/dev.ps1` closes A's copy and B's build is the one running
   (its badge/log path proves it). Run twice from the same checkout: still one copy, the newest build.
 - With no dev copy running: launches normally. The installed copy is untouched in every case.
-- Docs say the sub-session launches the dev copy when the gate passes.
+- Docs say the sub-session launches the dev copy after review acceptance, before the hand checks.
+- Concurrent runs from two worktrees serialize; a hung old dev copy is force-closed after the graceful quit times out (verified dev image only).
 - Gate passes.
 
 ## Before you report (director only)

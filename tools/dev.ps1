@@ -13,6 +13,7 @@ $testDataPath = [System.IO.Path]::GetFullPath((Join-Path $buildRoot 'testdata'))
 $shotsPath = [System.IO.Path]::GetFullPath((Join-Path $buildRoot 'shots'))
 $pidFilePath = [System.IO.Path]::GetFullPath((Join-Path $buildRoot 'dev.pid'))
 $exePath = [System.IO.Path]::GetFullPath((Join-Path $devBuildPath 'AntiNotepad.exe'))
+$helperBuildPath = Join-Path $buildRoot 'dev-handoff-helper'
 $expectedTestDataPath = [System.IO.Path]::GetFullPath((Join-Path $buildRoot 'testdata'))
 
 if (-not [System.String]::Equals(
@@ -142,101 +143,162 @@ function Get-ProcessIdentity {
     return $null
 }
 
-function Stop-TrackedDev {
-    if (-not (Test-Path -LiteralPath $pidFilePath)) {
-        return
-    }
+# Match SingleInstanceService.ObjectStem: current logon session plus Windows user SID.
+function Get-DevObjectStem {
+    $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+    $hash = [System.Security.Cryptography.SHA256]::HashData([System.Text.Encoding]::UTF8.GetBytes($sid))
+    return 'Local\AntiNotepad-dev-' + [Convert]::ToHexString($hash).Substring(0, 20)
+}
 
-    Assert-NotReparsePoint -LiteralPath $pidFilePath -Description 'Dev PID file'
+function Test-DevVacant {
+    $probe = [System.Threading.Mutex]::new($false, "$devStem-Mutex")
+    $owned = $false
     try {
-        $recordText = Get-Content -LiteralPath $pidFilePath -Raw
+        try { $owned = $probe.WaitOne(0) }
+        catch [System.Threading.AbandonedMutexException] { $owned = $true }
+        return $owned
     }
-    catch {
-        throw "Cannot read the owned dev PID record at $pidFilePath; leaving every process untouched. $($_.Exception.Message)"
+    finally {
+        if ($owned) { $probe.ReleaseMutex() }
+        $probe.Dispose()
     }
+}
 
-    if ($recordText.Trim() -match '^\d+$') {
-        throw "The legacy bare-PID file at $pidFilePath cannot be stopped safely because it has no executable path or start time. Exit the old dev instance manually and remove build/dev.pid once, then retry."
-    }
-
+function Get-DevOwner {
+    param([switch]$AllowUnpublished)
+    $map = [System.IO.MemoryMappedFiles.MemoryMappedFile]::OpenExisting(
+        "$devStem-Owner", [System.IO.MemoryMappedFiles.MemoryMappedFileRights]::Read)
     try {
-        $record = $recordText | ConvertFrom-Json -ErrorAction Stop
+        $view = $map.CreateViewAccessor(0, 4, [System.IO.MemoryMappedFiles.MemoryMappedFileAccess]::Read)
+        try {
+            $ownerPid = $view.ReadInt32(0)
+            if ($ownerPid -le 0 -and -not $AllowUnpublished) { throw 'Dev singleton owner has not published a valid PID.' }
+            return $ownerPid
+        }
+        finally { $view.Dispose() }
     }
-    catch {
-        throw "Cannot parse the owned dev PID record at $pidFilePath; leaving every process untouched. $($_.Exception.Message)"
-    }
+    finally { $map.Dispose() }
+}
 
-    $targetPid = 0
-    if (-not [int]::TryParse([string]$record.pid, [ref]$targetPid) -or $targetPid -le 0) {
-        throw "The dev PID record is invalid at $pidFilePath; leaving every process untouched."
+function Assert-SafeAncestors {
+    param([Parameter(Mandatory)][string]$LiteralPath)
+    $cursor = [System.IO.Path]::GetFullPath($LiteralPath)
+    while ($cursor) {
+        Assert-NotReparsePoint -LiteralPath $cursor -Description 'Dev path ancestor'
+        $cursor = [System.IO.Path]::GetDirectoryName($cursor)
     }
+}
 
-    $recordedExe = [string]$record.exePath
-    if ([string]::IsNullOrWhiteSpace($recordedExe) -or
-        -not [string]::Equals(
-            [System.IO.Path]::GetFullPath($recordedExe),
-            $exePath,
-            [System.StringComparison]::OrdinalIgnoreCase)) {
-        throw "The dev PID record names a different executable; leaving every process untouched."
-    }
-
-    $recordedStartTicks = 0L
-    if (-not [long]::TryParse([string]$record.startTimeUtcTicks, [ref]$recordedStartTicks) -or
-        $recordedStartTicks -le 0) {
-        throw "The dev PID record has an invalid start time; leaving every process untouched."
-    }
-
-    try {
-        $trackedProcess = [System.Diagnostics.Process]::GetProcessById($targetPid)
-    }
-    catch [System.ArgumentException] {
-        Remove-PidFile
-        Write-Host "Removed stale dev PID record for exited process $targetPid."
-        return
-    }
-
-    try {
-        $identity = Get-ProcessIdentity -Process $trackedProcess
-    }
-    catch {
-        throw "Cannot verify PID $targetPid against its recorded executable and start time; leaving it untouched. $($_.Exception.Message)"
-    }
-
-    if ($null -eq $identity) {
-        Remove-PidFile
-        Write-Host "Removed stale dev PID record for exited process $targetPid."
-        return
-    }
-
-    $sameExecutable = [string]::Equals(
-        $identity.ExePath,
-        $exePath,
-        [System.StringComparison]::OrdinalIgnoreCase)
-    if (-not $sameExecutable -or $identity.StartTimeUtcTicks -ne $recordedStartTicks) {
-        Remove-PidFile
-        throw "PID $targetPid no longer matches the recorded dev process. It was left untouched, and this run stopped before data cleanup, build, or launch. Review the running process, then retry."
-    }
-
-    try {
-        $trackedProcess.Kill()
-    }
-    catch {
-        $alreadyExited = $false
-        try { $alreadyExited = $trackedProcess.WaitForExit(0) } catch { }
-        if (-not $alreadyExited) {
-            throw "Could not stop the verified dev process PID $targetPid. $($_.Exception.Message)"
+function Assert-SafeBuildOutput {
+    param([Parameter(Mandatory)][string]$LiteralPath)
+    Assert-SafeAncestors $LiteralPath
+    if (Test-Path -LiteralPath $LiteralPath) {
+        # Do not let dotnet overwrite a redirected child file/directory either.
+        foreach ($child in @(Get-ChildItem -LiteralPath $LiteralPath -Force -Recurse)) {
+            Assert-NotReparsePoint $child.FullName 'Build output entry'
         }
     }
+}
 
-    if (-not $trackedProcess.WaitForExit(5000)) {
-        throw "Verified dev process PID $targetPid did not exit within 5 seconds; its PID record was retained."
+function Get-CommonGitDirectory {
+    param([Parameter(Mandatory)][string]$Checkout)
+    $result = @(& git -C $Checkout rev-parse --path-format=absolute --git-common-dir)
+    if ($LASTEXITCODE -ne 0 -or $result.Count -ne 1) { throw "Cannot verify repository at $Checkout" }
+    $top = @(& git -C $Checkout rev-parse --show-toplevel)
+    if ($LASTEXITCODE -ne 0 -or $top.Count -ne 1 -or
+        -not [string]::Equals([System.IO.Path]::GetFullPath($top[0]), $Checkout, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Not an actual repository checkout root: $Checkout"
     }
+    return [System.IO.Path]::GetFullPath($result[0])
+}
 
-    Remove-PidFile
-    Write-Host "Stopped the verified dev process PID $targetPid."
+function Stop-DevOwner {
+    # Local records (including legacy/stale records) are bookkeeping only, never authority.
+    if (Test-DevVacant) { return }
+    $ownerPid = Get-DevOwner
+    $resident = [System.Diagnostics.Process]::GetProcessById($ownerPid)
+    try {
+        # Pin the process handle before inspecting identity; never reacquire by PID to kill.
+        $null = $resident.Handle
+        $identity = Get-ProcessIdentity $resident
+        if ($null -eq $identity) { throw 'Dev owner exited during verification; retry the launcher.' }
+        $installedRoot = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'Programs/AntiNotepad'
+        $installedPrefix = [System.IO.Path]::GetFullPath($installedRoot).TrimEnd('\') + '\'
+        if ($identity.ExePath.StartsWith($installedPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+            throw 'Refusing to stop an installed AntiNotepad image.'
+        }
+        $candidateRoot = [System.IO.Path]::GetDirectoryName([System.IO.Path]::GetDirectoryName(
+            [System.IO.Path]::GetDirectoryName($identity.ExePath)))
+        $expectedImage = [System.IO.Path]::GetFullPath((Join-Path $candidateRoot 'build/dev/AntiNotepad.exe'))
+        $common = Get-CommonGitDirectory $repoRoot
+        $mainRoot = [System.IO.Path]::GetDirectoryName($common)
+        $worktreesRoot = [System.IO.Path]::GetFullPath((Join-Path $mainRoot '.claude/worktrees'))
+        $allowedRoot = [string]::Equals($candidateRoot, $mainRoot, [StringComparison]::OrdinalIgnoreCase) -or
+            [string]::Equals([System.IO.Path]::GetDirectoryName($candidateRoot), $worktreesRoot, [StringComparison]::OrdinalIgnoreCase)
+        Assert-SafeAncestors $identity.ExePath
+        if (-not $allowedRoot -or
+            -not [string]::Equals($identity.ExePath, $expectedImage, [StringComparison]::OrdinalIgnoreCase) -or
+            -not [string]::Equals((Get-CommonGitDirectory $candidateRoot), $common, [StringComparison]::OrdinalIgnoreCase)) {
+            throw "Refusing to force-close unverified dev owner PID $ownerPid at $($identity.ExePath)."
+        }
+        $again = Get-ProcessIdentity $resident
+        if ($null -eq $again -or $again.StartTimeUtcTicks -ne $identity.StartTimeUtcTicks -or
+            (Test-DevVacant) -or (Get-DevOwner) -ne $ownerPid) {
+            throw 'Dev singleton ownership changed during verification; retry the launcher.'
+        }
+        Write-Warning "Force-closing verified dev owner PID $ownerPid ($($identity.ExePath)); unsaved dev edits may be lost."
+        $resident.Kill()
+        if (-not $resident.WaitForExit(5000)) { throw 'Verified dev owner did not exit within 5 seconds.' }
+    }
+    finally { $resident.Dispose() }
+}
+
+function New-DevStartInfo {
+    param([Parameter(Mandatory)][string]$Image)
+    if ([string]::IsNullOrWhiteSpace($testDataPath) -or -not [System.IO.Path]::IsPathFullyQualified($testDataPath)) {
+        throw 'Dev DATA must be an absolute, nonempty path before starting any app process.'
+    }
+    $info = [System.Diagnostics.ProcessStartInfo]::new()
+    $info.FileName = $Image
+    $info.WorkingDirectory = [System.IO.Path]::GetDirectoryName($Image)
+    $info.UseShellExecute = $false
+    $info.Environment['ANTINOTEPAD_DEV'] = '1'
+    $info.Environment['ANTINOTEPAD_DATA'] = $testDataPath
+    $info.Environment['ANTINOTEPAD_HOTKEY'] = 'Ctrl+Alt+Shift+D'
+    $info.Environment['ANTINOTEPAD_SHOTS'] = $shotsPath
+    return $info
+}
+
+function Request-DevQuit {
+    # After fallback termination, require a fresh successful quit/vacancy round too.
+    for ($attempt = 0; $attempt -lt 2; $attempt++) {
+        $info = New-DevStartInfo (Join-Path $helperBuildPath 'AntiNotepad.exe')
+        [void]$info.ArgumentList.Add('--quit')
+        $helper = [System.Diagnostics.Process]::Start($info)
+        if ($null -eq $helper) { throw 'Could not start the dev quit helper.' }
+        try {
+            if (-not $helper.WaitForExit(8000)) {
+                # An unresponsive client could send a delayed Quit to a replacement.
+                # Never kill a staging image; only a verified canonical dev owner may be killed.
+                throw 'Dev quit helper did not finish within 8 seconds. No replacement launched; wait for the helper to exit before retrying.'
+            }
+            $quitExit = $helper.ExitCode
+        }
+        finally { $helper.Dispose() }
+        if ($quitExit -eq 0) {
+            if (-not (Test-DevVacant)) { throw 'Quit returned success but the dev singleton is occupied; retry the launcher.' }
+            return
+        }
+        if ($attempt -ne 0) { throw "Dev quit helper still returned $quitExit after force-close; refusing cleanup, build and launch." }
+        Write-Warning "Dev quit helper returned $quitExit; checking the dev owner for force-close."
+        Stop-DevOwner
+        if (-not (Test-DevVacant)) { throw 'Dev singleton is still occupied; refusing cleanup, build and launch.' }
+    }
 }
 
 function Invoke-DevBuild {
+    param([Parameter(Mandatory)][string]$OutputPath)
+    Assert-SafeBuildOutput $OutputPath
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $startInfo.FileName = 'dotnet'
     $startInfo.WorkingDirectory = $repoRoot
@@ -248,7 +310,7 @@ function Invoke-DevBuild {
         (Join-Path $repoRoot 'product/AntiNotepad/AntiNotepad.csproj'),
         '-c', 'Debug',
         '-p:AntiNotepadDev=true',
-        '-o', $devBuildPath
+        '-o', $OutputPath
     )) {
         [void]$startInfo.ArgumentList.Add([string]$argument)
     }
@@ -308,14 +370,7 @@ function Start-DevProcess {
         throw "The Debug build did not produce $exePath"
     }
 
-    $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
-    $startInfo.FileName = $exePath
-    $startInfo.WorkingDirectory = $devBuildPath
-    $startInfo.UseShellExecute = $false
-    $startInfo.Environment['ANTINOTEPAD_DEV'] = '1'
-    $startInfo.Environment['ANTINOTEPAD_DATA'] = $testDataPath
-    $startInfo.Environment['ANTINOTEPAD_HOTKEY'] = 'Ctrl+Alt+Shift+D'
-    $startInfo.Environment['ANTINOTEPAD_SHOTS'] = $shotsPath
+    $startInfo = New-DevStartInfo $exePath
 
     $appProcess = [System.Diagnostics.Process]::Start($startInfo)
     if ($null -eq $appProcess) {
@@ -323,59 +378,62 @@ function Start-DevProcess {
     }
 
     try {
-        if ($appProcess.HasExited) {
-            throw "AntiNotepad exited immediately with code $($appProcess.ExitCode)."
+        # Give startup time to publish Owner and expose a secondary that immediately exits.
+        $timer = [System.Diagnostics.Stopwatch]::StartNew()
+        $primary = $false
+        while ($timer.ElapsedMilliseconds -lt 5000 -and -not $appProcess.HasExited) {
+            # Do not acquire the product mutex here: that could make the child a secondary.
+            try { $primary = (Get-DevOwner -AllowUnpublished) -eq $appProcess.Id }
+            catch [System.IO.FileNotFoundException] { $primary = $false }
+            if ($primary) { break }
+            Start-Sleep -Milliseconds 100
         }
-
-        $identity = Get-ProcessIdentity -Process $appProcess
-        if ($null -eq $identity) {
-            throw "AntiNotepad exited immediately with code $($appProcess.ExitCode)."
+        if (-not $primary) { throw 'Launched dev process did not become the published primary within 5 seconds.' }
+        Start-Sleep -Milliseconds 750
+        $identity = Get-ProcessIdentity $appProcess
+        if ($null -eq $identity -or
+            -not [string]::Equals($identity.ExePath, $exePath, [StringComparison]::OrdinalIgnoreCase) -or
+            (Test-DevVacant) -or (Get-DevOwner) -ne $appProcess.Id -or $appProcess.HasExited) {
+            throw "Launched dev process failed owner/image/survival verification for $exePath"
         }
-
-        if (-not [string]::Equals(
-                $identity.ExePath,
-                $exePath,
-                [System.StringComparison]::OrdinalIgnoreCase)) {
-            throw "The launched process image did not match $exePath"
-        }
-
         Write-PidRecord -Process $appProcess -StartTimeUtcTicks $identity.StartTimeUtcTicks
     }
     catch {
-        $launchFailure = $_
-        $hasExited = $false
-        try { $hasExited = $appProcess.HasExited } catch { }
-        if (-not $hasExited) {
-            $cleanupComplete = $false
-            $cleanupError = $null
-            try {
-                $appProcess.Kill()
-                $cleanupComplete = $appProcess.WaitForExit(5000)
-            }
-            catch { $cleanupError = $_.Exception.Message }
-
-            if (-not $cleanupComplete) {
-                throw "Dev launch setup failed: $($launchFailure.Exception.Message) The new process could not be confirmed stopped within 5 seconds; no PID record was written. $cleanupError"
-            }
-        }
-        throw $launchFailure
+        # Do not kill on failed verification: identity/ownership may be ambiguous.
+        throw "Dev launch verification failed; no success record written. Inspect the dev copy before retrying. $($_.Exception.Message)"
     }
 
     Write-Host "RUNNING pid=$($appProcess.Id)"
+    Write-Host "EXE $exePath"
     Write-Host "DATA $testDataPath"
     Write-Host 'HOTKEY Ctrl+Alt+Shift+D'
 }
 
-Ensure-Directory -LiteralPath $buildRoot
-Ensure-Directory -LiteralPath $devBuildPath
-Assert-NotReparsePoint -LiteralPath $shotsPath -Description 'Capture directory'
-Stop-TrackedDev
+$devStem = Get-DevObjectStem
+$launcher = [System.Threading.Mutex]::new($false, "$devStem-Launcher")
+$launcherOwned = $false
+try {
+    try { $launcherOwned = $launcher.WaitOne(120000) }
+    catch [System.Threading.AbandonedMutexException] { $launcherOwned = $true }
+    if (-not $launcherOwned) { throw 'Timed out after 120 seconds waiting for another dev launcher. Retry after it finishes.' }
 
-if ($Fresh) {
-    Clear-TestData
+    foreach ($path in @($repoRoot, $buildRoot, $devBuildPath, $helperBuildPath, $testDataPath, $shotsPath, $pidFilePath)) {
+        Assert-SafeAncestors $path
+    }
+    Ensure-Directory $buildRoot
+    Ensure-Directory $helperBuildPath
+    Ensure-Directory $testDataPath
+    Invoke-DevBuild -OutputPath $helperBuildPath
+    Request-DevQuit
+    Remove-PidFile
+    if ($Fresh) { Clear-TestData }
+    Ensure-Directory $devBuildPath
+    Ensure-Directory $testDataPath
+    Ensure-Directory $shotsPath
+    Invoke-DevBuild -OutputPath $devBuildPath
+    Start-DevProcess
 }
-
-Ensure-Directory -LiteralPath $testDataPath
-Ensure-Directory -LiteralPath $shotsPath
-Invoke-DevBuild
-Start-DevProcess
+finally {
+    if ($launcherOwned) { $launcher.ReleaseMutex() }
+    $launcher.Dispose()
+}

@@ -19,6 +19,13 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- C25-dev-instance-handoff merged into dev (2f6c123, 2026-10-29; user hand test passed 4 of 4): cause was every dev run
+  sharing the `AntiNotepad-dev` mutex while `dev.ps1` tracked only its own checkout's PID. `tools/dev.ps1` now takes a
+  launcher mutex, sends the graceful dev quit via a staged helper, force-closes only a verified repo dev build if that
+  fails, then builds and launches; sub-sessions open their build after review acceptance. Gate on dev PASS; Codex review
+  accept; design review accept-with-followup. Proposed follow-ups (unnumbered, need the user): pin dev.ps1's copy of the
+  mutex names to `SingleInstance.cs` (comment + gate check); comment the checkout-root assumption; skip the helper build
+  when no dev copy runs. Next: A45-dev-build-badge.
 - C24a-roadmap-local-page merged into dev (6b5483f, 2026-10-29, user: "local page is fine"): `/roadmap` opens
   `.coord/roadmap.html`, rebuilt by PostToolUse and Stop hooks and reloading itself every 3 s; no republish prompts. The
   Artifact stays, published only on request.
@@ -155,7 +162,7 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | **Bugs** | | | | |
 | A53-split-divider-height | Split-view divider stops short of the window's bottom edge; make it full height (was A58) | Low | Small | done |
 | A54-link-hover-click | Every URL opens on Ctrl+click; shortened links always show a hand, other URLs show it while Ctrl is held (widened in r3, user) | Low | Small | done |
-| C25-dev-instance-handoff | `tools/dev.ps1` closes whatever dev copy is running from any checkout (shared record, dev-only, never the installed copy) and launches its own; the implementation sub-session starts its dev copy when the gate passes | High | Small | in review |
+| C25-dev-instance-handoff | `tools/dev.ps1` closes whatever dev copy is running from any checkout (shared record, dev-only, never the installed copy) and launches its own; the implementation sub-session starts its dev copy when the gate passes | High | Small | done |
 | A45-dev-build-badge | Dev badge names the exact build: branch glyph U+E0A0 (fallback ⎇), `dev/<branch>@<ISO build time>` stamped at build; short form expands on hover, tooltip always shows the full text; approved at its hand test (dev-only) | Low | Small | planned |
 | A55-split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider (was A57) | Medium | Medium | planned |
 | Release marker | dev -> main with a tag, on your go | - | - | planned |

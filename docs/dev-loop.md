@@ -60,10 +60,34 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
   of the runtime `ANTINOTEPAD_DEV=1` marker, which works with a custom data path to gate the dev badge and dev-only UI.
 - The dev script sets `AntiNotepadDev=true`; ordinary Debug/Release builds and the installed Release publish leave it unset
   and retain the default `AntiNotepad` identity.
-- The scripts stop only their recorded dev PID after checking executable path and process start time; they never stop the
-  installed copy. Fresh deletes only repo test data. Logs and PID state live under `build`.
-- On the first use after upgrading these scripts, a legacy numeric-only `build/dev.pid` is rejected. Exit the old dev copy
-  manually and remove that PID file once, then retry. A mismatched PID is left untouched and the launcher aborts.
+- Running the launcher from any checkout replaces the current dev copy with that checkout's build, leaving exactly one
+  dev primary in the current Windows user/logon session. All worktrees share a launcher mutex for the entire transaction
+  (120-second acquisition limit, released in finally). A later launcher may replace it again; manual/older launchers do
+  not participate in this lock, so conflicting ownership fails verification instead of reporting success.
+- Before replacing `build/dev`, the launcher builds a quit helper in `build/dev-handoff-helper` with the same dev identity.
+  It runs exactly `--quit` with explicit `ANTINOTEPAD_DEV=1` and absolute, nonempty checkout `ANTINOTEPAD_DATA`.
+  Exit 0 must be followed by a vacant `AntiNotepad-dev` mutex. The helper's normal graceful-quit timeout is about 5 seconds;
+  a nonzero exit triggers force-close of only the published dev owner after verifying its process handle, start time,
+  image, repository identity and unchanged singleton owner. Allowed images are this repository's main checkout or a direct
+  `.claude/worktrees/*` checkout's `build/dev/AntiNotepad.exe`; installed images are explicitly rejected. Ambiguous owners,
+  inaccessible paths or redirected path ancestors abort. After force-close, a second helper must return 0 and the mutex
+  must be vacant. No process-name enumeration or termination is used.
+- A force-close may lose unsaved disposable dev edits. An unresponsive helper that has not exited after 8 seconds aborts
+  without replacement: wait for it to exit before retrying, because a delayed Quit could otherwise target the replacement.
+  Failure to close the verified owner within 5 seconds also aborts. A successful quit followed by an occupied mutex aborts.
+- Only after confirmed vacancy does `-Fresh` clear this checkout's `build/testdata` with the existing containment/link guards,
+  followed by the canonical Debug build and launch. Fresh never follows `location.json` or clears another checkout's data.
+  Build/helper paths and their ancestors/children are checked for reparse points before build; PID paths are also guarded.
+- The launcher waits up to 5 seconds for its PID to be published as owner, then another 750 ms and checks owner, exact
+  executable path and survival again before writing `build/dev.pid` last. Success prints PID, EXE, DATA and HOTKEY.
+  Legacy, stale and mismatched local PID records are ignored for discovery and removed after shutdown; they never authorize
+  termination. Failed launch verification leaves the process for inspection and writes no new record. Helper output and
+  bookkeeping stay under `build`; the installed copy is never targeted by dev quit or force-close.
+- Before hand tests, verify that dev `location.json` pointers select disposable notes: dev DATA isolates app home and
+  identity, but graceful shutdown still saves the old resident's selected notes folder, which could have been moved.
+- After the round's gate and required reviews are accepted, the implementation sub-session runs `tools/dev.ps1` from its
+  worktree immediately before handing the user the checks. It verifies the dev badge, printed EXE and DATA, and app log
+  under that DATA before interacting or telling the user the build is ready. Never launch during review or rework.
 - The explicit dev marker plus a custom data path enables the dev badge and dev-only UI. A custom data path alone still uses
   the separate instance and bypasses real-data/registry migration, but has no badge. Merely inheriting `CLAUDECODE` does nothing.
 - Headless Codex must not run these launch scripts; build to `build/<task>-check` and use `--selftest` only.

@@ -23,7 +23,7 @@ Set in the brief's `Tier:` line by the master at step 2. When unsure, pick the h
 | 7a | Fresh Codex review (Medium, High) | Codex reviewer tier | `/review-task` | `.coord/reports/<ID-slug>.review.md` | `in review` |
 | 7b | Design review (High) | Claude `design-reviewer` agent | `/review-task` after 7a | reply to the manager | `in review` |
 | 7c | Manager verdict | sub-session manager (Sonnet) | `/review-task` reads 6, 7a, 7b | `## Manager verdict` in the task report, or a `<ID-slug>-rN` brief | `accepted` / `rework rN` / `ask-user` |
-| 8 | Hand test | user, dev copy (`tools/dev.ps1`) | manager gives the report's hand-check list | pass or fail in STATUS | `hand-tested` |
+| 8 | Hand test | sub-session launches; user checks dev copy | after gate/reviews accept, sub-session runs worktree `tools/dev.ps1`, verifies dev badge + EXE/DATA/log paths, then gives the hand-check list | pass or fail in STATUS | `hand-tested` |
 | 9 | Merge | master | user's pass | `--no-ff` merge into dev, gate re-run on dev, one STATUS commit, push, remove the worktree | `done` |
 
 Rules:
@@ -59,7 +59,7 @@ Rules:
   sub-session or Codex works on lives in `.claude/worktrees/<ID-slug>` (`git worktree add .claude/worktrees/<ID-slug> -b
   feat/<ID-slug> dev`). Sub-sessions share the master's folder (`use_worktree: false`) and work only inside that path, with
   absolute paths; Codex runs from the worktree's own `.coord/tools/codex-run.sh`. Several items can run at once only if
-  their Files lists do not overlap. The hand test runs `tools/dev.ps1` from the worktree.
+  their Files lists do not overlap. After gate and review acceptance, the implementation sub-session runs `tools/dev.ps1` from the worktree immediately before the hand checks; it verifies the dev badge and EXE/DATA/log paths.
 - **What lands on the branch:** the brief, audit, reports and code, committed there (Codex cannot commit: the sub-session
   manager does). Push the branch to origin freely.
 - **What lands on dev:** only the item's `--no-ff` merge plus one `S<n>-status:` commit per merge. Between merges the
@@ -76,7 +76,8 @@ Three commands drive the loop: `/next-task` (steps 1-5, master), `/review-task <
   result, then `/merge-task <ID-slug>`; "release" at a marker.
 - **Master, automatically:** launches the audit (3) and, after "go", starts the implementation sub-session.
 - **Implementation sub-session, automatically:** launches Codex (5); when the run exits it runs `/review-task <ID-slug>`
-  (6-7), relaunches rework itself, then hands the user the hand checks (8) and tells the master.
+  (6-7), relaunches rework itself, then, only after acceptance, starts its worktree dev copy with `tools/dev.ps1`, verifies
+  the dev badge and EXE/DATA/log paths, hands the user the hand checks (8) and tells the master. Never launch during review or rework.
 - **Any time, any terminal:** `pwsh -NoProfile -File tools/gate.ps1 -Task <ID-slug>` (gate only).
 - **CI (manual for now):** GitHub Actions workflow `gate`, run from the Actions tab; it runs `tools/gate.ps1 -Ci`.
 
