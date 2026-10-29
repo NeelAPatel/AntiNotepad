@@ -26,6 +26,10 @@
       <Value>$(AntiNotepadDev)</Value>
     </AssemblyMetadata>
   </ItemGroup>
+  <ItemGroup Condition="'$(AntiNotepadDev)' == 'true' and '$(Configuration)' == 'Debug'">
+    <AssemblyMetadata Include="AntiNotepadBranch" Value="$(AntiNotepadBranch)" />
+    <AssemblyMetadata Include="AntiNotepadBuildTime" Value="$([System.DateTimeOffset]::Now.ToString('o'))" />
+  </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Include="antinotepad.ico" />
     <AvaloniaResource Include="antinotepad-dev.ico" />

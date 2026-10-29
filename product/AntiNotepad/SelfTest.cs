@@ -2393,6 +2393,28 @@ internal static partial class SelfTest
         }
     }
 
+    private static bool DevBadgeBuildStampChecks(out string report)
+    {
+        var time = new DateTimeOffset(2026, 10, 29, 11, 30, 0, TimeSpan.FromHours(-4));
+        var failures = new List<string>();
+        void Check(bool ok, string detail) { if (!ok) failures.Add(detail); }
+        Check(AppInfo.FormatDevBadge("feat/A54-link-hover-click", time) ==
+            ("\uE0A0 A54 · 11:30 AM", "\uE0A0 dev/A54-link-hover-click@2026-10-29 11:30 AM"), "feature format");
+        Check(AppInfo.FormatDevBadge("feat/A43b-notes-session", time).Short == "\uE0A0 A43b · 11:30 AM", "letter suffix");
+        Check(AppInfo.FormatDevBadge("dev", time) == ("\uE0A0 dev", "\uE0A0 dev"), "dev branch");
+        Check(AppInfo.FormatDevBadge("topic-long-branch-name", time) ==
+            ("\uE0A0 topic-long-b · 11:30 AM", "\uE0A0 dev/topic-long-branch-name@2026-10-29 11:30 AM"), "other branch");
+        Check(AppInfo.FormatDevBadge(null, time) == ("dev", "dev")
+            && AppInfo.FormatDevBadge("", time) == ("dev", "dev")
+            && AppInfo.FormatDevBadge("feat/A54-link-hover-click", null) == ("dev", "dev"), "missing stamp");
+        if (!AppInfo.IsDevBuild)
+            Check(!typeof(AppInfo).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
+                .Any(a => a.Key is "AntiNotepadBranch" or "AntiNotepadBuildTime"), "non-dev assembly carries stamp");
+        Check(AppInfo.BuildBranch is null || AppInfo.BuildTime is not null, "branch requires timestamp");
+        report = failures.Count == 0 ? "formatting and assembly metadata OK" : string.Join("; ", failures);
+        return failures.Count == 0;
+    }
+
     private static bool DevIdentitySelfTest(out string report)
     {
         try

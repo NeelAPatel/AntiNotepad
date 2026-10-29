@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace AntiNotepad;
 
@@ -23,6 +25,21 @@ public static class AppInfo
 
     public static string Name => _name;
     public static bool IsDevBuild => _isDevBuild;
+    public static string? BuildBranch => GetMetadata("AntiNotepadBranch") is { Length: > 0 } branch ? branch : null;
+    public static DateTimeOffset? BuildTime => DateTimeOffset.TryParseExact(GetMetadata("AntiNotepadBuildTime"), "o",
+        CultureInfo.InvariantCulture, DateTimeStyles.None, out var time) ? time : null;
+
+    internal static (string Short, string Full) FormatDevBadge(string? branch, DateTimeOffset? time)
+    {
+        if (string.IsNullOrWhiteSpace(branch) || time is null) return ("dev", "dev");
+        var slug = branch.StartsWith("feat/", StringComparison.Ordinal) ? branch[5..] : branch;
+        if (slug == "dev") return ("\uE0A0 dev", "\uE0A0 dev");
+        var match = Regex.Match(slug, @"^[A-Za-z][0-9]+[A-Za-z]?");
+        var id = match.Success ? match.Value : slug[..Math.Min(12, slug.Length)];
+        return ($"\uE0A0 {id} · {time.Value.ToString("h:mm tt", CultureInfo.InvariantCulture)}",
+            $"\uE0A0 dev/{slug}@{time.Value.ToString("yyyy-MM-dd h:mm tt", CultureInfo.InvariantCulture)}");
+    }
+
     public static string DisplayName => IsDevBuild ? $"{Name} (dev)" : Name;
 
     public static string InformationalVersion => _informationalVersion;

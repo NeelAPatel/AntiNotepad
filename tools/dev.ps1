@@ -310,6 +310,7 @@ function Invoke-DevBuild {
         (Join-Path $repoRoot 'product/AntiNotepad/AntiNotepad.csproj'),
         '-c', 'Debug',
         '-p:AntiNotepadDev=true',
+        "-p:AntiNotepadBranch=$(& git -C $repoRoot branch --show-current)",
         '-o', $OutputPath
     )) {
         [void]$startInfo.ArgumentList.Add([string]$argument)

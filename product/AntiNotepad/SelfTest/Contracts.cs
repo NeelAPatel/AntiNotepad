@@ -19,6 +19,12 @@ internal static partial class SelfTest
         ContractRow[] rows =
         [
             new(
+                "dev-badge-build-stamp",
+                "A dev build stamped with a branch and build time shows them in the badge (short form, full form on hover and in the tooltip); without the stamp it shows plain dev; release builds carry no stamp.",
+                "A45-dev-build-badge",
+                () => RunExistingCheck(DevBadgeBuildStampChecks, "dev badge build stamp: "),
+                "Dev copy: short badge expands on hover; tooltip shows full branch and timestamp; release has no badge."),
+            new(
                 "store-unavailable-save-noop",
                 "An unavailable store's QueueSave, Save, and Flush succeed as no-ops, set LastError, and write nothing.",
                 "A30",

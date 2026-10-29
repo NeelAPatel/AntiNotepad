@@ -23,7 +23,7 @@ internal sealed partial class PadWindow
     private readonly Grid _content = new() { RowDefinitions = new RowDefinitions($"{ChromeTokens.DockedRowHeight},*") };
     private readonly Grid _top = new() { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto") };
     /// <summary>Which copy this is; fades with the icons.</summary>
-    private readonly StackPanel _badges = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.BadgeSpacing, Margin = new Thickness(0, 0, ChromeTokens.BadgeRightInset, 0), VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
+    private readonly StackPanel _badges = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.BadgeSpacing, Margin = new Thickness(0, 0, ChromeTokens.BadgeRightInset, 0), VerticalAlignment = VerticalAlignment.Center };
     private TextBlock? _saved;
     private readonly StackPanel _meta = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.MetaSpacing, Margin = new Thickness(ChromeTokens.FirstItemInset, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
     private readonly StackPanel _icons = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.IconSpacing, Margin = new Thickness(0, 0, ChromeTokens.BarEdgeInset, 0), VerticalAlignment = VerticalAlignment.Center };
@@ -150,7 +150,7 @@ internal sealed partial class PadWindow
         _icons.Children.Clear();
         // The repo launch route is the only copy with a badge.
         _badges.Children.Clear();
-        if (_isDev) _badges.Children.Add(Chip("dev", p.Number));
+        if (_isDev) _badges.Children.Add(DevBadge(p.Number));
         _badges.IsVisible = _isDev;
         _icons.Children.Add(Kit.IconButton(Glyph.Search, "Search notes (Ctrl+F)", p, () => OpenSearch()));
         _icons.Children.Add(Kit.IconButton(Glyph.Split, "Split view with a slot (Ctrl+\\)", p, ToggleSplit));
@@ -199,6 +199,45 @@ internal sealed partial class PadWindow
         Height = ChromeTokens.BadgeHeight,
         Child = Kit.Text(text, color, ChromeTokens.BadgeFontSize, FontWeight.SemiBold), VerticalAlignment = VerticalAlignment.Center
     };
+
+    private Border DevBadge(Color color)
+    {
+        var (shortText, fullText) = AppInfo.FormatDevBadge(AppInfo.BuildBranch, AppInfo.BuildTime?.ToLocalTime());
+        var chip = Chip(shortText, color);
+        if (shortText == "dev") return chip;
+        var text = (TextBlock)chip.Child!;
+        FontFamily? glyphFont = null;
+        foreach (var family in FontManager.Current.SystemFonts)
+        {
+            if (family.Name is "Cascadia Mono" or "Cascadia Code"
+                && FontManager.Current.TryGetGlyphTypeface(new Typeface(family), out var typeface)
+                && typeface.CharacterToGlyphMap.ContainsGlyph(0xE0A0))
+            {
+                glyphFont = family;
+                break;
+            }
+        }
+        void SetText(string value)
+        {
+            text.Text = null;
+            text.Inlines!.Clear();
+            text.Inlines.Add(new Avalonia.Controls.Documents.Run(glyphFont is null ? "\u2387" : "\uE0A0")
+                { FontFamily = glyphFont ?? text.FontFamily, FontWeight = FontWeight.Normal });
+            text.Inlines.Add(new Avalonia.Controls.Documents.Run(value[1..]));
+        }
+        SetText(shortText);
+        var tooltip = fullText == "\uE0A0 dev"
+            ? $"{fullText}@{AppInfo.BuildTime?.ToLocalTime().ToString("yyyy-MM-dd h:mm tt", System.Globalization.CultureInfo.InvariantCulture)}"
+            : fullText;
+        ToolTip.SetTip(chip, new TextBlock
+        {
+            Text = glyphFont is null ? tooltip.Replace('\uE0A0', '\u2387') : tooltip,
+            FontFamily = glyphFont ?? text.FontFamily,
+        });
+        chip.PointerEntered += (_, _) => SetText(fullText);
+        chip.PointerExited += (_, _) => SetText(shortText);
+        return chip;
+    }
 
     private void BuildPill()
     {
