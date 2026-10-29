@@ -5,7 +5,33 @@ namespace AntiNotepad.Platform;
 
 internal sealed record NotesLocationResolution(string AppHome, string NotesFolder, string? Error, string? Notice = null, bool Custom = false);
 
-internal sealed record NotesMoveResult(bool Success, string Folder, string? Error = null, string? Warning = null, int FileCount = 0, long ByteCount = 0);
+internal enum NotesOldCopyFailure { NameCollision, AccessDenied, InUse, Other }
+
+internal sealed record NotesOldCopyResult(string OriginalFolder, string? BackupFolder, NotesOldCopyFailure? Failure = null)
+{
+    internal string Message(int fileCount)
+    {
+        if (Failure is { } failure)
+        {
+            var reason = failure switch
+            {
+                NotesOldCopyFailure.NameCollision => "its backup name already exists",
+                NotesOldCopyFailure.AccessDenied => "access was denied",
+                NotesOldCopyFailure.InUse => "it is in use",
+                _ => "its backup could not be created"
+            };
+            return $"Notes moved; the old folder remains at {OriginalFolder} because {reason}.";
+        }
+        var moved = $"Moved {fileCount} {(fileCount == 1 ? "file" : "files")}";
+        return BackupFolder is { } backup ? $"{moved}; the old folder was kept as {backup}." : moved + ".";
+    }
+}
+
+internal sealed record NotesMoveResult(bool Success, string Folder, string? Error = null, int FileCount = 0, long ByteCount = 0,
+    NotesOldCopyResult? OldCopy = null)
+{
+    internal string? Warning => OldCopy?.Failure is not null ? OldCopy.Message(FileCount) : null;
+}
 
 /// <summary>Resolves and moves the user-visible notes folder. Paths are supplied by the caller for isolated testing.</summary>
 internal static class NotesLocation
@@ -130,8 +156,8 @@ internal static class NotesLocation
                 throw new IOException("The copied file count did not match the source.");
 
             WritePointer(appHome, targetFolder);
-            var warning = KeepOldCopy(appHome, currentFolder);
-            return new(true, targetFolder, Warning: warning, FileCount: copies.Count, ByteCount: byteCount);
+            var oldCopy = KeepOldCopy(appHome, currentFolder);
+            return new(true, targetFolder, FileCount: copies.Count, ByteCount: byteCount, OldCopy: oldCopy);
         }
         catch (Exception ex)
         {
@@ -205,27 +231,29 @@ internal static class NotesLocation
         }
     }
 
-    private static string? KeepOldCopy(string appHome, string currentFolder)
+    private static NotesOldCopyResult KeepOldCopy(string appHome, string currentFolder)
     {
-        if (string.Equals(appHome, currentFolder, StringComparison.OrdinalIgnoreCase))
+        currentFolder = Path.TrimEndingDirectorySeparator(currentFolder);
+        if (string.Equals(Path.TrimEndingDirectorySeparator(appHome), currentFolder, StringComparison.OrdinalIgnoreCase))
             return BackupAppHomeData(appHome);
-        var parent = Path.GetDirectoryName(currentFolder)!;
-        var leaf = Path.GetFileName(currentFolder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-        var backup = Path.Combine(parent, $"{leaf} (moved {DateTime.Now:yyyy-MM-dd HHmm})");
         try
         {
-            if (Directory.Exists(backup) || File.Exists(backup)) return $"Notes moved. The old folder remains at {currentFolder} because its backup name already exists.";
+            var parent = Path.GetDirectoryName(currentFolder);
+            if (parent is null) return new(currentFolder, null, NotesOldCopyFailure.Other);
+            var leaf = Path.GetFileName(currentFolder);
+            var backup = Path.Combine(parent, $"{leaf} (moved {DateTime.Now:yyyy-MM-dd HHmm})");
+            if (Directory.Exists(backup) || File.Exists(backup)) return new(currentFolder, null, NotesOldCopyFailure.NameCollision);
             Directory.Move(currentFolder, backup);
-            return null;
+            return new(currentFolder, backup);
         }
-        catch (Exception ex) { return $"Notes are now in the new folder, but the old folder could not be renamed and remains at {currentFolder}: {ex.Message}"; }
+        catch (Exception ex) { return new(currentFolder, null, RetentionFailure(ex)); }
     }
 
-    private static string? BackupAppHomeData(string appHome)
+    private static NotesOldCopyResult BackupAppHomeData(string appHome)
     {
         var items = new[] { "index.json", "index.json.bak", "notes", RecoveredFolderName }
             .Select(name => Path.Combine(appHome, name)).Where(path => File.Exists(path) || Directory.Exists(path)).ToList();
-        if (items.Count == 0) return null;
+        if (items.Count == 0) return new(appHome, null);
         var stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
         var backup = Path.Combine(appHome, $"backup-before-move-{stamp}");
         for (var suffix = 1; Directory.Exists(backup) || File.Exists(backup); suffix++)
@@ -241,16 +269,25 @@ internal static class NotesLocation
                 if (isDirectory) Directory.Move(item, destination); else File.Move(item, destination);
                 moved.Add((item, destination, isDirectory));
             }
-            return null;
+            return new(appHome, backup);
         }
         catch (Exception ex)
         {
             foreach (var (from, to, isDirectory) in moved.AsEnumerable().Reverse())
                 try { if (isDirectory) Directory.Move(to, from); else File.Move(to, from); } catch { }
             TryRemoveEmptyDirectory(backup);
-            return $"Notes are now in the new folder, but the old data could not be fully moved to its backup and remains in {appHome}: {ex.Message}";
+            return new(appHome, null, RetentionFailure(ex));
         }
     }
+
+    private static NotesOldCopyFailure RetentionFailure(Exception ex) => ex switch
+    {
+        UnauthorizedAccessException => NotesOldCopyFailure.AccessDenied,
+        IOException when (ex.HResult & 0xffff) is 80 or 183 => NotesOldCopyFailure.NameCollision,
+        IOException when (ex.HResult & 0xffff) is 5 => NotesOldCopyFailure.AccessDenied,
+        IOException when (ex.HResult & 0xffff) is 32 or 33 => NotesOldCopyFailure.InUse,
+        _ => NotesOldCopyFailure.Other
+    };
 
     private static bool SameOrNested(string parent, string candidate)
     {

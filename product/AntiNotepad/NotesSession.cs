@@ -21,8 +21,9 @@ internal sealed class NotesSession : INotesLocation
         _log = log;
     }
 
-    internal bool MoveNotes(string target, out string message)
+    internal bool MoveNotes(string target, out string message, out NotesMoveResult? moveResult)
     {
+        moveResult = null;
         if (Store is null || !Store.IsAvailable || NotesLocationError is not null)
         {
             message = NotesLocationError ?? $"The current notes folder is unavailable: {DataFolder}";
@@ -36,12 +37,13 @@ internal sealed class NotesSession : INotesLocation
             return false;
         }
         var result = NotesLocation.Move(AppHome, DataFolder, target);
+        moveResult = result;
         if (!result.Success) { message = result.Error ?? "The notes folder could not be changed."; return false; }
         Store.SwitchFolder(result.Folder);
         DataFolder = result.Folder;
         var unavailable = $"The notes folder is unavailable: {result.Folder}";
         NotesLocationError = Store.IsAvailable ? null : unavailable;
-        message = result.Warning ?? (Store.IsAvailable ? $"Notes moved to {result.Folder}." : unavailable);
+        message = result.Warning ?? (Store.IsAvailable ? result.OldCopy!.Message(result.FileCount) : unavailable);
         if (result.Warning is { } warning) _log(warning);
         return true;
     }

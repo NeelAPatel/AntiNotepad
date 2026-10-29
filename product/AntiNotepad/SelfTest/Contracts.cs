@@ -49,6 +49,12 @@ internal static partial class SelfTest
                 () => RunExistingCheck(SettingsChangedChecks, "settings Changed: "),
                 null),
             new(
+                "notes-move-renames-old-folder",
+                "Moving notes from a non-app-home folder renames the old folder even with trailing separators; if retention fails, the move succeeds and reports that the old path remains.",
+                "A52-move-old-folder-rename-warning",
+                () => RunExistingCheck(NotesMoveRenameChecks, "notes move old-folder rename: "),
+                null),
+            new(
                 "window-style-bits",
                 "The pad window's style flags are unchanged.",
                 "A32/A34",

@@ -19,6 +19,10 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- A52-move-old-folder-rename-warning merged into dev (3ced024, 2026-10-29; user hand test passed 3 of 3): cause was a trailing
+  separator in the source path; `Move` now returns an explicit retention outcome and Settings shows one truthful message.
+  New CONTRACTS row `notes-move-renames-old-folder`. Gate on dev PASS (0 warnings, SELFTEST PASS, CONTRACTS 7 rows: 6 pass,
+  1 manual, seam 0). Follow-ups are steps of A78-notes-folder-move-flow. Next: re-ID the design-system rows (user).
 - C22-roadmap-step-rows (user, 2026-10-29): one ID = one idea, work toward it = lettered steps under it; A52's six
   follow-ups folded into A78-notes-folder-move-flow (steps a-f); `/roadmap` indents steps. Merged 5887137.
 - C20-branch-worktree-loop (user, 2026-10-29): every item runs on `feat/<ID-slug>` in `.claude/worktrees/<ID-slug>`; dev gets
@@ -140,7 +144,7 @@ Held until the user brings them back: "Open (needs the user)" below and the A44b
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
 | **Bugs** | | | | |
-| A52-move-old-folder-rename-warning | After a notes move the old folder is not renamed and the message is wrong; fix the rename in `NotesLocation.Move` and the message | High | Small | hand test |
+| A52-move-old-folder-rename-warning | After a notes move the old folder is not renamed and the message is wrong; fix the rename in `NotesLocation.Move` and the message | High | Small | done |
 | A58-split-divider-height | Split-view divider stops short of the window's bottom edge; make it full height | Low | Small | planned |
 | A54-link-hover-click | Check that long (shortened) links open on Ctrl+click with a hand cursor; making short links clickable is a separate lab item | Low | Small | planned |
 | A57-split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider | Medium | Medium | planned |

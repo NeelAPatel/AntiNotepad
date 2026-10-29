@@ -1696,7 +1696,7 @@ internal static partial class SelfTest
             CheckCase(store.Save(), "source note saves before move");
 
             var session = new NotesSession(store, source, source, null, _ => { });
-            var moved = session.MoveNotes(target, out _);
+            var moved = session.MoveNotes(target, out _, out _);
             CheckCase(moved && ReferenceEquals(session.Store, store) && ReferenceEquals(store.Data, data)
                 && ReferenceEquals(store.SettingsService, settingsService) && session.DataFolder == store.Folder
                 && session.DataFolder == target && session.NotesLocationError is null && store.IsAvailable
@@ -1716,7 +1716,7 @@ internal static partial class SelfTest
             var pointerBeforeFailure = NotesLocation.ReadPointer(source);
             var folderBeforeFailure = session.DataFolder;
             var errorBeforeFailure = session.NotesLocationError;
-            var occupiedRefused = !session.MoveNotes(occupied, out _);
+            var occupiedRefused = !session.MoveNotes(occupied, out _, out _);
             CheckCase(occupiedRefused && session.DataFolder == folderBeforeFailure && session.NotesLocationError == errorBeforeFailure
                 && ReferenceEquals(session.Store, store) && ReferenceEquals(store.Data, data)
                 && ReferenceEquals(store.SettingsService, settingsService) && NotesLocation.ReadPointer(source) == pointerBeforeFailure,
@@ -1725,7 +1725,7 @@ internal static partial class SelfTest
             var nested = Path.Combine(target, "nested");
             folderBeforeFailure = session.DataFolder;
             errorBeforeFailure = session.NotesLocationError;
-            var nestedRefused = !session.MoveNotes(nested, out _);
+            var nestedRefused = !session.MoveNotes(nested, out _, out _);
             CheckCase(nestedRefused && !Directory.Exists(nested) && session.DataFolder == folderBeforeFailure
                 && session.NotesLocationError == errorBeforeFailure && ReferenceEquals(session.Store, store)
                 && ReferenceEquals(store.Data, data) && ReferenceEquals(store.SettingsService, settingsService)
@@ -1740,7 +1740,7 @@ internal static partial class SelfTest
             var unavailableSettings = unavailableStore.SettingsService;
             var unavailableError = unavailableStore.LastError ?? "unavailable";
             var unavailableSession = new NotesSession(unavailableStore, root, unavailableFolder, unavailableError, _ => { });
-            var unavailableRefused = !unavailableSession.MoveNotes(unavailableTarget, out _);
+            var unavailableRefused = !unavailableSession.MoveNotes(unavailableTarget, out _, out _);
             CheckCase(unavailableRefused && !unavailableStore.IsAvailable && !Directory.Exists(unavailableFolder) && !Directory.Exists(unavailableTarget)
                 && unavailableSession.DataFolder == unavailableFolder && unavailableSession.NotesLocationError == unavailableError
                 && ReferenceEquals(unavailableSession.Store, unavailableStore) && ReferenceEquals(unavailableStore.Data, unavailableData)
@@ -1761,6 +1761,132 @@ internal static partial class SelfTest
             try { unavailableStore?.Flush(); } catch { }
             try { if (Directory.Exists(root)) Directory.Delete(root, true); } catch { }
         }
+    }
+
+    private static bool NotesMoveRenameChecks(out string report)
+    {
+        var root = Path.Combine(Environment.CurrentDirectory, "build", $"A52-move-old-folder-rename-warning-fixtures-{Guid.NewGuid():N}");
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+        Store? collisionStore = null;
+
+        try
+        {
+            Directory.CreateDirectory(root);
+            foreach (var (name, trailingSeparator) in new[]
+            {
+                ("trimmed", ""),
+                ("backslash", "\\"),
+                ("slash", "/")
+            })
+            {
+                var caseRoot = Path.Combine(root, name);
+                var caseAppHome = Path.Combine(caseRoot, "app-home");
+                var source = Path.Combine(caseRoot, "test targetA");
+                var target = Path.Combine(caseRoot, "targetB");
+                var sourceFile = Path.Combine(source, "notes", "move-contract.md");
+                Directory.CreateDirectory(caseAppHome);
+                Directory.CreateDirectory(Path.GetDirectoryName(sourceFile)!);
+                File.WriteAllText(sourceFile, "old note content");
+
+                var sourceWithTrailingSeparator = source + trailingSeparator;
+                var result = NotesLocation.Move(caseAppHome, sourceWithTrailingSeparator, target);
+                var oldCopy = result.OldCopy;
+                var backup = oldCopy?.BackupFolder;
+                var displayMessage = oldCopy?.Message(result.FileCount);
+                CheckCase(result.Success && oldCopy is not null && oldCopy.Failure is null
+                    && PathEquals(oldCopy.OriginalFolder, source) && backup is not null
+                    && Path.GetFileName(backup).StartsWith("test targetA (moved ", StringComparison.Ordinal)
+                    && !Directory.Exists(source)
+                    && File.ReadAllText(Path.Combine(backup!, "notes", "move-contract.md")) == "old note content"
+                    && File.ReadAllText(Path.Combine(target, "notes", "move-contract.md")) == "old note content"
+                    && displayMessage == $"Moved 1 file; the old folder was kept as {Path.GetFullPath(backup!)}."
+                    && displayMessage is not null
+                    && displayMessage.IndexOf(Path.GetFullPath(backup!), StringComparison.OrdinalIgnoreCase)
+                        == displayMessage.LastIndexOf(Path.GetFullPath(backup!), StringComparison.OrdinalIgnoreCase),
+                    $"{name} source path copied successfully and retained its old folder; outcome: {oldCopy?.Message(result.FileCount) ?? result.Error ?? "missing old-copy outcome"}");
+            }
+
+            var appHomeRoot = Path.Combine(root, "app-home-equivalence");
+            var appHome = Path.Combine(appHomeRoot, "app-home");
+            var appHomeTarget = Path.Combine(appHomeRoot, "target");
+            Directory.CreateDirectory(Path.Combine(appHome, "notes"));
+            File.WriteAllText(Path.Combine(appHome, "index.json"), "app-home index");
+            File.WriteAllText(Path.Combine(appHome, "notes", "app-home.md"), "app-home note");
+            var appHomeMove = NotesLocation.Move(appHome, appHome + "\\", appHomeTarget);
+            var appHomeCopy = appHomeMove.OldCopy;
+            var appHomeMessage = appHomeCopy?.Message(appHomeMove.FileCount);
+            CheckCase(appHomeMove.Success && appHomeCopy is not null && appHomeCopy.Failure is null
+                && PathEquals(appHomeCopy.OriginalFolder, appHome) && appHomeCopy.BackupFolder is not null
+                && Path.GetFileName(appHomeCopy.BackupFolder).StartsWith("backup-before-move-", StringComparison.Ordinal)
+                && File.ReadAllText(Path.Combine(appHomeTarget, "notes", "app-home.md")) == "app-home note"
+                && File.ReadAllText(Path.Combine(appHomeCopy.BackupFolder!, "notes", "app-home.md")) == "app-home note"
+                && appHomeMessage == $"Moved {appHomeMove.FileCount} files; the old folder was kept as {Path.GetFullPath(appHomeCopy.BackupFolder!)}."
+                && appHomeMessage is not null
+                && appHomeMessage.IndexOf(Path.GetFullPath(appHomeCopy.BackupFolder!), StringComparison.OrdinalIgnoreCase)
+                    == appHomeMessage.LastIndexOf(Path.GetFullPath(appHomeCopy.BackupFolder!), StringComparison.OrdinalIgnoreCase)
+                && NotesLocation.ReadPointer(appHome) is { } appHomePointer && PathEquals(appHomePointer, appHomeTarget),
+                "app-home path with a trailing backslash is recognized as the app home and uses its backup path");
+
+            var collisionRoot = Path.Combine(root, "collision");
+            var collisionAppHome = Path.Combine(collisionRoot, "app-home");
+            var collisionSource = Path.Combine(collisionRoot, "source");
+            var collisionTarget = Path.Combine(collisionRoot, "target");
+            collisionStore = new Store(collisionSource);
+            collisionStore.Load();
+            collisionStore.Data.Stack[0].Text = "move despite backup collision";
+            CheckCase(collisionStore.Save(), "collision source note saves before move");
+            var collisionBackupPaths = new[] { DateTime.Now, DateTime.Now.AddMinutes(1) }
+                .Select(time => Path.Combine(collisionRoot, $"source (moved {time:yyyy-MM-dd HHmm})"))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            foreach (var collisionBackup in collisionBackupPaths) Directory.CreateDirectory(collisionBackup);
+            var collisionSession = new NotesSession(collisionStore, collisionAppHome, collisionSource, null, _ => { });
+            var collisionMoved = collisionSession.MoveNotes(collisionTarget, out var collisionMessage, out var collisionResult);
+            var collisionOutcome = collisionResult?.OldCopy;
+            var collisionNotePath = Path.Combine("notes", collisionStore.Data.Stack[0].Id + ".md");
+            var collisionSourceBody = Path.Combine(collisionSource, collisionNotePath);
+            var collisionTargetBody = Path.Combine(collisionTarget, collisionNotePath);
+            var postMoveText = "post-collision save uses target";
+            collisionStore.Data.Stack[0].Text = postMoveText;
+            var collisionSaved = collisionStore.Save();
+            CheckCase(collisionMoved && collisionResult is { Success: true }
+                && collisionOutcome is { Failure: NotesOldCopyFailure.NameCollision, BackupFolder: null }
+                && PathEquals(collisionOutcome.OriginalFolder, collisionSource)
+                && collisionSession.DataFolder == collisionTarget
+                && collisionStore.Folder == collisionTarget && collisionStore.IsAvailable && collisionSession.NotesLocationError is null
+                && PathEquals(NotesLocation.ReadPointer(collisionAppHome) ?? "", collisionTarget)
+                && Directory.Exists(collisionSource)
+                && File.ReadAllText(collisionSourceBody) == "move despite backup collision"
+                && collisionSaved && File.ReadAllText(collisionTargetBody) == postMoveText
+                && collisionMessage == collisionOutcome.Message(collisionResult.FileCount)
+                && collisionMessage == $"Notes moved; the old folder remains at {Path.GetFullPath(collisionSource)} because its backup name already exists.",
+                $"backup-name collision keeps the old folder but completes the move and reports its outcome: {collisionMessage}");
+
+            report = failures.Count == 0 ? "passed" : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+        catch (Exception ex)
+        {
+            report = string.Join("; ", failures.Append(ex.Message));
+            return false;
+        }
+        finally
+        {
+            try { collisionStore?.Flush(); } catch { }
+            try { if (Directory.Exists(root)) Directory.Delete(root, true); } catch { }
+        }
+    }
+
+    private static bool PathEquals(string left, string right)
+    {
+        try
+        {
+            var normalizedLeft = Path.TrimEndingDirectorySeparator(Path.GetFullPath(left));
+            var normalizedRight = Path.TrimEndingDirectorySeparator(Path.GetFullPath(right));
+            return string.Equals(normalizedLeft, normalizedRight, StringComparison.OrdinalIgnoreCase);
+        }
+        catch { return false; }
     }
 
     private static bool NotesUseFolderChecks(out string report)

@@ -691,12 +691,7 @@ internal sealed partial class SettingsWindow : Window
             return;
         }
 
-        var oldFolder = _notes.DataFolder;
-        var appHome = _notes.AppHome;
-        var fileCount = NotesFileCount(oldFolder);
-        var backupRoot = SamePath(oldFolder, appHome) ? appHome : Path.GetDirectoryName(oldFolder)!;
-        var before = DirectorySet(backupRoot);
-        if (!_notes.MoveNotes(target, out var message))
+        if (!_notes.MoveNotes(target, out var message, out var result))
         {
             _notesError = message;
             _notesNotice = null;
@@ -704,11 +699,10 @@ internal sealed partial class SettingsWindow : Window
             return;
         }
 
-        var backup = NewBackupDirectory(backupRoot, before, oldFolder, target, appHome);
         _pendingNotesFolder = null;
         _notesError = null;
-        _notesSuccess = $"Moved {fileCount} {(fileCount == 1 ? "file" : "files")}. The old folder was kept as {backup ?? Path.GetFileName(oldFolder)}.";
-        _notesNotice = message.StartsWith("Notes moved to ", StringComparison.OrdinalIgnoreCase) ? null : message;
+        _notesSuccess = result!.OldCopy!.Message(result.FileCount);
+        _notesNotice = _notes.NotesLocationError;
         Refresh();
     }
 
@@ -736,43 +730,6 @@ internal sealed partial class SettingsWindow : Window
     private static int? RecoveredFileCount(string folder)
     {
         try { return Directory.Exists(folder) ? Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories).Count() : 0; }
-        catch { return null; }
-    }
-
-    private static int NotesFileCount(string folder)
-    {
-        var count = 0;
-        foreach (var name in new[] { "index.json", "index.json.bak" })
-            if (File.Exists(Path.Combine(folder, name))) count++;
-        foreach (var name in new[] { "notes", "recovered" })
-        {
-            var directory = Path.Combine(folder, name);
-            if (Directory.Exists(directory)) count += Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories).Count();
-        }
-        return count;
-    }
-
-    private static HashSet<string> DirectorySet(string folder)
-    {
-        try { return Directory.Exists(folder) ? Directory.GetDirectories(folder).ToHashSet(StringComparer.OrdinalIgnoreCase) : []; }
-        catch { return []; }
-    }
-
-    private static string? NewBackupDirectory(string root, HashSet<string> before, string oldFolder, string target, string appHome)
-    {
-        try
-        {
-            var prefix = SamePath(oldFolder, appHome)
-                ? "backup-before-move-"
-                : Path.GetFileName(oldFolder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) + " (moved ";
-            return Directory.GetDirectories(root)
-                .Where(path => !before.Contains(path)
-                    && Path.GetFileName(path).StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
-                    && !IsSameOrNestedPath(path, target)
-                    && !IsSameOrNestedPath(target, path))
-                .Select(Path.GetFileName)
-                .FirstOrDefault();
-        }
         catch { return null; }
     }
 
