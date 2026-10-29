@@ -28,7 +28,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   Gate on dev PASS (0 warnings, SELFTEST PASS, CONTRACTS 8 rows: 7 pass, 1 manual). Next: A54-link-hover-click.
 - C24-roadmap-artifact (user, 2026-10-29): `/roadmap` widget replaced by a roadmap Artifact
   (https://claude.ai/artifact/VU8guxUCfxJTSZ1MxNaqyy) that a Claude Stop hook republishes when the Plan changes (main
-  checkout only). On `feat/C24-roadmap-artifact` (965af9e), pushed. Next: user approves the merge into dev.
+  checkout only). Merged into dev (783e9ab, 2026-10-29, user asked); gate on dev PASS.
 - C23-idea-numbering (user, 2026-10-29): numbers only on user confirmation; A53+ dissolved; Plan redrawn as unnumbered
   ideas with steps (design-tokens, design-unify, code-ownership, notes-folder-move-flow, ...). Next: user confirms ideas.
 - A52-move-old-folder-rename-warning merged into dev (3ced024, 2026-10-29; user hand test passed 3 of 3): cause was a trailing
@@ -152,6 +152,8 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | **Bugs** | | | | |
 | A53-split-divider-height | Split-view divider stops short of the window's bottom edge; make it full height (was A58) | Low | Small | done |
 | A54-link-hover-click | Every URL opens on Ctrl+click; shortened links always show a hand, other URLs show it while Ctrl is held (widened in r3, user) | Low | Small | done |
+| C25-dev-instance-handoff | `tools/dev.ps1` closes whatever dev copy is running from any checkout (shared record, dev-only, never the installed copy) and launches its own; the implementation sub-session starts its dev copy when the gate passes | High | Small | in review |
+| A45-dev-build-badge | Dev badge names the exact build: branch glyph U+E0A0 (fallback ⎇), `dev/<branch>@<ISO build time>` stamped at build; short form expands on hover, tooltip always shows the full text; approved at its hand test (dev-only) | Low | Small | planned |
 | A55-split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider (was A57) | Medium | Medium | planned |
 | Release marker | dev -> main with a tag, on your go | - | - | planned |
 | **Reorg leftovers** | | | | |
@@ -200,7 +202,6 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | step: single-result-message | Settings shows the move's own result message instead of rebuilding it | Low | Small | needs you |
 | A51-recovered-folder-always-open | Recovered-notes folder always exists and its Open button always works | Low | Small | planned |
 | A48-answers-toggle-clarity | Rename the "Answers" toggle to say what it does, and apply it live | Low | Small | planned |
-| A45-dev-build-badge | Dev badge shows the live task, for example "dev · A52" | Low | Small | planned |
 | idea: native-timer-notification | Windows notification when a timer ends (was A55) | Medium | Medium | needs you |
 | A47-hotkey-recorder | Set a hotkey in Settings by pressing the keys | Medium | Medium | planned |
 | idea: chime-picker | Choose the timer chime: native sound plus two more, stretch (was A56) | Low | Medium | needs you |
@@ -220,7 +221,7 @@ IDs A53 and later below are dissolved (user, 2026-10-29); the Plan holds those a
   - (old A57, now A55-split-view-clip) (after current tasks): in split view, scrolling text overlaps across the divider; the divider should crop the visual of each pane.
   - (old A58, now A53-split-divider-height) (after current tasks): the split divider does not reach the bottom edge.
 - Settings window runs about 90 threads (memory is stable, freed 5 of 5 cycles).
-- A45-dev-build-badge (user wish, 2026-10-26): the dev badge shows which task/build is live (e.g. "dev · A39"), so the user
+- A45-dev-build-badge (user wish, 2026-10-26; widened 2026-10-29 to branch glyph + `dev/<branch>@<build time>`, now in the Plan): the dev badge shows which task/build is live (e.g. "dev · A39"), so the user
   knows exactly what is being checked. Lab-first.
 - A47-hotkey-recorder (user wish, 2026-10-26): binding a hotkey in Settings should record the actual key press, not typed text.
   Lab-first.
