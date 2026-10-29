@@ -19,6 +19,9 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- C24a-roadmap-local-page merged into dev (6b5483f, 2026-10-29, user: "local page is fine"): `/roadmap` opens
+  `.coord/roadmap.html`, rebuilt by PostToolUse and Stop hooks and reloading itself every 3 s; no republish prompts. The
+  Artifact stays, published only on request.
 - A54-link-hover-click merged into dev (f32b92a, 2026-10-29; user hand test passed): cause was `PadView.OnViewMoved`
   resetting the cursor to the I-beam after AvaloniaEdit set the hand; Ctrl+click now handled in the tunnel press. User widened
   scope in r3: every URL (short, expanded on the caret line, Shorten links off) is Ctrl+clickable. CONTRACTS

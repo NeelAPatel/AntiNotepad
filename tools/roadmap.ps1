@@ -1,17 +1,14 @@
-# Renders the STATUS "Plan" section as the roadmap Artifact page, .coord/roadmap.html (published to the URL in
-# tools/roadmap.url). -Hook: Claude Stop hook; regenerates the page and, when it differs from the last published one,
-# asks Claude to republish it. -Mark: records the current page as published (run after the publish succeeds).
+# Renders the STATUS "Plan" section as the local roadmap page, .coord/roadmap.html, which reloads itself every few seconds
+# when opened from disk. -Hook: Claude PostToolUse/Stop hook; regenerates the page silently. -Open: also opens it.
+# The same page can still be published by hand as the roadmap Artifact (tools/roadmap.url).
 # Acts only in the main checkout: worktrees carry a branch copy of STATUS that would overwrite the live plan.
-param([switch]$Hook, [switch]$Mark, [string]$Root = (Split-Path $PSScriptRoot -Parent))
+param([switch]$Hook, [switch]$Open, [string]$Root = (Split-Path $PSScriptRoot -Parent))
 $ErrorActionPreference = 'Stop'
 $status = Join-Path $Root '.coord/STATUS.md'
 $out = Join-Path $Root '.coord/roadmap.html'
-$shaFile = Join-Path $Root '.coord/roadmap.sha'
-$urlFile = Join-Path $Root 'tools/roadmap.url'
 
 if ($Hook) {
     try { $j = [Console]::In.ReadToEnd() | ConvertFrom-Json } catch { $j = $null }
-    if ($j.stop_hook_active) { exit 0 }
     if ($Root -match '[\\/]\.claude[\\/]worktrees[\\/]' -or -not (Test-Path $status)) { exit 0 }
 }
 
@@ -70,6 +67,13 @@ $chips = ($counts.GetEnumerator() | Sort-Object Name | ForEach-Object {
 $page = @"
 <title>AntiNotepad Roadmap</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<script>
+// Opened from disk: reload every 3 s to pick up hook rewrites, keeping the scroll position.
+if (location.protocol === 'file:') {
+  addEventListener('load', () => { try { scrollTo(0, +sessionStorage.getItem('rmY') || 0) } catch {} })
+  setInterval(() => { try { sessionStorage.setItem('rmY', scrollY) } catch {}; location.reload() }, 3000)
+}
+</script>
 <style>
 /* One long ledger: priority headings, block labels, then rows (#, item, scope, tier, state); stacks to two lines on phones. */
 :root{--bg:#fbfaf8;--fg:#1f1e1d;--fg2:#5f5e5a;--muted:#9a9893;--line:rgba(40,30,20,.1);--line2:rgba(40,30,20,.22);
@@ -115,22 +119,11 @@ h1{font-size:20px;font-weight:600;margin:0;text-wrap:balance}
 <div class="rm-cs">$chips</div>
 <div class="rm-r rm-h" aria-hidden="true"><span>#</span><span>Item</span><span>Scope</span><span>Tier · effort</span><span>State</span></div>
 $($sb.ToString())
-<p class="rm-foot">Republished by Claude when the STATUS plan changes. Rows are numbered by position; IDs are the item names.</p>
+<p class="rm-foot">Rebuilt by a Claude hook whenever STATUS changes. Rows are numbered by position; IDs are the item names.</p>
 </main>
 "@
 
-$sha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($page)))
-$old = if (Test-Path $shaFile) { (Get-Content $shaFile -Raw).Trim() } else { '' }
 Set-Content -Path $out -Value $page -Encoding utf8 -NoNewline
-if ($Mark) { Set-Content -Path $shaFile -Value $sha -Encoding ascii; "Marked $out as published"; exit 0 }
-
-if (-not $Hook) { "Wrote $out ($n items; $(($counts.GetEnumerator() | Sort-Object Name | ForEach-Object { "$($_.Value) $($_.Name)" }) -join ', '))"; exit 0 }
-if ($sha -eq $old) { exit 0 }
-$url = if (Test-Path $urlFile) { (Get-Content $urlFile -Raw).Trim() } else { '' }
-$markCmd = "pwsh -NoProfile -File `"$PSCommandPath`" -Mark"
-$reason = if ($url) {
-    "The STATUS plan changed. Republish the roadmap: Artifact publish with file_path `"$out`" and url `"$url`" (no icon, no other change). If this session has not read or published that artifact yet, read it first. After the publish succeeds, run: $markCmd. Then carry on; no reply about it is needed."
-} else {
-    "The STATUS plan changed and the roadmap Artifact has no URL yet. Publish `"$out`" as a new Artifact (icon `"map`"), write its URL to `"$urlFile`", then run: $markCmd."
-}
-@{ decision = 'block'; reason = $reason } | ConvertTo-Json -Compress
+if ($Hook) { exit 0 }
+"Wrote $out ($n items; $(($counts.GetEnumerator() | Sort-Object Name | ForEach-Object { "$($_.Value) $($_.Name)" }) -join ', '))"
+if ($Open) { Invoke-Item $out }

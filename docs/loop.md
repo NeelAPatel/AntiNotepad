@@ -46,9 +46,9 @@ Rules:
   8 steps means split the idea. Review follow-ups become steps of the idea they serve. A numbers continue from A53 (A53 and
   later from before 2026-10-29 were dissolved; old reports keep their old meaning), C numbers from C23. A number is never
   reused, even if dropped. Always write `<ID>-<slug>` plus its scope, never a bare ID or a range.
-- The plan table: the roadmap Artifact (URL in `tools/roadmap.url`; `/roadmap` opens it). A Claude Stop hook regenerates
-  `.coord/roadmap.html` after every turn in the main checkout and asks for a republish when the plan changed, so STATUS
-  edits from any path (Edit, shell, merge) reach it at the next turn's end. `/next-task` and `/merge-task` keep State current.
+- The plan table: the local page `.coord/roadmap.html` (`/roadmap` opens it). Claude hooks rebuild it in the main checkout
+  on every Edit/Write and at each turn's end, so STATUS edits from any path (Edit, shell, merge) reach it, and the open page
+  reloads itself every 3 seconds. The Artifact (`tools/roadmap.url`) is published only on request. `/next-task` and `/merge-task` keep State current.
 - Release markers in the STATUS plan: the master asks the user before tagging dev -> main. Only on the user's go.
 - Design changes stay lab-first (`AGENTS.md`): steps 5-8 run on a lab build, and the user approves before the real change.
 
@@ -95,5 +95,5 @@ Three commands drive the loop: `/next-task` (steps 1-5, master), `/review-task <
 | `.claude/skills/review-task/SKILL.md` | `/review-task <ID-slug>`: steps 6-7 by tier |
 | `.claude/skills/merge-task/SKILL.md` | `/merge-task <ID-slug>`: step 9 |
 | `.github/workflows/gate.yml` | CI gate, manual trigger |
-| `tools/roadmap.ps1`, `tools/roadmap.url`, `.claude/skills/roadmap/SKILL.md` | roadmap Artifact from STATUS (`/roadmap`) |
-| `.claude/settings.json` | Stop hook: regenerates `.coord/roadmap.html`, asks for a republish when the plan changed |
+| `tools/roadmap.ps1`, `tools/roadmap.url`, `.claude/skills/roadmap/SKILL.md` | local roadmap page from STATUS (`/roadmap`); Artifact on request |
+| `.claude/settings.json` | PostToolUse and Stop hooks: rebuild `.coord/roadmap.html` |
