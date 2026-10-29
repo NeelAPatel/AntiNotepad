@@ -18,8 +18,7 @@ Missing Plan or Go: stop and tell the master the item skipped phases. Missing ti
 ## 2. Gate (always)
 `pwsh -NoProfile -File tools/gate.ps1 -Task <round>` from the worktree. It writes `.coord/reports/<round>.gate.md` (not
 committed) and exits non-zero on failure. Read only its Summary.
-- Fail: write `.coord/tasks/<ID-slug>-rN.md` (next N) from `.coord/templates/round.md` quoting the failing lines, relaunch
-  Codex (`docs/agents.md`), STATUS `rework rN`, stop.
+- Fail: triage it (step 4a) before anything is relaunched.
 - Warnings (scope, size): carry them into step 4.
 
 ## 3. The card's other gates
@@ -39,15 +38,28 @@ deviations, and `git diff --stat dev...HEAD`. Write `## Check` on the card:
 - "Noticed": side bugs or follow-ups, as proposals only.
 Then decide:
 - Any review `rework`, a blocker or major finding, a missing Behavior changes entry, or a Plan's "Must not change" broken:
-  write the `<ID-slug>-rN` round brief with exactly those findings and relaunch Codex; when it exits, run this skill again.
-  Max two rework rounds; a third goes to the user.
+  triage it (4a). Max two rework rounds; a third goes to the user.
 - Any "ask the user" line, or a review `ask-user`: ask the user that one question with the card; STATUS `ask-user`.
   A scope change they give becomes a round brief with their words under "Why this round".
 - Otherwise accept. Commit the card and reports on the branch (`<ID-slug>: check`). STATUS `accepted`.
 
+## 4a. Triage (every failure, no extra agent)
+You already hold the context, so triage here instead of spawning anyone. Name one cause from the failing lines or
+findings, and route by it (`docs/loop.md`, "Triage, lessons, scores"):
+| Cause | Route |
+|---|---|
+| `code`: the build does not do what the Plan says | `<ID-slug>-rN` round brief from `.coord/templates/round.md` with exactly the failing lines or proven findings; relaunch Codex; run this skill again when it exits |
+| `test`: a selftest, contract or probe is wrong, not the product | round brief limited to the test files; say so under "Why this round" |
+| `plan`: Findings or Plan were wrong (wrong cause, missed caller, impossible After) | stop; tell the master with the card; the master re-plans and asks the user for Go again |
+| `env`: tooling, build cache, flaky run, sandbox | re-run the gate once; still failing: one-line gate fix if it is the manager's to make, else tell the master |
+| `judgment`: only the user can decide | ask the user that one question with the card; STATUS `ask-user` |
+Add one line per failure under "Misses" in the card's `## Check`: found at, cause, caught by, which check should have
+caught it earlier, a one-line lesson. The master copies these into `.coord/lessons.md` at Merge.
+
 ## 5. Hand over
 For an accepted item with UI checks: run `tools/dev.ps1` from the worktree immediately before the hand checks. Verify the
-dev badge, the printed EXE and DATA paths, and the app log under that DATA before reporting ready; if any fails, report
-that and do not claim the build is ready. Never launch during review or rework. Give the user the Plan's UI checks plus
-the report's new ones, and the badge text they should see. Record their result verbatim under `## Hand test`, commit it,
-and tell the master. Not visible: say no hand test is needed. Merging is the master's `/merge-task`.
+printed EXE and DATA paths and the app log under that DATA before reporting ready; if any fails, report that and do not
+claim the build is ready. The on-screen dev badge is the user's first hand check while Computer Use is off: give them
+the badge text they should see. Never launch during review or rework. Give the user the Plan's UI checks plus the
+report's new ones. Record their result verbatim under `## Hand test`, commit it, and tell the master. A failed hand check
+is triaged (4a) and gets a "Misses" line. Not visible: say no hand test is needed. Merging is the master's `/merge-task`.

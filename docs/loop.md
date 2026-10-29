@@ -46,7 +46,7 @@ The master asks one question: go, change, or drop. Nothing is built before go.
 ### Gates menu
 | Gate | Catches | Default for |
 |---|---|---|
-| `tools/gate.ps1` (build 0 warnings, selftest, LAYERS, CONTRACTS, seam, scope, size) | compile errors, broken promises, layering leaks, files outside the plan, god-file growth | every tier |
+| `tools/gate.ps1` (build 0 warnings, selftest, LAYERS, CONTRACTS, seam, format, scope, size) | compile errors, broken promises, layering leaks, new format problems on changed lines, files outside the plan, god-file growth | every tier |
 | Codex fresh review (`lens-review`) | logic, behavioral coupling, shared state and latches, timing and caches, missed inputs, cleanup | Medium, High |
 | Claude `design-reviewer` | responsibility, boundaries, coupling between features, future cost | High |
 | New `CONTRACTS` row | the fixed bug or new promise coming back unseen | every bug fix |
@@ -63,6 +63,21 @@ After the gates, the sub-session compares three things and writes `## Check` on 
 - Side bugs noticed on the way go under "Noticed" as proposed follow-ups, never fixed in passing.
 - A scope change from the user mid-item (A54 r3) is recorded on the card with the user's words and goes through Plan again
   for that round.
+
+### Triage, lessons, scores (C28-loop-cheap-checks)
+Strictness is cheap by design: scripts first (zero model tokens), model judgment only on exceptions.
+- **Triage on every failure** (gate fail, review rework, hand-test fail), done by the Check session that already has the
+  context, no extra agent: one cause, `code`, `test`, `plan`, `env` or `judgment`, routed by the table in
+  `/review-task` step 4a. Only `code` and `test` go back to Codex; `plan` goes to the master, `judgment` to the user.
+- **Lessons:** each failure leaves one "Misses" line on the card; the master copies them into `.coord/lessons.md` at Merge
+  with one Scores row per item (what each check found). Master-owned on dev, like STATUS.
+- **Self-improvement, user-approved:** when the same cause and "should have caught" pair appears twice without a rule
+  change, the master proposes an unnumbered `idea:` row naming the rule or bot file to change. Rules change only through
+  an item the user approves.
+- **Reviewer scores:** the Scores table shows whether each review earns its run. Empty reviews on items that later had
+  misses mean that review's checklist needs a change (an `idea:` row), not more reviewers.
+- **Cost:** a green item adds no model calls (format and the ledger are scripts); a failure adds a few lines in a
+  session already open; the retro is one row written at Merge.
 
 ## Tiers
 Set at Plan; findings may raise it. When unsure, pick the higher tier.
@@ -84,6 +99,8 @@ detail goes below it.
 ```
 - `✓` done, `●` current, `–` skipped by tier (Findings is never skipped), plain = not reached. Rework shows as `Build ● (r2)`.
 - Several items in flight: one card each, the one the reply is about first.
+- **Quiet relays:** a sub-session note that changes nothing ("still running", a launcher exit already reported) gets at
+  most one plain line from the master, with no card and no tool calls. A card is for a phase change or a question.
 - A `UserPromptSubmit` hook (`tools/loop-card.ps1`) reminds every turn and lists the items in flight from STATUS.
 
 ## Rules
@@ -115,8 +132,9 @@ detail goes below it.
   bounds check are not skipped.
 
 ## Sessions: master, sub-sessions, names (user, 2026-10-29)
-**Loop version: v2** (C26-item-card-loop, 2026-10-29). v1 was C13-dev-loop-kit through C25. A merged C-item that changes
-the phases, roles or session rules bumps the version here and says so in its merge note.
+**Loop version: v2.1** (v2: C26-item-card-loop; v2.1: C28-loop-cheap-checks, triage, lessons, format check; 2026-10-29).
+v1 was C13-dev-loop-kit through C25. A merged C-item that changes the phases, roles or session rules bumps the major
+version (new master at the next handover); smaller rule changes bump the minor version and need no new master.
 
 - **One master chat at a time** orchestrates: it owns STATUS and the roadmap, runs Request to Go and Merge, and starts
   sub-sessions. It never runs Codex, builds or hand-test launches itself; its own reading is the Low-tier scout.
@@ -192,6 +210,7 @@ sub-session), `/merge-task <ID-slug>` (Merge; master).
 | `.claude/skills/review-task/SKILL.md` | `/review-task <ID-slug>`: Check (gates, bounds check, verdict), hand over |
 | `.claude/skills/merge-task/SKILL.md` | `/merge-task <ID-slug>`: Merge |
 | `tools/loop-card.ps1` | `UserPromptSubmit` hook: status-card reminder and the items in flight |
+| `.coord/lessons.md` | misses (cause, caught by, should have caught) and per-item reviewer scores; master-owned |
 | `.github/workflows/gate.yml` | CI gate, manual trigger |
 | `tools/roadmap.ps1`, `tools/roadmap.url`, `.claude/skills/roadmap/SKILL.md` | local roadmap page from STATUS (`/roadmap`); Artifact on request |
 | `.claude/settings.json` | hooks: roadmap rebuild (PostToolUse, Stop), status card (UserPromptSubmit) |

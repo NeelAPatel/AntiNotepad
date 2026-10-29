@@ -19,8 +19,12 @@ tags happen only on the user's explicit go. Every reply opens with the status ca
 4. Re-gate on dev: `pwsh -NoProfile -File tools/gate.ps1 -Task <ID-slug>` (scope step is expected to warn on dev; build,
    selftest and seam must pass; the gate report is not committed). Fail: tell the user, do not push.
 5. STATUS: the plan row's State cell `done`, merge hash in "Now", gate line, the card's "Noticed" follow-ups as unnumbered
-   plan or Backlog rows. Commit STATUS once as `S<n>-status: <ID-slug> merged`; it carries every STATUS edit since the
-   last merge. This and the merge are the only commits dev gets.
+   plan or Backlog rows. `.coord/lessons.md`: copy the card's "Misses" lines, add the item's Scores row (rework rounds,
+   gate fails, Codex review proven findings, design review findings, hand-test fails). If a Misses cause and "should
+   have caught" pair now appears twice without a rule change, add an unnumbered `idea:` plan row naming the rule or bot
+   file to change (e.g. `.agents/skills/lens-review/SKILL.md`) and tell the user; never edit the rule yourself here.
+   Commit STATUS and lessons once as `S<n>-status: <ID-slug> merged`; it carries every STATUS edit since the last
+   merge. This and the merge are the only commits dev gets.
 6. `git push origin dev feat/<ID-slug>`. Remove the worktree (`git worktree remove .claude/worktrees/<ID-slug>`); keep the
    branch until the next release marker.
 7. Reply with the status card at Merge ✓: merged hash, gate result, and the next plan item (offer `/next-task`).

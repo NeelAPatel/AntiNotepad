@@ -329,6 +329,63 @@ try {
         Add-Step -Name 'Seam' -Status 'FAIL' -Summary $_.Exception.Message
     }
 
+    # Format: `dotnet format` on the changed product C# files only. A problem on a line this change touched fails;
+    # problems on untouched lines are older code and only counted, so existing files never block a gate.
+    if ($Ci) {
+        Add-Step -Name 'Format' -Status 'SKIP' -Summary 'format is skipped in CI mode'
+    }
+    else {
+        try {
+            $csFiles = @(Get-ChangedFiles | Where-Object { $_ -match '^product/.+\.cs$' -and (Test-Path (Join-Path $script:repoRoot $_)) })
+            if ($csFiles.Count -eq 0) {
+                Add-Step -Name 'Format' -Status 'PASS' -Summary 'no changed product C# files'
+            }
+            else {
+                $baseRevision = Resolve-BaseRevision
+                $touched = @{}
+                foreach ($file in $csFiles) {
+                    $set = [Collections.Generic.HashSet[int]]::new()
+                    $diff = Invoke-CapturedProcess -FileName 'git' -Arguments @('-C', $script:repoRoot, 'diff', '-U0', $baseRevision, '--', $file) -WorkingDirectory $script:repoRoot
+                    $tracked = (Invoke-CapturedProcess -FileName 'git' -Arguments @('-C', $script:repoRoot, 'cat-file', '-e', "${baseRevision}:$file") -WorkingDirectory $script:repoRoot).ExitCode -eq 0
+                    if (-not $tracked) { $set = $null }
+                    else {
+                        foreach ($m in [regex]::Matches($diff.StdOut, '(?m)^@@ -\S+ \+(\d+)(?:,(\d+))? @@')) {
+                            $start = [int]$m.Groups[1].Value
+                            $count = if ($m.Groups[2].Success) { [int]$m.Groups[2].Value } else { 1 }
+                            for ($i = $start; $i -lt $start + $count; $i++) { [void]$set.Add($i) }
+                        }
+                    }
+                    $touched[[IO.Path]::GetFullPath((Join-Path $script:repoRoot $file))] = $set
+                }
+                $formatArgs = @('format', $script:projectPath, '--verify-no-changes', '--verbosity', 'quiet', '--include') + $csFiles
+                $format = Invoke-CapturedProcess -FileName 'dotnet' -Arguments $formatArgs -WorkingDirectory $script:repoRoot
+                $new = [Collections.Generic.List[string]]::new(); $old = 0
+                foreach ($line in (Get-OutputLines (Get-CombinedOutput $format))) {
+                    $m = [regex]::Match($line, '^(?<path>.+?\.cs)\((?<line>\d+),\d+\): (?:error|warning) (?<code>\S+): (?<msg>.*?)(?: \[.*\])?$')
+                    if (-not $m.Success) { continue }
+                    $path = [IO.Path]::GetFullPath($m.Groups['path'].Value)
+                    $lineNo = [int]$m.Groups['line'].Value
+                    $set = $touched[$path]
+                    # WHITESPACE problems start at the end of the line before the bad indent, so that line counts too.
+                    if ($touched.ContainsKey($path) -and ($null -eq $set -or $set.Contains($lineNo) -or $set.Contains($lineNo + 1))) {
+                        $rel = [IO.Path]::GetRelativePath($script:repoRoot, $path).Replace('\', '/')
+                        $new.Add("${rel}:${lineNo} $($m.Groups['code'].Value): $($m.Groups['msg'].Value)")
+                    }
+                    else { $old++ }
+                }
+                if ($new.Count -gt 0) {
+                    Add-Step -Name 'Format' -Status 'FAIL' -Summary "$($new.Count) format problem(s) on changed lines (fix: dotnet format --include <file>); $old older one(s) ignored" -Lines @($new | Select-Object -First 40)
+                }
+                else {
+                    Add-Step -Name 'Format' -Status 'PASS' -Summary "$($csFiles.Count) changed C# file(s), no format problems on changed lines; $old older one(s) ignored"
+                }
+            }
+        }
+        catch {
+            Add-Step -Name 'Format' -Status 'WARN' -Summary "format check could not run: $($_.Exception.Message)"
+        }
+    }
+
     if ($Ci) {
         Add-Step -Name 'Scope' -Status 'SKIP' -Summary 'scope is skipped in CI mode'
     }

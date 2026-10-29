@@ -11,16 +11,26 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Never run `AntiNotepad.exe --quit` without `ANTINOTEPAD_DATA`: it targets the installed copy's instance.
 
 ## Where things are
-- `main`: tag `antinotepad-v0.6.0-untested-r7` (f4b8aee, 2026-10-28, user: "Yes, release r7") = r6 + A37-caret-drag-jump
+- `main`: tag `antinotepad-v0.6.0-untested-r8` (42ad744, 2026-10-29, user: "Release now") = r7 + A55-split-view-clip,
+  A54-link-hover-click, A52-move-old-folder-rename-warning, A53 divider guard, A45 dev badge (dev-only) and the loop v2
+  tooling (C13-C27). Release build 0 warnings, SELFTEST PASS (CONTRACTS 11 rows: 10 pass, 1 manual); tree identical to dev
+  at release (ddb6ce7). Installed copy upgraded to r8 by the user with `tools/install.ps1` (2026-10-29: "Upgraded").
+- Previous: `main`: tag `antinotepad-v0.6.0-untested-r7` (f4b8aee, 2026-10-28, user: "Yes, release r7") = r6 + A37-caret-drag-jump
   + the A39-A44 modularity reorg (one-way layering, 104 LAYERS rows, `tools/check-platform-seam.ps1`) + A43b missing-folder
   fix and recovery. Release build 0 warnings, SELFTEST PASS; tree identical to dev at release.
 - r6 (2026-10-25) was dev reverted to just after A30 (A31-A33 reverted, A34 dropped: A32/A34 forced caption-window styles
   onto the frameless pad, losing corners and shadow). Windowing is still r4's.
-- Installed copy: r5 (broken frame) until the user reinstalls with `tools/install.ps1` (on hold; r7 is now the latest).
+- Installed copy: r8 (user upgraded 2026-10-29).
 - Finished briefs, reports and the A1 audit doc were removed from the tree on 2026-10-25; they live in git under tag
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- C28-loop-cheap-checks merged into dev (c30a063, 2026-10-29, user: "lets do 1-5"; gate on dev PASS): loop v2.1. Gate
+  Format step (new problems on changed lines only), Codex ledger and logs in the main checkout, triage on every failure
+  (`/review-task` 4a), `.coord/lessons.md` (master-owned; Misses and Scores filled at Merge), quiet relays. Master 1
+  continues as is (minor version). Queued: C29-headless-render-probe (product code, after A42c-checkbox-indent).
+- Release r8 (user, 2026-10-29: "Release now"): dev merged into main --no-ff (42ad744), tag
+  `antinotepad-v0.6.0-untested-r8`, both pushed. Release build 0 warnings, SELFTEST PASS. Next: A42c-checkbox-indent.
 - A55-split-view-clip merged into dev (2a7a482, 2026-10-29; user hand test "all passed" on checks 0-5): cause was each
   PadView sitting directly in the split grid while NoteSwipe/arrival translate the whole PadView, so a pulled pane slid over
   the divider. Each pane now sits in a stationary ClipToBounds host in its column; motion unchanged; right host follows
@@ -189,10 +199,12 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | A45-dev-build-badge | Dev badge names the exact build: branch glyph U+E0A0 (fallback ⎇), `dev/<branch>@<ISO build time>` stamped at build; short form expands on hover, tooltip always shows the full text; approved at its hand test (dev-only) | Low | Small | done |
 | C26-item-card-loop | One item card per item (Request > Findings > Plan > Go > Build > Check > Hand test > Merge), findings every tier, reproduction before bug builds, gates per item, bounds check, status card hook | Low | Small | done |
 | C27-session-naming | Master and sub-session names, loop version v2, master handover checklist and resume prompt | Low | Small | done |
+| C28-loop-cheap-checks | Gate format check on changed lines, worktree-safe Codex ledger, triage on failure, lessons and reviewer scores, quiet relays (loop v2.1) | Low | Small | done |
+| C29-headless-render-probe | Off-screen Avalonia render helper for the selftest, so audits can reproduce visual bugs and `split-pane-clipping` checks pixels automatically instead of manually; run after A42c-checkbox-indent (both touch the selftest) | Medium | Small | planned |
 | A55-split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider (was A57) | Medium | Medium | done |
-| Release marker | dev -> main with a tag, on your go | - | - | planned |
+| Release marker | dev -> main with a tag, on your go (r8, 42ad744) | - | - | done |
 | **Reorg leftovers** | | | | |
-| A42c-checkbox-indent | Move checkbox indent logic out of `PadView` into its own Editor class, behavior-neutral | Low | Small | planned |
+| A42c-checkbox-indent | Move checkbox indent logic out of `PadView` into its own Editor class, behavior-neutral | Medium | Small | plan ready (Medium) |
 | A42d-list-commands | Move list commands out of `PadView` into its own Editor class, behavior-neutral | Medium | Medium | planned |
 | **Design system and ownership** | | | | |
 | idea: design-tokens | One source of truth for every design value (radius, fonts, colors, shadows, motion durations); the app looks and moves exactly as today | - | - | needs you |
@@ -243,7 +255,6 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | idea: floating-scrollbar | Modern floating scrollbar at the side, shown only while scrolling (user, 2026-10-29, A55 hand test: "a scroll bar shows, i didn't expect that"); open: hide vs fade, both split panes, existing bar styles | - | - | needs you |
 
 ## Open (needs the user)
-- Reinstall the installed copy with r6 (`tools/install.ps1` from Windows Terminal) to get the r4 window back.
 - Live check not yet done: A30 Windows restart/sign-out saving an edit typed just before.
 - N3-release-and-update-plan: proposal at tag `proposal/N3-release-plan`; discussed in a separate chat ("Production readiness
   for antinotepad"): publishing, GitHub repo, license, signing, version label, installer.

@@ -12,7 +12,10 @@ if [[ ! "$task" =~ ^[A-Z][A-Za-z0-9]*(-[a-z0-9]+)+$ ]]; then
   exit 2
 fi
 WORKDIR="${CODEX_WORKDIR:-$ROOT}"; TAG="${CODEX_BUDGET_TAG:-$(date +%F)}"; TMIN="${CODEX_TIMEOUT_MIN:-45}"
-LEDGER="$ROOT/.coord/logs/usage.tsv"; mkdir -p "$ROOT/.coord/logs" "$ROOT/.coord/reports"; touch "$LEDGER"
+# Ledger and logs live in the main checkout, so caps count every worktree's runs and logs outlive worktree removal.
+MAIN="$(cd "$(git -C "$ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd -W)" || MAIN="$ROOT"
+[ -n "$MAIN" ] || MAIN="$ROOT"; LOGS="$MAIN/.coord/logs"
+LEDGER="$LOGS/usage.tsv"; mkdir -p "$LOGS" "$ROOT/.coord/reports"; touch "$LEDGER"
 
 tier() { case "$1" in
   director) echo "gpt-6.1-sol medium ${CODEX_MAX_DIRECTOR:-20}";;
@@ -27,7 +30,7 @@ attempt() {  # $1=role -> 0 ok, 3 cap reached, 4 limit-type failure (try next ti
   read -r model effort cap <<<"$(tier "$r")" || return 2
   used=$(awk -F'\t' -v t="$TAG" -v r="$r" '$1==t && $3==r' "$LEDGER" | wc -l)
   if [ "$used" -ge "$cap" ]; then echo "CAP: $r runs used $used/$cap for tag $TAG" >&2; return 3; fi
-  log="$ROOT/.coord/logs/$task.$r.log"; out="$ROOT/.coord/reports/$task.$r.codex.md"
+  log="$LOGS/$task.$r.log"; out="$ROOT/.coord/reports/$task.$r.codex.md"
   echo "PLAN: role=$r model=$model effort=$effort run=$((used+1))/$cap workdir=$WORKDIR task=$file log=$log report=$out timeout=${TMIN}m"
   [ "${CODEX_DRY:-0}" = 1 ] && return 0
   start=$(date +%s)
@@ -46,7 +49,7 @@ r="$role"
 while :; do
   attempt "$r"; rc=$?
   case $rc in
-    0) echo "DONE via $r. Report: .coord/reports/$task.$r.codex.md  Log: .coord/logs/$task.$r.log"; exit 0;;
+    0) echo "DONE via $r. Report: .coord/reports/$task.$r.codex.md  Log: $LOGS/$task.$r.log"; exit 0;;
     3|4) n="$(next "$r")"; [ -z "$n" ] && { echo "STOP: no further tier after $r (rc=$rc). Write HANDOFF.md, do not loop." >&2; exit $rc; }
          echo "FAILOVER: $r -> $n" >&2; r="$n";;
     *) echo "FAIL: $r exit=$rc. Not retrying (see log). Revert or fix manually." >&2; exit $rc;;

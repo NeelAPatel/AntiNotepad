@@ -76,7 +76,8 @@ Report: `.coord/reports/<ID-slug>.md`, short, with exactly these sections:
 
 ## Check
 <Filled by `/review-task`: gate result lines, review verdicts, then the bounds check, one line per difference between
-Request, Plan and done: within plan | justified (why) | ask the user. "Noticed": side bugs as proposed follow-ups.>
+Request, Plan and done: within plan | justified (why) | ask the user. "Noticed": side bugs as proposed follow-ups.
+"Misses": one line per failure (found at, cause, caught by, should have caught, lesson), or "None".>
 
 ## Hand test
 <Filled by the sub-session: the build checked (dev badge text), and the user's result, verbatim.>
