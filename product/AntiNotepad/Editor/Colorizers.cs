@@ -77,7 +77,7 @@ internal sealed class NoteColorizer(PadView pad) : DocumentColorizingTransformer
             if (size > 1) ChangeLinePart(o, line.EndOffset, e => e.TextRunProperties.SetFontRenderingEmSize(e.TextRunProperties.FontRenderingEmSize * size));
             return;
         }
-        var box = CheckboxGenerator.Box.Match(text);
+        var box = ListEditing.Checkbox.Match(text);
         if (box.Success && box.Groups[2].Value != " ")
         {
             ChangeLinePart(o + box.Length, line.EndOffset, e =>

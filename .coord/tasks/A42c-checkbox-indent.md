@@ -116,8 +116,22 @@ Report: `.coord/reports/A42c-checkbox-indent.md`, short, with exactly these sect
 9. **Hand checks for the user**: the Plan's UI checks, plus anything new, or "None (not visible)".
 
 ## Check
-<Filled by `/review-task`: gate result lines, review verdicts, then the bounds check, one line per difference between
-Request, Plan and done: within plan | justified (why) | ask the user. "Noticed": side bugs as proposed follow-ups.>
+- **Gate (online, `-Task A42c-checkbox-indent`):** GATE: PASS. Build 0 warnings; SELFTEST PASS; CONTRACTS 12 rows, 11 pass, 1 manual; Seam 0 violations in 50 files; Format PASS (8 files); Scope PASS (8 allowed files); Size WARN: SelfTest.cs 2980 -> 3089 (planned tests and LAYERS guards). PadView shrank 28 lines.
+- **Codex review (director's lens_reviewer + fresh reviewer run):** both `VERDICT: accept`, no proven findings (`.coord/reports/A42c-checkbox-indent.review.md`). Unproven: caret, selection, click geometry and combined indent+renumber undo are for the hand test.
+- **Bounds check:**
+  - ListEditing owns regex and pure edits, DocumentCommands applies them, PadView keeps facades, key routing, Tab RunUpdate + Renumber: within plan.
+  - Elements, Renderers, Colorizers read `ListEditing.Checkbox`, no alias left: within plan.
+  - LAYERS rows (3 ListEditing, 18 DocumentCommands bans; guard proven with a temporary real TextEditor reference): within plan.
+  - CONTRACTS `checkbox-indent-preserved` added: within plan.
+  - Adapter `Indent` now ignores an out-of-range line number (old code would throw); unreachable from the only caller (IsListLine already validated the line): justified, no behavior change.
+  - Build check folders left by Codex (sandbox could not delete): removed by the Check session: justified.
+  - Files outside the list: none (only reports and the review brief).
+- **Misses:** none.
+- **Noticed:** none.
+- **Verdict:** accepted.
 
 ## Hand test
-<Filled by the sub-session: the build checked (dev badge text), and the user's result, verbatim.>
+- **Build checked:** dev copy from the worktree, EXE `build\dev\AntiNotepad.exe` (pid 23836), DATA `build	estdata`, log `build	estdatantinotepad.log` (pad shown). Dev badge text not seen by this session (no Computer Use); the user ran it.
+- **Result (user, 2026-10-29, checks 1-5):** "All of these pass"
+- **Separate request, not part of A42c (not fixed; Master 1 handles it as a new idea):** user, 2026-10-29: "timer note: typing `10s test` and [enter] immediately starts the timer. that shouldnt be the case because i might be writing multiple timers."
+- **Misses:** none.

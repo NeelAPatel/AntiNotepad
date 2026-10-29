@@ -43,14 +43,12 @@ internal class GlyphElement : FormattedTextElement
 /// <summary>Draws `[ ]` / `[x]` as a checkbox glyph; click toggles. `- [ ]` bullets fold into the box.</summary>
 internal sealed class CheckboxGenerator(PadView pad) : VisualLineElementGenerator
 {
-    internal static readonly Regex Box = new(@"^(\s*)(?:[-*+]\s+)?\[( |x|X)\]", RegexOptions.Compiled);
-
     public override int GetFirstInterestedOffset(int startOffset)
     {
         var doc = CurrentContext.Document;
         var line = doc.GetLineByOffset(startOffset);
         if (startOffset != line.Offset && startOffset > line.Offset + IndentOf(doc, line)) return -1;
-        var m = Box.Match(doc.GetText(line));
+        var m = ListEditing.Checkbox.Match(doc.GetText(line));
         if (!m.Success) return -1;
         var at = line.Offset + m.Groups[1].Length;
         return at >= startOffset ? at : -1;
@@ -61,7 +59,7 @@ internal sealed class CheckboxGenerator(PadView pad) : VisualLineElementGenerato
         if (!pad.Decorate) return null;
         var doc = CurrentContext.Document;
         var line = doc.GetLineByOffset(offset);
-        var m = Box.Match(doc.GetText(line));
+        var m = ListEditing.Checkbox.Match(doc.GetText(line));
         if (!m.Success || line.Offset + m.Groups[1].Length != offset) return null;
         var length = m.Length - m.Groups[1].Length;
         var lineNumber = line.LineNumber;

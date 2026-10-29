@@ -25,6 +25,12 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- A42c-checkbox-indent merged into dev (178d4c0, 2026-10-29; user hand test "All of these pass" on checks 1-5):
+  checkbox toggle and Tab/Shift+Tab indent edits decided in `Editor/ListEditing` (checkbox regex moved there, groups
+  unchanged), applied by new `Editor/DocumentCommands`; `PadView` keeps routing and Tab's single undo group (-28 lines).
+  CONTRACTS `checkbox-indent-preserved`. Gate on dev PASS (0 warnings, SELFTEST PASS, CONTRACTS 12 rows: 11 pass, 1
+  manual). New idea from the hand test: timer-enter-no-autostart (Plan, needs you). Next: A42d-list-commands, then
+  C29-headless-render-probe (user order).
 - C28-loop-cheap-checks merged into dev (c30a063, 2026-10-29, user: "lets do 1-5"; gate on dev PASS): loop v2.1. Gate
   Format step (new problems on changed lines only), Codex ledger and logs in the main checkout, triage on every failure
   (`/review-task` 4a), `.coord/lessons.md` (master-owned; Misses and Scores filled at Merge), quiet relays. Master 1
@@ -200,12 +206,12 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | C26-item-card-loop | One item card per item (Request > Findings > Plan > Go > Build > Check > Hand test > Merge), findings every tier, reproduction before bug builds, gates per item, bounds check, status card hook | Low | Small | done |
 | C27-session-naming | Master and sub-session names, loop version v2, master handover checklist and resume prompt | Low | Small | done |
 | C28-loop-cheap-checks | Gate format check on changed lines, worktree-safe Codex ledger, triage on failure, lessons and reviewer scores, quiet relays (loop v2.1) | Low | Small | done |
-| C29-headless-render-probe | Off-screen Avalonia render helper for the selftest, so audits can reproduce visual bugs and `split-pane-clipping` checks pixels automatically instead of manually; run after A42c-checkbox-indent (both touch the selftest) | Medium | Small | planned |
 | A55-split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider (was A57) | Medium | Medium | done |
 | Release marker | dev -> main with a tag, on your go (r8, 42ad744) | - | - | done |
 | **Reorg leftovers** | | | | |
-| A42c-checkbox-indent | Move checkbox indent logic out of `PadView` into its own Editor class, behavior-neutral | Medium | Small | plan ready (Medium) |
+| A42c-checkbox-indent | Move checkbox indent logic out of `PadView` into its own Editor class, behavior-neutral | Medium | Small | done |
 | A42d-list-commands | Move list commands out of `PadView` into its own Editor class, behavior-neutral | Medium | Medium | planned |
+| C29-headless-render-probe | Off-screen Avalonia render helper for the selftest, so audits can reproduce visual bugs and `split-pane-clipping` checks pixels automatically instead of manually; run after A42d-list-commands (user order 2026-10-29: A42c, A42d, then C29; all touch the selftest) | Medium | Small | planned |
 | **Design system and ownership** | | | | |
 | idea: design-tokens | One source of truth for every design value (radius, fonts, colors, shadows, motion durations); the app looks and moves exactly as today | - | - | needs you |
 | step: token-scan | Gate check that counts hard-coded design values per file and fails if a count rises; no product change | Low | Small | needs you |
@@ -253,6 +259,7 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | A47-hotkey-recorder | Set a hotkey in Settings by pressing the keys | Medium | Medium | planned |
 | idea: chime-picker | Choose the timer chime: native sound plus two more, stretch (was A56) | Low | Medium | needs you |
 | idea: floating-scrollbar | Modern floating scrollbar at the side, shown only while scrolling (user, 2026-10-29, A55 hand test: "a scroll bar shows, i didn't expect that"); open: hide vs fade, both split panes, existing bar styles | - | - | needs you |
+| idea: timer-enter-no-autostart | In a timer note, Enter after a timer line (e.g. `10s test`) starts that timer at once (`Editor/PadView.cs:698`, existing by design); user wants to write several timers first (user, 2026-10-29, A42c hand test: "that shouldnt be the case because i might be writing multiple timers"); open: what starts a timer then (Ctrl+Enter, chip click only?) | - | - | needs you |
 
 ## Open (needs the user)
 - Live check not yet done: A30 Windows restart/sign-out saving an edit typed just before.

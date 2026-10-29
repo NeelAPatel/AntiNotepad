@@ -655,25 +655,7 @@ internal sealed class PadView : Grid
     }
 
     public void ToggleCheckbox(int lineNumber)
-    {
-        var doc = Editor.Document;
-        if (lineNumber < 1 || lineNumber > doc.LineCount) return;
-        var line = doc.GetLineByNumber(lineNumber);
-        var text = doc.GetText(line);
-        var m = CheckboxGenerator.Box.Match(text);
-        if (m.Success)
-        {
-            var at = line.Offset + m.Groups[2].Index;
-            doc.Replace(at, 1, m.Groups[2].Value == " " ? "x" : " ");
-        }
-        else
-        {
-            var indent = text.Length - text.TrimStart().Length;
-            var bullet = Regex.Match(text, @"^\s*[-*+]\s+");
-            if (bullet.Success) doc.Replace(line.Offset + indent, bullet.Length - indent, "[ ] ");
-            else doc.Insert(line.Offset + indent, "[ ] ");
-        }
-    }
+        => DocumentCommands.ToggleCheckbox(Editor.Document, lineNumber);
 
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
@@ -768,17 +750,7 @@ internal sealed class PadView : Grid
     }
 
     private void Indent(int lineNumber, bool deeper)
-    {
-        var doc = Editor.Document;
-        var line = doc.GetLineByNumber(lineNumber);
-        if (deeper) doc.Insert(line.Offset, "  ");
-        else
-        {
-            var text = doc.GetText(line);
-            var n = text.Length - text.TrimStart(' ').Length;
-            if (n > 0) doc.Remove(line.Offset, Math.Min(2, n));
-        }
-    }
+        => DocumentCommands.Indent(Editor.Document, lineNumber, deeper);
 
     /// <summary>
     /// Numbers each level of the list around a line in order: 1. / two nested items / then 2. again, not 4.

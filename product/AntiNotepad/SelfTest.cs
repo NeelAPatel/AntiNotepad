@@ -722,14 +722,102 @@ internal static partial class SelfTest
     private static bool ListEditingChecks(out string report)
     {
         var failures = new List<string>();
-        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+        var checks = 0;
+        void CheckCase(bool passed, string name) { checks++; if (!passed) failures.Add(name); }
+
+        void ToggleCase(string text, Editor.ListEditing.LineEdit expected, string name) =>
+            CheckCase(Editor.ListEditing.ToggleCheckbox(text) == expected, name);
+        void IndentCase(string text, bool deeper, Editor.ListEditing.LineEdit? expected, string name) =>
+            CheckCase(Editor.ListEditing.Indent(text, deeper) == expected, name);
 
         CheckCase(Editor.ListEditing.TryListNumber("123456789. item", out var nineDigits) && nineDigits == 123_456_789,
             "9-digit list marker accepted");
         CheckCase(!Editor.ListEditing.TryListNumber("1234567890. item", out _),
             "10-digit list marker rejected");
 
-        report = failures.Count == 0 ? "2 checks" : string.Join("; ", failures);
+        ToggleCase("[ ]", new(1, 1, "x"), "unchecked checkbox edit");
+        ToggleCase("[x]", new(1, 1, " "), "lowercase checked checkbox edit");
+        ToggleCase("[X]", new(1, 1, " "), "uppercase checked checkbox edit");
+        ToggleCase("[ ]task", new(1, 1, "x"), "checkbox without following space");
+        ToggleCase("- task", new(0, 2, "[ ] "), "bullet checkbox edit");
+        ToggleCase("+  task", new(0, 3, "[ ] "), "bullet checkbox edit consumes matched spaces");
+        ToggleCase("  - task", new(2, 2, "[ ] "), "indented bullet checkbox edit");
+        ToggleCase("plain", new(0, 0, "[ ] "), "plain line checkbox insertion");
+        ToggleCase("", new(0, 0, "[ ] "), "empty line checkbox insertion");
+        ToggleCase("12. item", new(0, 0, "[ ] "), "numbered line checkbox insertion");
+
+        IndentCase("- item", true, new(0, 0, "  "), "indent inserts two spaces");
+        IndentCase("   - item", true, new(0, 0, "  "), "indent preserves existing spaces");
+        IndentCase("\t- item", true, new(0, 0, "  "), "indent before tab-leading line");
+        IndentCase("- item", false, null, "outdent with zero spaces is a no-op");
+        IndentCase(" - item", false, new(0, 1, ""), "outdent removes one leading space");
+        IndentCase("  - item", false, new(0, 2, ""), "outdent removes two leading spaces");
+        IndentCase("   - item", false, new(0, 2, ""), "outdent removes at most two of three spaces");
+        IndentCase("\t - item", false, null, "outdent ignores tab-leading whitespace");
+
+        report = failures.Count == 0 ? $"{checks} checks" : string.Join("; ", failures);
+        return failures.Count == 0;
+    }
+
+    private static bool CheckboxIndentChecks(out string report)
+    {
+        var failures = new List<string>();
+        var checks = 0;
+        void CheckCase(bool passed, string name) { checks++; if (!passed) failures.Add(name); }
+
+        void DocumentCase(string initial, int lineNumber, Action<AvaloniaEdit.Document.TextDocument, int> command,
+            string expected, string name)
+        {
+            var document = new AvaloniaEdit.Document.TextDocument(initial);
+            var changes = 0;
+            document.TextChanged += (_, _) => changes++;
+            command(document, lineNumber);
+            CheckCase(document.Text == expected, name + " text");
+            CheckCase(changes == (initial == expected ? 0 : 1), name + " one document edit");
+            if (initial == expected) return;
+
+            document.UndoStack.Undo();
+            CheckCase(document.Text == initial, name + " one Undo restores text");
+            CheckCase(!document.UndoStack.CanUndo, name + " no second Undo step");
+        }
+
+        void RegexCase(string text, string indent, string state, int stateOffset, int matchLength, string name)
+        {
+            var match = Editor.ListEditing.Checkbox.Match(text);
+            CheckCase(match.Success && match.Groups.Count == 3 && match.Length == matchLength
+                && match.Groups[1].Value == indent
+                && match.Groups[2].Value == state && match.Groups[2].Index == stateOffset,
+                name + " regex groups");
+        }
+
+        DocumentCase("lead\n[ ]task", 2, Editor.DocumentCommands.ToggleCheckbox, "lead\n[x]task", "toggle at nonzero LF offset");
+        DocumentCase("[x] task", 1, Editor.DocumentCommands.ToggleCheckbox, "[ ] task", "toggle lowercase checked box");
+        DocumentCase("lead\r\n[X] task", 2, Editor.DocumentCommands.ToggleCheckbox, "lead\r\n[ ] task", "toggle at nonzero CRLF offset");
+        DocumentCase("head\n- [ ] task", 2, Editor.DocumentCommands.ToggleCheckbox, "head\n- [x] task", "toggle checkbox after bullet");
+        DocumentCase("head\n-  task", 2, Editor.DocumentCommands.ToggleCheckbox, "head\n[ ] task", "toggle replaces bullet and spacing");
+        DocumentCase("", 1, Editor.DocumentCommands.ToggleCheckbox, "[ ] ", "toggle checkbox on empty line");
+        DocumentCase("12. item", 1, Editor.DocumentCommands.ToggleCheckbox, "[ ] 12. item", "toggle checkbox on numbered line");
+        DocumentCase("* [ ] task", 1, Editor.DocumentCommands.ToggleCheckbox, "* [x] task", "toggle checkbox after star bullet");
+        DocumentCase("*   task", 1, Editor.DocumentCommands.ToggleCheckbox, "[ ] task", "toggle checkbox replaces multi-space star bullet");
+        DocumentCase("\t*  task", 1, Editor.DocumentCommands.ToggleCheckbox, "\t[ ] task", "toggle checkbox after tab-indented bullet");
+        DocumentCase("head\r\n  plain", 2, Editor.DocumentCommands.ToggleCheckbox, "head\r\n  [ ] plain", "toggle inserts after line indent");
+        DocumentCase("head\n- item\nnext", 2, (doc, line) => Editor.DocumentCommands.Indent(doc, line, true), "head\n  - item\nnext", "indent at nonzero LF offset");
+        DocumentCase(" - item", 1, (doc, line) => Editor.DocumentCommands.Indent(doc, line, true), "   - item", "indent preserves one existing space");
+        DocumentCase("  - item", 1, (doc, line) => Editor.DocumentCommands.Indent(doc, line, true), "    - item", "indent preserves two existing spaces");
+        DocumentCase("head\r\n - item", 2, (doc, line) => Editor.DocumentCommands.Indent(doc, line, false), "head\r\n- item", "outdent at nonzero CRLF offset");
+        DocumentCase("  - item", 1, (doc, line) => Editor.DocumentCommands.Indent(doc, line, false), "- item", "outdent removes two spaces");
+        DocumentCase("head\n   - item", 2, (doc, line) => Editor.DocumentCommands.Indent(doc, line, false), "head\n - item", "outdent removes at most two spaces");
+        DocumentCase("head\n- item", 2, (doc, line) => Editor.DocumentCommands.Indent(doc, line, false), "head\n- item", "outdent without spaces is a no-op");
+        DocumentCase("\t- item", 1, (doc, line) => Editor.DocumentCommands.Indent(doc, line, false), "\t- item", "outdent preserves tab-leading line");
+        DocumentCase(" \t- item", 1, (doc, line) => Editor.DocumentCommands.Indent(doc, line, false), "\t- item", "outdent removes space before tab");
+        DocumentCase("head\n[ ] task", 0, Editor.DocumentCommands.ToggleCheckbox, "head\n[ ] task", "invalid checkbox line is a no-op");
+        DocumentCase("head\n[ ] task", 3, Editor.DocumentCommands.ToggleCheckbox, "head\n[ ] task", "checkbox line past document is a no-op");
+
+        RegexCase("  [x] task", "  ", "x", 3, 5, "indented checkbox");
+        RegexCase("- [ ] task", "", " ", 3, 5, "bullet checkbox");
+        RegexCase("+ [X]", "", "X", 3, 5, "uppercase bullet checkbox");
+
+        report = failures.Count == 0 ? $"{checks} checks" : string.Join("; ", failures);
         return failures.Count == 0;
     }
 
@@ -778,10 +866,31 @@ internal static partial class SelfTest
         new("ListEditing", "Control", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Avalonia.Controls.Control)),
         new("ListEditing", "Dispatcher", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Avalonia.Threading.Dispatcher)),
         new("ListEditing", "TextDocument", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(AvaloniaEdit.Document.TextDocument)),
+        new("ListEditing", "TextEditor", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(AvaloniaEdit.TextEditor)),
+        new("ListEditing", "TextArea", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(AvaloniaEdit.Editing.TextArea)),
+        new("ListEditing", "TextView", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(AvaloniaEdit.Rendering.TextView)),
         new("ListEditing", "Timers", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Timers)),
         new("ListEditing", "Settings", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Settings)),
         new("ListEditing", "SettingsService", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(SettingsService)),
         new("ListEditing", "CheckboxGenerator", ExactFrom: typeof(Editor.ListEditing), ExactTo: typeof(Editor.CheckboxGenerator)),
+        new("DocumentCommands", "UI", ExactFrom: typeof(Editor.DocumentCommands)),
+        new("DocumentCommands", "Platform", ExactFrom: typeof(Editor.DocumentCommands)),
+        new("DocumentCommands", "Motion", ExactFrom: typeof(Editor.DocumentCommands)),
+        new("DocumentCommands", "Theme", ExactFrom: typeof(Editor.DocumentCommands)),
+        new("DocumentCommands", "PadWindow", ExactFrom: typeof(Editor.DocumentCommands), ExactTo: typeof(PadWindow)),
+        new("DocumentCommands", "PadView", ExactFrom: typeof(Editor.DocumentCommands), ExactTo: typeof(Editor.PadView)),
+        new("DocumentCommands", "Program", ExactFrom: typeof(Editor.DocumentCommands), ExactTo: typeof(Program)),
+        new("DocumentCommands", "DesktopPlatform", ExactFrom: typeof(Editor.DocumentCommands), ExactTo: typeof(DesktopPlatform)),
+        new("DocumentCommands", "Window", ExactFrom: typeof(Editor.DocumentCommands), ExactTo: typeof(Avalonia.Controls.Window)),
+        new("DocumentCommands", "Control", ExactFrom: typeof(Editor.DocumentCommands), ExactTo: typeof(Avalonia.Controls.Control)),
+        new("DocumentCommands", "Dispatcher", ExactFrom: typeof(Editor.DocumentCommands), ExactTo: typeof(Avalonia.Threading.Dispatcher)),
+        new("DocumentCommands", "TextEditor", ExactFrom: typeof(Editor.DocumentCommands), ExactTo: typeof(AvaloniaEdit.TextEditor)),
+        new("DocumentCommands", "TextArea", ExactFrom: typeof(Editor.DocumentCommands), ExactTo: typeof(AvaloniaEdit.Editing.TextArea)),
+        new("DocumentCommands", "TextView", ExactFrom: typeof(Editor.DocumentCommands), ExactTo: typeof(AvaloniaEdit.Rendering.TextView)),
+        new("DocumentCommands", "Timers", ExactFrom: typeof(Editor.DocumentCommands), ExactTo: typeof(Timers)),
+        new("DocumentCommands", "Settings", ExactFrom: typeof(Editor.DocumentCommands), ExactTo: typeof(Settings)),
+        new("DocumentCommands", "SettingsService", ExactFrom: typeof(Editor.DocumentCommands), ExactTo: typeof(SettingsService)),
+        new("DocumentCommands", "CheckboxGenerator", ExactFrom: typeof(Editor.DocumentCommands), ExactTo: typeof(Editor.CheckboxGenerator)),
         new("NoteAnalysis", "PadView", ExactFrom: typeof(Editor.NoteAnalysis), ExactTo: typeof(Editor.PadView)),
         new("NoteAnalysis", "UI", ExactFrom: typeof(Editor.NoteAnalysis)),
         new("NoteAnalysis", "Platform", ExactFrom: typeof(Editor.NoteAnalysis)),

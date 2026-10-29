@@ -83,7 +83,13 @@ internal static partial class SelfTest
                 "Any URL opens on Ctrl+left-click once; plain text shows Hand only with Control, shortened glyphs always show Hand, and a plain click places the caret.",
                 "A54-link-hover-click",
                 () => RunExistingCheck(ShortenedLinkChecks, "shortened link: "),
-                "In the dev copy, test short, shortened, caret-line and Shorten links off URLs: Ctrl+left opens once, plain click places the caret; plain text shows Hand only with Control, shortened glyphs always show Hand. Check wrapped/scrolled links and unchanged checkboxes/result chips.")
+                "In the dev copy, test short, shortened, caret-line and Shorten links off URLs: Ctrl+left opens once, plain click places the caret; plain text shows Hand only with Control, shortened glyphs always show Hand. Check wrapped/scrolled links and unchanged checkboxes/result chips."),
+            new(
+                "checkbox-indent-preserved",
+                "Checkbox toggle and Tab/Shift+Tab indentation apply the same text edit and one Undo restores it; checkbox regex groups remain stable.",
+                "A42c-checkbox-indent",
+                () => RunExistingCheck(CheckboxIndentChecks, "checkbox indent: "),
+                "Dev copy: click and Ctrl+Enter on [ ]task, [X] task, - [ ] task and - task; confirm text, checkbox, strikethrough and one-step Undo. Click a box away from the caret and confirm caret/selection stay put. In a timer note, Ctrl+Enter still toggles the timer. Tab/Shift+Tab a bullet, checkbox and nested numbered list; confirm two-space steps, fresh nested numbering at 1, 9 -> 10, and one Undo for indent plus renumber. Tab on plain or selected text still uses the editor behavior.")
         ];
 
         var passed = 0;

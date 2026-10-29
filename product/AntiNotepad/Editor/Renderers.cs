@@ -406,7 +406,7 @@ internal sealed class CheckboxRenderer(PadView pad) : IBackgroundRenderer
         {
             var line = visual.FirstDocumentLine;
             var text = view.Document.GetText(line);
-            var m = CheckboxGenerator.Box.Match(text);
+            var m = ListEditing.Checkbox.Match(text);
             if (!m.Success) continue;
             var column = visual.GetVisualColumn(m.Groups[1].Length);
             var left = visual.GetVisualPosition(column, VisualYPosition.TextMiddle);

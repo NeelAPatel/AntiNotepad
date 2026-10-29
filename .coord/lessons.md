@@ -24,3 +24,4 @@ earning its run.
 | Date | Item | Tier | Rework rounds | Gate fails | Codex review (proven) | Design review (findings) | Hand-test fails | Misses after merge |
 |---|---|---|---|---|---|---|---|---|
 | 2026-10-29 | A55-split-view-clip | Medium | 0 | 0 | 0 | - | 0 | - |
+| 2026-10-29 | A42c-checkbox-indent | Medium | 0 | 0 | 0 | - | 0 | - |
