@@ -4,6 +4,8 @@ Updated: 2026-10-29
 Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 
 ## Working rules right now
+- Master chat (`docs/loop.md`, "Sessions"): next is `Master 1 - loop v2 - bugs-design-system-ownership`. The previous master,
+  "AntiNotepad task execution plan" (loop v1), was closed on 2026-10-29 with nothing in flight.
 - Codex is back (user, 2026-10-25): director Sol medium delegating to Luna xhigh; Claude briefs, reviews, commits.
 - Computer Use is off until the user's explicit go-ahead; live checks are done by the user by hand in the dev copy.
 - Never run `AntiNotepad.exe --quit` without `ANTINOTEPAD_DATA`: it targets the installed copy's instance.
@@ -19,6 +21,10 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- C27-session-naming merged into dev (c719c06, 2026-10-29, user request; gate on dev PASS): loop version v2; one orchestrating master named
+  `Master <N> - loop v<V> - <slug>`; step sub-sessions `<ID>-<step>-<slug>` (scan/audit Haiku; build/review/test Sonnet
+  medium); handover checklist and the new master's resume prompt in `docs/loop.md`. Old master closed. Next:
+  A55-split-view-clip, the first item on the item card, in Master 1.
 - C26-item-card-loop merged into dev (2d99362, 2026-10-29, user: "Yes, merge it"): every item has one item card
   (`.coord/templates/item.md`) through Request > Findings > Plan > Go > Build > Check > Hand test > Merge; Findings for
   every tier (master scout for Low), reproduction before building a bug, gates picked per item, a bounds check (requested
@@ -176,6 +182,7 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | C25-dev-instance-handoff | `tools/dev.ps1` closes whatever dev copy is running from any checkout (shared record, dev-only, never the installed copy) and launches its own; the implementation sub-session starts its dev copy when the gate passes | High | Small | done |
 | A45-dev-build-badge | Dev badge names the exact build: branch glyph U+E0A0 (fallback ⎇), `dev/<branch>@<ISO build time>` stamped at build; short form expands on hover, tooltip always shows the full text; approved at its hand test (dev-only) | Low | Small | done |
 | C26-item-card-loop | One item card per item (Request > Findings > Plan > Go > Build > Check > Hand test > Merge), findings every tier, reproduction before bug builds, gates per item, bounds check, status card hook | Low | Small | done |
+| C27-session-naming | Master and sub-session names, loop version v2, master handover checklist and resume prompt | Low | Small | done |
 | A55-split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider (was A57) | Medium | Medium | planned |
 | Release marker | dev -> main with a tag, on your go | - | - | planned |
 | **Reorg leftovers** | | | | |

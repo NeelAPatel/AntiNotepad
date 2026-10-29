@@ -94,10 +94,8 @@ detail goes below it.
 - Gate reports (`.coord/reports/*.gate.md`) are regenerated on every run and not committed; the result lines go into the
   card's `## Check`.
 - Every bug fixed adds a `CONTRACTS` row, so it cannot come back unseen.
-- Every Codex run happens in its own linked, visible sub-session that reports back to the master (user, 2026-10-29).
-  A pure run that only executes a brief and returns (an audit, a read-only report) gets a **Haiku** sub-session; any run
-  that needs reasoning (Build with `/review-task`, rework, Check) gets a **Sonnet medium** sub-session. Codex models and
-  routing inside the run stay as in `docs/agents.md`. The master never launches Codex directly.
+- Every Codex run happens in its own linked, visible sub-session that reports back to the master (user, 2026-10-29),
+  named and modeled as in "Sessions" below. The master never launches Codex directly.
 - Sub-sessions own the card's Build, Check and Hand test sections; the master owns Request, Findings, Plan, Go and STATUS.
   A sub-session that needs a user decision asks it with the card, and records the answer verbatim.
 - **Numbering (user, 2026-10-29).** Giving a number brings an item into existence: only the user's confirmation of an
@@ -115,6 +113,36 @@ detail goes below it.
 - Design changes stay lab-first (`AGENTS.md`): Build to Hand test run on a lab build, and the user approves before the real change.
 - Process and tooling items (C-items) run the same phases. Findings can be one paragraph, but the card, the gate and the
   bounds check are not skipped.
+
+## Sessions: master, sub-sessions, names (user, 2026-10-29)
+**Loop version: v2** (C26-item-card-loop, 2026-10-29). v1 was C13-dev-loop-kit through C25. A merged C-item that changes
+the phases, roles or session rules bumps the version here and says so in its merge note.
+
+- **One master chat at a time** orchestrates: it owns STATUS and the roadmap, runs Request to Go and Merge, and starts
+  sub-sessions. It never runs Codex, builds or hand-test launches itself; its own reading is the Low-tier scout.
+- **Master name:** `Master <N> - loop v<V> - <slug>`, N one higher than the last master (STATUS "Working rules" names the
+  current one), V the loop version above, the slug the remaining work it was opened for. Example:
+  `Master 1 - loop v2 - bugs-design-system-ownership`.
+- **Sub-session per step, well scoped:** each has one item, one step, one worktree, and a brief that names its done
+  condition. Name: `<ID>-<step>-<slug>` (the item's ID-slug with the step after the ID), for example
+  `A55-audit-split-view-clip`, `A55-build-split-view-clip`.
+  | Step | When | Model | Does |
+  |---|---|---|---|
+  | `scan` | rarely: a Low scout too big for the master | Haiku | read-only findings, no Codex |
+  | `audit` | Findings for Medium, High | Haiku | runs the Codex findings audit, commits it, reports |
+  | `build` | after Go | Sonnet medium | runs Codex, then Check (`/review-task`) and the hand-test handover |
+  | `review` | only a fresh Check apart from the build session (e.g. after a stalled build session) | Sonnet medium | `/review-task` |
+  | `test` | only a separate hand test (e.g. re-test after a rework the user asked for) | Sonnet medium | launches the build, gives the UI checks, records the result |
+  A build session moving into Check or Hand test renames itself to that step (`A55-review-...`, `A55-test-...`) so the
+  sidebar shows where it is; the master renames it if it cannot. Codex models inside a run stay as in `docs/agents.md`.
+- **Roadmap:** every master uses the same local page `.coord/roadmap.html` (`/roadmap`), rebuilt by the hooks from STATUS.
+- **Handing over to a new master** (the chat grew long, or the loop version changed): no sub-session mid-step (or each one
+  named in STATUS with its state), STATUS "Now" says where every item stands, dev clean and pushed. Retitle the old master
+  `Master <N> - loop v<V> - <slug> (closed)`, stop and archive it. The user opens the new master with:
+  > You are `Master <N+1> - loop v<V> - <slug>` for AntiNotepad. Read `AGENTS.md`, `docs/loop.md` (all of it, it is the
+  > law for how you run items and start Claude and Codex sub-sessions) and `.coord/STATUS.md`. Rename this chat to that
+  > name, update STATUS "Working rules" with it, open `/roadmap`, then reply with the status card for the next plan item
+  > and wait for my go. Computer Use only when I say so.
 
 ## Branches, worktrees and commits (user, 2026-10-29)
 - **Every item gets a branch:** `feat/<ID-slug>` off the latest dev, created at Request, including audit-only, docs and

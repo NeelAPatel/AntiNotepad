@@ -25,7 +25,7 @@ Answer the card's Findings lines with evidence. Never skip this, whatever the ti
 - **Low:** your own scout: a few `rg` and targeted reads, at most about ten tool calls. If that is not enough, or the item
   is a bug whose cause you cannot prove, raise it to Medium and use the audit.
 - **Medium, High:** fill `.coord/templates/findings.md` into `.coord/tasks/<ID-slug>-audit.md`. Start a linked **Haiku**
-  sub-session (start_session, user_asked, use_worktree false, wake_when_done) whose brief is: in
+  sub-session titled `<ID>-audit-<slug>` (start_session, user_asked, use_worktree false, wake_when_done) whose brief is: in
   `.claude/worktrees/<ID-slug>` (absolute paths only), run
   `bash .coord/tools/codex-run.sh director <ID-slug>-audit .coord/tasks/<ID-slug>-audit.md` in the background, wait for
   the exit notification (no polling), check the report exists, commit the audit brief and report on `feat/<ID-slug>`, and
@@ -48,7 +48,9 @@ and what you need from them. Ask one question: go, change, or drop. Record their
 STATUS: `approved`.
 
 ## 5. Start Build
-Start the Build sub-session (linked, **Sonnet medium**, use_worktree false) with a brief that says:
+Start the Build sub-session titled `<ID>-build-<slug>` (linked, **Sonnet medium**, use_worktree false; names and the
+other step sessions: `docs/loop.md`, "Sessions") with a brief that says:
+- rename yourself `<ID>-review-<slug>` when Check starts and `<ID>-test-<slug>` at the hand test;
 - work only in `.claude/worktrees/<ID-slug>` with absolute paths; read the card first;
 - launch `bash .coord/tools/codex-run.sh director <ID-slug> .coord/tasks/<ID-slug>.md` there, then run
   `/review-task <ID-slug>` when it exits, relaunch rework itself, commit each round on `feat/<ID-slug>` and push;
