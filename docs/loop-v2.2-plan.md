@@ -1,5 +1,7 @@
 # Loop v2.2: plan (proposal, not a rule)
 
+**DORMANT.** dev and main stay on loop v2.1 until the user triggers v2.2. Index of everything stored: `docs/v2.2/README.md`.
+
 Status: **proposal** from `C30-loop-docs-v22-plan` (user request, 2026-10-29). Nothing here changes `docs/loop.md`. Each
 step below is an unnumbered `step:` name; the user confirms scope before any of it gets an ID (`docs/loop.md`, "Numbering").
 A plain-words version is in `docs/wiki/Loop-v2.2-Plan.md`.

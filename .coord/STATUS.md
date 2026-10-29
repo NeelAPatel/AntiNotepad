@@ -11,7 +11,10 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Never run `AntiNotepad.exe --quit` without `ANTINOTEPAD_DATA`: it targets the installed copy's instance.
 
 ## Where things are
-- `main`: tag `antinotepad-v0.6.0-untested-r8` (42ad744, 2026-10-29, user: "Release now") = r7 + A55-split-view-clip,
+- `main`: tag `antinotepad-v0.6.0-untested-r9` (8ec1423, 2026-10-29, user: "bring all changes to main. Dev = Main") =
+  r8 + A42c-checkbox-indent + A42d-list-commands (behavior-neutral) + C28 loop v2.1. Release build 0 warnings, SELFTEST
+  PASS (CONTRACTS 13 rows: 12 pass, 1 manual); tree identical to dev (5545ae5). Installed copy still r8.
+- Previous: `main`: tag `antinotepad-v0.6.0-untested-r8` (42ad744, 2026-10-29, user: "Release now") = r7 + A55-split-view-clip,
   A54-link-hover-click, A52-move-old-folder-rename-warning, A53 divider guard, A45 dev badge (dev-only) and the loop v2
   tooling (C13-C27). Release build 0 warnings, SELFTEST PASS (CONTRACTS 11 rows: 10 pass, 1 manual); tree identical to dev
   at release (ddb6ce7). Installed copy upgraded to r8 by the user with `tools/install.ps1` (2026-10-29: "Upgraded").
@@ -25,6 +28,16 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- C30-loop-docs-v22-plan merged into dev (e2898d1, 2026-10-29, user: "merge it to main"; gate on dev PASS, CONTRACTS 13
+  rows: 12 pass, 1 manual): loop v2.2 plan (`docs/loop-v2.2-plan.md`), wiki source `docs/wiki/` (published to
+  AntiNotepad.wiki.git 78965eb), and the dormant v2.2 drop (`docs/v2.2/`, `tools/v2.2/`, called by nothing). dev and main
+  stay on loop v2.1 until the user triggers v2.2 (`docs/v2.2/ACTIVATION.md`). Noticed: `docs/loop.md` contradictions
+  (v2 attribution, gate row, rework counting, parallel items vs one dev copy), listed in the C30 card.
+- Release r9 (user, 2026-10-29): dev merged into main --no-ff (8ec1423), tag `antinotepad-v0.6.0-untested-r9`, pushed.
+  Loose threads found (not touched; user is resetting history and naming in the session "Deleting old commits"):
+  unmerged `feat/A38-mvvm-audit` (1 commit, audit doc) and `feat/C30-loop-docs-v22-plan` (since merged, below);
+  local-only `feat/loop-article` (already in dev); 5 reorg worktrees (`reorg/A40`-`A44`, merged; 3 hold untracked Codex
+  logs); 5 orphan folders in `.claude/worktrees/` (A45, A53, A54, C25 about 3.6 GB of build output, C20 empty).
 - A42d-list-commands merged into dev (6089740, 2026-10-29; user hand test "all passed" on checks 1-6): list Enter
   continuation, list recognition and Renumber decided in `Editor/ListEditing`, applied line by line with live offsets by
   `Editor/DocumentCommands`; `PadView` keeps routing, both undo scopes, the post-edit caret read, timer Enter fall-through
@@ -212,6 +225,8 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | C26-item-card-loop | One item card per item (Request > Findings > Plan > Go > Build > Check > Hand test > Merge), findings every tier, reproduction before bug builds, gates per item, bounds check, status card hook | Low | Small | done |
 | C27-session-naming | Master and sub-session names, loop version v2, master handover checklist and resume prompt | Low | Small | done |
 | C28-loop-cheap-checks | Gate format check on changed lines, worktree-safe Codex ledger, triage on failure, lessons and reviewer scores, quiet relays (loop v2.1) | Low | Small | done |
+| C30-loop-docs-v22-plan | Loop v2.2 plan (parallel items, catch-up, conflicts), GitHub wiki pages, dormant v2.2 drop (docs and scripts, inactive) | Low | Small | done |
+| idea: loop-md-contradictions | Fix the `docs/loop.md` contradictions C30 noticed (v2 attribution, gate row, rework counting, parallel items vs one dev copy) | Low | Small | proposed |
 | A55-split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider (was A57) | Medium | Medium | done |
 | Release marker | dev -> main with a tag, on your go (r8, 42ad744) | - | - | done |
 | **Reorg leftovers** | | | | |

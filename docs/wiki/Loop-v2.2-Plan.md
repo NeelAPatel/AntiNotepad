@@ -1,5 +1,8 @@
 # Loop v2.2 Plan (a proposal)
 
+> **Dormant.** The loop is still v2.1 on `dev` and `main`. The plan, change log and ready-made scripts are stored in the
+> repository (`docs/v2.2/`, `tools/v2.2/`) and switch on only when you say so.
+
 Nothing here is a rule yet. It is a plan for when more than one item runs at a time. The full version, with cost and the
 files each step would touch, is `docs/loop-v2.2-plan.md` in the repository.
 

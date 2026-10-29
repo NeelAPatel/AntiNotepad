@@ -133,6 +133,8 @@ detail goes below it.
 
 ## Sessions: master, sub-sessions, names (user, 2026-10-29)
 **Loop version: v2.1** (v2: C26-item-card-loop; v2.1: C28-loop-cheap-checks, triage, lessons, format check; 2026-10-29).
+v2.2 (parallel items, catch up with dev, merge conflicts) is planned and **dormant**: stored in `docs/v2.2/`, `tools/v2.2/`
+and the wiki, applied only when the user triggers it. Nothing in this file or the skills uses it yet.
 v1 was C13-dev-loop-kit through C25. A merged C-item that changes the phases, roles or session rules bumps the major
 version (new master at the next handover); smaller rule changes bump the minor version and need no new master.
 

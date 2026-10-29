@@ -27,3 +27,4 @@ earning its run.
 | 2026-10-29 | A55-split-view-clip | Medium | 0 | 0 | 0 | - | 0 | - |
 | 2026-10-29 | A42c-checkbox-indent | Medium | 0 | 0 | 0 | - | 0 | - |
 | 2026-10-29 | A42d-list-commands | Medium | 0 | 0 (1 env, offline pass) | 0 | - | 0 | - |
+| 2026-10-29 | C30-loop-docs-v22-plan | Low | 1 (dormant follow-up) | 0 | - | - | - | - |

@@ -22,4 +22,4 @@ This wiki is a readable copy. The rules themselves are in the repository: `docs/
 `AGENTS.md` (project rules), `docs/agents.md` (how Codex is launched), `docs/dev-loop.md` (the dev copy and installing).
 If this wiki and `docs/loop.md` ever disagree, `docs/loop.md` wins; please say so and the wiki gets fixed.
 
-*Written for loop v2.1, 2026-10-29. Source of the pages: `docs/wiki/` in the repository.*
+*v2.2 is planned but dormant. Written for loop v2.1, 2026-10-29. Source of the pages: `docs/wiki/` in the repository.*
