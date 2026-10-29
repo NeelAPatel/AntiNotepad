@@ -33,6 +33,12 @@ Rules:
 - Gate reports (`.coord/reports/*.gate.md`) are regenerated on every run and not committed; the result lines go into the
   task report's "Checks run" and "Manager verdict".
 - Every bug fixed later adds a `CONTRACTS` row in its brief's "Contracts" section, so it cannot come back unseen.
+- Every Codex run happens in its own linked, visible sub-session that reports back to the master (user, 2026-10-29).
+  A pure run that only executes a brief and returns (an audit, a read-only report) gets a **Haiku** sub-session; any run
+  that needs reasoning (implementation with `/review-task`, rework, verdicts) gets a **Sonnet medium** sub-session. Codex
+  models and routing inside the run stay as in `docs/agents.md`. The master never launches Codex directly.
+- The master manages the roadmap and opens every update with a status card: `<ID-slug> | <loop step>`, a one-line step
+  strip, the goal (max 2 lines), what is happening now, and what waits on the user.
 - One ID = one loop item = one brief (user, 2026-10-28). An ID is created only as a STATUS plan row with a one-line Scope
   that says exactly what is in it; the brief may not grow past that scope (more work = a new row and ID). Applies to all
   items, old and new. In chat and reports, mention an item as `<ID>-<slug>` plus its scope, never a bare ID or a range.

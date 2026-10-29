@@ -23,9 +23,11 @@ Find files with a quick `rg`, not by reading whole files. STATUS: `briefed (<tie
 ## 3. Audit (Medium and High only)
 Write `.coord/tasks/<ID-slug>-audit.md`: read-only (no edits outside `.coord/reports/`), confirm or correct the Files list
 and tier, list callers and shared state the change can reach, riskiest parts and the hand checks, and a "Recommendation on
-handling" (scope, split or not). Report to `.coord/reports/<ID-slug>-audit.md`. Launch in the background:
-`bash .coord/tools/codex-run.sh director <ID-slug>-audit .coord/tasks/<ID-slug>-audit.md`
-Tell the user in one line: working folder, brief file, log, report. Wait for the exit notification; do not poll.
+handling" (scope, split or not). Report to `.coord/reports/<ID-slug>-audit.md`. Start a linked **Haiku** sub-session
+(start_session, user_asked, wake_when_done) whose brief is: run
+`bash .coord/tools/codex-run.sh director <ID-slug>-audit .coord/tasks/<ID-slug>-audit.md` in the background, wait for the
+exit notification (no polling), check the report exists, and end its turn with the report path and the run's last lines.
+Tell the user in one line: working folder, brief file, log, report. Wait for the session's note; do not poll.
 Fold accepted corrections into the brief. STATUS: `audited`.
 
 ## 4. Ask
@@ -34,6 +36,6 @@ Record the answer in STATUS (`approved` / `changed` / `dropped`).
 
 ## 5. On "go"
 Create the branch `feat/<ID-slug>` off dev (a worktree if another task is in flight). Start the implementation sub-session
-(Sonnet manager) with a brief that says: launch `bash .coord/tools/codex-run.sh director <ID-slug> .coord/tasks/<ID-slug>.md`
+(linked, **Sonnet medium**) with a brief that says: launch `bash .coord/tools/codex-run.sh director <ID-slug> .coord/tasks/<ID-slug>.md`
 in that branch's folder, then run `/review-task <ID-slug>` when it exits, relaunch rework itself, give the user the hand
 checks, and report back here. STATUS: `implementing`.
