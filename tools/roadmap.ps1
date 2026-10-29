@@ -33,7 +33,7 @@ function StateClass([string]$s) {
 }
 
 $sb = [System.Text.StringBuilder]::new()
-$n = 0; $counts = @{}
+$n = 0; $parent = $null; $counts = @{}
 foreach ($l in $lines[$start..($lines.Count - 1)]) {
     if ($l -match '^## ') { break }
     if ($l -match '^### (.+)$') { [void]$sb.Append("<div class=`"rm-p`">$(Esc $Matches[1])</div>"); continue }
@@ -48,10 +48,13 @@ foreach ($l in $lines[$start..($lines.Count - 1)]) {
         [void]$sb.Append("<div class=`"rm-m rm-$cls`"><span>Release marker</span><span>$(Esc $scope)</span><span class=`"rm-s`">$(Esc $state)</span></div>")
         continue
     }
-    $n++
+    # A step row (A78a-...) right under its parent (A78-...) is indented and keeps the parent's number.
+    $step = $parent -and $item -match "^$([regex]::Escape($parent))([a-z])-"
+    if ($step) { $num = "$n$($Matches[1])"; $cls += ' rm-sub' }
+    else { $n++; $num = "$n"; $parent = if ($item -match '^([A-Z]\d+)-') { $Matches[1] } else { $null } }
     $te = if ($tier -eq '-' -or -not $tier) { '' } else { "$(Esc $tier) · $(Esc $effort)" }
     $name = if ($item -match '^Decision: (.+)$') { "<span class=`"rm-d`">Decision</span> $(Esc $Matches[1])" } else { "<code>$(Esc $item)</code>" }
-    [void]$sb.Append("<div class=`"rm-r rm-$cls`"><span>$n</span><span>$name</span><span class=`"rm-x`">$(Esc $scope)</span><span class=`"rm-x`">$te</span><span><span class=`"rm-s`">$(Esc $state)</span></span></div>")
+    [void]$sb.Append("<div class=`"rm-r rm-$cls`"><span>$num</span><span>$name</span><span class=`"rm-x`">$(Esc $scope)</span><span class=`"rm-x`">$te</span><span><span class=`"rm-s`">$(Esc $state)</span></span></div>")
 }
 
 $summary = ($counts.GetEnumerator() | Sort-Object Name | ForEach-Object { "$($_.Value) $($_.Name)" }) -join ' · '
@@ -67,6 +70,7 @@ $css = @'
 .rm-s{display:inline-block;font-size:11px;padding:1px 8px;border-radius:8px;background:var(--surface-1);color:var(--text-secondary)}
 .rm-d{font-size:11px;padding:1px 6px;border-radius:8px;background:var(--bg-accent);color:var(--text-accent)}
 .rm-you .rm-s{background:var(--bg-warning);color:var(--text-warning)}.rm-live .rm-s{background:var(--bg-accent);color:var(--text-accent)}
+.rm-sub>span:nth-child(2){padding-left:16px}.rm-sub{font-size:12px}
 .rm-done{color:var(--text-muted)}.rm-done code,.rm-done .rm-x{color:var(--text-muted);text-decoration:line-through}
 </style>
 '@

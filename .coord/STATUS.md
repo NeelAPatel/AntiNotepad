@@ -19,6 +19,8 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- C22-roadmap-step-rows (user, 2026-10-29): one ID = one idea, work toward it = lettered steps under it; A52's six
+  follow-ups folded into A78-notes-folder-move-flow (steps a-f); `/roadmap` indents steps. Merged 5887137.
 - C20-branch-worktree-loop (user, 2026-10-29): every item runs on `feat/<ID-slug>` in `.claude/worktrees/<ID-slug>`; dev gets
   only `--no-ff` merges plus one STATUS commit each (STATUS edited live, committed at merge). Merged 6f8da54.
 - C19-subsession-routing (user, 2026-10-29): every Codex run gets its own linked sub-session (Haiku for pure runs, Sonnet medium
@@ -121,7 +123,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 Rendered by `/roadmap` (Claude) or `pwsh -NoProfile -File tools/roadmap.ps1` (writes and opens `.coord/roadmap.html`).
 Format rules (the script parses this section): `###` = priority; a row with only a bold first cell = block; Item is an
 `<ID>-<slug>`, `Decision: ...` or `Release marker`; rows run in the order listed (the script numbers them). Every ID is one
-loop item with one brief, scoped exactly as its Scope cell says (user, 2026-10-28). State: `planned`, `proposed` (awaits the
+idea; its lettered step rows (`A78a-...`) sit right under it, one loop run each (user, 2026-10-29). State: `planned`, `proposed` (awaits the
 user), `needs you`, a `docs/loop.md` state (`briefing` ... `hand-tested`), `done` or `dropped`. `/next-task` and
 `/merge-task` keep State current.
 Held until the user brings them back: "Open (needs the user)" below and the A44b-interop-guards leftover hand checks
@@ -138,7 +140,7 @@ Held until the user brings them back: "Open (needs the user)" below and the A44b
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
 | **Bugs** | | | | |
-| A52-move-old-folder-rename-warning | After a notes move the old folder is not renamed and the message is wrong; fix the rename in `NotesLocation.Move` and the message | Low | Small | planned |
+| A52-move-old-folder-rename-warning | After a notes move the old folder is not renamed and the message is wrong; fix the rename in `NotesLocation.Move` and the message | High | Small | hand test |
 | A58-split-divider-height | Split-view divider stops short of the window's bottom edge; make it full height | Low | Small | planned |
 | A54-link-hover-click | Check that long (shortened) links open on Ctrl+click with a hand cursor; making short links clickable is a separate lab item | Low | Small | planned |
 | A57-split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider | Medium | Medium | planned |
@@ -163,8 +165,8 @@ Held until the user brings them back: "Open (needs the user)" below and the A44b
 | A65d-motion-timings | Apply the animation durations you picked in A64-design-unify-lab; visible change | Medium | Small | planned |
 | A66-ui-kit-merge | One control kit: Settings' private controls merge into `Kit`; `Material()` and `Ago()` move to their owners | Medium | Medium | planned |
 | A67-model-store-split | Move `Note`, `Settings`, `StoreData` and the search types out of `Model/Store.cs` into their own files, verbatim | Low | Small | planned |
-| A70-selftest-split | Split `SelfTest.cs` (2,637 lines) into one file per area, verbatim | Low | Small | planned |
-| A68-notes-path-dedupe | One same-or-nested path rule in `Platform/NotesPathRules` (no dependencies) replacing the three copies in `NotesSession`, `NotesLocation` and `SettingsWindow`; each caller keeps its error handling; CONTRACTS path row | High | Small | planned |
+| A70-selftest-split | Split `SelfTest.cs` (2,637 lines) into one file per area, verbatim; includes the A52 notes-move checks | Low | Small | planned |
+| A68-notes-path-dedupe | One same-or-nested path rule in `Platform/NotesPathRules` (no dependencies) replacing the three copies in `NotesSession`, `NotesLocation` and `SettingsWindow`; each caller keeps its error handling; also the `KeepOldCopy` app-home comparison (from A52); CONTRACTS path row | High | Small | planned |
 | A69-ownership-map | `docs/architecture.md` owner per responsibility; `NotesSession` and `RuntimeLog` into `App/` (`AppInfo` stays a leaf); LAYERS rows: nothing but Program references `App/` except `AppInfo`, Model/Platform never reference Motion, Motion never references UI/Editor | Low | Small | planned |
 | **Cleanup** | | | | |
 | C14-a38-audit-branch | Merge the A38 MVVM audit doc into dev or delete `feat/A38-mvvm-audit` | Low | Small | planned |
@@ -177,6 +179,13 @@ Held until the user brings them back: "Open (needs the user)" below and the A44b
 | A74-settings-thread-count | Find why the Settings window runs about 90 threads; report, fix only if cheap | Low | Small | planned |
 | A49-large-note-perf | Measure then reduce typing lag in a 6,000-line note; one change at a time (ideas in Backlog) | Medium | Large | planned |
 | **Features and polish (lab-first where visible)** | | | | |
+| A78-notes-folder-move-flow | Choosing and moving the notes folder is clear and safe: check the folder before moving, show what will happen, allow undo. Steps below, each one loop run; steps a and f follow A68-notes-path-dedupe | High | Large | planned |
+| A78a-path-validator | Step: one shared Platform check for a chosen folder; blocks invalid, same, nested, not writable, already has notes; warns new, non-empty, network, low space, cloud-synced | High | Medium | planned |
+| A78b-editable-path-field | Step: editable path box plus Browse in Settings, validation line under it, Migrate enabled only when valid or warned; lab mock first | Medium | Medium | planned |
+| A78c-move-preview | Step: before moving, show note count, size and what happens to the old folder | Medium | Small | planned |
+| A78d-move-undo | Step: "Move back" after a move, using the kept old copy | High | Medium | planned |
+| A78e-picker-last-location | Step: the folder picker opens at the last picked folder | Low | Small | planned |
+| A78f-single-result-message | Step: Settings shows the move's own result message instead of rebuilding it (A52 design-review follow-up) | Low | Small | planned |
 | A51-recovered-folder-always-open | Recovered-notes folder always exists and its Open button always works | Low | Small | planned |
 | A48-answers-toggle-clarity | Rename the "Answers" toggle to say what it does, and apply it live | Low | Small | planned |
 | A45-dev-build-badge | Dev badge shows the live task, for example "dev · A44c" | Low | Small | planned |
