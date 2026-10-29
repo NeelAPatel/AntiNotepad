@@ -16,7 +16,7 @@ passed in their own words. Not for release markers: dev -> main and tags happen 
 3. Switch to dev, `git merge --no-ff feat/<ID-slug>`. Conflicts: stop and tell the user.
 4. Re-gate on dev: `pwsh -NoProfile -File tools/gate.ps1 -Task <ID-slug>` (scope step is expected to warn on dev; build,
    selftest and seam must pass; the gate report is not committed). Fail: tell the user, do not push.
-5. STATUS: state `done`, merge hash, gate line, anything deferred (follow-ups go to the plan or Backlog as `<ID-slug>`
+5. STATUS: the plan row's State cell `done`, merge hash in "Now", gate line, anything deferred (follow-ups go to the plan or Backlog as `<ID-slug>`
    items). Commit it.
 6. `git push origin dev feat/<ID-slug>`. Remove the task worktree if one was used; keep the branch unless the user says to
    delete it.

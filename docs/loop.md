@@ -33,6 +33,11 @@ Rules:
 - Gate reports (`.coord/reports/*.gate.md`) are regenerated on every run and not committed; the result lines go into the
   task report's "Checks run" and "Manager verdict".
 - Every bug fixed later adds a `CONTRACTS` row in its brief's "Contracts" section, so it cannot come back unseen.
+- One ID = one loop item = one brief (user, 2026-10-28). An ID is created only as a STATUS plan row with a one-line Scope
+  that says exactly what is in it; the brief may not grow past that scope (more work = a new row and ID). Applies to all
+  items, old and new. In chat and reports, mention an item as `<ID>-<slug>` plus its scope, never a bare ID or a range.
+- The plan table: `/roadmap` (Claude) or `pwsh -NoProfile -File tools/roadmap.ps1` (opens `.coord/roadmap.html`, which a
+  Claude hook regenerates on every STATUS edit). `/next-task` and `/merge-task` keep each row's State current.
 - Release markers in the STATUS plan: the master asks the user before tagging dev -> main. Only on the user's go.
 - Design changes stay lab-first (`AGENTS.md`): steps 5-8 run on a lab build, and the user approves before the real change.
 
@@ -62,3 +67,5 @@ Three commands drive the loop: `/next-task` (steps 1-5, master), `/review-task <
 | `.claude/skills/review-task/SKILL.md` | `/review-task <ID-slug>`: steps 6-7 by tier |
 | `.claude/skills/merge-task/SKILL.md` | `/merge-task <ID-slug>`: step 9 |
 | `.github/workflows/gate.yml` | CI gate, manual trigger |
+| `tools/roadmap.ps1`, `.claude/skills/roadmap/SKILL.md` | plan table from STATUS (`/roadmap`, `.coord/roadmap.html`) |
+| `.claude/settings.json` | hook: regenerates `.coord/roadmap.html` after every STATUS edit |

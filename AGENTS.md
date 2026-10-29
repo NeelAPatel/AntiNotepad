@@ -23,7 +23,7 @@ tags `v0.1`, `antipad-v*` and `baseline/m8c-v1-compact`.
   cannot write to .git), relays to the user. Keeps its own implementation to tiny gate fixes.
 
 ## Read when
-- Starting or resuming work: `.coord/STATUS.md`.
+- Starting or resuming work: `.coord/STATUS.md`; the plan as a table: `/roadmap` or `tools/roadmap.ps1`.
 - Building, installing/upgrading the user's copy, dev instance, hotkeys, data folders: `docs/dev-loop.md`.
 - The per-task loop (tiers, gate, reviews, who triggers what): `docs/loop.md`.
 - Launching or briefing Codex: `docs/agents.md`. Briefs go in `.coord/tasks/<ID-slug>.md`, reports in `.coord/reports/`.
