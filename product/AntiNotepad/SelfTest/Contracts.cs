@@ -89,7 +89,13 @@ internal static partial class SelfTest
                 "Checkbox toggle and Tab/Shift+Tab indentation apply the same text edit and one Undo restores it; checkbox regex groups remain stable.",
                 "A42c-checkbox-indent",
                 () => RunExistingCheck(CheckboxIndentChecks, "checkbox indent: "),
-                "Dev copy: click and Ctrl+Enter on [ ]task, [X] task, - [ ] task and - task; confirm text, checkbox, strikethrough and one-step Undo. Click a box away from the caret and confirm caret/selection stay put. In a timer note, Ctrl+Enter still toggles the timer. Tab/Shift+Tab a bullet, checkbox and nested numbered list; confirm two-space steps, fresh nested numbering at 1, 9 -> 10, and one Undo for indent plus renumber. Tab on plain or selected text still uses the editor behavior.")
+                "Dev copy: click and Ctrl+Enter on [ ]task, [X] task, - [ ] task and - task; confirm text, checkbox, strikethrough and one-step Undo. Click a box away from the caret and confirm caret/selection stay put. In a timer note, Ctrl+Enter still toggles the timer. Tab/Shift+Tab a bullet, checkbox and nested numbered list; confirm two-space steps, fresh nested numbering at 1, 9 -> 10, and one Undo for indent plus renumber. Tab on plain or selected text still uses the editor behavior."),
+            new(
+                "list-commands-preserved",
+                "Enter continuation and Tab/Shift+Tab renumber preserve the same text and one Undo step; caret position and scrolling remain a dev-copy check.",
+                "A42d-list-commands",
+                () => RunExistingCheck(ListCommandsChecks, "list commands: "),
+                "Dev copy: Enter at the end and in the middle of - ab, 9. ab, 9) ab and [x] ab; confirm the same markers, trailing text movement and caret after the new marker. Enter on an empty nested item outdents; Enter on an empty root item exits the list. Tab/Shift+Tab a numbered list across 9 -> 10 and confirm one Ctrl+Z per Enter or Tab. Check Shift+Enter, Enter with a selection and completion open, caret visibility at the bottom of a long note, and typing in a long list. In a timer note, Enter after 10s test still starts the timer and Ctrl+Enter still toggles it.")
         ];
 
         var passed = 0;

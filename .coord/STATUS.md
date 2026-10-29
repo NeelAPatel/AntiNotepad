@@ -25,6 +25,12 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- A42d-list-commands merged into dev (6089740, 2026-10-29; user hand test "all passed" on checks 1-6): list Enter
+  continuation, list recognition and Renumber decided in `Editor/ListEditing`, applied line by line with live offsets by
+  `Editor/DocumentCommands`; `PadView` keeps routing, both undo scopes, the post-edit caret read, timer Enter fall-through
+  and thin `Insert` (-75 lines). CONTRACTS `list-commands-preserved`. Gate on dev PASS (0 warnings, SELFTEST PASS,
+  CONTRACTS 13 rows: 12 pass, 1 manual). A42 reorg done. Check-session sandbox could not reach nuget.org (NU1900); Master 1
+  ran the online gate (lessons: env). Next: C29-headless-render-probe (user order).
 - A42c-checkbox-indent merged into dev (178d4c0, 2026-10-29; user hand test "All of these pass" on checks 1-5):
   checkbox toggle and Tab/Shift+Tab indent edits decided in `Editor/ListEditing` (checkbox regex moved there, groups
   unchanged), applied by new `Editor/DocumentCommands`; `PadView` keeps routing and Tab's single undo group (-28 lines).
@@ -210,7 +216,7 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | Release marker | dev -> main with a tag, on your go (r8, 42ad744) | - | - | done |
 | **Reorg leftovers** | | | | |
 | A42c-checkbox-indent | Move checkbox indent logic out of `PadView` into its own Editor class, behavior-neutral | Medium | Small | done |
-| A42d-list-commands | Move list commands out of `PadView` into its own Editor class, behavior-neutral | Medium | Medium | planned |
+| A42d-list-commands | Move list commands out of `PadView` into its own Editor class, behavior-neutral | Medium | Medium | done |
 | C29-headless-render-probe | Off-screen Avalonia render helper for the selftest, so audits can reproduce visual bugs and `split-pane-clipping` checks pixels automatically instead of manually; run after A42d-list-commands (user order 2026-10-29: A42c, A42d, then C29; all touch the selftest) | Medium | Small | planned |
 | **Design system and ownership** | | | | |
 | idea: design-tokens | One source of truth for every design value (radius, fonts, colors, shadows, motion durations); the app looks and moves exactly as today | - | - | needs you |

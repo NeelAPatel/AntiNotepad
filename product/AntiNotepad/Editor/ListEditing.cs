@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using AntiNotepad.Model;
 
 namespace AntiNotepad.Editor;
 
@@ -9,6 +10,15 @@ internal static class ListEditing
     internal static readonly Regex Checkbox = new(@"^(\s*)(?:[-*+]\s+)?\[( |x|X)\]", RegexOptions.Compiled);
 
     internal readonly record struct LineEdit(int Offset, int RemovalLength, string InsertText);
+
+    internal enum ContinuationKind { Decline, InsertAtCaret, ClearLine, Outdent }
+
+    internal readonly record struct Continuation(ContinuationKind Kind, string? InsertText = null)
+    {
+        internal bool IsContinued => Kind != ContinuationKind.Decline;
+    }
+
+    internal readonly record struct NumberEdit(int LineNumber, int Number);
 
     internal static LineEdit? ToggleCheckbox(string text)
     {
@@ -39,5 +49,85 @@ internal static class ListEditing
         var digits = match.Groups[3];
         return digits.Success && digits.Length <= 9
             && int.TryParse(digits.Value, NumberStyles.None, CultureInfo.InvariantCulture, out number);
+    }
+
+    internal static bool IsListLine(string text)
+    {
+        var match = ListPrefix.Match(text);
+        return match.Success && (!match.Groups[3].Success || TryListNumber(match, out _));
+    }
+
+    internal static Continuation Continue(string text, int lineNumber, NoteMode mode)
+    {
+        if (mode == NoteMode.Code) return new(ContinuationKind.Decline);
+
+        var match = ListPrefix.Match(text);
+        if (!match.Success)
+        {
+            return mode == NoteMode.List && (lineNumber == 1 || text.Trim().Length > 0)
+                ? new(ContinuationKind.InsertAtCaret, "\n[ ] ")
+                : new(ContinuationKind.Decline);
+        }
+
+        if (match.Groups[3].Success
+            && (!TryListNumber(match, out var number) || number == 999_999_999))
+            return new(ContinuationKind.Decline);
+
+        var indent = match.Groups[1].Value;
+        var prefix = match.Groups[2].Value;
+        if (text.Trim() == prefix.Trim())
+            return indent.Length >= 2
+                ? new(ContinuationKind.Outdent)
+                : new(ContinuationKind.ClearLine);
+
+        string next;
+        if (match.Groups[3].Success)
+        {
+            TryListNumber(match, out var nextNumber);
+            next = $"{nextNumber + 1}{match.Groups[4].Value} ";
+        }
+        else if (prefix.Contains('[')) next = Regex.Replace(prefix, @"\[[ xX]\]", "[ ]");
+        else next = prefix;
+
+        if (!next.EndsWith(' ')) next += " ";
+        return new(ContinuationKind.InsertAtCaret, "\n" + indent + next);
+    }
+
+    /// <summary>Returns the numbered markers that should change for the block containing a 1-based line number.</summary>
+    internal static NumberEdit[] Renumber(int lineCount, Func<int, string> getLine, int lineNumber, bool fresh = false)
+    {
+        bool InBlock(int number)
+        {
+            var text = getLine(number);
+            return text.Trim().Length > 0 && (ListPrefix.IsMatch(text) || text.StartsWith(' '));
+        }
+
+        if (lineNumber < 1 || lineNumber > lineCount || !InBlock(lineNumber)) return [];
+
+        var first = lineNumber;
+        var last = lineNumber;
+        while (first > 1 && InBlock(first - 1)) first--;
+        while (last < lineCount && InBlock(last + 1)) last++;
+
+        var edits = new List<NumberEdit>();
+        var counts = new Dictionary<int, int>();
+        for (var number = first; number <= last; number++)
+        {
+            var match = ListPrefix.Match(getLine(number));
+            if (!match.Success) continue;
+
+            var indent = match.Groups[1].Length;
+            foreach (var deeper in counts.Keys.Where(key => key > indent).ToList()) counts.Remove(deeper);
+            if (!match.Groups[3].Success) { counts.Remove(indent); continue; }
+            if (!TryListNumber(match, out var own)) { counts.Remove(indent); continue; }
+            if (counts.TryGetValue(indent, out var previous) && previous == 999_999_999)
+            { counts.Remove(indent); continue; }
+
+            var want = counts.TryGetValue(indent, out var before) ? before + 1 : fresh && number == lineNumber ? 1 : own;
+            counts[indent] = want;
+            if (want != own) edits.Add(new(number, want));
+        }
+
+        return edits.ToArray();
     }
 }

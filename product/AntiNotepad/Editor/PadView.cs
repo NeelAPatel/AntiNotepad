@@ -1,5 +1,4 @@
 using Avalonia.Input.Platform;
-using System.Globalization;
 using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
@@ -675,14 +674,22 @@ internal sealed class PadView : Grid
         if (e.Key == Key.Enter && !ctrl && !shift && e.KeyModifiers == KeyModifiers.None && Editor.TextArea.Selection.IsEmpty && !Completion.IsOpen)
         {
             bool continued;
-            using (Editor.Document.RunUpdate()) { continued = ContinueList(); if (continued) Renumber(CaretLine); }
+            using (Editor.Document.RunUpdate())
+            {
+                continued = DocumentCommands.ContinueList(Editor.Document, CaretLine, Mode, Insert);
+                if (continued) DocumentCommands.Renumber(Editor.Document, CaretLine);
+            }
             if (continued) { e.Handled = true; return; }
             if (Mode == NoteMode.Timer) StartTimerOnLine(CaretLine);
         }
-        if (e.Key == Key.Tab && Editor.TextArea.Selection.IsEmpty && IsListLine(CaretLine))
+        if (e.Key == Key.Tab && Editor.TextArea.Selection.IsEmpty && DocumentCommands.IsListLine(Editor.Document, CaretLine))
         {
             e.Handled = true;
-            using (Editor.Document.RunUpdate()) { Indent(CaretLine, !shift); Renumber(CaretLine, fresh: !shift); }
+            using (Editor.Document.RunUpdate())
+            {
+                DocumentCommands.Indent(Editor.Document, CaretLine, !shift);
+                DocumentCommands.Renumber(Editor.Document, CaretLine, fresh: !shift);
+            }
         }
     }
 
@@ -741,88 +748,6 @@ internal sealed class PadView : Grid
             items.AddRange(extra);
         }
         ShowMenu?.Invoke(Editor, items);
-    }
-
-    private bool IsListLine(int lineNumber)
-    {
-        var m = ListEditing.ListPrefix.Match(Editor.Document.GetText(Editor.Document.GetLineByNumber(lineNumber)));
-        return m.Success && (!m.Groups[3].Success || ListEditing.TryListNumber(m, out _));
-    }
-
-    private void Indent(int lineNumber, bool deeper)
-        => DocumentCommands.Indent(Editor.Document, lineNumber, deeper);
-
-    /// <summary>
-    /// Numbers each level of the list around a line in order: 1. / two nested items / then 2. again, not 4.
-    /// A level keeps the number its first item starts at (a list may start at 5), except a line just indented to
-    /// open a new level (<paramref name="fresh"/>), which starts at 1. Only runs on Return and Tab, never on typing.
-    /// </summary>
-    private void Renumber(int lineNumber, bool fresh = false)
-    {
-        var doc = Editor.Document;
-        string Text(int n) => doc.GetText(doc.GetLineByNumber(n));
-        // A list block: list items and their indented text, up to a blank or unindented non-list line.
-        bool InBlock(int n) { var t = Text(n); return t.Trim().Length > 0 && (ListEditing.ListPrefix.IsMatch(t) || t.StartsWith(' ')); }
-        if (lineNumber < 1 || lineNumber > doc.LineCount || !InBlock(lineNumber)) return;
-        int first = lineNumber, last = lineNumber;
-        while (first > 1 && InBlock(first - 1)) first--;
-        while (last < doc.LineCount && InBlock(last + 1)) last++;
-        var counts = new Dictionary<int, int>();
-        for (var n = first; n <= last; n++)
-        {
-            var m = ListEditing.ListPrefix.Match(Text(n));
-            if (!m.Success) continue;
-            var indent = m.Groups[1].Length;
-            foreach (var deeper in counts.Keys.Where(k => k > indent).ToList()) counts.Remove(deeper);
-            if (!m.Groups[3].Success) { counts.Remove(indent); continue; }
-            if (!ListEditing.TryListNumber(m, out var own)) { counts.Remove(indent); continue; }
-            if (counts.TryGetValue(indent, out var previous) && previous == 999_999_999)
-            { counts.Remove(indent); continue; }
-            var want = counts.TryGetValue(indent, out var before) ? before + 1 : fresh && n == lineNumber ? 1 : own;
-            counts[indent] = want;
-            if (want != own) doc.Replace(doc.GetLineByNumber(n).Offset + m.Groups[3].Index, m.Groups[3].Length, want.ToString(CultureInfo.InvariantCulture));
-        }
-    }
-
-    /// <summary>Return inside a list continues it; Return on an empty item ends the list. List mode adds boxes everywhere.</summary>
-    private bool ContinueList()
-    {
-        var doc = Editor.Document;
-        var line = doc.GetLineByNumber(CaretLine);
-        var text = doc.GetText(line);
-        if (Mode == NoteMode.Code) return false;
-        var m = ListEditing.ListPrefix.Match(text);
-        if (!m.Success)
-        {
-            if (Mode == NoteMode.List && (line.LineNumber == 1 || text.Trim().Length > 0))
-            {
-                Insert("\n[ ] ");
-                return true;
-            }
-            return false;
-        }
-        if (m.Groups[3].Success && (!ListEditing.TryListNumber(m, out var ownNumber) || ownNumber == 999_999_999)) return false;
-        var indent = m.Groups[1].Value;
-        var prefix = m.Groups[2].Value;
-        if (text.Trim() == prefix.Trim())
-        {
-            // Empty item: end the list (or outdent one level first).
-            if (indent.Length >= 2) { doc.Remove(line.Offset, 2); Renumber(line.LineNumber); return true; }
-            doc.Replace(line.Offset, line.Length, "");
-            if (Mode == NoteMode.List) return true;
-            return true;
-        }
-        string next;
-        if (m.Groups[3].Success)
-        {
-            ListEditing.TryListNumber(m, out var nextNumber);
-            next = $"{nextNumber + 1}{m.Groups[4].Value} ";
-        }
-        else if (prefix.Contains('[')) next = Regex.Replace(prefix, @"\[[ xX]\]", "[ ]");
-        else next = prefix;
-        if (!next.EndsWith(' ')) next += " ";
-        Insert("\n" + indent + next);
-        return true;
     }
 
     private void Insert(string text)

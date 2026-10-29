@@ -115,9 +115,13 @@ Report: `.coord/reports/A42d-list-commands.md`, short, with exactly these sectio
 9. **Hand checks for the user**: the Plan's UI checks, plus anything new, or "None (not visible)".
 
 ## Check
-<Filled by `/review-task`: gate result lines, review verdicts, then the bounds check, one line per difference between
-Request, Plan and done: within plan | justified (why) | ask the user. "Noticed": side bugs as proposed follow-ups.
-"Misses": one line per failure (found at, cause, caught by, should have caught, lesson), or "None".>
+- **Gate (online, run by Master 1, 2026-10-29):** GATE: PASS. Build 0 warnings 0 errors; SELFTEST PASS; CONTRACTS 13 rows, 12 pass, 1 manual; Seam PASS; Format PASS (5 changed files); Scope PASS (5 files); Size WARN (SelfTest.cs 3089 -> 3247 lines, planned tests; PadView shrank by 75); Cleanup PASS.
+- **Gate (this session):** online run failed twice on NU1900 only (nuget.org unreachable in sandbox, env); `-Offline` run GATE: PASS, same results.
+- **Codex review:** `.coord/reports/A42d-list-commands.review.md` VERDICT: accept, no proven findings. Unproven: live caret/scroll feel (hand test).
+- **Bounds check:** Change list (5 Files-listed product files) = within plan. Behavior changes "None" = matches diff and review. Out-of-scope files: only reports = within plan. Plan deviations: None. Contracts: `list-commands-preserved` added = within plan.
+- **Noticed:** none.
+- **Misses:** found at gate in Check; cause env; caught by gate; should have caught: none (sandbox has no network); lesson: Check sessions run the gate with -Offline and Master reruns online.
 
 ## Hand test
-<Filled by the sub-session: the build checked (dev badge text), and the user's result, verbatim.>
+Dev copy from the worktree (PID 12308, build/dev, DATA build/testdata, log checked). Checks 1-6 given.
+User, 2026-10-29: "all passed"

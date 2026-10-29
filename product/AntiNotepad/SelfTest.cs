@@ -63,6 +63,10 @@ internal static partial class SelfTest
         Console.WriteLine(listEditingPass ? "LIST EDITING " + listEditingReport : "LIST EDITING FAIL " + listEditingReport);
         Check(listEditingPass, "list editing: " + listEditingReport);
 
+        var listCommandsPass = ListCommandsChecks(out var listCommandsReport);
+        Console.WriteLine(listCommandsPass ? "LIST COMMANDS " + listCommandsReport : "LIST COMMANDS FAIL " + listCommandsReport);
+        Check(listCommandsPass, "list commands: " + listCommandsReport);
+
         Check(Calc.Calculator.SelfTest(out var calcReport), "calculator: " + calcReport);
         Check(ChromeTokens.PillHeight == 42 && ChromeTokens.PagerStripHeight == 50
             && ChromeTokens.TopBackdrop.MidpointStop == 46 && ChromeTokens.TopScrollableWhitespace == 40
@@ -729,11 +733,59 @@ internal static partial class SelfTest
             CheckCase(Editor.ListEditing.ToggleCheckbox(text) == expected, name);
         void IndentCase(string text, bool deeper, Editor.ListEditing.LineEdit? expected, string name) =>
             CheckCase(Editor.ListEditing.Indent(text, deeper) == expected, name);
+        void ContinueCase(string text, int lineNumber, NoteMode mode,
+            Editor.ListEditing.ContinuationKind kind, string? insertion, string name)
+        {
+            var result = Editor.ListEditing.Continue(text, lineNumber, mode);
+            CheckCase(result.Kind == kind && result.InsertText == insertion, name);
+        }
+        void RenumberCase(string[] lines, int lineNumber, bool fresh,
+            Editor.ListEditing.NumberEdit[] expected, string name)
+        {
+            var result = Editor.ListEditing.Renumber(lines.Length, number => lines[number - 1], lineNumber, fresh);
+            CheckCase(result.SequenceEqual(expected), name);
+        }
 
         CheckCase(Editor.ListEditing.TryListNumber("123456789. item", out var nineDigits) && nineDigits == 123_456_789,
             "9-digit list marker accepted");
         CheckCase(!Editor.ListEditing.TryListNumber("1234567890. item", out _),
             "10-digit list marker rejected");
+        CheckCase(Editor.ListEditing.IsListLine("- item") && !Editor.ListEditing.IsListLine("1234567890. item"),
+            "list-line recognition validates numbered marker size");
+
+        ContinueCase("- ab", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n- ", "bullet continuation");
+        ContinueCase("* ab", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n* ", "star bullet continuation");
+        ContinueCase("+ ab", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n+ ", "plus bullet continuation");
+        ContinueCase("9. ab", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n10. ", "period-number continuation");
+        ContinueCase("9) ab", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n10) ", "parenthesis-number continuation");
+        ContinueCase("[ ] ab", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n[ ] ", "unchecked box continuation");
+        ContinueCase("[x] ab", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n[ ] ", "checked box continuation resets unchecked");
+        ContinueCase("[X] ab", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n[ ] ", "uppercase checked box continuation resets unchecked");
+        ContinueCase("- [X] ab", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n- [ ] ", "bullet-wrapped checkbox continuation resets unchecked");
+        ContinueCase("  - ab", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n  - ", "nested bullet continuation keeps indent");
+        ContinueCase("  - ", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.Outdent, null, "empty nested item outdents");
+        ContinueCase("- ", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.ClearLine, null, "empty root item clears");
+        ContinueCase(" - ", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.ClearLine, null, "one-space empty item clears instead of outdenting");
+        ContinueCase("\t- ", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.ClearLine, null, "tab-only one-character indent clears");
+        ContinueCase(" \t- ", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.Outdent, null, "mixed two-character indent outdents");
+        ContinueCase("\t\t- ", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.Outdent, null, "two-tab indent outdents");
+        ContinueCase("- item", 1, NoteMode.Code, Editor.ListEditing.ContinuationKind.Decline, null, "Code mode declines list continuation");
+        ContinueCase("", 1, NoteMode.List, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n[ ] ", "List mode adds a box on the first blank line");
+        ContinueCase("", 2, NoteMode.List, Editor.ListEditing.ContinuationKind.Decline, null, "List mode declines a later blank line");
+        ContinueCase("plain", 2, NoteMode.List, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n[ ] ", "List mode adds a box after text");
+        ContinueCase("999999999. item", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.Decline, null, "maximum list number declines continuation");
+        ContinueCase("1234567890. item", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.Decline, null, "ten-digit list number declines continuation");
+
+        RenumberCase(["  8. a", "9. b", "9. c", "9. d"], 1, fresh: true,
+            [new(1, 1), new(3, 10), new(4, 11)], "fresh numbering resets the indented level and grows following root numbers");
+        RenumberCase(["8. a", "  7. b", "  7. c", "9. d"], 2, fresh: true,
+            [new(2, 1), new(3, 2)], "nested level starts fresh at one and increments within its indent");
+        RenumberCase(["8. a", "- bullet", "8. c", "9. d"], 1, fresh: false,
+            [], "bullet resets numbered sequence at its indent");
+        RenumberCase(["999999999. a", "999999999. b", "4. c"], 1, fresh: false,
+            [], "number overflow resets without changing existing markers");
+        RenumberCase(["8. a", "12. b", "plain", "12. c"], 1, fresh: false,
+            [new(2, 9)], "renumber stops at an unindented plain-line boundary");
 
         ToggleCase("[ ]", new(1, 1, "x"), "unchecked checkbox edit");
         ToggleCase("[x]", new(1, 1, " "), "lowercase checked checkbox edit");
@@ -754,6 +806,112 @@ internal static partial class SelfTest
         IndentCase("  - item", false, new(0, 2, ""), "outdent removes two leading spaces");
         IndentCase("   - item", false, new(0, 2, ""), "outdent removes at most two of three spaces");
         IndentCase("\t - item", false, null, "outdent ignores tab-leading whitespace");
+
+        report = failures.Count == 0 ? $"{checks} checks" : string.Join("; ", failures);
+        return failures.Count == 0;
+    }
+
+    private static bool ListCommandsChecks(out string report)
+    {
+        var failures = new List<string>();
+        var checks = 0;
+        void CheckCase(bool passed, string name) { checks++; if (!passed) failures.Add(name); }
+
+        int CaretLine(AvaloniaEdit.Document.TextDocument document, AvaloniaEdit.Document.TextAnchor caret)
+            => document.GetLineByOffset(caret.Offset).LineNumber;
+
+        void DocumentCase(string initial, int lineNumber, int caretColumn,
+            Action<AvaloniaEdit.Document.TextDocument, AvaloniaEdit.Document.TextAnchor> command,
+            string expected, string name, int? expectedCaretLine = null, int? expectedCaretColumn = null)
+        {
+            var document = new AvaloniaEdit.Document.TextDocument(initial);
+            var line = document.GetLineByNumber(lineNumber);
+            var caret = document.CreateAnchor(line.Offset + caretColumn);
+            caret.MovementType = AvaloniaEdit.Document.AnchorMovementType.AfterInsertion;
+            var changes = 0;
+            document.TextChanged += (_, _) => changes++;
+
+            using (document.RunUpdate()) command(document, caret);
+            CheckCase(document.Text == expected, name + " text");
+            CheckCase(changes == (initial == expected ? 0 : 1), name + " one document update");
+            if (expectedCaretLine is { } wantedLine)
+                CheckCase(CaretLine(document, caret) == wantedLine, name + " post-edit caret line");
+            if (expectedCaretColumn is { } wantedColumn)
+            {
+                var caretLine = document.GetLineByOffset(caret.Offset);
+                CheckCase(caret.Offset - caretLine.Offset == wantedColumn, name + " post-edit caret column");
+            }
+
+            if (initial == expected) return;
+            document.UndoStack.Undo();
+            CheckCase(document.Text == initial, name + " one Undo restores text");
+            CheckCase(!document.UndoStack.CanUndo, name + " no second Undo step");
+        }
+
+        void ContinuationCase(string initial, int lineNumber, int caretColumn, NoteMode mode,
+            string expected, bool expectedContinued, string name, int? expectedCaretLine = null, int? expectedCaretColumn = null)
+        {
+            bool? continued = null;
+            DocumentCase(initial, lineNumber, caretColumn, (document, caret) =>
+            {
+                continued = Editor.DocumentCommands.ContinueList(document, lineNumber, mode,
+                    text => document.Insert(caret.Offset, text));
+                if (continued.Value) Editor.DocumentCommands.Renumber(document, CaretLine(document, caret));
+            }, expected, name, expectedCaretLine, expectedCaretColumn);
+            CheckCase(continued == expectedContinued, name + " continuation result");
+        }
+
+        void IndentationCase(string initial, int lineNumber, int caretColumn, bool deeper, string expected, string name)
+            => DocumentCase(initial, lineNumber, caretColumn, (document, caret) =>
+            {
+                Editor.DocumentCommands.Indent(document, lineNumber, deeper);
+                Editor.DocumentCommands.Renumber(document, CaretLine(document, caret), fresh: deeper);
+            }, expected, name);
+
+        void RenumberDocumentCase(string initial, int lineNumber, bool fresh, string expected, string name)
+            => DocumentCase(initial, lineNumber, 0,
+                (document, _) => Editor.DocumentCommands.Renumber(document, lineNumber, fresh),
+                expected, name);
+
+        ContinuationCase("8. a\n9. b\n9. c\n9. d", 1, 4, NoteMode.Plain,
+            "8. a\n9. \n10. b\n11. c\n12. d", true, "Enter continuation plus live-offset renumber", 2, 3);
+        ContinuationCase("- ab", 1, 2, NoteMode.Plain,
+            "- \n- ab", true, "mid-line Enter moves trailing text below the new marker", 2, 2);
+        ContinuationCase("[x] ab", 1, 6, NoteMode.Plain,
+            "[x] ab\n[ ] ", true, "checkbox Enter continuation at line end", 2, 4);
+        ContinuationCase("8. root\n  2. \n9. next", 2, 5, NoteMode.Plain,
+            "8. root\n9. \n10. next", true, "empty nested Enter outdents and runs both renumbers", 2, 3);
+        ContinuationCase("    - ", 1, 6, NoteMode.Plain,
+            "  - ", true, "empty deeply indented item removes exactly two spaces", 1, 4);
+        ContinuationCase("\t- ", 1, 3, NoteMode.Plain,
+            "", true, "empty one-tab item clears by character-count indent rule", 1, 0);
+        ContinuationCase(" \t- ", 1, 4, NoteMode.Plain,
+            "- ", true, "empty mixed-indent item removes exactly two characters", 1, 2);
+        ContinuationCase("8. a\n9. ", 2, 3, NoteMode.Plain,
+            "8. a\n", true, "empty root Enter exits list", 2, 0);
+        ContinuationCase("999999999. item", 1, 15, NoteMode.Plain,
+            "999999999. item", false, "maximum number declines document continuation");
+        ContinuationCase("", 1, 0, NoteMode.List,
+            "\n[ ] ", true, "List mode first blank line creates its checkbox", 2, 4);
+        ContinuationCase("head\n\nlast", 2, 0, NoteMode.List,
+            "head\n\nlast", false, "List mode declines a later blank line");
+
+        IndentationCase("8. a\n9. b\n9. c\n9. d", 1, 4, deeper: true,
+            "  1. a\n9. b\n10. c\n11. d", "Tab indentation plus fresh renumber shares one Undo");
+        IndentationCase("8. a\n  1. b\n9. c", 2, 7, deeper: false,
+            "8. a\n9. b\n10. c", "Shift+Tab outdent plus renumber shares one Undo");
+        RenumberDocumentCase("8. a\n12. b\nplain\n12. c", 1, fresh: false,
+            "8. a\n9. b\nplain\n12. c", "document renumber respects block boundary");
+        RenumberDocumentCase("8. root\n  5. child\n  5. child\n9. root\n  7. child\n10. root", 2, fresh: true,
+            "8. root\n  1. child\n  2. child\n9. root\n  7. child\n10. root", "document renumber resets nested level and preserves sibling level");
+        RenumberDocumentCase("8. a\n- bullet\n5. c\n5. d", 1, fresh: false,
+            "8. a\n- bullet\n5. c\n6. d", "document bullet resets numbered sequence");
+        RenumberDocumentCase("999999999. a\n999999999. b\n4. c", 1, fresh: false,
+            "999999999. a\n999999999. b\n4. c", "document overflow reset leaves numbers unchanged");
+        RenumberDocumentCase("head\r\n8. a\r\n12. b\r\n12. c", 2, fresh: false,
+            "head\r\n8. a\r\n9. b\r\n10. c", "document renumber uses live offsets after a CRLF prefix");
+        ContinuationCase("head\r\n8. a\r\n9. b\r\n9. c", 2, 4, NoteMode.Plain,
+            "head\r\n8. a\n9. \r\n10. b\r\n11. c", true, "continuation preserves nonzero offset and mixed inserted LF", 3, 3);
 
         report = failures.Count == 0 ? $"{checks} checks" : string.Join("; ", failures);
         return failures.Count == 0;

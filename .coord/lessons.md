@@ -16,6 +16,7 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 | 2026-10-29 | A53-split-divider-height | Hand test | plan | hand-test | findings | dev already did what was asked; nobody checked Now | C26-item-card-loop (Findings "Now") |
 | 2026-10-29 | A54-link-hover-click | Check r1 | plan | manager | findings | bug built without a reproduction; r1 claimed no fix | C26-item-card-loop (reproduce first) |
 | 2026-10-29 | A54-link-hover-click | Hand test | judgment | hand-test | plan | scope (all URLs) asked only at hand test | C26-item-card-loop (scope questions) |
+| 2026-10-29 | A42d-list-commands | Check (gate) | env | gate | none (sandbox has no network) | Check session sandbox cannot reach nuget.org (NU1900); master ran the online gate | - |
 
 ## Scores
 One row per merged item: what each check found. A reviewer with many empty rows on items that later had misses is not
@@ -25,3 +26,4 @@ earning its run.
 |---|---|---|---|---|---|---|---|---|
 | 2026-10-29 | A55-split-view-clip | Medium | 0 | 0 | 0 | - | 0 | - |
 | 2026-10-29 | A42c-checkbox-indent | Medium | 0 | 0 | 0 | - | 0 | - |
+| 2026-10-29 | A42d-list-commands | Medium | 0 | 0 (1 env, offline pass) | 0 | - | 0 | - |
