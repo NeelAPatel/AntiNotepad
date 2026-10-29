@@ -19,6 +19,9 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- A53-split-divider-height merged into dev (7299e8b, 2026-10-29): after hand-test rounds (full height, mirrored gap) the user
+  kept the divider ending above the pager strip; merged as a guard, no visible change: CONTRACTS `split-divider-above-pager`.
+  Gate on dev PASS (0 warnings, SELFTEST PASS, CONTRACTS 8 rows: 7 pass, 1 manual). Next: A54-link-hover-click.
 - C23-idea-numbering (user, 2026-10-29): numbers only on user confirmation; A53+ dissolved; Plan redrawn as unnumbered
   ideas with steps (design-tokens, design-unify, code-ownership, notes-folder-move-flow, ...). Next: user confirms ideas.
 - A52-move-old-folder-rename-warning merged into dev (3ced024, 2026-10-29; user hand test passed 3 of 3): cause was a trailing
@@ -140,9 +143,9 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
 | **Bugs** | | | | |
-| idea: split-divider-height | Split-view divider stops short of the window's bottom edge; make it full height (was A58) | Low | Small | needs you |
-| idea: link-hover-click | Check that long (shortened) links open on Ctrl+click with a hand cursor; short links clickable is a separate lab idea (was A54) | Low | Small | needs you |
-| idea: split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider (was A57) | Medium | Medium | needs you |
+| A53-split-divider-height | Split-view divider stops short of the window's bottom edge; make it full height (was A58) | Low | Small | done |
+| A54-link-hover-click | Check that long (shortened) links open on Ctrl+click with a hand cursor; short links clickable is a separate lab idea (was A54) | Low | Small | planned |
+| A55-split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider (was A57) | Medium | Medium | planned |
 | Release marker | dev -> main with a tag, on your go | - | - | planned |
 | **Reorg leftovers** | | | | |
 | A42c-checkbox-indent | Move checkbox indent logic out of `PadView` into its own Editor class, behavior-neutral | Low | Small | planned |
@@ -205,10 +208,10 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 IDs A53 and later below are dissolved (user, 2026-10-29); the Plan holds those as unnumbered ideas.
 - A44a hand test (user, 2026-10-28), proposed backlog IDs (parent may renumber):
   - A54-link-hover-click (open, blocks A44a sign-off decision): Ctrl+click on a link does nothing and links show no hand cursor. Only shortened URLs (over 34 chars, caret off the line) become `LinkGenerator` elements with Hand and Pressed (`Editor/Elements.cs`); short URLs are plain colored text. Not changed by A44a (its diff is only the OpenUrl name); confirm on the dev baseline.
-  - A55-native-timer-notification: a native Windows popup notification when a timer ends.
-  - A56-chime-picker (stretch): chime picker, native sound plus two more.
-  - A57-split-view-clip (after current tasks): in split view, scrolling text overlaps across the divider; the divider should crop the visual of each pane.
-  - A58-split-divider-height (after current tasks): the split divider does not reach the bottom edge.
+  - (old A55, now idea native-timer-notification): a native Windows popup notification when a timer ends.
+  - (old A56, now idea chime-picker) (stretch): chime picker, native sound plus two more.
+  - (old A57, now A55-split-view-clip) (after current tasks): in split view, scrolling text overlaps across the divider; the divider should crop the visual of each pane.
+  - (old A58, now A53-split-divider-height) (after current tasks): the split divider does not reach the bottom edge.
 - Settings window runs about 90 threads (memory is stable, freed 5 of 5 cycles).
 - A45-dev-build-badge (user wish, 2026-10-26): the dev badge shows which task/build is live (e.g. "dev · A39"), so the user
   knows exactly what is being checked. Lab-first.

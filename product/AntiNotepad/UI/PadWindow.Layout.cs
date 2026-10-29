@@ -28,7 +28,7 @@ internal sealed partial class PadWindow
     private readonly StackPanel _meta = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.MetaSpacing, Margin = new Thickness(ChromeTokens.FirstItemInset, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
     private readonly StackPanel _icons = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.IconSpacing, Margin = new Thickness(0, 0, ChromeTokens.BarEdgeInset, 0), VerticalAlignment = VerticalAlignment.Center };
     private readonly Grid _panes = new() { ColumnDefinitions = new ColumnDefinitions("*,0,0") };
-    private readonly Border _divider = new() { Width = ChromeTokens.DividerWidth, Margin = new Thickness(0, ChromeTokens.DividerTopMargin, 0, ChromeTokens.DividerBottomMargin) };
+    private readonly Border _divider = CreateSplitDivider();
     private readonly Border _pill = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 0, ChromeTokens.PillBottomInset), CornerRadius = new CornerRadius(ChromeTokens.PillCornerRadius), Padding = new Thickness(ChromeTokens.PillInset) };
     private readonly Border _toast = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(16, 0, 16, ChromeTokens.ToastBottomMargin), CornerRadius = new CornerRadius(10), Padding = new Thickness(12, 7), IsVisible = false, MaxWidth = 380 };
     private readonly Panel _overlayHost = new() { IsVisible = false };
@@ -57,6 +57,21 @@ internal sealed partial class PadWindow
     private TextBlock? _saveFailureReason;
     private Button? _saveFailureRetryButton, _saveFailureQuitButton;
     private Action? _saveFailureRetryAction;
+
+    internal static Border CreateSplitDivider() => new()
+    {
+        Width = ChromeTokens.DividerWidth,
+        Margin = new Thickness(0, ChromeTokens.DividerTopMargin, 0, ChromeTokens.DividerBottomMargin),
+    };
+
+    internal static void AddChromeLayers(Panel root, Panel topLayer, Panel bottomLayer, Control toast, Control pill, Control floatPager)
+    {
+        root.Children.Add(topLayer);
+        root.Children.Add(bottomLayer);
+        root.Children.Add(toast);
+        root.Children.Add(pill);
+        root.Children.Add(floatPager);
+    }
 
     private void BuildLayout()
     {
@@ -89,12 +104,8 @@ internal sealed partial class PadWindow
         root.Children.Add(_tint);
         root.Children.Add(_content);
         InitializeTopBlurVisuals();
-        root.Children.Add(_topLayer);
-        root.Children.Add(_bottomLayer);
-        root.Children.Add(_toast);
-        root.Children.Add(_pill);
+        AddChromeLayers(root, _topLayer, _bottomLayer, _toast, _pill, _floatPager);
         _topLayer.RenderTransform = new TranslateTransform();
-        root.Children.Add(_floatPager);
         _floatPager.PlacementTarget = root;
         _bottomLayer.RenderTransform = new TranslateTransform();
         _barsSleep.Tick += (_, _) => BarsSleepTick();

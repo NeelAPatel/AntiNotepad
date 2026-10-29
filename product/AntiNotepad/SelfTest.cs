@@ -2,6 +2,7 @@ using AntiNotepad.Model;
 using AntiNotepad.Platform;
 using AntiNotepad.Theme;
 using AntiNotepad.UI;
+using Avalonia.Controls;
 using Avalonia.Platform;
 using System.Diagnostics;
 using System.Reflection;
@@ -129,6 +130,43 @@ internal static partial class SelfTest
 
         Console.WriteLine(failures.Count == 0 ? "SELFTEST PASS" : "SELFTEST FAIL\n" + string.Join("\n", failures));
         return failures.Count == 0 ? 0 : 1;
+    }
+
+    private static bool SplitDividerFullHeightChecks(out string report)
+    {
+        try
+        {
+            var divider = PadWindow.CreateSplitDivider();
+            var panes = new Grid { ColumnDefinitions = new ColumnDefinitions("*,0,0") };
+            Grid.SetColumn(divider, 1);
+            panes.Children.Add(divider);
+            var content = new Grid();
+            content.Children.Add(panes);
+
+            var root = new Grid();
+            root.Children.Add(new Border());
+            root.Children.Add(content);
+            var topLayer = new Panel();
+            var bottomLayer = new Panel();
+            var pill = new Border();
+            PadWindow.AddChromeLayers(root, topLayer, bottomLayer, new Border(), pill, new Border());
+
+            var contentIndex = root.Children.IndexOf(content);
+            var splitDivider = ReferenceEquals(divider.Parent, panes) && ReferenceEquals(panes.Parent, content);
+            var dockedPagerAbove = splitDivider && root.Children.IndexOf(pill) > contentIndex;
+            root.Children.Remove(pill);
+            bottomLayer.Children.Add(pill);
+            var overlayPagerAbove = splitDivider && ReferenceEquals(pill.Parent, bottomLayer)
+                && root.Children.IndexOf(bottomLayer) > contentIndex;
+
+            report = $"divider bottom={divider.Margin.Bottom}; docked pager above divider={dockedPagerAbove}; overlay pager above divider={overlayPagerAbove}";
+            return divider.Margin.Bottom == ChromeTokens.PagerStripHeight + ChromeTokens.DividerPagerClearance && dockedPagerAbove && overlayPagerAbove;
+        }
+        catch (Exception ex)
+        {
+            report = ex.GetType().Name + ": " + ex.Message;
+            return false;
+        }
     }
 
     private sealed record LayerRule(

@@ -59,7 +59,13 @@ internal static partial class SelfTest
                 "The pad window's style flags are unchanged.",
                 "A32/A34",
                 null,
-                "pad keeps rounded corners and shadow in all three bar styles")
+                "pad keeps rounded corners and shadow in all three bar styles"),
+            new(
+                "split-divider-above-pager",
+                "The split divider ends just above the pager strip whether or not the pill shows, and the pager layers above it.",
+                "A53-split-divider-height",
+                () => RunExistingCheck(SplitDividerFullHeightChecks, "split divider full height: "),
+                null)
         ];
 
         var passed = 0;
