@@ -15,7 +15,7 @@ Set in the brief's `Tier:` line by the master at step 2. When unsure, pick the h
 | # | Step | Who | Trigger | Leaves | STATUS state |
 |---|---|---|---|---|---|
 | 1 | Pick the next item | master (Opus) | user says "next", or the previous item merged | - | `briefing` |
-| 2 | Write the brief, set the tier | master | same turn | `.coord/tasks/<ID-slug>.md` from `.coord/templates/brief.md` | `briefed (<tier>)` |
+| 2 | Branch + worktree, write the brief, set the tier | master | same turn | `feat/<ID-slug>` in `.claude/worktrees/<ID-slug>`; `.coord/tasks/<ID-slug>.md` from `.coord/templates/brief.md`, committed on the branch | `briefed (<tier>)` |
 | 3 | Read-only impact audit (Medium, High) | Codex director | `bash .coord/tools/codex-run.sh director <ID-slug>-audit .coord/tasks/<ID-slug>-audit.md` | `.coord/reports/<ID-slug>-audit.md` | `audited` |
 | 4 | User decides | user | master summarizes and asks | decision in STATUS | `approved` / `changed` / `dropped` |
 | 5 | Implement | Codex director + Luna; director spawns `lens_reviewer` before reporting | implementation sub-session: `bash .coord/tools/codex-run.sh director <ID-slug> .coord/tasks/<ID-slug>.md` | code on `feat/<ID-slug>`, report with change list and behavior changes | `implementing` |
@@ -24,7 +24,7 @@ Set in the brief's `Tier:` line by the master at step 2. When unsure, pick the h
 | 7b | Design review (High) | Claude `design-reviewer` agent | `/review-task` after 7a | reply to the manager | `in review` |
 | 7c | Manager verdict | sub-session manager (Sonnet) | `/review-task` reads 6, 7a, 7b | `## Manager verdict` in the task report, or a `<ID-slug>-rN` brief | `accepted` / `rework rN` / `ask-user` |
 | 8 | Hand test | user, dev copy (`tools/dev.ps1`) | manager gives the report's hand-check list | pass or fail in STATUS | `hand-tested` |
-| 9 | Merge | master | user's pass | `--no-ff` merge into dev, gate re-run on dev, STATUS, push | `done` |
+| 9 | Merge | master | user's pass | `--no-ff` merge into dev, gate re-run on dev, one STATUS commit, push, remove the worktree | `done` |
 
 Rules:
 - A failed gate or a `rework` verdict goes back to step 5 as `<ID-slug>-r2`, `-r3` (STATUS `rework rN`). A third round goes
@@ -46,6 +46,23 @@ Rules:
   Claude hook regenerates on every STATUS edit). `/next-task` and `/merge-task` keep each row's State current.
 - Release markers in the STATUS plan: the master asks the user before tagging dev -> main. Only on the user's go.
 - Design changes stay lab-first (`AGENTS.md`): steps 5-8 run on a lab build, and the user approves before the real change.
+
+## Branches, worktrees and commits (user, 2026-10-29)
+- **Every item gets a branch:** `feat/<ID-slug>` off the latest dev, created at step 2, including audit-only, docs and
+  tooling items. Rework rounds stay on the same branch.
+- **Worktree when anything else is checked out or in flight:** the master's checkout stays on dev, so any item a
+  sub-session or Codex works on lives in `.claude/worktrees/<ID-slug>` (`git worktree add .claude/worktrees/<ID-slug> -b
+  feat/<ID-slug> dev`). Sub-sessions share the master's folder (`use_worktree: false`) and work only inside that path, with
+  absolute paths; Codex runs from the worktree's own `.coord/tools/codex-run.sh`. Several items can run at once only if
+  their Files lists do not overlap. The hand test runs `tools/dev.ps1` from the worktree.
+- **What lands on the branch:** the brief, audit, reports and code, committed there (Codex cannot commit: the sub-session
+  manager does). Push the branch to origin freely.
+- **What lands on dev:** only the item's `--no-ff` merge plus one `S<n>-status:` commit per merge. Between merges the
+  master edits `.coord/STATUS.md` on dev but leaves it uncommitted (the roadmap reads the working copy); that STATUS
+  commit carries every STATUS change since the last merge. Branches never edit STATUS, so merges never conflict on it.
+  No other direct commits to dev; urgent one-line fixes also go through a branch.
+- **Clean-up:** after the merge, remove the worktree; keep the branch until the next release marker, then delete merged
+  branches (local and origin) on the user's go.
 
 ## Triggers in practice
 Three commands drive the loop: `/next-task` (steps 1-5, master), `/review-task <ID-slug>` (steps 6-7, sub-session),

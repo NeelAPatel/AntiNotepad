@@ -19,6 +19,8 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- C20-branch-worktree-loop (user, 2026-10-29): every item runs on `feat/<ID-slug>` in `.claude/worktrees/<ID-slug>`; dev gets
+  only `--no-ff` merges plus one STATUS commit each (STATUS edited live, committed at merge). Merged 6f8da54.
 - C19-subsession-routing (user, 2026-10-29): every Codex run gets its own linked sub-session (Haiku for pure runs, Sonnet medium
   when reasoning is needed); master opens updates with a status card. A59-design-ownership-audit done, 7 corrections applied,
   A76-behavior-timer-names added; design-system rows now planned. Next: A52-move-old-folder-rename-warning on the user's go.

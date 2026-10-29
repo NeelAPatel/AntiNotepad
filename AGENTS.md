@@ -6,7 +6,7 @@ The earlier AntiQuickPad project (spikes A/B, `src/AntiQuickPad`) is retired and
 tags `v0.1`, `antipad-v*` and `baseline/m8c-v1-compact`.
 
 ## Rules
-- Remote: private GitHub repo `NeelAPatel/AntiNotepad` (origin); the manager pushes after commits. Branches: `main` (tagged releases only, on user say-so) > `dev` (integration) > `feat/<ID-slug>` (one per task,
+- Remote: private GitHub repo `NeelAPatel/AntiNotepad` (origin); the manager pushes after commits. Branches: `main` (tagged releases only, on user say-so) > `dev` (integration: only `--no-ff` merges plus one status commit each) > `feat/<ID-slug>` (one per task, in `.claude/worktrees/<ID-slug>`; see `docs/loop.md`,
   off dev, merged back with --no-ff). Commit per completed task. Tags: `antinotepad-vN`.
 - Name items and tasks `<ID>-<short-slug>` everywhere (chat, briefs, commits, reports). Never a bare ID.
 - Design changes go lab-first: show them in a spike or lab build first, wait for the user's approval, then
