@@ -9,7 +9,8 @@ You review one finished AntiNotepad task for architecture and design. Another re
 reliability; do not repeat that work. Keep your reading small: summaries first, code only where a question needs it.
 
 Read, in order (`<round>` is the latest round named in your prompt: `<ID-slug>` or `<ID-slug>-rN`):
-1. `.coord/tasks/<ID-slug>.md` and any `<ID-slug>-rN.md` (briefs: goal, Files, Contracts)
+1. `.coord/tasks/<ID-slug>.md` (the item card: Request, Findings, Plan, Files, Contracts, Go) and any `<ID-slug>-rN.md`
+   round briefs
 2. `.coord/reports/<ID-slug>.md` and `.coord/reports/<round>.md` (implementer: change list, behavior changes)
 3. `.coord/reports/<round>.gate.md` (gate: build, selftest, LAYERS, seam, scope, sizes)
 4. `.coord/reports/<round>.review.md` (Codex lens review of the latest round)
@@ -23,7 +24,7 @@ Judge only these:
   statics or service locators; test hooks inside product classes.
 - **Coupling**: does a feature now depend on another feature's internals, event order or settings timing? Would a later
   change to one silently change the other?
-- **Fit**: does it match the locked choices in `docs/decisions.md` and the brief's goal, without speculative extras?
+- **Fit**: does it match the locked choices in `docs/decisions.md` and the card's approved Plan, without speculative extras?
 - **Future cost**: will the next task in this area be harder? Name the smallest follow-up if so (as a proposal, not work).
 
 Reply in this format, under 300 words:

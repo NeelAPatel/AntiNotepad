@@ -11,12 +11,15 @@ unavailable folder), state that latched for good (A30 IsAvailable), a cache trus
 a missing-input startup crash (A43b), and a global window-style change that broke every bar style (A32/A34).
 
 ## Inputs
-The brief (`.coord/tasks/<ID-slug>.md`), the implementer's report (`.coord/reports/<ID-slug>.md`), the gate report if present
+The item card (`.coord/tasks/<ID-slug>.md`: Request, Plan with "After" and "Must not change", Files, Contracts, Go) and
+any round briefs, the implementer's report (`.coord/reports/<ID-slug>.md`), the gate report if present
 (`.coord/reports/<ID-slug>.gate.md`) and the diff. Read the changed files around each hunk, and the callers of anything whose
 signature or meaning changed (search with `rg`).
 
 ## Checklist (go through every item for every hunk)
-1. **Scope**: does each hunk serve a goal line of the brief? Flag unrelated edits (icons, tokens, styles, renames, defaults).
+1. **Scope and plan bounds**: does each hunk serve a line of the card's Plan "After"? Does anything break its "Must not
+   change"? Flag unrelated edits (icons, tokens, styles, renames, defaults) and any deviation the report's "Plan
+   deviations" does not list.
 2. **Contracts**: did any public or shared method change its result, exceptions, side effects or meaning? List every caller
    and say whether each still holds. Compare with the report's "Behavior changes"; a missing entry is a finding.
 3. **Shared state**: new or changed fields, statics, settings or flags. Can a state be set and never reset (latch)? Is it
@@ -45,8 +48,8 @@ risks", at most five, one line each. Never edit files under `product/`.
 1. [blocker|major|minor] file:line - what breaks, how proven, suggested smallest fix
 ## Behavior changes check
 Report's list vs the diff: matches | missing: ...
-## Scope check
-In scope | unrelated hunks: file:line ...
+## Scope and plan check
+In plan | unrelated hunks or unlisted deviations: file:line ...
 ## Unproven risks
 - ...
 ## Checks run

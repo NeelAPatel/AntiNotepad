@@ -1,52 +1,53 @@
 ---
 name: review-task
-description: Run the AntiNotepad review pipeline on a finished Codex task - gate script, then the reviews its tier calls for, then a verdict. Use when the user or manager says "/review-task <ID-slug>", "review <ID-slug>", or a Codex implementation run for a task has just exited.
+description: Run the AntiNotepad Check phase on a finished Codex round - the gates the item card planned, then the bounds check (request vs plan vs done), then a verdict and the hand-test handover. Use when the user or manager says "/review-task <ID-slug>", "review <ID-slug>", or a Codex Build run for an item has just exited.
 argument-hint: <ID-slug>
 ---
 
 # /review-task <ID-slug>
 
-Runs steps 6-7 of the loop in `docs/loop.md`. Keep Claude reading small: read report sections and verdict lines, not whole
-diffs. Never fix product code here; rework goes back to Codex with a `<ID-slug>-rN` brief.
+Phase 6 (Check) of `docs/loop.md`, then the hand-over to Hand test. Every reply opens with the status card. Keep Claude
+reading small: report sections and verdict lines, not whole diffs. Never fix product code here; rework goes back to Codex.
 
-## 1. Read the tier
-From `.coord/tasks/<ID-slug>.md`, the `Tier:` line (Low, Medium, High). Missing tier: treat as Medium and say so.
-Check that `.coord/reports/<ID-slug>.md` exists and has the "Change list" and "Behavior changes" sections; if not, that is a
-rework (the report format is part of the task).
+## 1. Read the card
+From `.coord/tasks/<ID-slug>.md`: `Tier:`, `## Request`, `## Plan` (After, Must not change, Gates, Test plan), `## Go`.
+Missing Plan or Go: stop and tell the master the item skipped phases. Missing tier: treat as Medium and say so.
+`<round>` is the round just finished: `<ID-slug>` first, `<ID-slug>-rN` after a rework. Check that
+`.coord/reports/<round>.md` has the "Change list", "Behavior changes" and "Plan deviations" sections; if not, that is a rework.
 
-## 2. Gate (all tiers)
-`<round>` is the name of the round just finished: `<ID-slug>` for the first, `<ID-slug>-rN` after a rework. Run
-`pwsh -NoProfile -File tools/gate.ps1 -Task <round>` from the worktree that holds the change. It writes
-`.coord/reports/<round>.gate.md` (not committed) and exits non-zero on failure. Read only its Summary section.
-- Fail: write `.coord/tasks/<ID-slug>-rN.md` (next N) from `.coord/templates/brief.md` quoting the failing lines, relaunch
-  Codex (`docs/agents.md`), update STATUS (`rework rN`), stop.
+## 2. Gate (always)
+`pwsh -NoProfile -File tools/gate.ps1 -Task <round>` from the worktree. It writes `.coord/reports/<round>.gate.md` (not
+committed) and exits non-zero on failure. Read only its Summary.
+- Fail: write `.coord/tasks/<ID-slug>-rN.md` (next N) from `.coord/templates/round.md` quoting the failing lines, relaunch
+  Codex (`docs/agents.md`), STATUS `rework rN`, stop.
 - Warnings (scope, size): carry them into step 4.
 
-## 3. Reviews by tier
-- **Low**: none. Go to step 4.
-- **Medium**: fresh Codex review. Fill `.coord/templates/review.md` into `.coord/tasks/<ID-slug>-review.md` (base branch
-  `dev` unless the brief says otherwise), then launch in the background:
-  `bash .coord/tools/codex-run.sh reviewer <ID-slug>-review .coord/tasks/<ID-slug>-review.md`
-  Tell the user in one line: working folder, brief file, log `.coord/logs/<ID-slug>-review.reviewer.log`, report
-  `.coord/reports/<ID-slug>.review.md`. Wait for the exit notification; do not poll.
-  After a rework, name the review `<round>-review`, list both the base report and `.coord/reports/<round>.md` as inputs,
-  and point it at `.coord/reports/<round>.gate.md`.
-- **High**: the Medium step, then spawn the `design-reviewer` agent (Agent tool, `subagent_type: design-reviewer`) with the
-  prompt "Design review of <ID-slug>, latest round <round>." after the Codex review report exists.
+## 3. The card's other gates
+Run every gate the Plan lists (at least the tier's defaults):
+- **Codex review** (Medium, High): fill `.coord/templates/review.md` into `.coord/tasks/<round>-review.md`, launch
+  `bash .coord/tools/codex-run.sh reviewer <round>-review .coord/tasks/<round>-review.md` in the background, tell the user
+  in one line (folder, brief, log, report `.coord/reports/<round>.review.md`), wait for the exit notification.
+- **Design review** (High): after the Codex review exists, spawn the `design-reviewer` agent (Agent tool,
+  `subagent_type: design-reviewer`) with "Design review of <ID-slug>, latest round <round>."
+- **Contracts / reproduction test**: confirm the named rows and checks exist in the diff and pass in the gate's selftest.
 
-## 4. Verdict
-Read the `VERDICT:` line and "Findings (proven)" of the Codex review, and the design reviewer's reply.
-- Any `rework`, a blocker/major finding, or a report "Behavior changes" entry the review says is missing: write the rework
-  brief `<ID-slug>-rN` with exactly those findings and relaunch Codex; when it exits, run this skill again for that round.
+## 4. Bounds check and verdict
+Compare Request, Plan (and Go) with what was done: the report's Change list, Behavior changes, Out-of-scope files, Plan
+deviations, and `git diff --stat dev...HEAD`. Write `## Check` on the card:
+- Gate and review result lines.
+- One line per difference: **within plan**, **justified** (why the user need not decide), or **ask the user**.
+- "Noticed": side bugs or follow-ups, as proposals only.
+Then decide:
+- Any review `rework`, a blocker or major finding, a missing Behavior changes entry, or a Plan's "Must not change" broken:
+  write the `<ID-slug>-rN` round brief with exactly those findings and relaunch Codex; when it exits, run this skill again.
   Max two rework rounds; a third goes to the user.
-- `ask-user`: put the one question to the user.
-- Otherwise accept. Append to `.coord/reports/<ID-slug>.md` a short `## Manager verdict` (tier, gate result, review verdicts,
-  scope/size warnings accepted and why).
+- Any "ask the user" line, or a review `ask-user`: ask the user that one question with the card; STATUS `ask-user`.
+  A scope change they give becomes a round brief with their words under "Why this round".
+- Otherwise accept. Commit the card and reports on the branch (`<ID-slug>: check`). STATUS `accepted`.
 
 ## 5. Hand over
-Update `.coord/STATUS.md` (state `accepted`, `rework rN`, or `ask-user`). For an accepted task needing hand checks, the implementation
-sub-session runs `tools/dev.ps1` from the task worktree immediately before giving the user the report's "Hand checks for
-the user" list. Verify the dev badge, printed EXE and DATA paths, and app log under that DATA before interaction or
-reporting ready. Never launch during review or rework. If launch/verification fails, report that failure and do not claim
-the build is ready. For Low tier and not visible, say no hand test is needed.
-Merging into dev is the master session's step 9, after the user's hand test passes.
+For an accepted item with UI checks: run `tools/dev.ps1` from the worktree immediately before the hand checks. Verify the
+dev badge, the printed EXE and DATA paths, and the app log under that DATA before reporting ready; if any fails, report
+that and do not claim the build is ready. Never launch during review or rework. Give the user the Plan's UI checks plus
+the report's new ones, and the badge text they should see. Record their result verbatim under `## Hand test`, commit it,
+and tell the master. Not visible: say no hand test is needed. Merging is the master's `/merge-task`.

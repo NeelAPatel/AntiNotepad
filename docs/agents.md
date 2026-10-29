@@ -23,8 +23,10 @@ Headless, in the background; the process exit wakes the manager:
   short report at `.coord/reports/<ID-slug>.md`.
 
 ## Briefs
-- One file per task in `.coord/tasks/<ID-slug>.md`, from `.coord/templates/brief.md`: role, branch, tier, the exact files in
-  scope (`## Files`, read by `tools/gate.ps1`), contracts, goal, "Done means" and the fixed report sections.
+- One item card per item in `.coord/tasks/<ID-slug>.md`, from `.coord/templates/item.md`: the user's request, findings,
+  the approved plan, the exact files in scope (`## Files`, read by `tools/gate.ps1`), contracts, the user's go, and a
+  "For Codex" section (role, constraints, "Done means", the fixed report sections). Codex reads the whole card, never edits it.
+- Findings audits use `.coord/templates/findings.md`; rework rounds `.coord/templates/round.md` (`<ID-slug>-rN.md`).
 - Directors spawn the project role `lens_reviewer` (`.codex/agents/lens-reviewer.toml`) before reporting. Codex loads
   project `.codex/` only for trusted folders; a worktree outside the repo folder may need trusting once.
 - Codex cannot write to `.git` in its sandbox: it never commits; the manager reviews and commits.

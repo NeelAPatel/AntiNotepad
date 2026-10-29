@@ -19,6 +19,13 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- C26-item-card-loop merged into dev (2d99362, 2026-10-29, user: "Yes, merge it"): every item has one item card
+  (`.coord/templates/item.md`) through Request > Findings > Plan > Go > Build > Check > Hand test > Merge; Findings for
+  every tier (master scout for Low), reproduction before building a bug, gates picked per item, a bounds check (requested
+  vs approved vs done) at Check, and the five-line status card on every reply, reminded by a `UserPromptSubmit` hook
+  (`tools/loop-card.ps1`). Gate on dev PASS (0 warnings, SELFTEST PASS, CONTRACTS 10 rows: 9 pass, 1 manual). Proposed
+  follow-up (unnumbered, needs the user): `codex-run.sh` writes `usage.tsv` and logs to the worktree, so caps and logs
+  are lost on worktree removal. Next: A55-split-view-clip, the first item on the new card.
 - A45-dev-build-badge merged into dev (56a85cd, 2026-10-29; user hand test passed): `tools/dev.ps1` stamps the branch and
   build time into dev builds only; the top-bar chip shows ` <ID> · <time>`, expands on hover to
   `dev/<branch>@<date time>`, tooltip always full. CONTRACTS `dev-badge-build-stamp`. Gate on dev PASS (0 warnings, SELFTEST
@@ -168,6 +175,7 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | A54-link-hover-click | Every URL opens on Ctrl+click; shortened links always show a hand, other URLs show it while Ctrl is held (widened in r3, user) | Low | Small | done |
 | C25-dev-instance-handoff | `tools/dev.ps1` closes whatever dev copy is running from any checkout (shared record, dev-only, never the installed copy) and launches its own; the implementation sub-session starts its dev copy when the gate passes | High | Small | done |
 | A45-dev-build-badge | Dev badge names the exact build: branch glyph U+E0A0 (fallback ⎇), `dev/<branch>@<ISO build time>` stamped at build; short form expands on hover, tooltip always shows the full text; approved at its hand test (dev-only) | Low | Small | done |
+| C26-item-card-loop | One item card per item (Request > Findings > Plan > Go > Build > Check > Hand test > Merge), findings every tier, reproduction before bug builds, gates per item, bounds check, status card hook | Low | Small | done |
 | A55-split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider (was A57) | Medium | Medium | planned |
 | Release marker | dev -> main with a tag, on your go | - | - | planned |
 | **Reorg leftovers** | | | | |
