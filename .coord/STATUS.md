@@ -19,6 +19,9 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- C19-subsession-routing (user, 2026-10-29): every Codex run gets its own linked sub-session (Haiku for pure runs, Sonnet medium
+  when reasoning is needed); master opens updates with a status card. A59-design-ownership-audit done, 7 corrections applied,
+  A76-behavior-timer-names added; design-system rows now planned. Next: A52-move-old-folder-rename-warning on the user's go.
 - C17-roadmap-view (user, 2026-10-28): `/roadmap` and `tools/roadmap.ps1` render the Plan section as a table (Claude hook
   keeps `.coord/roadmap.html` current); Plan rewritten so every row has an `<ID>-<slug>`, a scope and a State; new IDs
   C14-a38-audit-branch, C15-worktree-branch-cleanup, C16-archive-finished-sessions, A74-settings-thread-count;
@@ -126,8 +129,8 @@ Held until the user brings them back: "Open (needs the user)" below and the A44b
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
 | Decision: approve goals and targets | Four goals (one owner per job, less duplicated code, one central design system, look and feel identical unless you approve a change in a lab) and the success targets in the P1 plan, section 3 (reworded 2026-10-29: tokens keep today's values). Approved by the user 2026-10-29 | - | - | done |
-| A59-design-ownership-audit | Read-only Codex audit: confirm large files, draft the ownership map, sweep duplication, catalog every design value with file:line. No code. Runs alongside the Bugs block (decision 2A) | Medium | Medium | in review |
-| Decision: pick the design-system items and order | From the A59-design-ownership-audit report. P1 plan decisions (user, 2026-10-28): 4 spacing = count may not grow, watched closely; 5 no Calculator/PadWindow splits for now; 6 A46-motion-timings folds into A64-design-unify-lab; 7 exact file paths for now; 8 two release markers; 1 goals approved, 2A bugs first with A59-design-ownership-audit alongside, 3 visible changes in scope (lab-first) with A75-design-system-reference before the lab (2026-10-29). Left: which items run, after the A59 report | - | - | planned |
+| A59-design-ownership-audit | Read-only Codex audit: confirm large files, draft the ownership map, sweep duplication, catalog every design value with file:line. No code. Report `.coord/reports/A59-design-ownership-audit.md`; design review accept-with-followup; 7 corrections applied (user, 2026-10-29) | Medium | Medium | done |
+| Decision: pick the design-system items and order | From the A59-design-ownership-audit report. P1 plan decisions (user, 2026-10-28): 4 spacing = count may not grow, watched closely; 5 no Calculator/PadWindow splits for now; 6 A46-motion-timings folds into A64-design-unify-lab; 7 exact file paths for now; 8 two release markers; 1 goals approved, 2A bugs first with A59-design-ownership-audit alongside, 3 visible changes in scope (lab-first) with A75-design-system-reference before the lab (2026-10-29). After the A59 report the user approved all 7 corrections (2026-10-29); all design-system rows are now `planned` | - | - | done |
 
 ### Priority 2: pending work
 | Item | Scope | Tier | Effort | State |
@@ -142,29 +145,30 @@ Held until the user brings them back: "Open (needs the user)" below and the A44b
 | A42c-checkbox-indent | Move checkbox indent logic out of `PadView` into its own Editor class, behavior-neutral | Low | Small | planned |
 | A42d-list-commands | Move list commands out of `PadView` into its own Editor class, behavior-neutral | Medium | Medium | planned |
 | **Design system and ownership (from Priority 1)** | | | | |
-| A60-design-token-scan | Gate script that counts hard-coded design values (radius, fonts, colors, shadows, durations) per file and fails if a count rises. No product change | Low | Small | proposed |
-| A61-theme-tokens-core | Define radius, typography, shadow and color-mix tokens in `Theme/` at today's values. No call sites changed | Low | Small | proposed |
-| A71-tokens-pad-chrome | Pad window chrome (toast, card, pill, divider) uses the tokens; looks identical | Medium | Medium | proposed |
-| A72-tokens-overlays | Menu, search and help overlays and `Kit` use the tokens; looks identical | Medium | Medium | proposed |
-| A73-tokens-editor | Editor renderers and colorizers use the tokens; one brush cache instead of three; looks identical | Medium | Medium | proposed |
-| A62-settings-tokens | Settings window uses the tokens, plus page, card and row layout tokens; looks identical | Medium | Medium | proposed |
-| A63-motion-tokens | One named duration per animation role at today's values; behavior timers get named constants; timing identical | Medium | Small | proposed |
-| Release marker | dev -> main after the look-identical work (proposed second marker), on your go | - | - | proposed |
-| A75-design-system-reference | Claude Design System artifact built from today's real token values, plus a Design canvas comparing proposed radius, type and shadow options with today's. No code; final picks happen in A64-design-unify-lab | Low | Small | proposed |
-| A64-design-unify-lab | Lab build only: today's look next to a proposed radius scale, type ramp, shadow tiers and Windows 11 motion timings (absorbs A46-motion-timings); you pick values | Medium | Medium | proposed |
-| A65a-radius-scale | Apply the corner-radius scale you picked in A64-design-unify-lab; visible change | Medium | Small | proposed |
-| A65b-type-ramp | Apply the font-size ramp you picked in A64-design-unify-lab; visible change | Medium | Small | proposed |
-| A65c-shadow-tiers | Apply the shadow tiers you picked in A64-design-unify-lab; visible change | Medium | Small | proposed |
-| A65d-motion-timings | Apply the animation durations you picked in A64-design-unify-lab; visible change | Medium | Small | proposed |
-| A66-ui-kit-merge | One control kit: Settings' private controls merge into `Kit`; `Material()` and `Ago()` move to their owners | Medium | Medium | proposed |
-| A67-model-store-split | Move `Note`, `Settings`, `StoreData` and the search types out of `Model/Store.cs` into their own files, verbatim | Low | Small | proposed |
-| A70-selftest-split | Split `SelfTest.cs` (2,637 lines) into one file per area, verbatim | Low | Small | proposed |
-| A68-notes-path-dedupe | One same-or-nested path rule shared by `NotesSession` and `NotesLocation`, with a CONTRACTS row | Medium | Small | proposed |
-| A69-ownership-map | `docs/architecture.md` owner per responsibility; root files into `App/`; LAYERS rows that enforce it | Low | Small | proposed |
+| A60-design-token-scan | Gate script that counts hard-coded design values (radius, fonts, colors, shadows, durations) per file and fails if a count rises. No product change | Low | Small | planned |
+| A61-theme-tokens-core | Define the full token catalog from the A59 inventory in `Theme/` at today's values, Settings tokens included; later items only consume (and add a DESIGN row for any token they must append). Two color helpers: `WithAlpha(byte)` and `Faded(opacity)`. No call sites changed | Low | Small | planned |
+| A71-tokens-pad-chrome | Pad window chrome (toast, card, pill, divider) uses the tokens; looks identical | Medium | Medium | planned |
+| A72-tokens-overlays | Menu, search and help overlays and `Kit` use the tokens; looks identical | Medium | Medium | planned |
+| A73-tokens-editor | Editor renderers and colorizers use the tokens; brush/pen factories shared, each cache keeps its own limits and keys (no cache-policy change); looks identical | Medium | Medium | planned |
+| A62-settings-tokens | Settings window, its parts and the motion preview (`UI/MotionPreview.cs`) use the tokens; looks identical | Medium | Medium | planned |
+| A63-motion-tokens | One named duration per animation role (tweens only) at today's values, easing kept as is; timing identical. Behavior timers are A76-behavior-timer-names | Medium | Small | planned |
+| Release marker | dev -> main after the look-identical work (proposed second marker), on your go | - | - | planned |
+| A75-design-system-reference | Claude Design System artifact built from today's real token values, plus a Design canvas comparing proposed radius, type and shadow options with today's. No code; final picks happen in A64-design-unify-lab | Low | Small | planned |
+| A64-design-unify-lab | Lab build only: today's look next to a proposed radius scale, type ramp, shadow tiers and Windows 11 motion timings (absorbs A46-motion-timings); you pick values | Medium | Medium | planned |
+| A65a-radius-scale | Apply the corner-radius scale you picked in A64-design-unify-lab; visible change | Medium | Small | planned |
+| A65b-type-ramp | Apply the font-size ramp you picked in A64-design-unify-lab; visible change | Medium | Small | planned |
+| A65c-shadow-tiers | Apply the shadow tiers you picked in A64-design-unify-lab; visible change | Medium | Small | planned |
+| A65d-motion-timings | Apply the animation durations you picked in A64-design-unify-lab; visible change | Medium | Small | planned |
+| A66-ui-kit-merge | One control kit: Settings' private controls merge into `Kit`; `Material()` and `Ago()` move to their owners | Medium | Medium | planned |
+| A67-model-store-split | Move `Note`, `Settings`, `StoreData` and the search types out of `Model/Store.cs` into their own files, verbatim | Low | Small | planned |
+| A70-selftest-split | Split `SelfTest.cs` (2,637 lines) into one file per area, verbatim | Low | Small | planned |
+| A68-notes-path-dedupe | One same-or-nested path rule in `Platform/NotesPathRules` (no dependencies) replacing the three copies in `NotesSession`, `NotesLocation` and `SettingsWindow`; each caller keeps its error handling; CONTRACTS path row | High | Small | planned |
+| A69-ownership-map | `docs/architecture.md` owner per responsibility; `NotesSession` and `RuntimeLog` into `App/` (`AppInfo` stays a leaf); LAYERS rows: nothing but Program references `App/` except `AppInfo`, Model/Platform never reference Motion, Motion never references UI/Editor | Low | Small | planned |
 | **Cleanup** | | | | |
 | C14-a38-audit-branch | Merge the A38 MVVM audit doc into dev or delete `feat/A38-mvvm-audit` | Low | Small | planned |
 | C15-worktree-branch-cleanup | Remove investigator worktrees and finished `reorg/*` branches (local and origin) | Low | Small | planned |
 | C16-archive-finished-sessions | Archive the finished A39-A44 Claude sessions | Low | Small | planned |
+| A76-behavior-timer-names | Optional: name behavior timers (save, debounce, toast, taskbar) as constants beside their owners, values unchanged; no scheduler change | High | Small | planned |
 | C18-tag-scheme | Propose one tag naming scheme (releases, archives, proposals, baselines) and a dev -> main release checklist that re-checks gate rules; doc only, no retagging | Low | Small | proposed |
 | Release marker | dev -> main with a tag, on your go | - | - | planned |
 | **Performance** | | | | |

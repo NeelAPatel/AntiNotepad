@@ -154,3 +154,16 @@ Original questions:
 6. A46-motion-timings folded into A64 (proposed) or kept separate?
 7. Gate scope check: keep exact file paths (proposed) or accept folders in a brief's Files list (dev-loop session's question)?
 8. Release markers: one after A69 (dev-loop advice) or two, after A63 and after A69 (proposed)?
+
+## 8. Corrections from A59-design-ownership-audit (user approved 2026-10-29)
+These override section 4 where they differ; the STATUS plan rows carry the final scopes.
+1. A61-theme-tokens-core defines the full token catalog up front (Settings tokens included); migrations only consume and
+   add a DESIGN row for any token they must append. Separate `Paint.WithAlpha(byte)` and `Paint.Faded(opacity)`; no tokens
+   that only rename Avalonia enums.
+2. A73-tokens-editor shares brush/pen factories; each cache keeps its own limits and keys (no "one brush cache").
+3. A68-notes-path-dedupe covers the third copy in `UI/SettingsWindow.cs`, is High tier, and puts the rule in
+   `Platform/NotesPathRules` (no dependencies), so it no longer waits on A67-model-store-split.
+4. A63-motion-tokens covers decorative tweens only.
+5. New A76-behavior-timer-names (optional, High, Cleanup): behavior timers named beside their owners, values unchanged.
+6. A62-settings-tokens adds `UI/MotionPreview.cs`.
+7. A69-ownership-map keeps `AppInfo` a leaf and adds LAYERS rows for `App/` and `Motion/`.
