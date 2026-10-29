@@ -126,7 +126,7 @@ Held until the user brings them back: "Open (needs the user)" below and the A44b
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
 | Decision: approve goals and targets | Four goals (one owner per job, less duplicated code, one central design system, look and feel identical unless you approve a change in a lab) and the success targets in the P1 plan, section 3 (reworded 2026-10-29: tokens keep today's values). Approved by the user 2026-10-29 | - | - | done |
-| A59-design-ownership-audit | Read-only Codex audit: confirm large files, draft the ownership map, sweep duplication, catalog every design value with file:line. No code. Runs alongside the Bugs block (decision 2A) | Medium | Medium | implementing |
+| A59-design-ownership-audit | Read-only Codex audit: confirm large files, draft the ownership map, sweep duplication, catalog every design value with file:line. No code. Runs alongside the Bugs block (decision 2A) | Medium | Medium | in review |
 | Decision: pick the design-system items and order | From the A59-design-ownership-audit report. P1 plan decisions (user, 2026-10-28): 4 spacing = count may not grow, watched closely; 5 no Calculator/PadWindow splits for now; 6 A46-motion-timings folds into A64-design-unify-lab; 7 exact file paths for now; 8 two release markers; 1 goals approved, 2A bugs first with A59-design-ownership-audit alongside, 3 visible changes in scope (lab-first) with A75-design-system-reference before the lab (2026-10-29). Left: which items run, after the A59 report | - | - | planned |
 
 ### Priority 2: pending work
