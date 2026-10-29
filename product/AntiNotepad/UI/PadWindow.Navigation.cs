@@ -28,8 +28,7 @@ internal sealed partial class PadWindow
                 _settingsService.Update(settings => settings.SplitSlot = settings.SplitSlot % 9 + 1);
             _right.Bind(RightNote);
         }
-        _panes.ColumnDefinitions = new ColumnDefinitions(Settings.Split ? "*,1,*" : "*,0,0");
-        _right.IsVisible = Settings.Split; _divider.IsVisible = Settings.Split;
+        ApplyPaneSplit(_panes, _leftHost, _divider, _rightHost, _right, Settings.Split);
         if (!Settings.Split && _active == _right) _active = _left;
         if (arrive != 0 && _active == _left) _left.Arrive(arrive);
         UpdateChrome();

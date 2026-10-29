@@ -296,6 +296,36 @@ internal static partial class SelfTest
         }
     }
 
+    private static bool SplitPaneClippingChecks(out string report)
+    {
+        var left = new Border { RenderTransform = new Avalonia.Media.TranslateTransform() };
+        var right = new Border { RenderTransform = new Avalonia.Media.TranslateTransform() };
+        var divider = PadWindow.CreateSplitDivider(); var grid = new Grid();
+        var (leftHost, rightHost) = PadWindow.AddPaneHosts(grid, left, divider, right);
+        PadWindow.ApplyPaneSplit(grid, leftHost, divider, rightHost, right, true);
+        grid.Measure(new Size(640, 400)); grid.Arrange(new Rect(0, 0, 640, 400));
+        var structure = grid.Children.Count == 3 && ReferenceEquals(grid.Children[0], leftHost) && ReferenceEquals(grid.Children[1], divider) && ReferenceEquals(grid.Children[2], rightHost)
+            && ReferenceEquals(leftHost.Parent, grid) && ReferenceEquals(rightHost.Parent, grid) && ReferenceEquals(leftHost.Child, left) && ReferenceEquals(rightHost.Child, right)
+            && ReferenceEquals(left.Parent, leftHost) && ReferenceEquals(right.Parent, rightHost)
+            && Grid.GetColumn(leftHost) == 0 && Grid.GetColumn(divider) == 1 && Grid.GetColumn(rightHost) == 2 && leftHost.ClipToBounds && rightHost.ClipToBounds
+            && leftHost.IsVisible && rightHost.IsVisible && right.IsVisible && divider.IsVisible;
+        var leftBounds = leftHost.Bounds; var rightBounds = rightHost.Bounds;
+        var separated = leftBounds.Width > 0 && rightBounds.Width > 0 && leftBounds.Right <= divider.Bounds.Left
+            && rightBounds.Left >= divider.Bounds.Right && divider.Bounds.Width == ChromeTokens.DividerWidth;
+        var leftMotion = (Avalonia.Media.TranslateTransform)left.RenderTransform!; var rightMotion = (Avalonia.Media.TranslateTransform)right.RenderTransform!;
+        leftMotion.X = 64; rightMotion.X = -64;
+        var towardDividerStable = leftHost.Bounds == leftBounds && rightHost.Bounds == rightBounds;
+        leftMotion.X = -64; rightMotion.X = 64;
+        var awayFromDividerStable = leftHost.Bounds == leftBounds && rightHost.Bounds == rightBounds;
+        var stationary = towardDividerStable && awayFromDividerStable && leftHost.RenderTransform is null && rightHost.RenderTransform is null;
+        PadWindow.ApplyPaneSplit(grid, leftHost, divider, rightHost, right, false);
+        var single = !leftHost.ClipToBounds && !rightHost.IsVisible && !right.IsVisible && !divider.IsVisible;
+        PadWindow.ApplyPaneSplit(grid, leftHost, divider, rightHost, right, true);
+        var restored = leftHost.ClipToBounds && rightHost.IsVisible && right.IsVisible && divider.IsVisible;
+        report = $"split host structure={structure}; bounds separated by divider={separated}; toward/away translations keep host bounds={stationary}; single view unclipped/hidden={single}; split restored={restored}";
+        return structure && separated && stationary && single && restored;
+    }
+
     private sealed record LayerRule(
         string From,
         string? To,

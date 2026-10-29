@@ -4,8 +4,8 @@ Updated: 2026-10-29
 Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 
 ## Working rules right now
-- Master chat (`docs/loop.md`, "Sessions"): next is `Master 1 - loop v2 - bugs-design-system-ownership`. The previous master,
-  "AntiNotepad task execution plan" (loop v1), was closed on 2026-10-29 with nothing in flight.
+- Master chat (`docs/loop.md`, "Sessions"): current is `Master 1 - loop v2 - bugs-design-system-ownership` (opened
+  2026-10-29). The previous master, "AntiNotepad task execution plan" (loop v1), was closed on 2026-10-29 with nothing in flight.
 - Codex is back (user, 2026-10-25): director Sol medium delegating to Luna xhigh; Claude briefs, reviews, commits.
 - Computer Use is off until the user's explicit go-ahead; live checks are done by the user by hand in the dev copy.
 - Never run `AntiNotepad.exe --quit` without `ANTINOTEPAD_DATA`: it targets the installed copy's instance.
@@ -21,6 +21,12 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- A55-split-view-clip merged into dev (2a7a482, 2026-10-29; user hand test "all passed" on checks 0-5): cause was each
+  PadView sitting directly in the split grid while NoteSwipe/arrival translate the whole PadView, so a pulled pane slid over
+  the divider. Each pane now sits in a stationary ClipToBounds host in its column; motion unchanged; right host follows
+  split. CONTRACTS `split-pane-clipping` (structural pass, pixel containment manual). Gate on dev PASS (0 warnings,
+  SELFTEST PASS, CONTRACTS 11 rows: 10 pass, 1 manual). First item run by Master 1 on loop v2. New unnumbered idea from the
+  hand test: floating-scrollbar (Plan, needs you). Next: Release marker (dev -> main, on your go), then A42c-checkbox-indent.
 - C27-session-naming merged into dev (c719c06, 2026-10-29, user request; gate on dev PASS): loop version v2; one orchestrating master named
   `Master <N> - loop v<V> - <slug>`; step sub-sessions `<ID>-<step>-<slug>` (scan/audit Haiku; build/review/test Sonnet
   medium); handover checklist and the new master's resume prompt in `docs/loop.md`. Old master closed. Next:
@@ -183,7 +189,7 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | A45-dev-build-badge | Dev badge names the exact build: branch glyph U+E0A0 (fallback ⎇), `dev/<branch>@<ISO build time>` stamped at build; short form expands on hover, tooltip always shows the full text; approved at its hand test (dev-only) | Low | Small | done |
 | C26-item-card-loop | One item card per item (Request > Findings > Plan > Go > Build > Check > Hand test > Merge), findings every tier, reproduction before bug builds, gates per item, bounds check, status card hook | Low | Small | done |
 | C27-session-naming | Master and sub-session names, loop version v2, master handover checklist and resume prompt | Low | Small | done |
-| A55-split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider (was A57) | Medium | Medium | planned |
+| A55-split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider (was A57) | Medium | Medium | done |
 | Release marker | dev -> main with a tag, on your go | - | - | planned |
 | **Reorg leftovers** | | | | |
 | A42c-checkbox-indent | Move checkbox indent logic out of `PadView` into its own Editor class, behavior-neutral | Low | Small | planned |
@@ -234,6 +240,7 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | idea: native-timer-notification | Windows notification when a timer ends (was A55) | Medium | Medium | needs you |
 | A47-hotkey-recorder | Set a hotkey in Settings by pressing the keys | Medium | Medium | planned |
 | idea: chime-picker | Choose the timer chime: native sound plus two more, stretch (was A56) | Low | Medium | needs you |
+| idea: floating-scrollbar | Modern floating scrollbar at the side, shown only while scrolling (user, 2026-10-29, A55 hand test: "a scroll bar shows, i didn't expect that"); open: hide vs fade, both split panes, existing bar styles | - | - | needs you |
 
 ## Open (needs the user)
 - Reinstall the installed copy with r6 (`tools/install.ps1` from Windows Terminal) to get the r4 window back.

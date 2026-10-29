@@ -116,8 +116,21 @@ Report: `.coord/reports/A55-split-view-clip.md`, short, with exactly these secti
 9. **Hand checks for the user**: the Plan's UI checks, plus anything new, or "None (not visible)".
 
 ## Check
-<Filled by `/review-task`: gate result lines, review verdicts, then the bounds check, one line per difference between
-Request, Plan and done: within plan | justified (why) | ask the user. "Noticed": side bugs as proposed follow-ups.>
+- **Gate (online, `tools/gate.ps1 -Task A55-split-view-clip`):** `GATE: PASS`; build 0 warnings, `SELFTEST PASS`, `CONTRACTS: 11 rows, 10 pass, 1 manual`, LAYERS 0 violations, seam 0, scope 4 files allowed. Warning: SelfTest.cs 2950 -> 2980 lines (+30).
+- **Codex fresh review** (`.coord/reports/A55-split-view-clip.review.md`): no proven findings, behavior list matches the diff; `VERDICT: accept`. Builder's own lens review also accept.
+- **Contracts:** `split-pane-clipping` added (structural checks pass; pixel containment manual), `split-divider-above-pager` still passes.
+- **Bounds check:**
+  - Files changed = the 4 in `## Files`: within plan.
+  - Stationary ClipToBounds Border host per pane, motion still on PadView, right host follows split: within plan.
+  - Left host clip off in single view (outer edges stay unclipped, per scope question 2): within plan.
+  - New internal helpers `AddPaneHosts`/`ApplyPaneSplit` shared by production and selftest: justified (the audit recommended a production helper so the selftest exercises the real construction).
+  - SelfTest.cs +30 lines over the +25 advisory: justified (one focused structural check).
+  - Extra report files (`*.lens.md`, `*.review.md`, director logs) committed: within the loop's report convention.
+- **Noticed:** none. Pixel containment, caret/selection and top blur are left to the hand test.
 
 ## Hand test
-<Filled by the sub-session: the build checked (dev badge text), and the user's result, verbatim.>
+Build checked: dev copy from this worktree (`build/dev`, PID 43556, DATA `build/testdata`, log clean); the dev badge was not read by me (no Computer Use), expected `A55 · <time>`.
+User, 2026-10-29, on checks 0-5 (verbatim): "all passed"
+
+Separate request, not part of A55 (user, same message, with a screenshot of the vertical scrollbar): "a scroll bar shows, i didn't expect that. can we get one of those modern floating scroll bars on the side thats visible only when scrolling?"
+Proposed as a new idea for the master (unnumbered until the user confirms scope): idea: floating-scrollbar (overlay scrollbar that fades in only while scrolling).

@@ -29,6 +29,7 @@ internal sealed partial class PadWindow
     private readonly StackPanel _icons = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.IconSpacing, Margin = new Thickness(0, 0, ChromeTokens.BarEdgeInset, 0), VerticalAlignment = VerticalAlignment.Center };
     private readonly Grid _panes = new() { ColumnDefinitions = new ColumnDefinitions("*,0,0") };
     private readonly Border _divider = CreateSplitDivider();
+    private Border _leftHost = null!, _rightHost = null!;
     private readonly Border _pill = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 0, ChromeTokens.PillBottomInset), CornerRadius = new CornerRadius(ChromeTokens.PillCornerRadius), Padding = new Thickness(ChromeTokens.PillInset) };
     private readonly Border _toast = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(16, 0, 16, ChromeTokens.ToastBottomMargin), CornerRadius = new CornerRadius(10), Padding = new Thickness(12, 7), IsVisible = false, MaxWidth = 380 };
     private readonly Panel _overlayHost = new() { IsVisible = false };
@@ -64,6 +65,23 @@ internal sealed partial class PadWindow
         Margin = new Thickness(0, ChromeTokens.DividerTopMargin, 0, ChromeTokens.DividerBottomMargin),
     };
 
+    internal static (Border Left, Border Right) AddPaneHosts(Grid panes, Control leftPane, Border divider, Control rightPane)
+    {
+        var leftHost = new Border { Child = leftPane, ClipToBounds = true };
+        var rightHost = new Border { Child = rightPane, ClipToBounds = true };
+        panes.Children.Add(leftHost); Grid.SetColumn(leftHost, 0);
+        panes.Children.Add(divider); Grid.SetColumn(divider, 1);
+        panes.Children.Add(rightHost); Grid.SetColumn(rightHost, 2);
+        return (leftHost, rightHost);
+    }
+
+    internal static void ApplyPaneSplit(Grid panes, Border leftHost, Border divider, Border rightHost, Control rightPane, bool split)
+    {
+        panes.ColumnDefinitions = new ColumnDefinitions(split ? "*,1,*" : "*,0,0");
+        leftHost.ClipToBounds = split;
+        rightHost.IsVisible = rightPane.IsVisible = divider.IsVisible = split;
+    }
+
     internal static void AddChromeLayers(Panel root, Panel topLayer, Panel bottomLayer, Control toast, Control pill, Control floatPager)
     {
         root.Children.Add(topLayer);
@@ -91,9 +109,8 @@ internal sealed partial class PadWindow
         _left = NewPane();
         _right = NewPane();
         _active = _left;
-        _panes.Children.Add(_left);
-        Grid.SetColumn(_divider, 1); _panes.Children.Add(_divider);
-        Grid.SetColumn(_right, 2); _panes.Children.Add(_right);
+        (_leftHost, _rightHost) = AddPaneHosts(_panes, _left, _divider, _right);
+        ApplyPaneSplit(_panes, _leftHost, _divider, _rightHost, _right, Settings.Split);
         Grid.SetRow(_panes, 1);
         _content.Children.Add(_panes);
 

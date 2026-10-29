@@ -73,6 +73,12 @@ internal static partial class SelfTest
                 () => RunExistingCheck(SplitDividerFullHeightChecks, "split divider full height: "),
                 null),
             new(
+                "split-pane-clipping",
+                "In split view each pane is clipped at its own column edge by a stationary host; the right host hides in single view.",
+                "A55-split-view-clip",
+                () => RunExistingCheck(SplitPaneClippingChecks, "split pane clipping: "),
+                "Dev copy: repeat sideways swipes toward the divider; no text, caret, selection, or decoration pixels cross it."),
+            new(
                 "shortened-link-opens",
                 "Any URL opens on Ctrl+left-click once; plain text shows Hand only with Control, shortened glyphs always show Hand, and a plain click places the caret.",
                 "A54-link-hover-click",
