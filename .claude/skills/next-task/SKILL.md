@@ -11,7 +11,8 @@ Steps 1-4 of `docs/loop.md`, run in the master session. After the user says go, 
 ## 1. Pick
 Read `.coord/STATUS.md` "Plan (user order, ...)". Take the named item, or the first one not done in plan order. Stop and ask
 if the next row is a release marker (dev -> main needs the user's go), a `Decision:` row, `proposed`/`needs you`, or needs
-the user (lab-first design, "Open"). The row's Scope cell is the brief's scope: anything more is a new plan row with its own
+the user (lab-first design, "Open"). An unnumbered `idea:`/`step:` row needs the user to confirm its scope first; on that
+confirmation assign the next free number (`docs/loop.md`, "Numbering") and rename the rows. The row's Scope cell is the brief's scope: anything more is a new plan row with its own
 ID (`docs/loop.md`). Set the row's State cell to `briefing`, and keep that cell current at every later step.
 
 ## 2. Branch, worktree, brief

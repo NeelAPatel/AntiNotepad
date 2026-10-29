@@ -19,10 +19,12 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- C23-idea-numbering (user, 2026-10-29): numbers only on user confirmation; A53+ dissolved; Plan redrawn as unnumbered
+  ideas with steps (design-tokens, design-unify, code-ownership, notes-folder-move-flow, ...). Next: user confirms ideas.
 - A52-move-old-folder-rename-warning merged into dev (3ced024, 2026-10-29; user hand test passed 3 of 3): cause was a trailing
   separator in the source path; `Move` now returns an explicit retention outcome and Settings shows one truthful message.
   New CONTRACTS row `notes-move-renames-old-folder`. Gate on dev PASS (0 warnings, SELFTEST PASS, CONTRACTS 7 rows: 6 pass,
-  1 manual, seam 0). Follow-ups are steps of A78-notes-folder-move-flow. Next: re-ID the design-system rows (user).
+  1 manual, seam 0). Follow-ups are steps of idea notes-folder-move-flow.
 - C22-roadmap-step-rows (user, 2026-10-29): one ID = one idea, work toward it = lettered steps under it; A52's six
   follow-ups folded into A78-notes-folder-move-flow (steps a-f); `/roadmap` indents steps. Merged 5887137.
 - C20-branch-worktree-loop (user, 2026-10-29): every item runs on `feat/<ID-slug>` in `.claude/worktrees/<ID-slug>`; dev gets
@@ -123,79 +125,75 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Native-window work (A32/A34) parked; any retry must not change the window's frame styles and
   goes lab-first. A34 (lab) was dropped: thick native border, bars broken in all three styles.
 
-## Plan (user order, 2026-10-28)
+## Plan (user order, 2026-10-29)
 Rendered by `/roadmap` (Claude) or `pwsh -NoProfile -File tools/roadmap.ps1` (writes and opens `.coord/roadmap.html`).
-Format rules (the script parses this section): `###` = priority; a row with only a bold first cell = block; Item is an
-`<ID>-<slug>`, `Decision: ...` or `Release marker`; rows run in the order listed (the script numbers them). Every ID is one
-idea; its lettered step rows (`A78a-...`) sit right under it, one loop run each (user, 2026-10-29). State: `planned`, `proposed` (awaits the
-user), `needs you`, a `docs/loop.md` state (`briefing` ... `hand-tested`), `done` or `dropped`. `/next-task` and
-`/merge-task` keep State current.
-Held until the user brings them back: "Open (needs the user)" below and the A44b-interop-guards leftover hand checks
-(Explorer restart, tray right-click menu). Full P1 plan: `.coord/tasks/P1-project-reevaluation-plan.md`.
+Format (the script parses this section): `###` = priority; a row with only a bold first cell = block; Item is a numbered
+`<ID>-<slug>` (confirmed by the user), an unnumbered `idea: <slug>` with its `step: <slug>` rows right under it, a
+`Decision: ...` or `Release marker`. Rows run in the order listed; the script numbers them by position. Numbering rules:
+`docs/loop.md` ("Numbering"). A53 and later from before 2026-10-29 were dissolved (user); the "was" notes below point to
+old reports. State: `planned`, `needs you`, a `docs/loop.md` state (`briefing` ... `hand-tested`), `done` or `dropped`.
+`/next-task` and `/merge-task` keep State current. Held until the user brings them back: "Open (needs the user)" and the
+A44b-interop-guards leftover hand checks (Explorer restart, tray right-click menu). P1 background:
+`.coord/tasks/P1-project-reevaluation-plan.md`, `.coord/reports/A59-design-ownership-audit.md` (old ID).
 
-### Priority 1: re-evaluate the project
-| Item | Scope | Tier | Effort | State |
-|---|---|---|---|---|
-| Decision: approve goals and targets | Four goals (one owner per job, less duplicated code, one central design system, look and feel identical unless you approve a change in a lab) and the success targets in the P1 plan, section 3 (reworded 2026-10-29: tokens keep today's values). Approved by the user 2026-10-29 | - | - | done |
-| A59-design-ownership-audit | Read-only Codex audit: confirm large files, draft the ownership map, sweep duplication, catalog every design value with file:line. No code. Report `.coord/reports/A59-design-ownership-audit.md`; design review accept-with-followup; 7 corrections applied (user, 2026-10-29) | Medium | Medium | done |
-| Decision: pick the design-system items and order | From the A59-design-ownership-audit report. P1 plan decisions (user, 2026-10-28): 4 spacing = count may not grow, watched closely; 5 no Calculator/PadWindow splits for now; 6 A46-motion-timings folds into A64-design-unify-lab; 7 exact file paths for now; 8 two release markers; 1 goals approved, 2A bugs first with A59-design-ownership-audit alongside, 3 visible changes in scope (lab-first) with A75-design-system-reference before the lab (2026-10-29). After the A59 report the user approved all 7 corrections (2026-10-29); all design-system rows are now `planned` | - | - | done |
-
-### Priority 2: pending work
+### Pending work
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
 | **Bugs** | | | | |
-| A52-move-old-folder-rename-warning | After a notes move the old folder is not renamed and the message is wrong; fix the rename in `NotesLocation.Move` and the message | High | Small | done |
-| A58-split-divider-height | Split-view divider stops short of the window's bottom edge; make it full height | Low | Small | planned |
-| A54-link-hover-click | Check that long (shortened) links open on Ctrl+click with a hand cursor; making short links clickable is a separate lab item | Low | Small | planned |
-| A57-split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider | Medium | Medium | planned |
+| idea: split-divider-height | Split-view divider stops short of the window's bottom edge; make it full height (was A58) | Low | Small | needs you |
+| idea: link-hover-click | Check that long (shortened) links open on Ctrl+click with a hand cursor; short links clickable is a separate lab idea (was A54) | Low | Small | needs you |
+| idea: split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider (was A57) | Medium | Medium | needs you |
 | Release marker | dev -> main with a tag, on your go | - | - | planned |
 | **Reorg leftovers** | | | | |
 | A42c-checkbox-indent | Move checkbox indent logic out of `PadView` into its own Editor class, behavior-neutral | Low | Small | planned |
 | A42d-list-commands | Move list commands out of `PadView` into its own Editor class, behavior-neutral | Medium | Medium | planned |
-| **Design system and ownership (from Priority 1)** | | | | |
-| A60-design-token-scan | Gate script that counts hard-coded design values (radius, fonts, colors, shadows, durations) per file and fails if a count rises. No product change | Low | Small | planned |
-| A61-theme-tokens-core | Define the full token catalog from the A59 inventory in `Theme/` at today's values, Settings tokens included; later items only consume (and add a DESIGN row for any token they must append). Two color helpers: `WithAlpha(byte)` and `Faded(opacity)`. No call sites changed | Low | Small | planned |
-| A71-tokens-pad-chrome | Pad window chrome (toast, card, pill, divider) uses the tokens; looks identical | Medium | Medium | planned |
-| A72-tokens-overlays | Menu, search and help overlays and `Kit` use the tokens; looks identical | Medium | Medium | planned |
-| A73-tokens-editor | Editor renderers and colorizers use the tokens; brush/pen factories shared, each cache keeps its own limits and keys (no cache-policy change); looks identical | Medium | Medium | planned |
-| A62-settings-tokens | Settings window, its parts and the motion preview (`UI/MotionPreview.cs`) use the tokens; looks identical | Medium | Medium | planned |
-| A63-motion-tokens | One named duration per animation role (tweens only) at today's values, easing kept as is; timing identical. Behavior timers are A76-behavior-timer-names | Medium | Small | planned |
-| Release marker | dev -> main after the look-identical work (proposed second marker), on your go | - | - | planned |
-| A75-design-system-reference | Claude Design System artifact built from today's real token values, plus a Design canvas comparing proposed radius, type and shadow options with today's. No code; final picks happen in A64-design-unify-lab | Low | Small | planned |
-| A64-design-unify-lab | Lab build only: today's look next to a proposed radius scale, type ramp, shadow tiers and Windows 11 motion timings (absorbs A46-motion-timings); you pick values | Medium | Medium | planned |
-| A65a-radius-scale | Apply the corner-radius scale you picked in A64-design-unify-lab; visible change | Medium | Small | planned |
-| A65b-type-ramp | Apply the font-size ramp you picked in A64-design-unify-lab; visible change | Medium | Small | planned |
-| A65c-shadow-tiers | Apply the shadow tiers you picked in A64-design-unify-lab; visible change | Medium | Small | planned |
-| A65d-motion-timings | Apply the animation durations you picked in A64-design-unify-lab; visible change | Medium | Small | planned |
-| A66-ui-kit-merge | One control kit: Settings' private controls merge into `Kit`; `Material()` and `Ago()` move to their owners | Medium | Medium | planned |
-| A67-model-store-split | Move `Note`, `Settings`, `StoreData` and the search types out of `Model/Store.cs` into their own files, verbatim | Low | Small | planned |
-| A70-selftest-split | Split `SelfTest.cs` (2,637 lines) into one file per area, verbatim; includes the A52 notes-move checks | Low | Small | planned |
-| A68-notes-path-dedupe | One same-or-nested path rule in `Platform/NotesPathRules` (no dependencies) replacing the three copies in `NotesSession`, `NotesLocation` and `SettingsWindow`; each caller keeps its error handling; also the `KeepOldCopy` app-home comparison (from A52); CONTRACTS path row | High | Small | planned |
-| A69-ownership-map | `docs/architecture.md` owner per responsibility; `NotesSession` and `RuntimeLog` into `App/` (`AppInfo` stays a leaf); LAYERS rows: nothing but Program references `App/` except `AppInfo`, Model/Platform never reference Motion, Motion never references UI/Editor | Low | Small | planned |
+| **Design system and ownership** | | | | |
+| idea: design-tokens | One source of truth for every design value (radius, fonts, colors, shadows, motion durations); the app looks and moves exactly as today | - | - | needs you |
+| step: token-scan | Gate check that counts hard-coded design values per file and fails if a count rises; no product change | Low | Small | needs you |
+| step: theme-tokens-core | Define the full token catalog in `Theme/` at today's values; `WithAlpha(byte)` and `Faded(opacity)` kept separate; no call sites changed | Low | Small | needs you |
+| step: tokens-pad-chrome | Pad window chrome (toast, card, pill, divider) uses the tokens; looks identical | Medium | Medium | needs you |
+| step: tokens-overlays | Menu, search and help overlays and `Kit` use the tokens; looks identical | Medium | Medium | needs you |
+| step: tokens-editor | Editor drawing uses the tokens; shared brush/pen factories, each cache keeps its limits; looks identical | Medium | Medium | needs you |
+| step: tokens-settings | Settings window, its parts and the motion preview use the tokens; looks identical | Medium | Medium | needs you |
+| step: motion-tokens | One named duration per animation role at today's values; timing identical | Medium | Small | needs you |
+| Release marker | dev -> main after the look-identical work, on your go | - | - | planned |
+| idea: design-unify | You choose a unified look (radius scale, font sizes, shadows, motion timings) and it is applied; nothing changes without your lab approval | - | - | needs you |
+| step: design-reference | Claude Design System page from today's values plus a canvas comparing options; no code | Low | Small | needs you |
+| step: unify-lab | Lab build: today's look next to the proposed scales and Windows 11 timings; you pick | Medium | Medium | needs you |
+| step: apply-radius | Apply the corner-radius scale you picked | Medium | Small | needs you |
+| step: apply-type | Apply the font-size ramp you picked | Medium | Small | needs you |
+| step: apply-shadows | Apply the shadow tiers you picked | Medium | Small | needs you |
+| step: apply-motion | Apply the animation timings you picked | Medium | Small | needs you |
+| idea: code-ownership | Every responsibility has one owner and no copies; behavior unchanged | - | - | needs you |
+| step: store-split | Move `Note`, `Settings`, `StoreData` and the search types out of `Model/Store.cs`, verbatim | Low | Small | needs you |
+| step: selftest-split | Split `SelfTest.cs` into one file per area (incl. the notes-move checks), verbatim | Low | Small | needs you |
+| step: notes-path-dedupe | One same-or-nested path rule in `Platform/` replacing the copies in `NotesSession`, `NotesLocation`, `SettingsWindow` and `KeepOldCopy`; CONTRACTS row | High | Small | needs you |
+| step: ui-kit-merge | One control kit: Settings' private controls merge into `Kit`; `Material()` and `Ago()` move to their owners | Medium | Medium | needs you |
+| step: ownership-map | `docs/architecture.md` owner per responsibility; `NotesSession`, `RuntimeLog` into `App/`; LAYERS rows for `App/` and `Motion/` | Low | Small | needs you |
+| step: behavior-timer-names | Optional: name save, debounce, toast and taskbar timers beside their owners, values unchanged | High | Small | needs you |
 | **Cleanup** | | | | |
 | C14-a38-audit-branch | Merge the A38 MVVM audit doc into dev or delete `feat/A38-mvvm-audit` | Low | Small | planned |
-| C15-worktree-branch-cleanup | Remove investigator worktrees and finished `reorg/*` branches (local and origin) | Low | Small | planned |
+| C15-worktree-branch-cleanup | Remove leftover worktrees and finished `reorg/*` branches (local and origin) | Low | Small | planned |
 | C16-archive-finished-sessions | Archive the finished A39-A44 Claude sessions | Low | Small | planned |
-| A76-behavior-timer-names | Optional: name behavior timers (save, debounce, toast, taskbar) as constants beside their owners, values unchanged; no scheduler change | High | Small | planned |
-| C18-tag-scheme | Propose one tag naming scheme (releases, archives, proposals, baselines) and a dev -> main release checklist that re-checks gate rules; doc only, no retagging | Low | Small | proposed |
+| C18-tag-scheme | One tag naming scheme and a dev -> main release checklist that re-checks gate rules; doc only | Low | Small | needs you |
 | Release marker | dev -> main with a tag, on your go | - | - | planned |
 | **Performance** | | | | |
-| A74-settings-thread-count | Find why the Settings window runs about 90 threads; report, fix only if cheap | Low | Small | planned |
+| idea: settings-thread-count | Find why the Settings window runs about 90 threads; report, fix only if cheap (was A74) | Low | Small | needs you |
 | A49-large-note-perf | Measure then reduce typing lag in a 6,000-line note; one change at a time (ideas in Backlog) | Medium | Large | planned |
 | **Features and polish (lab-first where visible)** | | | | |
-| A78-notes-folder-move-flow | Choosing and moving the notes folder is clear and safe: check the folder before moving, show what will happen, allow undo. Steps below, each one loop run; steps a and f follow A68-notes-path-dedupe | High | Large | planned |
-| A78a-path-validator | Step: one shared Platform check for a chosen folder; blocks invalid, same, nested, not writable, already has notes; warns new, non-empty, network, low space, cloud-synced | High | Medium | planned |
-| A78b-editable-path-field | Step: editable path box plus Browse in Settings, validation line under it, Migrate enabled only when valid or warned; lab mock first | Medium | Medium | planned |
-| A78c-move-preview | Step: before moving, show note count, size and what happens to the old folder | Medium | Small | planned |
-| A78d-move-undo | Step: "Move back" after a move, using the kept old copy | High | Medium | planned |
-| A78e-picker-last-location | Step: the folder picker opens at the last picked folder | Low | Small | planned |
-| A78f-single-result-message | Step: Settings shows the move's own result message instead of rebuilding it (A52 design-review follow-up) | Low | Small | planned |
+| idea: notes-folder-move-flow | Choosing and moving the notes folder is clear and safe; first step follows code-ownership's notes-path-dedupe | - | - | needs you |
+| step: path-validator | One shared Platform check for a chosen folder: blocks invalid, same, nested, not writable, has notes; warns new, non-empty, network, low space, cloud-synced | High | Medium | needs you |
+| step: editable-path-field | Editable path box plus Browse in Settings with a validation line; Migrate enabled only when valid or warned; lab mock first | Medium | Medium | needs you |
+| step: move-preview | Before moving, show note count, size and what happens to the old folder | Medium | Small | needs you |
+| step: move-undo | "Move back" after a move, using the kept old copy | High | Medium | needs you |
+| step: picker-last-location | The folder picker opens at the last picked folder | Low | Small | needs you |
+| step: single-result-message | Settings shows the move's own result message instead of rebuilding it | Low | Small | needs you |
 | A51-recovered-folder-always-open | Recovered-notes folder always exists and its Open button always works | Low | Small | planned |
 | A48-answers-toggle-clarity | Rename the "Answers" toggle to say what it does, and apply it live | Low | Small | planned |
-| A45-dev-build-badge | Dev badge shows the live task, for example "dev · A44c" | Low | Small | planned |
-| A55-native-timer-notification | Windows notification when a timer ends | Medium | Medium | planned |
+| A45-dev-build-badge | Dev badge shows the live task, for example "dev · A52" | Low | Small | planned |
+| idea: native-timer-notification | Windows notification when a timer ends (was A55) | Medium | Medium | needs you |
 | A47-hotkey-recorder | Set a hotkey in Settings by pressing the keys | Medium | Medium | planned |
-| A56-chime-picker | Choose the timer chime: native sound plus two more (stretch) | Low | Medium | planned |
+| idea: chime-picker | Choose the timer chime: native sound plus two more, stretch (was A56) | Low | Medium | needs you |
 
 ## Open (needs the user)
 - Reinstall the installed copy with r6 (`tools/install.ps1` from Windows Terminal) to get the r4 window back.
@@ -204,6 +202,7 @@ Held until the user brings them back: "Open (needs the user)" below and the A44b
   for antinotepad"): publishing, GitHub repo, license, signing, version label, installer.
 
 ## Backlog (someday)
+IDs A53 and later below are dissolved (user, 2026-10-29); the Plan holds those as unnumbered ideas.
 - A44a hand test (user, 2026-10-28), proposed backlog IDs (parent may renumber):
   - A54-link-hover-click (open, blocks A44a sign-off decision): Ctrl+click on a link does nothing and links show no hand cursor. Only shortened URLs (over 34 chars, caret off the line) become `LinkGenerator` elements with Hand and Pressed (`Editor/Elements.cs`); short URLs are plain colored text. Not changed by A44a (its diff is only the OpenUrl name); confirm on the dev baseline.
   - A55-native-timer-notification: a native Windows popup notification when a timer ends.

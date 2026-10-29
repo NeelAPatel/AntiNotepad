@@ -39,11 +39,13 @@ Rules:
   models and routing inside the run stay as in `docs/agents.md`. The master never launches Codex directly.
 - The master manages the roadmap and opens every update with a status card: `<ID-slug> | <loop step>`, a one-line step
   strip, the goal (max 2 lines), what is happening now, and what waits on the user.
-- One ID = one idea (user, 2026-10-28/29). An ID is created only as a STATUS plan row whose Scope says what the idea is.
-  Work toward that idea is lettered steps right under it (`A78a-<slug>`, `A78b-<slug>`), each one loop run with its own
-  brief, branch and Scope cell; a small idea is a single run with no steps. More work toward the same idea = a new step;
-  a different idea = a new ID. Follow-ups found in review become steps of the idea they serve, not new IDs. Applies to
-  all items, old and new. In chat and reports, mention an item as `<ID>-<slug>` plus its scope, never a bare ID or a range.
+- **Numbering (user, 2026-10-29).** Giving a number brings an item into existence: only the user's confirmation of an
+  idea and its scope assigns one. Until then it is an unnumbered plan row `idea: <slug>` with `step: <slug>` rows under it
+  (or a Backlog line). One ID = one idea; its steps are lettered in run order, `A53a-<slug>`, `A53b-<slug>`, each one loop
+  run with its own brief and branch, lettered when confirmed. A small idea is a single run with no steps; more than about
+  8 steps means split the idea. Review follow-ups become steps of the idea they serve. A numbers continue from A53 (A53 and
+  later from before 2026-10-29 were dissolved; old reports keep their old meaning), C numbers from C23. A number is never
+  reused, even if dropped. Always write `<ID>-<slug>` plus its scope, never a bare ID or a range.
 - The plan table: `/roadmap` (Claude) or `pwsh -NoProfile -File tools/roadmap.ps1` (opens `.coord/roadmap.html`, which a
   Claude hook regenerates on every STATUS edit). `/next-task` and `/merge-task` keep each row's State current.
 - Release markers in the STATUS plan: the master asks the user before tagging dev -> main. Only on the user's go.
