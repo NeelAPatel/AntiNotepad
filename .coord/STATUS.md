@@ -19,9 +19,16 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- A54-link-hover-click merged into dev (f32b92a, 2026-10-29; user hand test passed): cause was `PadView.OnViewMoved`
+  resetting the cursor to the I-beam after AvaloniaEdit set the hand; Ctrl+click now handled in the tunnel press. User widened
+  scope in r3: every URL (short, expanded on the caret line, Shorten links off) is Ctrl+clickable. CONTRACTS
+  `shortened-link-opens`. Gate on dev PASS (0 warnings, SELFTEST PASS, CONTRACTS 9 rows: 8 pass, 1 manual). Next: A55-split-view-clip.
 - A53-split-divider-height merged into dev (7299e8b, 2026-10-29): after hand-test rounds (full height, mirrored gap) the user
   kept the divider ending above the pager strip; merged as a guard, no visible change: CONTRACTS `split-divider-above-pager`.
   Gate on dev PASS (0 warnings, SELFTEST PASS, CONTRACTS 8 rows: 7 pass, 1 manual). Next: A54-link-hover-click.
+- C24-roadmap-artifact (user, 2026-10-29): `/roadmap` widget replaced by a roadmap Artifact
+  (https://claude.ai/artifact/VU8guxUCfxJTSZ1MxNaqyy) that a Claude Stop hook republishes when the Plan changes (main
+  checkout only). On `feat/C24-roadmap-artifact` (965af9e), pushed. Next: user approves the merge into dev.
 - C23-idea-numbering (user, 2026-10-29): numbers only on user confirmation; A53+ dissolved; Plan redrawn as unnumbered
   ideas with steps (design-tokens, design-unify, code-ownership, notes-folder-move-flow, ...). Next: user confirms ideas.
 - A52-move-old-folder-rename-warning merged into dev (3ced024, 2026-10-29; user hand test passed 3 of 3): cause was a trailing
@@ -129,7 +136,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   goes lab-first. A34 (lab) was dropped: thick native border, bars broken in all three styles.
 
 ## Plan (user order, 2026-10-29)
-Rendered by `/roadmap` (Claude) or `pwsh -NoProfile -File tools/roadmap.ps1` (writes and opens `.coord/roadmap.html`).
+Rendered as the roadmap Artifact (`tools/roadmap.url`; `/roadmap` opens it), republished by a Claude Stop hook on change.
 Format (the script parses this section): `###` = priority; a row with only a bold first cell = block; Item is a numbered
 `<ID>-<slug>` (confirmed by the user), an unnumbered `idea: <slug>` with its `step: <slug>` rows right under it, a
 `Decision: ...` or `Release marker`. Rows run in the order listed; the script numbers them by position. Numbering rules:
@@ -144,7 +151,7 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 |---|---|---|---|---|
 | **Bugs** | | | | |
 | A53-split-divider-height | Split-view divider stops short of the window's bottom edge; make it full height (was A58) | Low | Small | done |
-| A54-link-hover-click | Check that long (shortened) links open on Ctrl+click with a hand cursor; short links clickable is a separate lab idea (was A54) | Low | Small | planned |
+| A54-link-hover-click | Every URL opens on Ctrl+click; shortened links always show a hand, other URLs show it while Ctrl is held (widened in r3, user) | Low | Small | done |
 | A55-split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider (was A57) | Medium | Medium | planned |
 | Release marker | dev -> main with a tag, on your go | - | - | planned |
 | **Reorg leftovers** | | | | |
@@ -207,7 +214,7 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 ## Backlog (someday)
 IDs A53 and later below are dissolved (user, 2026-10-29); the Plan holds those as unnumbered ideas.
 - A44a hand test (user, 2026-10-28), proposed backlog IDs (parent may renumber):
-  - A54-link-hover-click (open, blocks A44a sign-off decision): Ctrl+click on a link does nothing and links show no hand cursor. Only shortened URLs (over 34 chars, caret off the line) become `LinkGenerator` elements with Hand and Pressed (`Editor/Elements.cs`); short URLs are plain colored text. Not changed by A44a (its diff is only the OpenUrl name); confirm on the dev baseline.
+  - A54-link-hover-click (done, merged f32b92a): Ctrl+click on a link does nothing and links show no hand cursor. Only shortened URLs (over 34 chars, caret off the line) become `LinkGenerator` elements with Hand and Pressed (`Editor/Elements.cs`); short URLs are plain colored text. Not changed by A44a (its diff is only the OpenUrl name); confirm on the dev baseline.
   - (old A55, now idea native-timer-notification): a native Windows popup notification when a timer ends.
   - (old A56, now idea chime-picker) (stretch): chime picker, native sound plus two more.
   - (old A57, now A55-split-view-clip) (after current tasks): in split view, scrolling text overlaps across the divider; the divider should crop the visual of each pane.

@@ -65,7 +65,13 @@ internal static partial class SelfTest
                 "The split divider ends just above the pager strip whether or not the pill shows, and the pager layers above it.",
                 "A53-split-divider-height",
                 () => RunExistingCheck(SplitDividerFullHeightChecks, "split divider full height: "),
-                null)
+                null),
+            new(
+                "shortened-link-opens",
+                "Any URL opens on Ctrl+left-click once; plain text shows Hand only with Control, shortened glyphs always show Hand, and a plain click places the caret.",
+                "A54-link-hover-click",
+                () => RunExistingCheck(ShortenedLinkChecks, "shortened link: "),
+                "In the dev copy, test short, shortened, caret-line and Shorten links off URLs: Ctrl+left opens once, plain click places the caret; plain text shows Hand only with Control, shortened glyphs always show Hand. Check wrapped/scrolled links and unchanged checkboxes/result chips.")
         ];
 
         var passed = 0;

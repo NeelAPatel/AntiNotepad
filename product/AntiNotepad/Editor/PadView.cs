@@ -562,6 +562,8 @@ internal sealed class PadView : Grid
     {
         var view = Editor.TextArea.TextView;
         var point = e.GetPosition(view);
+        if (TryPressLink(GlyphAt(view, point), e)) return;
+        if (TryPressUrl(PlainUrlAt(view, point), e, Platform.DesktopPlatform.OpenUrl)) return;
         var chip = _results.Chips.FirstOrDefault(c => c.Kind != "error" && c.Bounds.Contains(point));
         if (chip.Bounds.Width <= 0) return;
         e.Handled = true;
@@ -579,8 +581,70 @@ internal sealed class PadView : Grid
         var view = Editor.TextArea.TextView;
         var point = e.GetPosition(view);
         var over = _results.Chips.Any(c => c.Kind != "error" && c.Bounds.Contains(point));
-        view.Cursor = over ? new Cursor(StandardCursorType.Hand) : new Cursor(StandardCursorType.Ibeam);
+        view.Cursor = over || GlyphAt(view, point) is { Hand: true }
+            || (e.KeyModifiers.HasFlag(KeyModifiers.Control) && PlainUrlAt(view, point) is not null)
+            ? new Cursor(StandardCursorType.Hand) : new Cursor(StandardCursorType.Ibeam);
         ToolTip.SetTip(view, over ? (Mode == NoteMode.Timer ? "Start / pause" : "Click to copy") : null);
+    }
+
+    internal static GlyphElement? GlyphAt(TextView view, Point point)
+    {
+        if (!view.VisualLinesValid || !new Rect(view.Bounds.Size).Contains(point)) return null;
+        var position = point + view.ScrollOffset;
+        var line = view.GetVisualLineFromVisualTop(position.Y);
+        if (line is null) return null;
+        foreach (var glyph in line.Elements.OfType<GlyphElement>())
+        {
+            // A replacement glyph is indivisible, including when the surrounding text wraps.
+            var textLine = line.GetTextLine(glyph.VisualColumn);
+            var left = line.GetTextLineVisualXPosition(textLine, glyph.VisualColumn);
+            var right = line.GetTextLineVisualXPosition(textLine, glyph.VisualColumn + glyph.VisualLength);
+            var top = line.GetTextLineVisualYPosition(textLine, VisualYPosition.LineTop);
+            var bottom = line.GetTextLineVisualYPosition(textLine, VisualYPosition.LineBottom);
+            if (position.X >= left && position.X < right && position.Y >= top && position.Y < bottom) return glyph;
+        }
+        return null;
+    }
+
+    internal static string? PlainUrlAt(TextView view, Point point)
+    {
+        if (!view.VisualLinesValid || !new Rect(view.Bounds.Size).Contains(point)
+            || GlyphAt(view, point) is not null) return null;
+        var position = point + view.ScrollOffset;
+        var line = view.GetVisualLineFromVisualTop(position.Y);
+        if (line is null || position.Y < line.VisualTop || position.Y >= line.VisualTop + line.Height) return null;
+        var hit = view.GetPositionFloor(position);
+        if (hit is null) return null;
+        var textLine = line.GetTextLine(hit.Value.VisualColumn);
+        var left = line.GetTextLineVisualXPosition(textLine, textLine.FirstTextSourceIndex);
+        var right = line.GetTextLineVisualXPosition(textLine, textLine.FirstTextSourceIndex + textLine.Length);
+        if (position.X < left || position.X >= right) return null;
+        var doc = view.Document;
+        var offset = doc.GetOffset(hit.Value.Location);
+        var documentLine = doc.GetLineByOffset(offset);
+        foreach (Match match in LinkGenerator.Url.Matches(doc.GetText(documentLine)))
+            if (offset >= documentLine.Offset + match.Index && offset < documentLine.Offset + match.Index + match.Length)
+                return match.Value;
+        return null;
+    }
+
+    internal static bool TryPressUrl(string? url, PointerPressedEventArgs e, Action<string> open)
+    {
+        if (e.Handled || url is null || !e.KeyModifiers.HasFlag(KeyModifiers.Control)
+            || !e.GetCurrentPoint(null).Properties.IsLeftButtonPressed) return false;
+        e.Handled = true;
+        open(url);
+        return true;
+    }
+
+    internal static bool TryPressLink(GlyphElement? glyph, PointerPressedEventArgs e)
+    {
+        if (e.Handled || glyph is not { IsLink: true, Pressed: not null }
+            || !e.KeyModifiers.HasFlag(KeyModifiers.Control)
+            || !e.GetCurrentPoint(null).Properties.IsLeftButtonPressed) return false;
+        e.Handled = true;
+        glyph.Pressed(e);
+        return true;
     }
 
     private void OnCaretMoved()

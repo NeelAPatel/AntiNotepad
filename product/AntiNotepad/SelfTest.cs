@@ -3,6 +3,7 @@ using AntiNotepad.Platform;
 using AntiNotepad.Theme;
 using AntiNotepad.UI;
 using Avalonia.Controls;
+using Avalonia;
 using Avalonia.Platform;
 using System.Diagnostics;
 using System.Reflection;
@@ -130,6 +131,132 @@ internal static partial class SelfTest
 
         Console.WriteLine(failures.Count == 0 ? "SELFTEST PASS" : "SELFTEST FAIL\n" + string.Join("\n", failures));
         return failures.Count == 0 ? 0 : 1;
+    }
+
+    private static bool ShortenedLinkChecks(out string report)
+    {
+        // Exercise the glyph's real press hook without a formatter, window, or browser.
+        // Layout needs a platform formatter; dispatch stays headless and uses a stub opener.
+        var glyph = (Editor.GlyphElement)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(Editor.GlyphElement));
+        var hook = typeof(Editor.GlyphElement).GetMethod("OnPointerPressed", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var calls = 0;
+        var sawControl = false;
+        typeof(Editor.GlyphElement).GetProperty("Pressed")!.SetValue(glyph,
+            (Action<Avalonia.Input.PointerPressedEventArgs>)(e =>
+            {
+                calls++;
+                sawControl = e.KeyModifiers.HasFlag(Avalonia.Input.KeyModifiers.Control);
+                if (sawControl) e.Handled = true;
+            }));
+        using var pointer = new Avalonia.Input.Pointer(1, Avalonia.Input.PointerType.Mouse, true);
+        Avalonia.Input.PointerPressedEventArgs Press(bool left, Avalonia.Input.KeyModifiers modifiers) =>
+            new(null, pointer, null!, default, 0,
+                new Avalonia.Input.PointerPointProperties(
+                    left ? Avalonia.Input.RawInputModifiers.LeftMouseButton : Avalonia.Input.RawInputModifiers.RightMouseButton,
+                    left ? Avalonia.Input.PointerUpdateKind.LeftButtonPressed : Avalonia.Input.PointerUpdateKind.RightButtonPressed),
+                modifiers);
+        var control = Press(true, Avalonia.Input.KeyModifiers.Control);
+        hook.Invoke(glyph, [control]);
+        var controlPass = calls == 1 && sawControl && control.Handled;
+        var plain = Press(true, Avalonia.Input.KeyModifiers.None);
+        hook.Invoke(glyph, [plain]);
+        var plainPass = calls == 2 && !sawControl && !plain.Handled;
+        hook.Invoke(glyph, [Press(false, Avalonia.Input.KeyModifiers.Control)]);
+        var rightPass = calls == 2;
+        typeof(Editor.GlyphElement).GetProperty("IsLink")!.SetValue(glyph, true);
+        calls = 0;
+        var tunnel = Press(true, Avalonia.Input.KeyModifiers.Control);
+        var tunnelPass = Editor.PadView.TryPressLink(glyph, tunnel) && tunnel.Handled && calls == 1;
+        hook.Invoke(glyph, [tunnel]);
+        var oncePass = calls == 1 && !Editor.PadView.TryPressLink(glyph, tunnel);
+        var plainTunnel = Press(true, Avalonia.Input.KeyModifiers.None);
+        var tunnelPlainPass = !Editor.PadView.TryPressLink(glyph, plainTunnel) && !plainTunnel.Handled && calls == 1;
+        var tunnelRightPass = !Editor.PadView.TryPressLink(glyph, Press(false, Avalonia.Input.KeyModifiers.Control)) && calls == 1;
+        var missingPass = !Editor.PadView.TryPressLink(null, Press(true, Avalonia.Input.KeyModifiers.Control));
+        typeof(Editor.GlyphElement).GetProperty("IsLink")!.SetValue(glyph, false);
+        var nonLinkPass = !Editor.PadView.TryPressLink(glyph, Press(true, Avalonia.Input.KeyModifiers.Control)) && calls == 1;
+
+        // Initialize only windowless layout services; no app lifetime, window, or shell opener.
+        AppBuilder.Configure<Application>().UsePlatformDetect().SetupWithoutStarting();
+        var editor = new AvaloniaEdit.TextEditor();
+        var pad = (Editor.PadView)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(Editor.PadView));
+        typeof(Editor.PadView).GetField("<Editor>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(pad, editor);
+        var settings = new Settings { ShortenLinks = true };
+        typeof(Editor.PadView).GetProperty("Settings")!.SetValue(pad, settings);
+        typeof(Editor.PadView).GetProperty("Palette")!.SetValue(pad, Palette.All[0]);
+        var view = editor.TextArea.TextView;
+        view.ElementGenerators.Add(new Editor.LinkGenerator(pad));
+        const string shortUrl = "https://google.com";
+        const string longUrl = "https://example.com/long/path/over/thirtyfour/characters";
+        editor.Text = $"prefix {shortUrl} suffix\n{longUrl}\nend";
+        void Layout()
+        {
+            view.Redraw();
+            view.Measure(new Size(800, 200));
+            view.Arrange(new Rect(0, 0, 800, 200));
+            view.EnsureVisualLines();
+        }
+        Point Inside(int lineNumber, int column) => view.GetVisualPosition(
+            new AvaloniaEdit.TextViewPosition(lineNumber, column), AvaloniaEdit.Rendering.VisualYPosition.LineMiddle)
+            - view.ScrollOffset + new Vector(1, 0);
+        Layout();
+        var shortPoint = Inside(1, 10);
+        var shortHit = Editor.PadView.PlainUrlAt(view, shortPoint) == shortUrl;
+        var outside = Editor.PadView.PlainUrlAt(view, Inside(1, 1)) is null
+            && Editor.PadView.PlainUrlAt(view, new Point(799, shortPoint.Y)) is null
+            && Editor.PadView.PlainUrlAt(view, new Point(1, 199)) is null
+            && Editor.PadView.PlainUrlAt(view, new Point(-1, 1)) is null;
+        editor.TextArea.Caret.Line = 2;
+        Layout();
+        var expandedHit = Editor.PadView.PlainUrlAt(view, Inside(2, 10)) == longUrl;
+        editor.TextArea.Caret.Line = 3;
+        settings.ShortenLinks = false;
+        Layout();
+        var disabledHit = Editor.PadView.PlainUrlAt(view, Inside(2, 10)) == longUrl;
+        calls = 0;
+        string? opened = null;
+        void Open(string url) { calls++; opened = url; }
+        var urlPress = Press(true, Avalonia.Input.KeyModifiers.Control);
+        var urlTunnel = Editor.PadView.TryPressUrl(Editor.PadView.PlainUrlAt(view, shortPoint), urlPress, Open)
+            && urlPress.Handled && calls == 1 && opened == shortUrl
+            && !Editor.PadView.TryPressUrl(shortUrl, urlPress, Open) && calls == 1;
+        var urlPlain = Press(true, Avalonia.Input.KeyModifiers.None);
+        var urlRejected = !Editor.PadView.TryPressUrl(shortUrl, urlPlain, Open) && !urlPlain.Handled
+            && !Editor.PadView.TryPressUrl(shortUrl, Press(false, Avalonia.Input.KeyModifiers.Control), Open)
+            && !Editor.PadView.TryPressUrl(null, Press(true, Avalonia.Input.KeyModifiers.Control), Open) && calls == 1;
+        var plainUrlsPass = shortHit && expandedHit && disabledHit && outside && urlTunnel && urlRejected;
+
+        var errors = new List<string>();
+        bool Calls(MethodBase method, Type owner, string name)
+        {
+            var found = false;
+            ScanMethod(method, [], errors, (_, opcode, target) =>
+            {
+                if ((opcode == OpCodes.Call || opcode == OpCodes.Callvirt || opcode == OpCodes.Newobj)
+                    && target.DeclaringType == owner && target.Name == name) found = true;
+            });
+            return found;
+        }
+        var generator = typeof(Editor.LinkGenerator).GetMethod("ConstructElement")!;
+        var generatorPass = Calls(generator, typeof(Editor.GlyphElement), ".ctor")
+            && Calls(generator, typeof(Editor.GlyphElement), "set_Hand")
+            && Calls(generator, typeof(Editor.GlyphElement), "set_IsLink")
+            && Calls(generator, typeof(Editor.GlyphElement), "set_Pressed");
+        var query = typeof(Editor.GlyphElement).GetMethod("OnQueryCursor", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var cursorPass = Calls(query, typeof(Avalonia.Input.InputElement), "set_Cursor")
+            && Calls(query, typeof(Avalonia.Interactivity.RoutedEventArgs), "set_Handled");
+        var moved = typeof(Editor.PadView).GetMethod("OnViewMoved", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var pressed = typeof(Editor.PadView).GetMethod("OnViewPressed", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var routePass = Calls(moved, typeof(Editor.PadView), "GlyphAt")
+            && Calls(pressed, typeof(Editor.PadView), "GlyphAt") && Calls(pressed, typeof(Editor.PadView), "TryPressLink")
+            && Calls(moved, typeof(Editor.PadView), "PlainUrlAt") && Calls(pressed, typeof(Editor.PadView), "PlainUrlAt")
+            && Calls(pressed, typeof(Editor.PadView), "TryPressUrl");
+        report = $"glyph Ctrl+left={controlPass}; plain unhandled={plainPass}; right ignored={rightPass}; generator wiring={generatorPass}; cursor handled={cursorPass}; tunnel={tunnelPass}; once={oncePass}; tunnel plain/right/missing/nonlink={tunnelPlainPass && tunnelRightPass && missingPass && nonLinkPass}; hit-test wiring={routePass}";
+        Console.WriteLine("SHORTENED LINK " + report);
+        report += $"; plain URL short/expanded/off={shortHit}/{expandedHit}/{disabledHit}; outside={outside}; plain URL once/rejected={urlTunnel}/{urlRejected}";
+        Console.WriteLine("ANY URL " + report);
+        return controlPass && plainPass && rightPass && generatorPass && cursorPass && tunnelPass && oncePass
+            && tunnelPlainPass && tunnelRightPass && missingPass && nonLinkPass && routePass && plainUrlsPass && errors.Count == 0;
     }
 
     private static bool SplitDividerFullHeightChecks(out string report)

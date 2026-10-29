@@ -16,6 +16,7 @@ internal class GlyphElement : FormattedTextElement
     public GlyphElement(TextLine line, int documentLength) : base(line, documentLength) { }
     public Action<PointerPressedEventArgs>? Pressed { get; init; }
     public bool Hand { get; init; }
+    public bool IsLink { get; init; }
 
     protected override void OnQueryCursor(PointerEventArgs e)
     {
@@ -26,7 +27,7 @@ internal class GlyphElement : FormattedTextElement
 
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
-        if (Pressed is null || !e.GetCurrentPoint(null).Properties.IsLeftButtonPressed) return;
+        if (e.Handled || Pressed is null || !e.GetCurrentPoint(null).Properties.IsLeftButtonPressed) return;
         Pressed(e);
     }
 
@@ -137,6 +138,7 @@ internal sealed class LinkGenerator(PadView pad) : VisualLineElementGenerator
         return new GlyphElement(text, url.Length)
         {
             Hand = true,
+            IsLink = true,
             Pressed = e =>
             {
                 if (e.KeyModifiers.HasFlag(KeyModifiers.Control)) { e.Handled = true; Platform.DesktopPlatform.OpenUrl(url); }
