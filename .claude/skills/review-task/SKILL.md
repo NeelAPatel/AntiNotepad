@@ -6,12 +6,13 @@ argument-hint: <ID-slug>
 
 # /review-task <ID-slug>
 
-Phase 6 (Check) of `docs/loop.md`, then the hand-over to Hand test. Every reply opens with the status card. Keep Claude
+Phase 6 (Check) of `docs/loop.md`, then the hand-over to Hand test. Every reply opens with the status card, with your
+role (`reviewer`, then `tester` at the hand-over) on its first line. Keep Claude
 reading small: report sections and verdict lines, not whole diffs. Never fix product code here; rework goes back to Codex.
 
 ## 1. Read the card
-From `.coord/tasks/<ID-slug>.md`: `Tier:`, `## Request`, `## Plan` (After, Must not change, Gates, Test plan), `## Go`.
-Missing Plan or Go: stop and tell the master the item skipped phases. Missing tier: treat as Medium and say so.
+From `.coord/tasks/<ID-slug>.md`: `Tier:`, `## Request`, `## Plan` (After, Must not change, Gates, Test plan), `## Approve`
+(`## Go` on era-one cards). Missing Plan or Approve: stop and tell the master the item skipped phases. Missing tier: treat as Medium and say so.
 `<round>` is the round just finished: `<ID-slug>` first, `<ID-slug>-rN` after a rework. Check that
 `.coord/reports/<round>.md` has the "Change list", "Behavior changes" and "Plan deviations" sections; if not, that is a rework.
 
@@ -31,10 +32,11 @@ Run every gate the Plan lists (at least the tier's defaults):
 - **Contracts / reproduction test**: confirm the named rows and checks exist in the diff and pass in the gate's selftest.
 
 ## 4. Bounds check and verdict
-Compare Request, Plan (and Go) with what was done: the report's Change list, Behavior changes, Out-of-scope files, Plan
+Compare Request, Plan (and Approve) with what was done: the report's Change list, Behavior changes, Out-of-scope files, Plan
 deviations, and `git diff --stat dev...HEAD`. Write `## Check` on the card:
 - Gate and review result lines.
 - One line per difference: **within plan**, **justified** (why the user need not decide), or **ask the user**.
+- Comments and formatting in the changed files follow `docs/coding.md` (on touch); a gap is a `code` rework line.
 - "Noticed": side bugs or follow-ups, as proposals only.
 Then decide:
 - Any review `rework`, a blocker or major finding, a missing Behavior changes entry, or a Plan's "Must not change" broken:
@@ -50,7 +52,7 @@ findings, and route by it (`docs/loop.md`, "Triage, lessons, scores"):
 |---|---|
 | `code`: the build does not do what the Plan says | `<ID-slug>-rN` round brief from `.coord/templates/round.md` with exactly the failing lines or proven findings; relaunch Codex; run this skill again when it exits |
 | `test`: a selftest, contract or probe is wrong, not the product | round brief limited to the test files; say so under "Why this round" |
-| `plan`: Findings or Plan were wrong (wrong cause, missed caller, impossible After) | stop; tell the master with the card; the master re-plans and asks the user for Go again |
+| `plan`: Findings or Plan were wrong (wrong cause, missed caller, impossible After) | stop; tell the master with the card; the master re-plans and asks the user to approve again |
 | `env`: tooling, build cache, flaky run, sandbox | re-run the gate once; still failing: one-line gate fix if it is the manager's to make, else tell the master |
 | `judgment`: only the user can decide | ask the user that one question with the card; STATUS `ask-user` |
 Add one line per failure under "Misses" in the card's `## Check`: found at, cause, caught by, which check should have

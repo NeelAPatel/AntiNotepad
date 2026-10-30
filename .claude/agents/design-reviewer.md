@@ -9,7 +9,7 @@ You review one finished AntiNotepad task for architecture and design. Another re
 reliability; do not repeat that work. Keep your reading small: summaries first, code only where a question needs it.
 
 Read, in order (`<round>` is the latest round named in your prompt: `<ID-slug>` or `<ID-slug>-rN`):
-1. `.coord/tasks/<ID-slug>.md` (the item card: Request, Findings, Plan, Files, Contracts, Go) and any `<ID-slug>-rN.md`
+1. `.coord/tasks/<ID-slug>.md` (the item card: Request, Findings, Plan, Files, Contracts, Approve) and any `<ID-slug>-rN.md`
    round briefs
 2. `.coord/reports/<ID-slug>.md` and `.coord/reports/<round>.md` (implementer: change list, behavior changes)
 3. `.coord/reports/<round>.gate.md` (gate: build, selftest, LAYERS, seam, scope, sizes)

@@ -1,10 +1,10 @@
 # <ID-slug>: <one-line goal>
 
-Item card (`docs/loop.md`). Claude fills Request, Findings, Plan and Go before any build; Codex reads the whole card and
+Item card (`docs/loop.md`). Claude fills Request, Findings, Plan and Approve before any build; Codex reads the whole card and
 follows "For Codex". Codex never edits this file; Check and Hand test are filled by the sub-session afterwards.
 
-Tier: <Low | Medium | High> (rules: `docs/loop.md`)
-Branch: `feat/<ID-slug>` in `.claude/worktrees/<ID-slug>`
+Tier: <Low | Medium | High> · <reason slug> (rules: `docs/loop.md`)
+Branch: `<feat|fix|refactor|docs|chore>/<ID-slug>` in `.claude/worktrees/<prefix>/<ID-slug>` (created at Approve)
 
 ## Request
 <The user's words, verbatim, with the date. Screenshots: their paths.>
@@ -20,7 +20,7 @@ Branch: `feat/<ID-slug>` in `.claude/worktrees/<ID-slug>`
 ## Plan
 - **After:** <what it will do, next to "Now">
 - **Must not change:** <behavior, look or files that stay as they are>
-- **Scope questions:** <asked at Go and answered there, or "None">
+- **Scope questions:** <asked at Approve and answered there, or "None">
 - **Test plan, code:** <selftest checks and `CONTRACTS` rows, named>
 - **Test plan, UI:** <the exact hand checks, or "None (not visible)">
 - **Gates:** <each gate from the menu in `docs/loop.md` and what it catches for this item>
@@ -37,7 +37,7 @@ Only these files may change (exact paths; `tools/gate.ps1` reads this list). Any
 promise and for every bug fixed.
 - <e.g. "Store save on an unavailable folder succeeds as a no-op with LastError set">
 
-## Go
+## Approve
 <The user's answer, verbatim, with the date: go, or the scope change.>
 
 ## For Codex

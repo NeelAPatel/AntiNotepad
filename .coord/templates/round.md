@@ -11,7 +11,7 @@ Role: <director | worker>
 own words with the date.>
 
 ## Change to the plan
-<"None" for a fix within the plan. For a scope change: the new "After" and UI checks, approved by the user at Go.>
+<"None" for a fix within the plan. For a scope change: the new "After" and UI checks, approved by the user at Approve.>
 
 ## Files
 Files added for this round only (the gate allows the card's Files plus these).

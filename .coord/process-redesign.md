@@ -1,4 +1,4 @@
-# Process redesign (in discussion)
+# Process redesign (settled 2026-10-29; rolled out as loop v3 by Loop1-process-v3)
 
 Opened 2026-10-29. Goal: settle branches, worktrees and naming on `dev` first, then clean the history. No history rewrite
 and no commits for this until the user says so.
@@ -33,11 +33,11 @@ and no commits for this until the user says so.
      `refactor/`; D is `docs/`; Loop and T are `chore/`. Example: `feat/A1-list-commands`.
    - An item branch is created at the approval step and deleted at Merge, locally and on GitHub.
    - **No pull requests for now.** They return with the release-pipeline topic (9).
-2. **Worktrees (proposed):**
+2. **Worktrees (agreed 2026-10-29):**
    - One per item, in a folder that mirrors the branch: `.claude/worktrees/feat/A1-list-commands`.
    - Created at the approval step and removed at Merge. If leftover files are found, the merge stops and lists them
      rather than force-deleting.
-   - At most 2 items building at once.
+   - At most 3 items building at once (user's pick).
    - The "Go" phase becomes **Approve** (agreed 2026-10-29; "yes" and "go" are too common to mean approval). It is the
      user's approval of the Plan, when the branch and worktree are created and Build starts. The rename goes into
      docs, skills, the hook and the roadmap together with the other changes.
@@ -52,22 +52,46 @@ and no commits for this until the user says so.
      their status cards (agreed: required for sub-sessions; the master may skip it).
    - Concept names: `docs/glossary.md`, one line per term (agreed).
    - UI region names: item `D1-ui-region-names`, a labeled screenshot plus a glossary section, built lab-first (agreed).
-4. **Commits (in discussion; how the branch's commits land on dev: squash, tidy, or merge):**
-   - One commit per item on `dev`, with its STATUS update inside it: no separate status commits.
-   - An item that would change more than about 400 lines of product code is split into lettered steps, and each step
-     is its own commit.
+4. **Commits (agreed 2026-10-29):**
+   - One commit per item on `dev`. STATUS edits made while the item is in flight stay uncommitted on dev and land
+     inside that item's commit at Merge. STATUS edits with no item (backlog ideas) ride with the next item, or one
+     `chore: status` commit at the end of the day if nothing lands. No separate status commits otherwise.
+   - An item that would change more than about 400 lines of product code is split into lettered steps (`A1a`, `A1b`),
+     each its own commit. Generated files, tests and docs don't count toward the 400.
 5. **Coding semantics:**
-   - Comments: read like a guide or textbook. Concise and direct, written for a technical reader who is new to the project.
-     No unexplained jargon, not oversimplified, not wordy. A comment should stay correct and in place when the code
-     below it changes later.
-   - Code separation (long term): split large files into focused files, sometimes replacing a file with a folder of the
-     same name that holds the smaller files.
+   - Comments (agreed 2026-10-29; goes into a new `docs/coding.md` and the builder brief): read like a guide for a
+     technical reader new to the project.
+     1. Each file opens with 1-3 lines: what it is for and where it fits.
+     2. Each class and non-trivial method gets a `///` summary of what and why, not how.
+     3. Inline `//` only for the non-obvious: a Win32 quirk, a timing reason, a trap.
+     4. No item IDs, dates or "changed from X" in code; git holds history.
+     5. Define a term on first use, or use the glossary word.
+     6. One to three lines; anything longer goes in `docs/`.
+     7. A multi-stage method that must stay one method opens with its stages as a pipeline line,
+        `// parse -> resolve units -> format`, and each stage is a block separated by a blank line and headed by its
+        slug (on the line before, or at the end of the line).
+   - Rollout: on touch. Any file an item changes is brought up to the standard; no big pass first.
+   - Formatting (agreed): a `.editorconfig` (first-party .NET, read by `dotnet format`); the gate checks only the files
+     an item changed, so there is no whole-codebase reformat commit.
+   - Code separation (agreed 2026-10-29): split by job, not line count. A part is separate when it changes for
+     different reasons, is a pipeline stage with clear input and output, sits in a different layer (Win32 / UI /
+     model), or is a self-contained set with its own types. Keep together what shares heavy private state. Over 600
+     lines triggers a "one job?" check in Findings; no hard cap. Partial files (`PadView.EdgeFade.cs`) when parts share
+     state, a separate class when one stands alone. Planned splits: `SelfTest.cs`, `Calc/Calculator.cs`,
+     `Model/Store.cs` (A items, Low tier pure-move); `Editor/PadView.cs` on touch only.
+   - Folders: namespace mirrors folder (`Model/Search/` is `AntiNotepad.Model.Search`). When 3 or more files share a
+     job, or a folder passes about 12 files, they move into a subfolder. A split item does its own reorganizing:
+     moves files, updates namespaces and `using` lines, the selftest layer rules (which match namespaces) and the code
+     layout lines in `AGENTS.md`; the Plan lists the moves and the build gate catches any missed reference.
 6. **Dev loop:**
    - Status card: **settled (2026-10-29).** A Markdown card, not a drawn widget (similar cost to plain text): `>> ID-slug`,
      a `|`-separated phase strip, Tier with a reason slug, Goal, Now, a divider, Waiting on you. Defined in `docs/loop.md`
      ("Status card"); the hook text matches.
-7. **Claude widgets:** which ones the loop can use (AskUserQuestion, the inline visualization, the end-of-turn
-   next-step box, the task list, Artifacts, ...).
+7. **Claude widgets (agreed 2026-10-29):** use everything that helps. Priority order (user): good development and
+   good understanding of the codebase first, then usage preservation. Bad usage is back-and-forth to get things right;
+   the loop should cut that, not cut features. In use: question cards for decisions with clear options, the
+   next-step box with buttons at the end of each reply, the task list for the steps of the current phase, inline
+   visuals where a picture helps (layouts, flows, lab-first designs), plus the Markdown status card.
 8. **History rewrite:** option B (tidy, then land) chosen 2026-10-29; full dry-run preview in `.coord/history-preview.md`
    (154 commits, final files identical to dev). User edits: keep #1; #2 renamed "confirmed Avalonia stack via spike
    testing across stacks"; 10-17 to 10-22 03:16 squashed to one commit "v0.1 AntiQuickPad built and discarded"; the

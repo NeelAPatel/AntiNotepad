@@ -2,13 +2,16 @@
 
 Windows 11 hotkey-summoned, chrome-free translucent scratchpad: a recreation of AntiNote (its functionality and feel, not a 1:1
 copy). Avalonia 12 + AvaloniaEdit 12 on .NET 10, in `product/AntiNotepad`. Speed of show/hide is the priority. US spelling in UI text.
-The earlier AntiQuickPad project (spikes A/B, `src/AntiQuickPad`) is retired and removed; it lives only in git history and the
-tags `v0.1`, `antipad-v*` and `baseline/m8c-v1-compact`.
+The earlier AntiQuickPad project (spikes A/B, `src/AntiQuickPad`) is retired and removed; it lives only in git history.
 
 ## Rules
-- Remote: private GitHub repo `NeelAPatel/AntiNotepad` (origin); the manager pushes after commits. Branches: `main` (tagged releases only, on user say-so) > `dev` (integration: only `--no-ff` merges plus one status commit each) > `feat/<ID-slug>` (one per task, in `.claude/worktrees/<ID-slug>`; see `docs/loop.md`,
-  off dev, merged back with --no-ff). Commit per completed task. Tags: `antinotepad-vN`.
-- Name items and tasks `<ID>-<short-slug>` everywhere (chat, briefs, commits, reports). Never a bare ID.
+- Remote: private GitHub repo `NeelAPatel/AntiNotepad` (origin); the manager pushes after commits. Branches: `main`
+  (releases only, fast-forwarded on the user's say-so, semver tags `v0.7.0` / `-rcN`) > `dev` (integration: one squashed
+  commit per item, carrying its STATUS edits) > `<prefix>/<ID-slug>` (`feat/`, `fix/`, `refactor/`, `docs/`, `chore/`;
+  one per item, created at Approve in `.claude/worktrees/<prefix>/<ID-slug>`). Details: `docs/loop.md`.
+- Name items `<ID>-<short-slug>` everywhere (chat, briefs, commits, reports), never a bare ID. Prefixes: `A` app, `Loop`
+  dev loop and agents, `D` docs, `T` non-AI tooling; steps `A1a`, rework `-r2` (`docs/loop.md`, "IDs and numbering").
+- Code follows `docs/coding.md` (comments, formatting, file and folder rules), applied to every file an item touches.
 - Design changes go lab-first: show them in a spike or lab build first, wait for the user's approval, then
   implement.
 - The user's installed copy (`%LOCALAPPDATA%\Programs\AntiNotepad`, real data) is never typed into or stopped during dev work.
@@ -25,8 +28,8 @@ tags `v0.1`, `antipad-v*` and `baseline/m8c-v1-compact`.
 ## Read when
 - Starting or resuming work: `.coord/STATUS.md`; the plan: `/roadmap` (local page `.coord/roadmap.html`, self-updating).
 - Building, installing/upgrading the user's copy, dev instance, hotkeys, data folders: `docs/dev-loop.md`.
-- The per-item loop (item card, phases Request > Findings > Plan > Go > Build > Check > Hand test > Merge, gates, status
-  card on every reply): `docs/loop.md`.
+- The per-item loop (item card, phases Request > Findings > Plan > Approve > Build > Check > Hand test > Merge, gates,
+  status card on every reply, sessions and roles): `docs/loop.md`. Terms: `docs/glossary.md`.
 - Launching or briefing Codex: `docs/agents.md`. Briefs go in `.coord/tasks/<ID-slug>.md`, reports in `.coord/reports/`.
 - Why something is the way it is (locked choices): `docs/decisions.md`.
 - Code layout: `product/AntiNotepad` — `Model/` (store, settings, notes), `Editor/` (PadView, colorizers, renderers, motion),

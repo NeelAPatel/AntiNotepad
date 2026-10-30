@@ -1,7 +1,7 @@
 # <ID-slug>-audit: findings for <ID-slug>
 
-Role: director (gpt-6.1-sol medium), read-only. Product `product/AntiNotepad`. Branch `feat/<ID-slug>` is checked out:
-never switch, merge, commit, or edit anything outside `.coord/reports/`. Never launch or kill AntiNotepad.
+Role: director (gpt-6.1-sol medium), read-only. Product `product/AntiNotepad`. You run in the master checkout on `dev`
+(no item branch exists before Approve): never switch, merge, commit, or edit anything outside `.coord/reports/`. Never launch or kill AntiNotepad.
 Read `AGENTS.md`, then the item card `.coord/tasks/<ID-slug>.md` (its Request is what the user asked for).
 
 ## Answer these (this is the Findings phase of `docs/loop.md`)

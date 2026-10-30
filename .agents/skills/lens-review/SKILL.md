@@ -11,7 +11,7 @@ unavailable folder), state that latched for good (A30 IsAvailable), a cache trus
 a missing-input startup crash (A43b), and a global window-style change that broke every bar style (A32/A34).
 
 ## Inputs
-The item card (`.coord/tasks/<ID-slug>.md`: Request, Plan with "After" and "Must not change", Files, Contracts, Go) and
+The item card (`.coord/tasks/<ID-slug>.md`: Request, Plan with "After" and "Must not change", Files, Contracts, Approve) and
 any round briefs, the implementer's report (`.coord/reports/<ID-slug>.md`), the gate report if present
 (`.coord/reports/<ID-slug>.gate.md`) and the diff. Read the changed files around each hunk, and the callers of anything whose
 signature or meaning changed (search with `rg`).

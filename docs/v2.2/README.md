@@ -5,6 +5,10 @@ stored, reviewed and versioned, but nothing in the live loop reads it: not `tool
 not `docs/loop.md` rules. v2.2 starts only when the user says so (user, 2026-10-29: "dev and main will remain on v2.1 until
 i explicitly trigger the v2.2 changes").
 
+> **Superseded in part by loop v3** (`Loop1-process-v3`, 2026-10-29, `docs/loop.md`): dev now runs v3, not v2.1; items land on dev as one squashed
+> commit (not `--no-ff` plus a status commit), branches are `<prefix>/<ID-slug>` in `.claude/worktrees/<prefix>/<ID-slug>`,
+> and up to **3** items may be past Approve (not 2). The rest of v2.2 stays dormant as written.
+
 | File | What it is |
 |---|---|
 | `docs/v2.2/README.md` | this page: status, contents, how to activate |

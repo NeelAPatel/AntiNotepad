@@ -2,6 +2,10 @@
 
 **DORMANT.** dev and main stay on loop v2.1 until the user triggers v2.2. Index of everything stored: `docs/v2.2/README.md`.
 
+> **Superseded in part by loop v3** (`Loop1-process-v3`, 2026-10-29, `docs/loop.md`): dev now runs v3, not v2.1; items land on dev as one squashed
+> commit (not `--no-ff` plus a status commit), branches are `<prefix>/<ID-slug>` in `.claude/worktrees/<prefix>/<ID-slug>`,
+> and up to **3** items may be past Approve (not 2). The rest of v2.2 stays dormant as written.
+
 Status: **proposal** from `C30-loop-docs-v22-plan` (user request, 2026-10-29). Nothing here changes `docs/loop.md`. Each
 step below is an unnumbered `step:` name; the user confirms scope before any of it gets an ID (`docs/loop.md`, "Numbering").
 A plain-words version is in `docs/wiki/Loop-v2.2-Plan.md`.

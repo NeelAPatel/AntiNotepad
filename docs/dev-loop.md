@@ -68,8 +68,8 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
   It runs exactly `--quit` with explicit `ANTINOTEPAD_DEV=1` and absolute, nonempty checkout `ANTINOTEPAD_DATA`.
   Exit 0 must be followed by a vacant `AntiNotepad-dev` mutex. The helper's normal graceful-quit timeout is about 5 seconds;
   a nonzero exit triggers force-close of only the published dev owner after verifying its process handle, start time,
-  image, repository identity and unchanged singleton owner. Allowed images are this repository's main checkout or a direct
-  `.claude/worktrees/*` checkout's `build/dev/AntiNotepad.exe`; installed images are explicitly rejected. Ambiguous owners,
+  image, repository identity and unchanged singleton owner. Allowed images are this repository's main checkout or a
+  `.claude/worktrees/<prefix>/<ID-slug>` (or direct `.claude/worktrees/*`) checkout's `build/dev/AntiNotepad.exe`; installed images are explicitly rejected. Ambiguous owners,
   inaccessible paths or redirected path ancestors abort. After force-close, a second helper must return 0 and the mutex
   must be vacant. No process-name enumeration or termination is used.
 - A force-close may lose unsaved disposable dev edits. An unresponsive helper that has not exited after 8 seconds aborts

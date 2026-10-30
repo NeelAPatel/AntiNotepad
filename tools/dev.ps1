@@ -233,8 +233,11 @@ function Stop-DevOwner {
         $common = Get-CommonGitDirectory $repoRoot
         $mainRoot = [System.IO.Path]::GetDirectoryName($common)
         $worktreesRoot = [System.IO.Path]::GetFullPath((Join-Path $mainRoot '.claude/worktrees'))
+        # Item worktrees sit at .claude/worktrees/<prefix>/<ID-slug> (docs/loop.md); a direct child is accepted too.
+        $candidateParent = [System.IO.Path]::GetDirectoryName($candidateRoot)
         $allowedRoot = [string]::Equals($candidateRoot, $mainRoot, [StringComparison]::OrdinalIgnoreCase) -or
-            [string]::Equals([System.IO.Path]::GetDirectoryName($candidateRoot), $worktreesRoot, [StringComparison]::OrdinalIgnoreCase)
+            [string]::Equals($candidateParent, $worktreesRoot, [StringComparison]::OrdinalIgnoreCase) -or
+            [string]::Equals([System.IO.Path]::GetDirectoryName($candidateParent), $worktreesRoot, [StringComparison]::OrdinalIgnoreCase)
         Assert-SafeAncestors $identity.ExePath
         if (-not $allowedRoot -or
             -not [string]::Equals($identity.ExePath, $expectedImage, [StringComparison]::OrdinalIgnoreCase) -or

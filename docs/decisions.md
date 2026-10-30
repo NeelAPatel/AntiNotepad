@@ -3,6 +3,18 @@
 Newest first. History before 2026-10-23 (overnight build log and write-up) is in git history and the tags `v0.1`,
 `antipad-v*` and `baseline/m8c-v1-compact`.
 
+## 2026-10-29
+- **Loop v3 process** (Loop1-process-v3; record of the discussion: `.coord/process-redesign.md`): IDs `A` app, `Loop`
+  dev loop, `D` docs, `T` non-AI tooling, counters reset per era; phase "Go" renamed **Approve**; branches
+  `<prefix>/<ID-slug>` with `feat/`, `fix/`, `refactor/`, `docs/`, `chore/`, created at Approve, worktrees mirroring them;
+  one squashed commit per item on dev carrying its STATUS edits (no separate status commits); items over about 400
+  product lines split into lettered steps; `main` fast-forwards at releases with semver tags; no pull requests until the
+  release pipeline; at most 3 items past Approve; Claude attribution off. Rejected: keeping `--no-ff` merges plus status
+  commits (bloated history), PRs now (too much overhead for one person).
+- **Coding standard** (`docs/coding.md`): guide-style comments (seven rules, incl. the pipeline line), `.editorconfig`
+  checked on touch, files split by job with a 600-line review trigger (rejected: hard line caps), folders mirror
+  namespaces. Applied on touch; no big reformat pass.
+
 ## 2026-10-25
 - **Bar insets and chrome tokens** (A35-bar-insets; supersedes the 2026-10-22 bar-style gradient/30 px gap and edge fade 40,
   and the 2026-10-23 4 px icon hover): every top bar and pager measurement lives in `ChromeTokens` (`UI/Chrome.cs`); no

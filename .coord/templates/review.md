@@ -1,11 +1,11 @@
 # <round>-review: lens review of <round>
 
 Role: reviewer (fresh run, read-only for product code). Product `product/AntiNotepad`.
-Branch: `feat/<ID-slug>` (already checked out; never switch, merge, commit or edit product files).
+Branch: `<prefix>/<ID-slug>` (already checked out; never switch, merge, commit or edit product files).
 Tier: <Medium | High>
 
 ## Inputs
-- Item card: `.coord/tasks/<ID-slug>.md` (Request, Plan with "After" and "Must not change", Files, Contracts, Go), plus
+- Item card: `.coord/tasks/<ID-slug>.md` (Request, Plan with "After" and "Must not change", Files, Contracts, Approve), plus
   any round briefs `.coord/tasks/<ID-slug>-rN.md`
 - Implementer report: `.coord/reports/<ID-slug>.md` and, after a rework, `.coord/reports/<round>.md`
 - Gate report: `.coord/reports/<round>.gate.md`
