@@ -515,6 +515,25 @@ try {
     }
 
     try {
+        # Use Scope's changed-file set, including deleted paths; CI checks the loop on every run.
+        $loopFiles = @($changedFiles | Where-Object {
+            $_ -match '^(AGENTS\.md|docs/(loop|glossary|agents|coding|dev-loop)\.md|\.claude/skills/[^/]+/SKILL\.md|\.claude/agents/[^/]+\.md|\.coord/templates/[^/]+\.md|\.agents/skills/[^/]+/SKILL\.md|\.codex/agents/[^/]+\.toml|tools/[^/]+\.(ps1|sh)|\.coord/tools/[^/]+\.sh)$'
+        })
+        if ($Ci -or $loopFiles.Count -gt 0) {
+            $lint = Invoke-CapturedProcess -FileName 'pwsh' -Arguments @('-NoProfile', '-File', (Join-Path $script:repoRoot 'tools/loop-lint.ps1')) -WorkingDirectory $script:repoRoot
+            $lintStatus = if ($lint.ExitCode -eq 0) { 'PASS' } else { 'FAIL' }
+            Add-Step -Name 'LoopLint' -Status $lintStatus -Summary "loop-lint.ps1 exit $($lint.ExitCode)" `
+                -Lines @(Get-OutputLines (Get-CombinedOutput $lint) | Select-Object -First 40)
+        }
+        else {
+            Add-Step -Name 'LoopLint' -Status 'SKIP' -Summary 'no loop files changed'
+        }
+    }
+    catch {
+        Add-Step -Name 'LoopLint' -Status 'FAIL' -Summary $_.Exception.Message
+    }
+
+    try {
         $changedFiles = if ($Ci) { @(Get-ChangedFiles) } else { $changedFiles }
         $sizeWarnings = [Collections.Generic.List[string]]::new()
         foreach ($relativePath in $changedFiles) {

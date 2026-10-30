@@ -74,6 +74,7 @@ step commits are kept on dev (fast-forward).
 - `tools/approve.ps1`
 - `tools/merge-preflight.ps1`
 - `tools/loop-lint.ps1`
+- `tools/loop-lint.allow`
 - `tools/scan-delta.ps1`
 - `.claude/skills/scan-backlog/SKILL.md`
 - `.coord/templates/scan.md`
