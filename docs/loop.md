@@ -75,7 +75,7 @@ After the gates, the reviewer compares three things and writes `## Check` on the
 ### Triage, lessons, scores
 Strictness is cheap by design: scripts first (zero model tokens), model judgment only on exceptions.
 - **Triage on every failure** (gate fail, review rework, hand-test fail), done by the Check session that already has the
-  context, no extra agent: one cause, `code`, `test`, `plan`, `env` or `judgment`, routed by the table in
+  context, no extra agent: one cause, `code`, `test`, `plan`, `env`, `conflict` or `judgment`, routed by the table in
   `/review-task` step 4a. Only `code` and `test` go back to Codex; `plan` goes to the master, `judgment` to the user.
 - **Lessons:** each failure leaves one "Misses" line on the card; the master copies them into `.coord/lessons.md` at Merge
   with one Scores row per item (what each check found). Master-owned on dev, like STATUS.
@@ -220,7 +220,7 @@ smaller rule changes bump the minor version (v3.1) and need no new master.
   paths; Codex runs from the worktree's own `.coord/tools/codex-run.sh`. **At most 3 items** past Approve at once, and
   only if their Files lists do not overlap. After Check accepts, the implementation sub-session runs `tools/dev.ps1`
   from the worktree immediately before the hand checks; it verifies the dev badge and EXE/DATA/log paths. One dev copy
-  runs at a time, so hand tests take turns.
+  runs at a time, so hand tests take turns, oldest accepted item first.
 - **Before Approve** there is no branch: the card and any audit brief and report live untracked in the master checkout;
   the auditor's Codex run is read-only there. At Approve they move into the new worktree and are committed on the branch.
 - **What lands on the branch:** the card, audit, reports and code, committed there as often as useful (Codex cannot

@@ -57,6 +57,7 @@ findings, and route by it (`docs/loop.md`, "Triage, lessons, scores"):
 | `test`: a selftest, contract or probe is wrong, not the product | round brief limited to the test files; say so under "Why this round" |
 | `plan`: Findings or Plan were wrong (wrong cause, missed caller, impossible After) | stop; tell the master with the card; the master re-plans and asks the user to approve again |
 | `env`: tooling, build cache, flaky run, sandbox | re-run the gate once; still failing: one-line gate fix if it is the manager's to make, else tell the master |
+| `conflict`: a catch-up stopped on conflicts | resolve on the branch in the item's session, keeping both sides as the two plans intend; commit the merge and re-run the gate. If the other item changed something this item's Plan relies on (a semantic clash), abort the merge (`git merge --abort`) and route it as `plan` instead |
 | `judgment`: only the user can decide | ask the user that one question with the card; STATUS `ask-user` |
 Add one line per failure under "Misses" in the card's `## Check`: found at, cause, caught by, which check should have
 caught it earlier, a one-line lesson. The master copies these into `.coord/lessons.md` at Merge.

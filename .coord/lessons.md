@@ -7,7 +7,7 @@ a rule change.
 
 ## Misses
 Every failed gate, rework round, ask-user stop, failed hand test, and bug found after merge.
-Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong), `env` (tooling, build, flaky), `judgment`
+Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong), `env` (tooling, build, flaky), `conflict`, `judgment`
 (a call only the user could make). Caught by / should have caught: `gate`, `format`, `codex-review`, `design-review`,
 `contract`, `hand-test`, `user-later`.
 
