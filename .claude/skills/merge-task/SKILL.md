@@ -12,7 +12,9 @@ and tagging happen only on the user's explicit go. Every reply opens with the st
 `<branch>` is `<prefix>/<ID-slug>`; `<wt>` is `.claude/worktrees/<prefix>/<ID-slug>`.
 
 1. From the master checkout, run `pwsh -NoProfile -File tools/merge-preflight.ps1 -Task <ID-slug>`.
-   FAIL: stop and tell the user the reason. For a `-NoWorktree` item, switch to dev before step 3 as the script directs.
+   FAIL with "behind dev": ask the item's session to catch up (it runs `/review-task` step 2 again) and wait; never merge
+   dev into an item branch from the master checkout. Other FAIL: stop and tell the user the reason. For a `-NoWorktree`
+   item, switch to dev before step 3 as the script directs.
 2. Check `git diff --name-only dev...<branch>`: only the card's Files and the item's `.coord/tasks` and
    `.coord/reports` files. Anything else (STATUS included): ask the user.
 3. In the master checkout (dev): `git merge --squash <branch>`. Conflicts: stop and tell the user (`git merge --abort`

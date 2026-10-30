@@ -17,6 +17,9 @@ From `.coord/tasks/<ID-slug>.md`: `Tier:`, `## Request`, `## Plan` (After, Must 
 `.coord/reports/<round>.md` has the "Change list", "Behavior changes" and "Plan deviations" sections; if not, that is a rework.
 
 ## 2. Gate (always)
+If `dev` is not an ancestor of HEAD, run `pwsh -NoProfile -File tools/catch-up.ps1 -Task <ID-slug>`, push the branch,
+then run the gate. CONFLICT: stop, leave the merge open, and tell the master (conflict routes: step 4a).
+
 `pwsh -NoProfile -File tools/gate.ps1 -Task <round>` from the worktree. It writes `.coord/reports/<round>.gate.md` (not
 committed) and exits non-zero on failure. Read only its Summary.
 - Fail: triage it (step 4a) before anything is relaunched.
@@ -59,6 +62,9 @@ Add one line per failure under "Misses" in the card's `## Check`: found at, caus
 caught it earlier, a one-line lesson. The master copies these into `.coord/lessons.md` at Merge.
 
 ## 5. Hand over
+A catch-up after acceptance that prints `RETEST: yes` repeats the hand test before Merge; `RETEST: no` keeps the earlier
+result.
+
 For an accepted item with UI checks: run `tools/dev.ps1` from the worktree immediately before the hand checks. Verify the
 printed EXE and DATA paths and the app log under that DATA before reporting ready; if any fails, report that and do not
 claim the build is ready. The on-screen dev badge is the user's first hand check while Computer Use is off: give them

@@ -236,6 +236,10 @@ smaller rule changes bump the minor version (v3.1) and need no new master.
   are listed for the user), then delete the branch locally (`git branch -D`, since a squash does not mark it merged) and
   on origin.
 
+**Catching up with dev:** merge, never rebase (item branches are pushed). Catch up at two points: before Check and before
+Merge when dev is not an ancestor of HEAD. The item's own session runs `tools/catch-up.ps1`, pushes the branch, then runs
+the gate. `RETEST: yes` repeats the hand test before Merge; `RETEST: no` keeps the earlier result.
+
 ## Triggers in practice
 Three commands drive the loop: `/next-task` (Request to Approve, then starts Build; master), `/review-task <ID-slug>`
 (Check; sub-session), `/merge-task <ID-slug>` (Merge; master).
@@ -261,6 +265,10 @@ Three commands drive the loop: `/next-task` (Request to Approve, then starts Bui
 | `.coord/templates/review.md` | brief for the fresh Codex review |
 | `.coord/templates/round.md` | brief for a rework round |
 | `tools/gate.ps1` | build, selftest (LAYERS, CONTRACTS), seam, format, scope, size |
+| `tools/catch-up.ps1` | merge local dev into an item branch; report conflicts and whether to repeat the hand test |
+| `tools/files-overlap.ps1` | compare an item's Files with other item checkouts |
+| `tools/approve.ps1` | check the item cap and overlap, then create the branch and worktree |
+| `tools/merge-preflight.ps1` | check the card, gate, branch and dev before Merge |
 | `product/AntiNotepad/SelfTest/Contracts.cs` | the `CONTRACTS` table of cross-feature promises |
 | `.agents/skills/lens-review/SKILL.md` | Codex review checklist (logic, coupling, reliability, plan bounds, proof rule) |
 | `.codex/agents/lens-reviewer.toml` | Codex role the director spawns before reporting |

@@ -21,6 +21,24 @@ $ErrorActionPreference = 'Stop'
 $prefixes = @('feat', 'fix', 'refactor', 'docs', 'chore')
 $branchPattern = '^(' + ($prefixes -join '|') + ')/(?<slug>[A-Z][A-Za-z0-9]*(-[a-z0-9]+)+)$'
 
+# Reads only the Files section so other card lists cannot cause false retests.
+function Get-CardFiles([string]$CardPath) {
+    if (-not (Test-Path -LiteralPath $CardPath -PathType Leaf)) { return $null }
+    $text = [IO.File]::ReadAllText($CardPath)
+    $section = [regex]::Match($text, '(?ms)^## Files\s*\r?\n(.*?)(?=^##\s|\z)')
+    if (-not $section.Success) { return @() }
+    @([regex]::Matches($section.Groups[1].Value, '(?m)^\s*-\s+`([^`]+)`') |
+        ForEach-Object { $_.Groups[1].Value.Trim().Replace('\', '/') } | Where-Object { $_.Length -gt 0 })
+}
+
+# Report against the card in this checkout after a successful catch-up.
+function Write-Retest([string[]]$Incoming) {
+    $files = Get-CardFiles (Join-Path $repoRoot ".coord/tasks/$Task.md")
+    $touched = @($Incoming | Where-Object { $files -contains $_ })
+    if ($touched.Count -gt 0) { Write-Host "RETEST: yes ($($touched -join ', '))" }
+    else { Write-Host 'RETEST: no' }
+}
+
 $repoRoot = & git -C $PSScriptRoot rev-parse --show-toplevel
 if ($LASTEXITCODE -ne 0) { Write-Host 'REFUSED: cannot find repository root.'; exit 1 }
 $repoRoot = $repoRoot.Trim()
@@ -38,26 +56,31 @@ if (@($changes | Where-Object { $_ -cnotmatch '^.. \.coord/STATUS\.md$' }).Count
 
 $fetchOutput = @(& git -C $repoRoot fetch --quiet origin 2>&1)
 if ($LASTEXITCODE -ne 0) { Write-Host "REFUSED: $($fetchOutput -join [Environment]::NewLine)"; exit 1 }
-$baseRef = "origin/$Base"
-& git -C $repoRoot rev-parse --verify --quiet $baseRef > $null
-if ($LASTEXITCODE -eq 1) { $baseRef = $Base }
-elseif ($LASTEXITCODE -ne 0) { Write-Host 'REFUSED: cannot resolve remote base.'; exit 1 }
-& git -C $repoRoot rev-parse --verify --quiet $baseRef > $null
+$baseRef = $Base
+$baseCommit = & git -C $repoRoot rev-parse --verify --quiet "refs/heads/$Base"
 if ($LASTEXITCODE -ne 0) { Write-Host 'REFUSED: cannot resolve base.'; exit 1 }
-& git -C $repoRoot merge-base --is-ancestor $baseRef HEAD
-if ($LASTEXITCODE -eq 0) { Write-Host "UP TO DATE with $baseRef"; exit 0 }
+$remoteCommit = & git -C $repoRoot rev-parse --verify --quiet "refs/remotes/origin/$Base"
+if ($LASTEXITCODE -eq 0) {
+    if ($remoteCommit -ne $baseCommit) { Write-Host "NOTE: origin/$Base differs from $Base" }
+}
+elseif ($LASTEXITCODE -ne 1) { Write-Host 'REFUSED: cannot resolve remote base.'; exit 1 }
+& git -C $repoRoot merge-base --is-ancestor "refs/heads/$baseRef" HEAD
+if ($LASTEXITCODE -eq 0) { Write-Host "UP TO DATE with $baseRef"; Write-Retest @(); exit 0 }
 if ($LASTEXITCODE -ne 1) { Write-Host 'REFUSED: cannot compare base with HEAD.'; exit 1 }
 
-$incoming = @(& git -C $repoRoot diff --name-only "HEAD...$baseRef")
+$incoming = @(& git -C $repoRoot diff --name-only -z "HEAD...refs/heads/$baseRef")
 if ($LASTEXITCODE -ne 0) { Write-Host 'REFUSED: cannot list incoming files.'; exit 1 }
-$mergeOutput = @(& git -C $repoRoot merge --no-ff -m "${Task}: catch up with dev" $baseRef 2>&1)
+$incoming = @(($incoming -join "`n").Split([char]0, [StringSplitOptions]::RemoveEmptyEntries))
+$mergeOutput = @(& git -C $repoRoot merge --no-ff -m "${Task}: catch up with dev" "refs/heads/$baseRef" 2>&1)
 if ($LASTEXITCODE -eq 0) {
     Write-Host "CLEAN: merged $baseRef ($($incoming.Count) incoming file(s)); re-run tools/gate.ps1 -Task $Task"
     $incoming | ForEach-Object { Write-Host "  incoming $_" }
+    Write-Retest $incoming
     exit 0
 }
-$conflicts = @(& git -C $repoRoot diff --name-only --diff-filter=U)
+$conflicts = @(& git -C $repoRoot diff --name-only --diff-filter=U -z)
 if ($LASTEXITCODE -ne 0) { Write-Host 'REFUSED: cannot list conflicts.'; exit 1 }
+$conflicts = @(($conflicts -join "`n").Split([char]0, [StringSplitOptions]::RemoveEmptyEntries))
 if ($conflicts.Count -eq 0) { Write-Host "REFUSED: $($mergeOutput -join [Environment]::NewLine)"; exit 1 }
 Write-Host "CONFLICT: $($conflicts.Count) file(s); resolve on the branch (merge is left open)"
 foreach ($c in $conflicts) { Write-Host ("  {0}{1}" -f $(if (@($HotFiles | Where-Object { $c -like $_ }).Count -gt 0) { '[hot] ' } else { '' }), $c) }
