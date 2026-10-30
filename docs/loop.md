@@ -37,6 +37,12 @@ card and see why the item exists, what was agreed and where it stands.
 - Low items get the master's own scout (a few `rg` and reads, at most about ten tool calls). Anything that needs more
   becomes a Codex audit, and the item is at least Medium.
 
+**Backlog scans:** `/scan-backlog [slug ...]` runs one read-only Haiku scout per idea in a shared detached dev snapshot
+and proposes an order for the user. Reports stay untracked in `.coord/research/<slug>.md`, stamped with the full scanned
+SHA, until Approve moves and commits them with the card. At task time Findings reads the scan plus `tools/scan-delta.ps1`:
+commits, changed Where files and their neighbors, and the related cards. More than half the Where files changed, or any
+Where file deleted, requires a fresh scout or audit; Medium/High audits still run with the scan and delta as inputs.
+
 ### 3. Plan: what the user approves
 - **After**: what it will do, written next to "Now" so the difference is the change.
 - **Scope questions**: anything the request leaves open, asked now (A54 found "all URLs or only shortened ones?" only at
@@ -262,11 +268,13 @@ Three commands drive the loop: `/next-task` (Request to Approve, then starts Bui
 | `.editorconfig` | formatting rules the gate's Format step checks |
 | `.coord/templates/item.md` | the item card: Request, Findings, Plan, Approve, Codex brief, Check, Hand test |
 | `.coord/templates/findings.md` | brief for the read-only Codex audit (Findings) |
+| `.coord/templates/scan.md` | brief for one read-only Haiku backlog scout |
 | `.coord/templates/review.md` | brief for the fresh Codex review |
 | `.coord/templates/round.md` | brief for a rework round |
 | `tools/gate.ps1` | build, selftest (LAYERS, CONTRACTS), seam, format, scope, size |
 | `tools/catch-up.ps1` | merge local dev into an item branch; report conflicts and whether to repeat the hand test |
 | `tools/files-overlap.ps1` | compare an item's Files with other item checkouts |
+| `tools/scan-delta.ps1` | compare a backlog scan SHA and Where files with dev; flag rescans and cards to read |
 | `tools/approve.ps1` | check the item cap and overlap, then create the branch and worktree |
 | `tools/merge-preflight.ps1` | check the card, gate, branch and dev before Merge |
 | `product/AntiNotepad/SelfTest/Contracts.cs` | the `CONTRACTS` table of cross-feature promises |
@@ -275,6 +283,7 @@ Three commands drive the loop: `/next-task` (Request to Approve, then starts Bui
 | `.coord/tools/codex-run.sh` | Codex wrapper: tiers, failover, caps (`docs/agents.md`) |
 | `.claude/agents/design-reviewer.md` | Claude design reviewer (Opus, read-only) |
 | `.claude/skills/next-task/SKILL.md` | `/next-task [ID-slug]`: Request, Findings, Plan, Approve, start Build |
+| `.claude/skills/scan-backlog/SKILL.md` | `/scan-backlog [slug ...]`: snapshot scouts and proposed backlog order |
 | `.claude/skills/review-task/SKILL.md` | `/review-task <ID-slug>`: Check (gates, bounds check, verdict), hand over |
 | `.claude/skills/merge-task/SKILL.md` | `/merge-task <ID-slug>`: Merge |
 | `tools/loop-card.ps1` | `UserPromptSubmit` hook: status-card reminder and the items in flight |

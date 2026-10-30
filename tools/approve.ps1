@@ -69,8 +69,12 @@ try {
 
     $branch = "$Prefix/$Task"
     $destination = if ($NoWorktree) { $root } else { Join-Path $root ".claude/worktrees/$branch" }
+    $research = ".coord/research/$($Task.Substring($Task.IndexOf('-') + 1)).md"
+    if ((Test-Path -LiteralPath (Join-Path $root $research)) -and $untracked -cnotcontains $research) {
+        throw 'research file must be untracked'
+    }
     $files = @($untracked | Where-Object {
-        $_ -ceq $card -or $_ -cmatch "^\.coord/tasks/$([regex]::Escape($Task))-.*\.md$" -or
+        $_ -ceq $card -or $_ -ceq $research -or $_ -cmatch "^\.coord/tasks/$([regex]::Escape($Task))-.*\.md$" -or
         $_ -cmatch "^\.coord/reports/$([regex]::Escape($Task))-"
     })
     if ($NoWorktree) { Write-Host "COMMAND: git switch -c $branch dev" }

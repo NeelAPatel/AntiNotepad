@@ -26,6 +26,12 @@ phase's steps, the next-step box at the end of each reply.
 
 ## 2. Findings
 Answer the card's Findings lines with evidence. Never skip this, whatever the tier.
+- **Scan first:** if `.coord/research/<slug>.md` exists (slug = the item name without its leading `<ID>-`), run
+  `pwsh -NoProfile -File tools/scan-delta.ps1 -Slug <slug>`. On failure, resolve the missing input or Git error before
+  using the scan. Read the scan, the delta's cards and its `WHERE`/`NEAR` files (deleted files: read the relevant diff).
+  Write Findings from them, including one line: "Since the scan (<short sha>): <unchanged | changed: ... | new code to use: ...>".
+  `RESCAN: yes` requires a fresh scout or audit as below. A Medium/High audit still runs and its brief includes the scan
+  and delta as inputs. With no scan, follow the existing scout/audit path below.
 - **Low:** your own scout: a few `rg` and targeted reads, at most about ten tool calls. If that is not enough, or the item
   is a bug whose cause you cannot prove, raise it to Medium and use the audit.
 - **Medium, High:** fill `.coord/templates/findings.md` into `.coord/tasks/<ID-slug>-audit.md`. Start a linked **Haiku**
