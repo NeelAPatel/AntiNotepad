@@ -88,16 +88,26 @@ Set at Plan; findings may raise it. When unsure, pick the higher tier.
 | High | `Store`/`NotesSession`/notes folder, startup and quit, `Platform/` window styles and taskbar, timers and deferred work, save paths, memory | Codex audit | gate + Codex review + design review; hand test always |
 
 ## Status card (every reply about an item)
-Every Claude reply about project work, master and sub-sessions alike, opens with this card. Keep it to these five lines;
+Every Claude reply about project work, master and sub-sessions alike, opens with this card. Keep it to these lines;
 detail goes below it.
 ```
-**<ID-slug>** · <phase> · <tier>
-`Request ✓ → Findings ✓ → Plan ● → Go → Build → Check → Hand test → Merge`
+**>> <ID-slug>** · <Tier> tier · ● <phase>
+✓ Request | ✓ Findings | ● Plan | ○ Go | ○ Build | ○ Check | ○ Hand test | ○ Merge
+**Tier:** <Tier> · <reason slug>
 **Goal:** <one line>
 **Now:** <what is happening, one or two lines>
-**Waiting on you:** <the one decision or check, or "nothing">
+
+---
+
+**Waiting on you:** <the one decision or check, or "nothing">; anything else below
 ```
-- `✓` done, `●` current, `–` skipped by tier (Findings is never skipped), plain = not reached. Rework shows as `Build ● (r2)`.
+- `✓` done, `●` current, `○` not reached, `–` skipped by tier (Findings is never skipped). Rework shows as
+  `● Build (r2)`.
+- The tier reason is a slug from the Tiers table's "Touches" column: Low `ui-text`, `theme-tokens`, `docs-tools`,
+  `calc-rules`, `pure-move`; Medium `editor-feature`, `settings-section`, `new-setting`, `shared-state`,
+  `bug-unproven-cause`; High `store-notes`, `startup-quit`, `platform-window`, `timers-deferred`, `save-paths`, `memory`.
+- Markdown: one line per field (each renders on its own line), and a blank line before `---` (without it the line above
+  turns into a heading).
 - Several items in flight: one card each, the one the reply is about first.
 - **Quiet relays:** a sub-session note that changes nothing ("still running", a launcher exit already reported) gets at
   most one plain line from the master, with no card and no tool calls. A card is for a phase change or a question.

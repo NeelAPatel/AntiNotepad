@@ -11,6 +11,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Never run `AntiNotepad.exe --quit` without `ANTINOTEPAD_DATA`: it targets the installed copy's instance.
 
 ## Where things are
+- `main` tip dd86b42 (2026-10-29, user: "merge it to main"): r9 + C30-loop-docs-v22-plan, a non-release merge, no tag.
 - `main`: tag `antinotepad-v0.6.0-untested-r9` (8ec1423, 2026-10-29, user: "bring all changes to main. Dev = Main") =
   r8 + A42c-checkbox-indent + A42d-list-commands (behavior-neutral) + C28 loop v2.1. Release build 0 warnings, SELFTEST
   PASS (CONTRACTS 13 rows: 12 pass, 1 manual); tree identical to dev (5545ae5). Installed copy still r8.
@@ -28,6 +29,10 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
 
 ## Now
+- Process redesign in discussion (2026-10-29), notes in `.coord/process-redesign.md`: only `main` and `dev` remain
+  (all other branches, worktrees and checkpoint refs deleted); new ID prefixes A / Loop / D / T agreed, counters reset at the
+  end of this era. Settled: status card, Claude attribution off, branch prefixes, naming, history shape (option B,
+  154 commits, preview `.coord/history-preview.md`). Still open: worktrees, commit sizing, coding semantics, widgets.
 - C30-loop-docs-v22-plan merged into dev (e2898d1, 2026-10-29, user: "merge it to main"; gate on dev PASS, CONTRACTS 13
   rows: 12 pass, 1 manual): loop v2.2 plan (`docs/loop-v2.2-plan.md`), wiki source `docs/wiki/` (published to
   AntiNotepad.wiki.git 78965eb), and the dormant v2.2 drop (`docs/v2.2/`, `tools/v2.2/`, called by nothing). dev and main
@@ -281,6 +286,9 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | idea: chime-picker | Choose the timer chime: native sound plus two more, stretch (was A56) | Low | Medium | needs you |
 | idea: floating-scrollbar | Modern floating scrollbar at the side, shown only while scrolling (user, 2026-10-29, A55 hand test: "a scroll bar shows, i didn't expect that"); open: hide vs fade, both split panes, existing bar styles | - | - | needs you |
 | idea: timer-enter-no-autostart | In a timer note, Enter after a timer line (e.g. `10s test`) starts that timer at once (`Editor/PadView.cs:698`, existing by design); user wants to write several timers first (user, 2026-10-29, A42c hand test: "that shouldnt be the case because i might be writing multiple timers"); open: what starts a timer then (Ctrl+Enter, chip click only?) | - | - | needs you |
+| idea: wrap-hanging-indent | When an indented bullet line soft-wraps, the wrapped part should start under the bullet's text, not under the bullet itself: in "• We're at a point w… they're easier to", "they're" sits about 4 columns left of "We're" (user, 2026-10-29, screenshots). Wanted: the same alignment as a typed new line, just without the bullet. Open: plain indented lines with no bullet, numbered lists and checkboxes | - | - | needs you |
+| idea: selection-convert-menu | Select several lines, right-click, and turn them into a list, checkboxes, timers etc.: each selected line gets the matching prefix (user, 2026-10-29, screenshot of the current right-click menu: Cut/Copy/Paste/Delete, Undo/Redo, Select all, New note, Search, split, pin, Settings, Hide). Open: which kinds (bullet, numbered, checkbox, timer, others?), a submenu or flat entries, toggling off or swapping lines that already have a prefix, blank lines in the selection | - | - | needs you |
+| idea: pinned-accent-ring | When the window is pinned (Ctrl+T), draw an accent-colored ring 2-4 px thick around the window's edge, so pinned is visible at a glance (user, 2026-10-29). Open: exact thickness, whether it follows the rounded corners, theme accent or a fixed color, a fade on pin/unpin, how it works with the frameless window and its shadow | - | - | needs you |
 
 ## Open (needs the user)
 - Live check not yet done: A30 Windows restart/sign-out saving an edit typed just before.
