@@ -37,8 +37,12 @@ Answer the card's Findings lines with evidence. Never skip this, whatever the ti
 - **Medium, High:** fill `.coord/templates/findings.md` into `.coord/tasks/<ID-slug>-audit.md`. Start a linked **Haiku**
   sub-session titled `<ID> · audit · <slug>`, role `auditor` (start_session, user_asked, use_worktree false,
   wake_when_done) whose brief is: in the master checkout (absolute paths only; read-only for product files), run
-  `bash .coord/tools/codex-run.sh director <ID-slug>-audit .coord/tasks/<ID-slug>-audit.md` in the background, wait for
-  the exit notification (no polling), check the report exists, commit nothing, and end its turn with the report path,
+  `CODEX_SANDBOX=read-only bash .coord/tools/codex-run.sh director <ID-slug>-audit .coord/tasks/<ID-slug>-audit.md` in the background, wait for
+  the exit notification (no polling), read only this invocation's output and copy the report named after `Report:` on
+  its final `DONE via <role>. Report: <path>` line (any role; the path ends before `  Log:`) to
+  `.coord/reports/<ID-slug>-audit.md`. If this invocation has no `DONE` line (stopped or failed), stop and end its turn
+  with the wrapper's last lines without copying anything; never use output or a report from an earlier run. Check the
+  copied report exists, commit nothing, and end its turn with the report path,
   its `READY:` line and the run's last lines. Tell the user in one line: working folder,
   brief file, log, report. Wait for the note; do not poll.
 - Stop and ask the user, with the card, when: dev already does what was asked; a bug did not reproduce (`READY: no`); the

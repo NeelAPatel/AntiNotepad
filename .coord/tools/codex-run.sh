@@ -3,10 +3,16 @@
 # Usage: .coord/tools/codex-run.sh <director|worker|backup|reviewer> <task-id> <task-file> [extra codex args]
 # Env:   CODEX_BUDGET_TAG  budget bucket (default: today). CODEX_MAX_DIRECTOR (20), CODEX_MAX_WORKER (10), CODEX_MAX_BACKUP (5), CODEX_MAX_REVIEWER (10), CODEX_REVIEW_EFFORT (medium)
 #        CODEX_TIMEOUT_MIN per-run wall limit (default 45). CODEX_WORKDIR (default: repo root). CODEX_DRY=1 prints the plan only.
+#        CODEX_SANDBOX workspace-write (default) or read-only.
 set -u
 ROOT="$(cd "$(dirname "$0")/../.." && pwd -W)"
 role="${1:?role: director|worker|backup|reviewer}"; task="${2:?task id, e.g. M9-function-contract-separation}"; file="${3:?task file}"; shift 3
 EXTRA=("$@")
+SANDBOX="${CODEX_SANDBOX-workspace-write}"
+case "$SANDBOX" in
+  workspace-write|read-only) ;;
+  *) echo "invalid CODEX_SANDBOX '$SANDBOX': expected workspace-write or read-only" >&2; exit 2;;
+esac
 if [[ ! "$task" =~ ^[A-Z][A-Za-z0-9]*(-[a-z0-9]+)+$ ]]; then
   echo "invalid task name '$task': expected <ID>-<slug> using ASCII letters, digits, and hyphens (slug lowercase)" >&2
   exit 2
@@ -31,17 +37,17 @@ attempt() {  # $1=role -> 0 ok, 3 cap reached, 4 limit-type failure (try next ti
   used=$(awk -F'\t' -v t="$TAG" -v r="$r" '$1==t && $3==r' "$LEDGER" | wc -l)
   if [ "$used" -ge "$cap" ]; then echo "CAP: $r runs used $used/$cap for tag $TAG" >&2; return 3; fi
   log="$LOGS/$task.$r.log"; out="$ROOT/.coord/reports/$task.$r.codex.md"
-  echo "PLAN: role=$r model=$model effort=$effort run=$((used+1))/$cap workdir=$WORKDIR task=$file log=$log report=$out timeout=${TMIN}m"
+  echo "PLAN: role=$r model=$model effort=$effort sandbox=$SANDBOX run=$((used+1))/$cap workdir=$WORKDIR task=$file log=$log report=$out timeout=${TMIN}m"
   [ "${CODEX_DRY:-0}" = 1 ] && return 0
   start=$(date +%s)
   [ -n "${CODEX_TRACE:-}" ] && set -x
   timeout "${TMIN}m" codex exec -m "$model" -c model_reasoning_effort="$effort" -c 'windows.sandbox="unelevated"' \
-    -C "$WORKDIR" --sandbox workspace-write --output-last-message "$out" "${EXTRA[@]}" - < "$file" > "$log" 2>&1
+    -C "$WORKDIR" --sandbox "$SANDBOX" --output-last-message "$out" "${EXTRA[@]}" - < "$file" > "$log" 2>&1
   rc=$?
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%ss\n' "$TAG" "$(date +%FT%T)" "$r" "$model" "$task" "exit=$rc" "$(( $(date +%s) - start ))" >> "$LEDGER"
   [ $rc -eq 0 ] && return 0
   [ $rc -eq 124 ] && { echo "TIMEOUT after ${TMIN}m ($r)" >&2; return 124; }
-  grep -qiE "usage limit|rate limit|quota|try again (at|in)|limit reached" "$log" && return 4
+  grep -qiE "usage limit|rate limit|quota|model is at capacity|try again (at|in)|limit reached" "$log" && return 4
   return $rc
 }
 

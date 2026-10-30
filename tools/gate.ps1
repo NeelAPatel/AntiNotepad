@@ -3,7 +3,7 @@
 param(
     [string]$Task,
     [string]$Base = 'dev',
-    [switch]$StrictScope,
+    [switch]$LooseScope,
     [ValidateRange(1, 2147483647)][int]$SizeWarn = 600,
     [ValidateRange(0, 2147483647)][int]$SizeGrowth = 25,
     [switch]$Keep,
@@ -53,6 +53,7 @@ function Add-Step {
         [string[]]$Lines = @()
     )
 
+    if ($Name -eq 'Scope' -and $LooseScope) { $Summary += ' (loose scope)' }
     $entry = [pscustomobject]@{
         Name = $Name
         Status = $Status
@@ -395,117 +396,122 @@ try {
         }
     }
 
-    if ($Ci) {
-        Add-Step -Name 'Scope' -Status 'SKIP' -Summary 'scope is skipped in CI mode'
-    }
-    else {
-        try {
-            $changedFiles = @(Get-ChangedFiles)
-            $roundMatch = [regex]::Match($Task, '^(?<base>.+)-r(?<number>[0-9]+)$')
-            [long]$roundNumber = 0
-            $isReworkRound = $roundMatch.Success -and
-                [long]::TryParse($roundMatch.Groups['number'].Value, [ref]$roundNumber) -and $roundNumber -ge 2
-            if (-not $isReworkRound) {
-                $briefPath = Join-Path $script:repoRoot ".coord/tasks/$Task.md"
-                if (-not (Test-Path -LiteralPath $briefPath -PathType Leaf)) {
-                    Add-Step -Name 'Scope' -Status 'WARN' -Summary "brief not found: .coord/tasks/$Task.md"
-                }
-                else {
-                    $brief = [IO.File]::ReadAllText($briefPath)
-                    $filesSection = [regex]::Match($brief, '(?ms)^## Files\s*\r?\n(.*?)(?=^##\s|\z)')
-                    if (-not $filesSection.Success) {
-                        Add-Step -Name 'Scope' -Status 'WARN' -Summary 'brief has no ## Files section'
-                    }
-                    else {
-                        $allowed = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
-                        foreach ($match in [regex]::Matches($filesSection.Groups[1].Value, '(?m)^\s*-\s+`([^`]+)`')) {
-                            $path = $match.Groups[1].Value.Trim().Replace('\', '/')
-                            if ($path.StartsWith('./', [StringComparison]::Ordinal)) { $path = $path.Substring(2) }
-                            if ($path.Length -gt 0) { [void]$allowed.Add($path) }
-                        }
-                        if ($allowed.Count -eq 0) {
-                            Add-Step -Name 'Scope' -Status 'WARN' -Summary '## Files contains no backticked file paths'
-                        }
-                        else {
-                            $outOfScope = @($changedFiles | Where-Object { -not $allowed.Contains($_) })
-                            if ($outOfScope.Count -eq 0) {
-                                Add-Step -Name 'Scope' -Status 'PASS' -Summary "$($changedFiles.Count) changed file(s); all are allowed by the brief"
-                            }
-                            else {
-                                $scopeStatus = if ($StrictScope) { 'FAIL' } else { 'WARN' }
-                                Add-Step -Name 'Scope' -Status $scopeStatus -Summary "$($outOfScope.Count) changed file(s) outside the brief's Files list" -Lines $outOfScope
-                            }
-                        }
-                    }
-                }
+    try {
+        $branch = (Get-GitNames @('rev-parse', '--abbrev-ref', 'HEAD')) -join ''
+        $scopeStatus = if ($Ci -or $LooseScope -or $branch -ceq $Base) { 'WARN' } else { 'FAIL' }
+        $changedFiles = @(Get-ChangedFiles)
+        $roundMatch = [regex]::Match($Task, '^(?<base>.+)-r(?<number>[0-9]+)$')
+        [long]$roundNumber = 0
+        $isReworkRound = $roundMatch.Success -and
+            [long]::TryParse($roundMatch.Groups['number'].Value, [ref]$roundNumber) -and $roundNumber -ge 2
+        if (-not $isReworkRound) {
+            $briefPath = Join-Path $script:repoRoot ".coord/tasks/$Task.md"
+            if (-not (Test-Path -LiteralPath $briefPath -PathType Leaf)) {
+                Add-Step -Name 'Scope' -Status $scopeStatus -Summary "brief not found: .coord/tasks/$Task.md"
             }
             else {
-                $baseTask = $roundMatch.Groups['base'].Value
-                $tasksDirectory = Join-Path $script:repoRoot '.coord/tasks'
-                $baseBriefName = "$baseTask.md"
-                $baseBriefPath = Join-Path $tasksDirectory $baseBriefName
-                if (-not (Test-Path -LiteralPath $baseBriefPath -PathType Leaf)) {
-                    Add-Step -Name 'Scope' -Status 'WARN' -Summary "base brief not found: .coord/tasks/$baseBriefName"
+                $brief = [IO.File]::ReadAllText($briefPath)
+                $filesSection = [regex]::Match($brief, '(?ms)^## Files\s*\r?\n(.*?)(?=^##\s|\z)')
+                if (-not $filesSection.Success) {
+                    Add-Step -Name 'Scope' -Status $scopeStatus -Summary 'brief has no ## Files section'
                 }
                 else {
-                    $briefsToRead = [Collections.Generic.List[object]]::new()
-                    $briefsToRead.Add([pscustomobject]@{ Number = 0L; Name = $baseBriefName; Path = $baseBriefPath })
-                    $roundPattern = '^' + [regex]::Escape($baseTask) + '-r(?<number>[0-9]+)\.md$'
-                    foreach ($candidate in (Get-ChildItem -LiteralPath $tasksDirectory -File)) {
-                        $candidateMatch = [regex]::Match($candidate.Name, $roundPattern, [Text.RegularExpressions.RegexOptions]::IgnoreCase)
-                        if (-not $candidateMatch.Success) { continue }
-                        [long]$candidateNumber = 0
-                        if ([long]::TryParse($candidateMatch.Groups['number'].Value, [ref]$candidateNumber) -and
-                            $candidateNumber -le $roundNumber) {
-                            $briefsToRead.Add([pscustomobject]@{
-                                Number = $candidateNumber
-                                Name = $candidate.Name
-                                Path = $candidate.FullName
-                            })
-                        }
-                    }
-                    $orderedBriefs = @($briefsToRead | Sort-Object Number, Name)
                     $allowed = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
-                    $briefLines = [Collections.Generic.List[string]]::new()
-                    $briefsWithoutFiles = [Collections.Generic.List[string]]::new()
-                    foreach ($briefEntry in $orderedBriefs) {
-                        $relativeBrief = ".coord/tasks/$($briefEntry.Name)"
-                        $briefLines.Add("read $relativeBrief")
-                        $brief = [IO.File]::ReadAllText($briefEntry.Path)
-                        $filesSection = [regex]::Match($brief, '(?ms)^## Files\s*\r?\n(.*?)(?=^##\s|\z)')
-                        if (-not $filesSection.Success) {
-                            $briefsWithoutFiles.Add("$relativeBrief has no ## Files section")
-                            continue
-                        }
-                        foreach ($match in [regex]::Matches($filesSection.Groups[1].Value, '(?m)^\s*-\s+`([^`]+)`')) {
-                            $path = $match.Groups[1].Value.Trim().Replace('\', '/')
-                            if ($path.StartsWith('./', [StringComparison]::Ordinal)) { $path = $path.Substring(2) }
-                            if ($path.Length -gt 0) { [void]$allowed.Add($path) }
-                        }
+                    foreach ($match in [regex]::Matches($filesSection.Groups[1].Value, '(?m)^\s*-\s+`([^`]+)`')) {
+                        $path = $match.Groups[1].Value.Trim().Replace('\', '/')
+                        if ($path.StartsWith('./', [StringComparison]::Ordinal)) { $path = $path.Substring(2) }
+                        if ($path.Length -gt 0) { [void]$allowed.Add($path) }
                     }
                     if ($allowed.Count -eq 0) {
-                        Add-Step -Name 'Scope' -Status 'WARN' -Summary 'rework briefs contain no backticked ## Files paths' -Lines @($briefLines + $briefsWithoutFiles)
+                        Add-Step -Name 'Scope' -Status $scopeStatus -Summary '## Files contains no backticked file paths'
                     }
                     else {
                         $outOfScope = @($changedFiles | Where-Object { -not $allowed.Contains($_) })
-                        $scopeLines = @($briefLines + $briefsWithoutFiles + $outOfScope)
-                        if ($briefsWithoutFiles.Count -gt 0) {
-                            Add-Step -Name 'Scope' -Status 'WARN' -Summary "$($briefsWithoutFiles.Count) brief(s) have no Files list; checked allowed paths from the other briefs" -Lines $scopeLines
-                        }
-                        elseif ($outOfScope.Count -eq 0) {
-                            Add-Step -Name 'Scope' -Status 'PASS' -Summary "$($changedFiles.Count) changed file(s); all are allowed by $($orderedBriefs.Count) rework brief(s)" -Lines $scopeLines
+                        if ($outOfScope.Count -eq 0) {
+                            Add-Step -Name 'Scope' -Status 'PASS' -Summary "$($changedFiles.Count) changed file(s); all are allowed by the brief"
                         }
                         else {
-                            $scopeStatus = if ($StrictScope) { 'FAIL' } else { 'WARN' }
-                            Add-Step -Name 'Scope' -Status $scopeStatus -Summary "$($outOfScope.Count) changed file(s) outside the rework briefs' Files lists" -Lines $scopeLines
+                            Add-Step -Name 'Scope' -Status $scopeStatus -Summary "$($outOfScope.Count) changed file(s) outside the brief's Files list" -Lines $outOfScope
                         }
                     }
                 }
             }
         }
-        catch {
-            Add-Step -Name 'Scope' -Status 'FAIL' -Summary $_.Exception.Message
+        else {
+            $baseTask = $roundMatch.Groups['base'].Value
+            $tasksDirectory = Join-Path $script:repoRoot '.coord/tasks'
+            $baseBriefName = "$baseTask.md"
+            $baseBriefPath = Join-Path $tasksDirectory $baseBriefName
+            if (-not (Test-Path -LiteralPath $baseBriefPath -PathType Leaf)) {
+                Add-Step -Name 'Scope' -Status $scopeStatus -Summary "base brief not found: .coord/tasks/$baseBriefName"
+            }
+            else {
+                $briefsToRead = [Collections.Generic.List[object]]::new()
+                $briefsToRead.Add([pscustomobject]@{ Number = 0L; Name = $baseBriefName; Path = $baseBriefPath })
+                $roundPattern = '^' + [regex]::Escape($baseTask) + '-r(?<number>[0-9]+)\.md$'
+                foreach ($candidate in (Get-ChildItem -LiteralPath $tasksDirectory -File)) {
+                    $candidateMatch = [regex]::Match($candidate.Name, $roundPattern, [Text.RegularExpressions.RegexOptions]::IgnoreCase)
+                    if (-not $candidateMatch.Success) { continue }
+                    [long]$candidateNumber = 0
+                    if ([long]::TryParse($candidateMatch.Groups['number'].Value, [ref]$candidateNumber) -and
+                        $candidateNumber -le $roundNumber) {
+                        $briefsToRead.Add([pscustomobject]@{
+                            Number = $candidateNumber
+                            Name = $candidate.Name
+                            Path = $candidate.FullName
+                        })
+                    }
+                }
+                $roundBriefName = "$Task.md"
+                if (-not (Test-Path -LiteralPath (Join-Path $tasksDirectory $roundBriefName) -PathType Leaf)) {
+                    $briefsToRead.Add([pscustomobject]@{ Number = $roundNumber; Name = $roundBriefName; Path = $null })
+                }
+                $orderedBriefs = @($briefsToRead | Sort-Object Number, Name)
+                $allowed = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+                $briefLines = [Collections.Generic.List[string]]::new()
+                $briefsWithoutFiles = [Collections.Generic.List[string]]::new()
+                foreach ($briefEntry in $orderedBriefs) {
+                    $relativeBrief = ".coord/tasks/$($briefEntry.Name)"
+                    $briefLines.Add("read $relativeBrief")
+                    if ($null -eq $briefEntry.Path) {
+                        $briefsWithoutFiles.Add("$relativeBrief not found")
+                        continue
+                    }
+                    $brief = [IO.File]::ReadAllText($briefEntry.Path)
+                    $filesSection = [regex]::Match($brief, '(?ms)^## Files\s*\r?\n(.*?)(?=^##\s|\z)')
+                    if (-not $filesSection.Success) {
+                        $briefsWithoutFiles.Add("$relativeBrief has no ## Files section")
+                        continue
+                    }
+                    $hasPaths = $false
+                    foreach ($match in [regex]::Matches($filesSection.Groups[1].Value, '(?m)^\s*-\s+`([^`]+)`')) {
+                        $path = $match.Groups[1].Value.Trim().Replace('\', '/')
+                        if ($path.StartsWith('./', [StringComparison]::Ordinal)) { $path = $path.Substring(2) }
+                        if ($path.Length -gt 0) { [void]$allowed.Add($path); $hasPaths = $true }
+                    }
+                    if (-not $hasPaths) { $briefsWithoutFiles.Add("$relativeBrief has no backticked ## Files paths") }
+                }
+                if ($allowed.Count -eq 0) {
+                    Add-Step -Name 'Scope' -Status $scopeStatus -Summary 'rework briefs contain no backticked ## Files paths' -Lines @($briefLines + $briefsWithoutFiles)
+                }
+                else {
+                    $outOfScope = @($changedFiles | Where-Object { -not $allowed.Contains($_) })
+                    $scopeLines = @($briefLines + $briefsWithoutFiles + $outOfScope)
+                    if ($briefsWithoutFiles.Count -gt 0) {
+                        Add-Step -Name 'Scope' -Status $scopeStatus -Summary "$($briefsWithoutFiles.Count) brief(s) have no Files list; checked allowed paths from the other briefs" -Lines $scopeLines
+                    }
+                    elseif ($outOfScope.Count -eq 0) {
+                        Add-Step -Name 'Scope' -Status 'PASS' -Summary "$($changedFiles.Count) changed file(s); all are allowed by $($orderedBriefs.Count) rework brief(s)" -Lines $scopeLines
+                    }
+                    else {
+                        Add-Step -Name 'Scope' -Status $scopeStatus -Summary "$($outOfScope.Count) changed file(s) outside the rework briefs' Files lists" -Lines $scopeLines
+                    }
+                }
+            }
         }
+    }
+    catch {
+        Add-Step -Name 'Scope' -Status 'FAIL' -Summary $_.Exception.Message
     }
 
     try {

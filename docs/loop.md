@@ -59,7 +59,7 @@ The master asks one question: approve, change, or drop. Nothing is built, and no
 ### Gates menu
 | Gate | Catches | Default for |
 |---|---|---|
-| `tools/gate.ps1` (build 0 warnings, selftest, LAYERS, CONTRACTS, seam, format, scope, size) | compile errors, broken promises, layering leaks, new format problems on changed lines (rules: `.editorconfig`), files outside the plan, god-file growth | every tier |
+| `tools/gate.ps1` (build 0 warnings, selftest, LAYERS, CONTRACTS, seam, format, scope, size) | compile errors, broken promises, layering leaks, new format problems on changed lines (rules: `.editorconfig`), files outside the plan (FAIL on item branches; WARN on dev, CI or `-LooseScope`), god-file growth | every tier |
 | Codex fresh review (`lens-review`) | logic, behavioral coupling, shared state and latches, timing and caches, missed inputs, cleanup | Medium, High |
 | Claude `design-reviewer` | responsibility, boundaries, coupling between features, future cost | High |
 | New `CONTRACTS` row | the fixed bug or new promise coming back unseen | every bug fix |

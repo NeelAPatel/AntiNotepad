@@ -15,7 +15,8 @@ Headless, in the background; the process exit wakes the manager:
 | reviewer | gpt-6.1-sol `CODEX_REVIEW_EFFORT` (medium); fresh lens review, see `docs/loop.md` | 10 |
 
 - The wrapper adds the only working sandbox route on this machine (`-c 'windows.sandbox="unelevated"'` with
-  `--sandbox workspace-write`, never full access).
+  `--sandbox`, never full access). Audits run `CODEX_SANDBOX=read-only`; builds and reviews keep the default
+  `workspace-write`.
 - Failover on a reached cap or a usage/rate-limit error: director -> worker -> backup -> stop; reviewer -> backup -> stop. Other failures are not retried.
 - The per-day caps are the wrapper's own safety counter (`.coord/logs/usage.tsv`), not the provider's usage limits. Override with
   `CODEX_MAX_DIRECTOR|WORKER|BACKUP`; `CODEX_TIMEOUT_MIN` (45) caps one run; `CODEX_DRY=1` prints the plan only.
