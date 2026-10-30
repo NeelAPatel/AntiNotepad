@@ -123,7 +123,20 @@ and its Done means. Role: director (gpt-6.1-sol medium). Never commit, never swi
 card, never touch `product/`. Report `.coord/reports/Loop2-loop-v3-1-<step>.md` in the item template's sections.
 
 ## Check
-<Filled per step and at the end.>
+- **Steps:** 3.1a-3.1i committed one per step (c644877 card ... a50c538 rehearsal). Gate PASS on each step; loop-lint
+  PASS from 3.1g on.
+- **Codex review (lens-review) on a, b, c, e, f, g:** rework on a, b, c, f, g (one `-r2` round each, all then accept);
+  e accepted first time. Proven findings fixed: catch-up false PASS on a git enumeration failure (a); labeled template
+  placeholders passing the merge preflight (b); RETEST missing paths with spaces (c); report copy after failover and a
+  too-wide capacity match (f); escaped Markdown links and a file passed as `-Root` (g). One minor left: a multiline
+  placeholder is not matched by the helper, but the Check guard still rejects the template (b r2 review).
+- **Rehearsal (3.1i):** 8 of 8 PASS in a throwaway clone (`.coord/reports/Loop2-loop-v3-1-rehearsal.md`). Notes: merge
+  preflight checks card sections before behind-dev (fine); the Codex check proves a nested worktree sees `.codex/agents`
+  with no trust warning, not a live `lens_reviewer` spawn. A live `/scan-backlog` with Haiku scouts is not exercised yet.
+- **Env miss:** Codex "Selected model is at capacity" did not fail over to the backup; fixed in 3.1f.
+- **Bounds:** requested (wake v2.2, best loop yet, one branch, small commits, no worktree) vs approved Plan with the round
+  2 scope change vs done: within plan. Not done here: the wiki update (waits for the user's OK on the flow diagram,
+  https://claude.ai/artifact/4CfTQAuvL4ZXwBXwYsqWi7) and the publish; Master 2 not messaged (user: no need).
 
 ## Hand test
 None (not visible).

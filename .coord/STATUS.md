@@ -1,41 +1,43 @@
 # STATUS
 
-Updated: 2026-10-29
+Updated: 2026-10-30
 Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 
 ## Working rules right now
-- Master chat (`docs/loop.md`, "Sessions"): current is `Master 1 - loop v2 - bugs-design-system-ownership` (opened
-  2026-10-29). The previous master, "AntiNotepad task execution plan" (loop v1), was closed on 2026-10-29 with nothing in flight.
+- One master (user, 2026-10-30: "There is no two masters, theres only 1"): `Master 2 · Loop v3 · era-two-start`
+  (opened 2026-10-29) runs every item and owns STATUS. Beside it, a **loop discussion chat** observes and discusses the
+  loop (`docs/loop.md`, "Sessions"); it ran Loop2-loop-v3-1 on the user's hand-over and otherwise runs no item.
+  The previous master, `Master 1 - loop v2 - bugs-design-system-ownership` (now titled "Era0 - ..."), is closed
+  (2026-10-29) with nothing in flight.
+- **Loop v3.1 is live** (Loop2-loop-v3-1, 2026-10-30). **Loop freeze:** no new `Loop` items until about five app items
+  have merged; after that, rules change only on a miss repeated in `.coord/lessons.md`.
 - Codex is back (user, 2026-10-25): director Sol medium delegating to Luna xhigh; Claude briefs, reviews, commits.
 - Computer Use is off until the user's explicit go-ahead; live checks are done by the user by hand in the dev copy.
 - Never run `AntiNotepad.exe --quit` without `ANTINOTEPAD_DATA`: it targets the installed copy's instance.
 
 ## Where things are
-- `main` tip dd86b42 (2026-10-29, user: "merge it to main"): r9 + C30-loop-docs-v22-plan, a non-release merge, no tag.
-- `main`: tag `antinotepad-v0.6.0-untested-r9` (8ec1423, 2026-10-29, user: "bring all changes to main. Dev = Main") =
-  r8 + A42c-checkbox-indent + A42d-list-commands (behavior-neutral) + C28 loop v2.1. Release build 0 warnings, SELFTEST
-  PASS (CONTRACTS 13 rows: 12 pass, 1 manual); tree identical to dev (5545ae5). Installed copy still r8.
-- Previous: `main`: tag `antinotepad-v0.6.0-untested-r8` (42ad744, 2026-10-29, user: "Release now") = r7 + A55-split-view-clip,
-  A54-link-hover-click, A52-move-old-folder-rename-warning, A53 divider guard, A45 dev badge (dev-only) and the loop v2
-  tooling (C13-C27). Release build 0 warnings, SELFTEST PASS (CONTRACTS 11 rows: 10 pass, 1 manual); tree identical to dev
-  at release (ddb6ce7). Installed copy upgraded to r8 by the user with `tools/install.ps1` (2026-10-29: "Upgraded").
-- Previous: `main`: tag `antinotepad-v0.6.0-untested-r7` (f4b8aee, 2026-10-28, user: "Yes, release r7") = r6 + A37-caret-drag-jump
-  + the A39-A44 modularity reorg (one-way layering, 104 LAYERS rows, `tools/check-platform-seam.ps1`) + A43b missing-folder
-  fix and recovery. Release build 0 warnings, SELFTEST PASS; tree identical to dev at release.
-- r6 (2026-10-25) was dev reverted to just after A30 (A31-A33 reverted, A34 dropped: A32/A34 forced caption-window styles
-  onto the frameless pad, losing corners and shadow). Windowing is still r4's.
-- Installed copy: r8 (user upgraded 2026-10-29).
-- Finished briefs, reports and the A1 audit doc were removed from the tree on 2026-10-25; they live in git under tag
-  `archive/coord-2026-10-25`. Locked choices stay in `docs/decisions.md`.
+- **History rewritten (2026-10-29, user: "Yes, rewrite"):** 623 era-one commits became 156 (option B, preview
+  `.coord/history-preview.md`). `main` and `dev` both at 8d18f72 (`Loop1-process-v3`), files identical to the old dev.
+  Commit hashes quoted below and in older cards and reports point into the old history.
+- **Tags now:** `v0.1.0`, `milestone/overnight-rebuild`, `v0.5.0`, `v0.6.0-rc1` to `rc9` (rc9 = the old
+  `antinotepad-v0.6.0-untested-r9`; each release tag checked to carry exactly the files it shipped). All other old tags
+  were deleted locally and on GitHub.
+- **Old history kept:** tags `archive/full-history-2026-10-29` (old dev tip) and `archive/main-2026-10-29` (old main
+  tip) on GitHub, plus the bundle `F:\LocalVSProj\Visual Studio Apps\AntiNotepad-history-backup-2026-10-29.bundle`
+  (all refs, verified).
+- Installed copy: r8 (= `v0.6.0-rc8`; user upgraded 2026-10-29). Windowing is still r4's (r6 rollback, 2026-10-25).
+- Locked choices: `docs/decisions.md`.
 
 ## Now
-- Loop1-process-v3 (Low, docs-tools): **done**, squash-merged onto dev (2026-10-29, user: "Merge it"); gate on dev PASS
-  (build 0 warnings, SELFTEST PASS, CONTRACTS 13 rows: 12 pass, 1 manual). dev now runs **loop v3** (`docs/loop.md`,
-  `docs/coding.md`, `docs/glossary.md`, `.editorconfig`). Next: the history rewrite (dry run re-run on the final dev,
-  then the user's go), then era two starts with fresh counters and a new master (`Master 2 · Loop v3 · <slug>`).
-- Process redesign settled (2026-10-29), record in `.coord/process-redesign.md`: only `main` and `dev` remain; history
-  rewrite shape option B (154 commits, preview `.coord/history-preview.md`, local only). The five leftover folders in
-  `.claude/worktrees/` (A45, A53, A54, C20, C25) were deleted on the user's word (2026-10-29).
+- Loop2-loop-v3-1 (Low, docs-tools): **done**, step commits fast-forwarded onto dev (2026-10-30, user: "manage it to
+  completion"). dev runs **loop v3.1**: `tools/approve.ps1`, `tools/catch-up.ps1`, `tools/merge-preflight.ps1`,
+  `tools/files-overlap.ps1`, `tools/scan-delta.ps1` + `/scan-backlog`, strict gate scope, `tools/loop-lint.ps1`,
+  read-only Codex audits; dormant v2.2 absorbed (`tools/v2.2/` removed). Rehearsal 8/8 PASS. Left: the wiki pages, after
+  the user's OK on the flow diagram (https://claude.ai/artifact/4CfTQAuvL4ZXwBXwYsqWi7). Next: Master 2 starts the backlog.
+- **Era one ended (2026-10-29).** Process redesign settled (`.coord/process-redesign.md`) and rolled out as **loop v3**
+  by Loop1-process-v3 (squash-merged; gate on dev PASS). History rewritten (see "Where things are"). Next: era two with
+  fresh counters and a new master, `Master 2 · Loop v3 · <slug>`; first candidates are the three file splits from
+  `docs/coding.md`, `D1-ui-region-names` and `idea: wiki-loop-v3`. Any other clone of the repo must be re-cloned.
 - C30-loop-docs-v22-plan merged into dev (e2898d1, 2026-10-29, user: "merge it to main"; gate on dev PASS, CONTRACTS 13
   rows: 12 pass, 1 manual): loop v2.2 plan (`docs/loop-v2.2-plan.md`), wiki source `docs/wiki/` (published to
   AntiNotepad.wiki.git 78965eb), and the dormant v2.2 drop (`docs/v2.2/`, `tools/v2.2/`, called by nothing). dev and main
@@ -225,6 +227,8 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 ### Pending work
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
+| **Loop v3.1 (first; the backlog waits for it, user 2026-10-30)** | | | | |
+| Loop2-loop-v3-1 | Loop v3.1: dormant v2.2 absorbed (overlap, catch-up, conflicts, hand-test queue), approve/merge preflights, strict scope, read-only audits, loop-lint, loop.md fixes, rehearsal; one branch, one commit per step, run by the loop chat | Low | Large | done |
 | **Bugs** | | | | |
 | A53-split-divider-height | Split-view divider stops short of the window's bottom edge; make it full height (was A58) | Low | Small | done |
 | A54-link-hover-click | Every URL opens on Ctrl+click; shortened links always show a hand, other URLs show it while Ctrl is held (widened in r3, user) | Low | Small | done |
