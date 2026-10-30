@@ -1,54 +1,46 @@
+**In short**
+
+A failure goes to the person or tool able to resolve it. The session already checking the item names the cause, so diagnosis needs no extra agent. The card keeps a lesson, and the master records it at Merge (`docs/loop.md`, “Triage, lessons, scores”).
+
 # Triage and Lessons
 
-Things fail. The loop's answer is cheap and consistent: find **one cause**, send the problem to the right place, and write
-one line so the loop can learn. (Added in C28-loop-cheap-checks, loop v2.1.)
+## One cause, one route
 
-## Triage: one cause, one route
-Triage happens on every failure (a failed gate, a review that asks for rework, a failed hand test). It is done by the
-helper that already holds the context, so it costs no extra agent.
+Every gate failure, rework verdict, and failed hand check is triaged in the Check session. These routes come from `.claude/skills/review-task/SKILL.md`, step 4a.
 
-```mermaid
-flowchart TD
-    F["Something failed"] --> T{"What is the cause?"}
-    T -- "code: the build does not do what the Plan says" --> C1["Rework round to Codex, with only the failing lines"]
-    T -- "test: a test or contract is wrong, not the app" --> C2["Rework round limited to the test files"]
-    T -- "plan: Findings or Plan were wrong" --> C3["Stop. Master re-plans and asks you for Go again"]
-    T -- "env: tooling, cache, flaky run" --> C4["Run the gate once more; fix the script or tell the master"]
-    T -- "judgment: only you can decide" --> C5["Ask you one question"]
-```
-
-| Cause | Meaning | Goes to |
+| Cause | Meaning | Route |
 |---|---|---|
-| `code` | the build does not match the Plan | Codex, as a rework round (`-r2`, `-r3`) |
-| `test` | a self-test, contract or probe is wrong | Codex, limited to test files |
-| `plan` | Findings or Plan were wrong (wrong cause, missed a caller, impossible goal) | the master, then you |
-| `env` | tooling, build cache, a flaky run | re-run once; then a one-line script fix or the master |
-| `judgment` | only you can decide | you |
+| code | Implementation does not match Plan | Codex round brief with failing lines or proven findings |
+| test | Selftest, contract, or probe is wrong | Codex round limited to test files |
+| plan | Findings or Plan were wrong | Stop; master re-plans and asks for approval again |
+| env | Tooling, cache, sandbox, or flaky run | Repeat gate once; then manager-owned one-line gate fix or tell master |
+| conflict | Catch-up stopped on conflicts | Item session resolves on its branch, preserves both plans, commits merge, repeats gate |
+| judgment | Only the user can decide | Ask that one question with the status card |
 
-Only `code` and `test` go back to Codex, which keeps AI usage down. A third rework round goes to you instead of looping on.
+A conflict that changes an assumption of the approved Plan is a semantic clash: abort the catch-up merge and route as plan (`.claude/skills/review-task/SKILL.md`, step 4a). See [Parallel and Branches](Parallel-and-Branches).
 
-## Lessons: what the loop missed
-Each failure leaves one **Misses** line on the item card: where it was found, the cause, which check caught it, which
-check *should* have caught it earlier, and a one-line lesson. At Merge the master copies these into `.coord/lessons.md`
-and adds one **Scores** row for the item (rework rounds, gate failures, what each review found).
+## Keep rework bounded
 
-Real examples from the first lessons table:
-| Item | Found at | Cause | What went wrong | Rule that grew from it |
-|---|---|---|---|---|
-| A53-split-divider-height | Hand test | plan | dev already did what was asked; nobody checked "Now" | Findings must state what the app does today |
-| A54-link-hover-click | Check | plan | a bug was built without being reproduced | reproduce first, or stop and ask |
-| A54-link-hover-click | Hand test | judgment | "all links or only shortened ones?" asked only at the end | scope questions are asked at Plan |
+Rework uses the same branch and a brief from `.coord/templates/round.md`. The gate uses the round name, such as `<ID-slug>-r2`, and combines Files lists from the base card and round briefs. Reviews read base and round reports. Only two rework rounds, -r2 and -r3, are allowed before -r4 goes to the user (`docs/loop.md`, “Rules”; `.claude/skills/review-task/SKILL.md`, steps 3–4a).
 
-## Self-improvement, with your approval
-If the same cause and the same "should have caught" appear **twice** with no rule change in between, the master proposes
-an unnumbered `idea:` row naming the rule or checklist file to change. Rules change only through an item you approve.
+## Learn from misses
 
-## Reviewer scores
-The Scores table shows whether each review earns its run. Many empty reviews on items that later had misses mean that
-review's checklist needs a change, not that more reviewers are needed.
+The card's Misses entry records where the failure was found, its cause, what caught it, what should have caught it earlier, and a one-line lesson. At Merge, the master copies it into `.coord/lessons.md` and adds a Scores row (`.claude/skills/merge-task/SKILL.md`, step 5; `.coord/lessons.md`, “Misses” and “Scores”).
 
-## Cost
-A green item adds no AI calls (format check and ledger are scripts). A failure adds a few lines in a session that is
-already open. The retro is one row at Merge.
+| Recorded example | Lesson | Evidence |
+|---|---|---|
+| A53-split-divider-height | Check what dev already does before building | `.coord/lessons.md`, Misses, 2026-10-29 |
+| A54-link-hover-click | Reproduce first; ask scope questions at Plan | `.coord/lessons.md`, Misses, 2026-10-29 |
+| Loop2-loop-v3-1 | Review found seven proven problems across five steps | `.coord/lessons.md`, Scores, 2026-10-30; [worked example](Worked-Example-Loop2) |
 
-Next: [Where Files Live](Where-Files-Live).
+When the same cause and “should have caught” pair occurs twice without a rule change, the master proposes an unnumbered idea naming the rule or checklist to change. It does not rewrite rules at Merge. After v3.1, the loop freeze pauses new Loop items until about five app items have merged; thereafter repeated misses govern changes (`docs/loop.md`, “Rules” and “Triage, lessons, scores”).
+
+Scores help assess whether reviews find useful problems. Empty reviews followed by escaped bugs point to a checklist change rather than automatically adding reviewers (`docs/loop.md`, “Triage, lessons, scores”).
+
+## Sources
+
+- `docs/loop.md` — Rules; Triage, lessons, scores.
+- `.claude/skills/review-task/SKILL.md` — steps 3–5, conflict and semantic-clash routes.
+- `.coord/templates/round.md` — bounded rework brief.
+- `.claude/skills/merge-task/SKILL.md` — step 5, master-owned lessons.
+- `.coord/lessons.md` — actual misses and scores.

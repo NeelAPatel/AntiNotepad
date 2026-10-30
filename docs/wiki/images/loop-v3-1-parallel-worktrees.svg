@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 330" role="img" aria-label="Git view of two items running in parallel worktrees: approve.ps1 checks the cap and file overlap, the first item squashes onto dev, the second catches up with dev before its own squash." font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11"><rect x="0" y="0" width="540" height="330" fill="#ffffff"/>
+        <defs><marker id="ga" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#1d2421"/></marker></defs>
+        <line x1="20" y1="170" x2="525" y2="170" stroke="#1d2421" stroke-width="2.5"/>
+        <text x="20" y="160" font-weight="600" fill="#1d2421">dev</text>
+        <path d="M60 170 C60 110 80 90 110 90 H260" fill="none" style="stroke:#b4621a" stroke-width="2"/>
+        <path d="M260 90 C290 90 300 120 300 164" fill="none" style="stroke:#b4621a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ga)"/>
+        <circle cx="140" cy="90" r="5" style="fill:#b4621a"/><circle cx="200" cy="90" r="5" style="fill:#b4621a"/><circle cx="250" cy="90" r="5" style="fill:#b4621a"/>
+        <text x="110" y="76" font-weight="600" style="fill:#b4621a">feat/A2-… in .claude/worktrees/feat/A2-…</text>
+        <text x="140" y="108" text-anchor="middle" fill="#1d2421" opacity=".8">card</text><text x="200" y="108" text-anchor="middle" fill="#1d2421" opacity=".8">build</text><text x="250" y="108" text-anchor="middle" fill="#1d2421" opacity=".8">check</text>
+        <text x="306" y="132" fill="#1d2421">squash</text>
+        <path d="M95 170 C95 230 115 250 145 250 H460" fill="none" style="stroke:#0f7a80" stroke-width="2"/>
+        <path d="M460 250 C490 250 495 220 495 176" fill="none" style="stroke:#0f7a80" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ga)"/>
+        <circle cx="170" cy="250" r="5" style="fill:#0f7a80"/><circle cx="240" cy="250" r="5" style="fill:#0f7a80"/>
+        <circle cx="360" cy="250" r="6" style="fill:#ffffff;stroke:#0f7a80" stroke-width="2.5"/><circle cx="440" cy="250" r="5" style="fill:#0f7a80"/>
+        <text x="145" y="290" font-weight="600" style="fill:#0f7a80">feat/A3-… in .claude/worktrees/feat/A3-…</text>
+        <text x="170" y="268" text-anchor="middle" fill="#1d2421" opacity=".8">card</text><text x="240" y="268" text-anchor="middle" fill="#1d2421" opacity=".8">build</text><text x="360" y="272" text-anchor="middle" fill="#1d2421" opacity=".8">merge dev in</text><text x="440" y="268" text-anchor="middle" fill="#1d2421" opacity=".8">check</text>
+        <circle cx="300" cy="170" r="6" style="fill:#b4621a"/><circle cx="495" cy="170" r="6" style="fill:#0f7a80"/><circle cx="40" cy="170" r="5" fill="#1d2421"/>
+        <path d="M306 175 C330 200 350 220 357 243" fill="none" style="stroke:#2f7a55" stroke-width="2" marker-end="url(#ga)"/>
+        <text x="338" y="200" font-weight="600" style="fill:#2f7a55">catch-up.ps1</text>
+        <text x="338" y="214" style="fill:#2f7a55">CLEAN, RETEST: no</text>
+        <rect x="20" y="16" width="212" height="34" rx="6" style="fill:#ddf0e5;stroke:#2f7a55"/>
+        <text x="30" y="31" font-weight="600" style="fill:#2f7a55">approve.ps1 for each item</text>
+        <text x="30" y="44" style="fill:#2f7a55">at most 3 in flight · Files must not overlap</text>
+        <rect x="300" y="16" width="226" height="34" rx="6" style="fill:#ddf0e5;stroke:#2f7a55"/>
+        <text x="310" y="31" font-weight="600" style="fill:#2f7a55">merge-preflight.ps1 for A3</text>
+        <text x="310" y="44" style="fill:#2f7a55">refuses until dev is inside the branch</text>
+        <text x="20" y="318" fill="#1d2421" opacity=".85">One dev copy on screen: A2's hand test runs first (oldest accepted), then A3's.</text>
+      </svg>

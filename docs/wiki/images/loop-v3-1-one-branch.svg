@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 330" role="img" aria-label="Git view of one branch checked out in the main checkout with approve.ps1 -NoWorktree, small step commits, and nothing else approved until it merges." font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11"><rect x="0" y="0" width="540" height="330" fill="#ffffff"/>
+        <defs><marker id="gb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#1d2421"/></marker></defs>
+        <line x1="20" y1="230" x2="80" y2="230" stroke="#1d2421" stroke-width="2.5"/>
+        <line x1="80" y1="230" x2="470" y2="230" stroke="#1d2421" stroke-width="2.5" stroke-dasharray="2 5" opacity=".5"/>
+        <line x1="470" y1="230" x2="525" y2="230" stroke="#1d2421" stroke-width="2.5"/>
+        <text x="20" y="220" font-weight="600" fill="#1d2421">dev</text>
+        <circle cx="40" cy="230" r="5" fill="#1d2421"/>
+        <path d="M70 230 C70 160 90 140 120 140 H440" fill="none" style="stroke:#b4621a" stroke-width="2"/>
+        <path d="M440 140 C470 140 480 170 485 222" fill="none" style="stroke:#b4621a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#gb)"/>
+        <g style="fill:#b4621a"><circle cx="140" cy="140" r="5"/><circle cx="185" cy="140" r="5"/><circle cx="230" cy="140" r="5"/><circle cx="275" cy="140" r="5"/><circle cx="320" cy="140" r="5"/><circle cx="365" cy="140" r="5"/><circle cx="410" cy="140" r="5"/></g>
+        <g text-anchor="middle" fill="#1d2421" opacity=".8"><text x="140" y="160">card</text><text x="185" y="160">3.1a</text><text x="230" y="160">3.1b</text><text x="275" y="160">3.1c</text><text x="320" y="160">…</text><text x="365" y="160">3.1i</text><text x="410" y="160">close</text></g>
+        <circle cx="490" cy="230" r="6" style="fill:#b4621a"/>
+        <text x="120" y="124" font-weight="600" style="fill:#b4621a">chore/Loop2-loop-v3-1, in the main checkout</text>
+        <text x="90" y="256" fill="#1d2421" opacity=".85">nothing else is approved until this merges</text>
+        <text x="474" y="256" fill="#1d2421">merge</text>
+        <rect x="20" y="16" width="250" height="34" rx="6" style="fill:#ddf0e5;stroke:#2f7a55"/>
+        <text x="30" y="31" font-weight="600" style="fill:#2f7a55">approve.ps1 -NoWorktree</text>
+        <text x="30" y="44" style="fill:#2f7a55">only when you say so; docs or tooling only</text>
+        <rect x="290" y="16" width="236" height="34" rx="6" style="fill:#ddf0e5;stroke:#2f7a55"/>
+        <text x="300" y="31" font-weight="600" style="fill:#2f7a55">gate.ps1 on every step commit</text>
+        <text x="300" y="44" style="fill:#2f7a55">strict scope against the card's Files</text>
+        <text x="20" y="300" fill="#1d2421" opacity=".85">Normally one squash commit lands on dev. Loop2 kept its 10 step</text>
+        <text x="20" y="316" fill="#1d2421" opacity=".85">commits and fast-forwarded, on your word.</text>
+      </svg>

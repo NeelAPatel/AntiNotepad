@@ -29,6 +29,11 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Locked choices: `docs/decisions.md`.
 
 ## Now
+- Loop2-loop-v3-1-wiki (Low, docs-tools): **done**, squashed onto dev (2026-10-30, user: "Merge to dev and publish"); gate
+  on dev PASS. `docs/wiki/` rewritten for loop v3.1 (Getting Started, Parallel and Branches, Backlog Scans, a Loop2 worked
+  example, Known limits; every claim cites a file), two Codex accuracy reviews accept. Noticed: `docs/loop.md` "Sessions"
+  says the auditor "commits" its report, but "Branches" and `/next-task` step 2 commit nothing before Approve (docs fix,
+  needs you; loop freeze applies).
 - Loop2-loop-v3-1 (Low, docs-tools): **done**, step commits fast-forwarded onto dev (2026-10-30, user: "manage it to
   completion"). dev runs **loop v3.1**: `tools/approve.ps1`, `tools/catch-up.ps1`, `tools/merge-preflight.ps1`,
   `tools/files-overlap.ps1`, `tools/scan-delta.ps1` + `/scan-backlog`, strict gate scope, `tools/loop-lint.ps1`,

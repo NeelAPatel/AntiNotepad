@@ -1,56 +1,62 @@
+**In short**
+
+The item card explains one change; STATUS explains the whole project. Rules, briefs, reports, and scripts each have a separate home. The master owns the shared project record while item sessions work in isolated checkouts (`docs/loop.md`, “Files,” “Sessions,” and “Branches, worktrees and commits”).
+
 # Where Files Live
 
-Paths are relative to the repository root.
+## Rules and instructions
 
-```mermaid
-flowchart TD
-    Root["Repository"] --> A["AGENTS.md and CLAUDE.md: project rules"]
-    Root --> Docs["docs/: the rules in prose"]
-    Root --> Coord[".coord/: the working notes of the loop"]
-    Root --> Tools["tools/: scripts"]
-    Root --> Claude[".claude/: skills, hooks, worktrees"]
-    Root --> Prod["product/AntiNotepad: the app"]
-    Docs --> D1["loop.md: the law"]
-    Docs --> D2["agents.md: launching Codex"]
-    Docs --> D3["dev-loop.md: dev copy and installing"]
-    Docs --> D4["decisions.md: why things are the way they are"]
-    Docs --> D5["wiki/: these pages"]
-    Coord --> C1["STATUS.md: where everything stands"]
-    Coord --> C2["tasks/: one item card per item"]
-    Coord --> C3["reports/: Codex reports, gate reports"]
-    Coord --> C4["templates/: blank cards and briefs"]
-    Coord --> C5["lessons.md: misses and scores"]
-    Claude --> K1["skills/: the three commands"]
-    Claude --> K2["worktrees/: one folder per item in flight"]
-```
+Paths here are relative to the repository root. This wiki explains the rules; `docs/loop.md` is authoritative when they differ (`docs/loop.md`, “Files”).
 
-## The files you will actually open
-| File | What it is for |
+| File | Purpose |
 |---|---|
-| `.coord/STATUS.md` | the single "where are we" page: working rules, what is happening now, the plan |
-| `.coord/roadmap.html` | the plan as a table, rebuilt automatically from STATUS; open it with `/roadmap` |
-| `.coord/tasks/<ID-slug>.md` | the item card: request, findings, plan, your go, check, hand test |
-| `.coord/reports/` | Codex reports and reviews (`<ID-slug>.md`, `.review.md`); gate reports are rebuilt each run and not saved in git |
-| `.coord/lessons.md` | what the loop missed, and how each review scored |
-| `docs/loop.md` | the rules of the loop (this wiki is the readable version) |
-| `AGENTS.md` | project rules, loaded by both Claude and Codex |
+| `AGENTS.md` | Project rules and pointers, loaded through `CLAUDE.md` for Claude and by Codex |
+| `docs/loop.md` | Phases, tiers, ownership, sessions, branches, and triggers |
+| `docs/agents.md` | Codex models, launch wrapper, sandbox, and reports |
+| `docs/dev-loop.md` | Dev copy, data isolation, build and install commands |
+| `docs/coding.md` | Comments, formatting, file jobs, and folders, applied on touch |
+| `docs/decisions.md` | Locked design choices |
+| `docs/glossary.md` | Shared terms |
+| `.claude/skills/next-task/SKILL.md` | Request through Approve and Build dispatch |
+| `.claude/skills/scan-backlog/SKILL.md` | Snapshot research and proposed backlog order |
+| `.claude/skills/review-task/SKILL.md` | Gates, bounds check, triage, and hand-test handover |
+| `.claude/skills/merge-task/SKILL.md` | Merge checks, squash, lessons, push, and cleanup |
+| `.claude/skills/roadmap/SKILL.md` | Open the local roadmap |
 
-## The three commands
-| Command | Who runs it | Does |
+The purpose and ownership of these files are defined in `docs/loop.md`, “Files,” and in each skill's numbered steps. See [Getting Started](Getting-Started) for the commands a user types.
+
+## Working records
+
+| Location or example | Purpose and lifetime | Source |
 |---|---|---|
-| `/next-task` | master | Request to Go, then starts Build |
-| `/review-task <ID-slug>` | build helper | Check: gates, bounds check, hands over to you |
-| `/merge-task <ID-slug>` | master | Merge, gate again, one STATUS commit, push, clean up |
+| `.coord/STATUS.md` | Master-owned state and plan on dev; uncommitted edits ride the next item commit, or a `chore: status` commit at the end of the day if nothing lands | `docs/loop.md`, Branches |
+| .coord/roadmap.html (generated) | Local view of STATUS; rebuilt by hooks, reloads every three seconds | `docs/loop.md`, Rules; `.claude/settings.json` |
+| `.coord/templates/item.md` | Blank card: Request, Findings, Plan, Files, Contracts, Approve, For Codex, Check, Hand test | Template headings |
+| `.coord/templates/findings.md` | Read-only audit prompt | Template role and final-message sections |
+| `.coord/templates/scan.md` | Snapshot scout prompt and research format | Template opening and headings |
+| `.coord/templates/review.md` | Fresh review prompt | Inputs and Write sections |
+| `.coord/templates/round.md` | Rework prompt | Template |
+| `.coord/tasks/Loop2-loop-v3-1.md` | Concrete example of a growing item card | Card sections |
+| `.coord/reports/Loop2-loop-v3-1-rehearsal.md` | Concrete rehearsal report | Report checks |
+| `.coord/lessons.md` | Master-owned Misses and Scores, copied at Merge | Lessons opening; merge-task step 5 |
 
-## Branches and worktrees
-- `main`: releases only, tagged when you say so.
-- `dev`: where finished items are combined. It receives only merges plus one status commit per merge.
-- `feat/<ID-slug>`: one per item, created at Request. Each lives in its own folder, `.claude/worktrees/<ID-slug>`, so
-  several items never share a working folder. After the merge the folder is removed and the branch is kept until the next
-  release.
+Cards use the task-name pattern under .coord/tasks; reports use it under .coord/reports. Generated gate reports end in .gate.md and are not committed. Backlog research lives under .coord/research with the idea slug and a full scanned SHA; it remains untracked until Approve (`docs/loop.md`, “Files,” “Rules,” and “Backlog scans”).
 
-## The dev copy
-There is one test copy of the app (`build/dev`) with its own data, never your real notes. Starting it from any item
-replaces the previous one, so **hand tests happen one at a time**. Your installed copy is only upgraded when you ask.
+Codex logs and usage.tsv live in the main checkout's .coord/logs, shared across worktrees so removing a worktree does not reset counters. The wrapper's last-message output goes to the launching checkout's .coord/reports, named by task and actual role (`.coord/tools/codex-run.sh`, MAIN, LOGS, LEDGER and attempt).
 
-Next: [Loop History](Loop-History).
+## Checkouts and app data
+
+Each approved item normally gets a branch and a matching folder under .claude/worktrees, with feat/, fix/, refactor/, docs/, or chore/ prefix. The master stays on dev; item branches never edit STATUS. At Merge, one squashed commit carries the item and STATUS/lessons changes. Cleanup removes the worktree without force and deletes local and remote branches (`docs/loop.md`, “Branches, worktrees and commits”; `.claude/skills/merge-task/SKILL.md`, steps 3–7).
+
+Only a user-authorized docs/tooling item can run without a worktree; that blocks other work until merge. See [Parallel and Branches](Parallel-and-Branches) (`docs/loop.md`, “No worktree”).
+
+The dev launcher builds under build/dev and uses build/testdata for app home, with a separate dev identity and badge. One dev copy runs at a time. A moved notes-folder pointer still needs checking for disposable data before hand testing. The installed copy uses real data and is upgraded only on request (`docs/dev-loop.md`, “Installed and dev copies” and “Dev copy”; `AGENTS.md`, “Rules”).
+
+## Sources
+
+- `AGENTS.md`, `CLAUDE.md`, `docs/loop.md` — authority, ownership, and layout.
+- `docs/agents.md`, `docs/dev-loop.md`, `docs/coding.md`, `docs/decisions.md`, `docs/glossary.md` — specialist rules.
+- `.claude/skills/next-task/SKILL.md`, `.claude/skills/scan-backlog/SKILL.md`, `.claude/skills/review-task/SKILL.md`, `.claude/skills/merge-task/SKILL.md`, `.claude/skills/roadmap/SKILL.md` — command instructions.
+- `.coord/templates/item.md`, `.coord/templates/findings.md`, `.coord/templates/scan.md`, `.coord/templates/review.md`, `.coord/templates/round.md` — payloads.
+- `.coord/STATUS.md`, .coord/roadmap.html (generated), `.coord/lessons.md`, `.claude/settings.json`, `.coord/tools/codex-run.sh` — shared records and hooks.
+- `.coord/tasks/Loop2-loop-v3-1.md`, `.coord/reports/Loop2-loop-v3-1-rehearsal.md` — examples on this branch.
