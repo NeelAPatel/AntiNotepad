@@ -140,7 +140,8 @@ usage is back-and-forth to get things right, so use whatever cuts that:
 
 ## Rules
 - A failed gate, a `rework` verdict or a user scope change goes back to Build as `<ID-slug>-r2`, `-r3` (STATUS `rework rN`),
-  with the round's brief listing what changed and why. A third round goes to the user. A round's gate and review run under
+  with the round's brief listing what changed and why. Max two rework rounds (`-r2`, `-r3`); a third rework (`-r4`)
+  goes to the user. A round's gate and review run under
   the round's name (`-Task <ID-slug>-rN`): the gate allows the Files of the base card and every round's brief, and the
   reviews read that round's report plus the base report.
 - Gate reports (`.coord/reports/*.gate.md`) are regenerated on every run and not committed; the result lines go into the
@@ -154,6 +155,10 @@ usage is back-and-forth to get things right, so use whatever cuts that:
 - Design changes stay lab-first (`AGENTS.md`): Build to Hand test run on a lab build, and the user approves before the real change.
 - Process, docs and tooling items (`Loop`, `D`, `T`) run the same phases. Findings can be one paragraph, but the card, the
   gate and the bounds check are not skipped.
+- **Who builds:** every item, `Loop`, `D` and `T` included, is built by Codex in a builder sub-session; a docs-only change
+  of a few lines may be made by the builder session itself and says so in the report.
+- **Loop freeze** (user, 2026-10-30): after v3.1, no new `Loop` items until about five app items have merged; after that,
+  loop rules change only when `.coord/lessons.md` shows the same miss twice (the existing self-improvement rule).
 - The plan table: the local page `.coord/roadmap.html` (`/roadmap` opens it). Claude hooks rebuild it in the main checkout
   on every Edit/Write and at each turn's end, so STATUS edits from any path (Edit, shell, merge) reach it, and the open page
   reloads itself every 3 seconds. The Artifact (`tools/roadmap.url`) is published only on request. `/next-task` and
@@ -178,15 +183,19 @@ usage is back-and-forth to get things right, so use whatever cuts that:
 - Always write `<ID>-<slug>` plus its scope, never a bare ID or a range.
 
 ## Sessions: master, sub-sessions, names (user, 2026-10-29)
-**Loop version: v3** (2026-10-29, `Loop1-process-v3`: Approve phase, A/Loop/D/T IDs and eras, type-prefixed branches and
-nested worktrees, squash merges with STATUS inside, roles, widgets, `docs/coding.md`). v2 was C26-item-card-loop, v2.1
-C28-loop-cheap-checks; v1 was C13-dev-loop-kit through C25. v2.2 (parallel items, catch up with dev, merge conflicts) is
-planned and **dormant**, stored in `docs/v2.2/` and `tools/v2.2/`, and is partly superseded by v3 (see its README).
-A merged item that changes the phases, roles or session rules bumps the major version (new master at the next handover);
-smaller rule changes bump the minor version (v3.1) and need no new master.
+**Loop version: v3.1** (2026-10-30, `Loop2-loop-v3-1`: approve and merge preflights, catch-up with dev, strict scope,
+read-only audits, backlog scans with a delta at task time, loop-lint; the dormant v2.2 drop absorbed). v3 was
+`Loop1-process-v3`: Approve phase, A/Loop/D/T IDs and eras, type-prefixed branches and nested worktrees, squash merges
+with STATUS inside, roles, widgets, `docs/coding.md`. v2 was C26-item-card-loop, v2.1
+C28-loop-cheap-checks; v1 was C13-dev-loop-kit through C25. v2.2 was never activated; v3.1 absorbed it (`docs/v2.2/README.md`).
+A merged item that changes the phases, the roles or who runs which phase bumps the major version (new master at the next
+handover); new checks, scripts, routes or research steps bump the minor version (v3.1) and need no new master.
 
 - **One master chat at a time** orchestrates: it owns STATUS and the roadmap, runs Request to Approve and Merge, and
   starts sub-sessions. It never runs Codex, builds or hand-test launches itself; its own reading is the Low-tier scout.
+- **Loop discussion chat** (optional, at most one): observes and discusses the loop beside the master, proposes `idea:`
+  rows for the master to number; it edits no STATUS, merges nothing and runs no item unless the user hands it one
+  (`Loop2-loop-v3-1` was such a hand-over).
 - **Master name:** `Master <N> · Loop v<V> · <slug>`, N one higher than the last master (STATUS "Working rules" names the
   current one), V the loop version above (written with "v" so it never reads as a `Loop` item ID), the slug the
   remaining work it was opened for. Example: `Master 2 · Loop v3 · era-two-start`.
@@ -227,14 +236,16 @@ smaller rule changes bump the minor version (v3.1) and need no new master.
   only if their Files lists do not overlap. After Check accepts, the implementation sub-session runs `tools/dev.ps1`
   from the worktree immediately before the hand checks; it verifies the dev badge and EXE/DATA/log paths. One dev copy
   runs at a time, so hand tests take turns, oldest accepted item first.
+- **No worktree** (only when the user says so, docs or tooling items): the branch is checked out in the main checkout
+  (`tools/approve.ps1 -NoWorktree`) and nothing else runs until it merges.
 - **Before Approve** there is no branch: the card and any audit brief and report live untracked in the master checkout;
   the auditor's Codex run is read-only there. At Approve they move into the new worktree and are committed on the branch.
 - **What lands on the branch:** the card, audit, reports and code, committed there as often as useful (Codex cannot
   commit: the sub-session does). Push the branch to origin freely. Branches never edit STATUS.
 - **What lands on dev: one squashed commit per item.** Between merges the master edits `.coord/STATUS.md` on dev and
   leaves it uncommitted (the roadmap reads the working copy). At Merge, `git merge --squash <prefix>/<ID-slug>`, then the
-  item's commit carries its code, card, reports, its STATUS edits and its lessons. STATUS edits that belong to no item
-  (backlog ideas) ride with the next item's commit, or one `chore: status` commit at the end of the day if nothing lands.
+  item's commit carries its code, card, reports, its STATUS edits and its lessons. STATUS rides whole with whichever
+  item's commit lands next, or one `chore: status` commit at the end of the day if nothing lands.
   No other direct commits to dev; urgent one-line fixes also go through a branch.
 - **Commit message:** subject `<ID-slug>: <what changed>`, 72 characters or fewer; body of 3-6 short lines: why, what
   changed, the gate result, the hand test. No Claude attribution lines (`.claude/settings.json`).

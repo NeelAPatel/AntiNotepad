@@ -7,7 +7,7 @@ Headless, in the background; the process exit wakes the manager:
 .coord/tools/codex-run.sh <director|worker|backup> <ID-slug> .coord/tasks/<ID-slug>.md
 ```
 
-| Tier | Model / effort | Runs per day (local counter) |
+| Tier | Model / effort | Run counter per day |
 |---|---|---|
 | director | gpt-6.1-sol medium (delegates to gpt-6-luna xhigh subagents) | 20 |
 | worker | gpt-6-luna xhigh | 10 |
@@ -18,8 +18,9 @@ Headless, in the background; the process exit wakes the manager:
   `--sandbox`, never full access). Audits run `CODEX_SANDBOX=read-only`; builds and reviews keep the default
   `workspace-write`.
 - Failover on a reached cap or a usage/rate-limit error: director -> worker -> backup -> stop; reviewer -> backup -> stop. Other failures are not retried.
-- The per-day caps are the wrapper's own safety counter (`.coord/logs/usage.tsv`), not the provider's usage limits. Override with
-  `CODEX_MAX_DIRECTOR|WORKER|BACKUP`; `CODEX_TIMEOUT_MIN` (45) caps one run; `CODEX_DRY=1` prints the plan only.
+- The per-day figures are the wrapper's run counter (`.coord/logs/usage.tsv`); Codex's real usage limits are its 5-hour and
+  weekly limits. Override with `CODEX_MAX_DIRECTOR|WORKER|BACKUP`; `CODEX_TIMEOUT_MIN` (45) caps one run; `CODEX_DRY=1`
+  prints the plan only.
 - Output: log `.coord/logs/<ID-slug>.<role>.log`, last message `.coord/reports/<ID-slug>.<role>.codex.md`; the brief asks for a
   short report at `.coord/reports/<ID-slug>.md`.
 

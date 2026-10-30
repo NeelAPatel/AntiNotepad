@@ -515,8 +515,14 @@ try {
     }
 
     try {
-        # Use Scope's changed-file set, including deleted paths; CI checks the loop on every run.
-        $loopFiles = @($changedFiles | Where-Object {
+        # Keep .coord/ paths here: Scope filters them out, but templates and helpers can affect live loop rules.
+        $loopChangedNames = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        $loopBaseRevision = Resolve-BaseRevision
+        foreach ($name in (Get-GitNames @('diff', '--name-only', "$loopBaseRevision...HEAD", '--'))) { [void]$loopChangedNames.Add($name.Replace('\', '/')) }
+        foreach ($name in (Get-GitNames @('diff', '--name-only', '--'))) { [void]$loopChangedNames.Add($name.Replace('\', '/')) }
+        foreach ($name in (Get-GitNames @('diff', '--cached', '--name-only', '--'))) { [void]$loopChangedNames.Add($name.Replace('\', '/')) }
+        foreach ($name in (Get-GitNames @('ls-files', '--others', '--exclude-standard'))) { [void]$loopChangedNames.Add($name.Replace('\', '/')) }
+        $loopFiles = @($loopChangedNames | Sort-Object | Where-Object {
             $_ -match '^(AGENTS\.md|docs/(loop|glossary|agents|coding|dev-loop)\.md|\.claude/skills/[^/]+/SKILL\.md|\.claude/agents/[^/]+\.md|\.coord/templates/[^/]+\.md|\.agents/skills/[^/]+/SKILL\.md|\.codex/agents/[^/]+\.toml|tools/[^/]+\.(ps1|sh)|\.coord/tools/[^/]+\.sh)$'
         })
         if ($Ci -or $loopFiles.Count -gt 0) {

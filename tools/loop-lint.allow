@@ -3,11 +3,11 @@
 docs/loop.md|stale-id|v2 was C26-item-card-loop
 # The same sentence dates the previous loop version.
 docs/loop.md|stale-version|v2 was C26-item-card-loop
+# The v3.1 version line records the absorbed historical v2.2 drop.
+docs/loop.md|stale-version|the dormant v2.2 drop absorbed
 # The history paragraph continues with the earlier loop's item names.
 docs/loop.md|stale-id|C28-loop-cheap-checks; v1 was C13-dev-loop-kit
 # This sentence describes the older, dormant proposal rather than the current loop.
 docs/loop.md|stale-version|C28-loop-cheap-checks; v1 was C13-dev-loop-kit
-# This history sentence locates the dormant scripts; it does not instruct callers to use them.
-docs/loop.md|stale-path|planned and **dormant**, stored in
 # The shell wrapper's header attributes its implementation to an era-one item, not a live item name.
 tools/dev.sh|stale-id|# C25-dev-instance-handoff: forward arguments

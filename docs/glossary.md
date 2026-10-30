@@ -19,9 +19,18 @@ UI region names (the parts of the window) come with `D1-ui-region-names`.
 - **Bounds check**: the Check step that compares what was requested, approved and done.
 - **Hand test**: the user trying the change by hand in the dev copy.
 - **Lab build**: a build that shows a design before the user approves it.
-- **Triage**: naming one cause for a failure (`code`, `test`, `plan`, `env`, `judgment`) and routing it.
+- **Triage**: naming one cause for a failure (`code`, `test`, `plan`, `env`, `conflict`, `judgment`) and routing it.
 - **Status card**: the Markdown block every reply about an item opens with.
-- **Loop version**: the version of these rules, written `Loop v3`; not to be confused with a `Loop` item ID.
+- **Loop version**: the version of these rules, written `Loop v3.1`; not to be confused with a `Loop` item ID.
+- **Catch-up**: merging `dev` into an item branch with `tools/catch-up.ps1`.
+- **Overlap check**: compares an item's Files with other in-flight items (`tools/files-overlap.ps1`).
+- **Hot file**: a shared file that only warns in the overlap check.
+- **Preflight**: the checks before an item branch (`tools/approve.ps1`) or merge (`tools/merge-preflight.ps1`).
+- **Backlog scan**: a read-only snapshot scout run with `/scan-backlog`.
+- **Research file**: `.coord/research/<slug>.md`, stamped with the dev commit it scanned.
+- **Scan delta**: checks scanned research against later dev commits (`tools/scan-delta.ps1`).
+- **Loop-lint**: checks live loop instructions and file references (`tools/loop-lint.ps1`).
+- **Loop freeze**: the pause on new `Loop` items and repeat-miss rule (`docs/loop.md`, "Rules").
 
 ## People and sessions
 - **Master**: the one Claude chat that runs the loop, named `Master <N> · Loop v<V> · <slug>`.
@@ -30,6 +39,7 @@ UI region names (the parts of the window) come with `D1-ui-region-names`.
 - **Codex director / worker**: the Codex models that implement (`docs/agents.md`).
 - **Lens reviewer**: the Codex reviewer a director spawns before reporting.
 - **Design reviewer**: the read-only Claude reviewer for High-tier items.
+- **Loop discussion chat**: optional chat that discusses the loop and proposes ideas to the master; it runs no item by default.
 
 ## Git
 - **dev**: the integration branch; one commit per item.

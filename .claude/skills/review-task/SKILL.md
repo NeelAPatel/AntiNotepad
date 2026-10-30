@@ -43,7 +43,7 @@ deviations, and `git diff --stat dev...HEAD`. Write `## Check` on the card:
 - "Noticed": side bugs or follow-ups, as proposals only.
 Then decide:
 - Any review `rework`, a blocker or major finding, a missing Behavior changes entry, or a Plan's "Must not change" broken:
-  triage it (4a). Max two rework rounds; a third goes to the user.
+  triage it (4a). Max two rework rounds (`-r2`, `-r3`); a third rework (`-r4`) goes to the user.
 - Any "ask the user" line, or a review `ask-user`: ask the user that one question with the card; STATUS `ask-user`.
   A scope change they give becomes a round brief with their words under "Why this round".
 - Otherwise accept. Commit the card and reports on the branch (`<ID-slug>: check`). STATUS `accepted`.
