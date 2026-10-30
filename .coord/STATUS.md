@@ -4,11 +4,14 @@ Updated: 2026-10-30
 Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 
 ## Working rules right now
-- One master (user, 2026-10-30: "There is no two masters, theres only 1"): `Master 2 · Loop v3 · era-two-start`
-  (opened 2026-10-29) runs every item and owns STATUS. Beside it, a **loop discussion chat** observes and discusses the
-  loop (`docs/loop.md`, "Sessions"); it ran Loop2-loop-v3-1 on the user's hand-over and otherwise runs no item.
-  The previous master, `Master 1 - loop v2 - bugs-design-system-ownership` (now titled "Era0 - ..."), is closed
-  (2026-10-29) with nothing in flight.
+- Two points of contact (user, 2026-10-30: "This chat is Master point of contact for the actual app development. Loop Hub 1 is the master for the meta level items such as Dev Loop"):
+  - `Master 2 · Loop v3 · era-1-start`: app development (`A`, `D` items).
+  - `Loop Hub 1 · Loop v3 · dev-loop`: meta items (`Loop`, `T`: the dev loop, the roadmap overview, tooling).
+  - Loop Hub 1 runs `Loop3-proposals-in-status` and `T1-roadmap-overview` (cards, branches, merges) and edits only its
+    own `Loop`/`T` rows plus one "Now" line of its own; Master 2 owns STATUS overall and every `A`/`D` row.
+  - Both squash-merge onto dev from the main checkout: before a merge, `git status`, check the other has no merge in
+    progress, and tell the other chat in one line.
+  - The previous master, `Master 1 - loop v2 - bugs-design-system-ownership` ("Era0 - ..."), is closed (2026-10-29).
 - **Loop v3.1 is live** (Loop2-loop-v3-1, 2026-10-30). **Loop freeze:** no new `Loop` items until about five app items
   have merged; after that, rules change only on a miss repeated in `.coord/lessons.md`.
 - Codex is back (user, 2026-10-25): director Sol medium delegating to Luna xhigh; Claude briefs, reviews, commits.
@@ -16,7 +19,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Never run `AntiNotepad.exe --quit` without `ANTINOTEPAD_DATA`: it targets the installed copy's instance.
 
 ## Where things are
-- **History rewritten (2026-10-29, user: "Yes, rewrite"):** 623 era-one commits became 156 (option B, preview
+- **History rewritten (2026-10-29, user: "Yes, rewrite"):** 623 era-0 commits became 156 (option B, preview
   `.coord/history-preview.md`). `main` and `dev` both at 8d18f72 (`Loop1-process-v3`), files identical to the old dev.
   Commit hashes quoted below and in older cards and reports point into the old history.
 - **Tags now:** `v0.1.0`, `milestone/overnight-rebuild`, `v0.5.0`, `v0.6.0-rc1` to `rc9` (rc9 = the old
@@ -29,6 +32,9 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Locked choices: `docs/decisions.md`.
 
 ## Now
+- T1-roadmap-overview (Low, docs-tools): **done**, squashed onto dev (2026-10-30, user: "okay it works ... merge it into
+  dev"); gate on dev PASS. Live overview at http://localhost:47811 (`tools/roadmap-serve.ps1`, auto-started by the
+  status-card hook); how-to in `docs/wiki/Roadmap-Portal.md`, linked from `README.md`. Follow-ups are `idea:` rows in Plan.
 - Loop2-loop-v3-1-wiki (Low, docs-tools): **done**, squashed onto dev (2026-10-30, user: "Merge to dev and publish"); gate
   on dev PASS. `docs/wiki/` rewritten for loop v3.1 (Getting Started, Parallel and Branches, Backlog Scans, a Loop2 worked
   example, Known limits; every claim cites a file), two Codex accuracy reviews accept. Noticed: `docs/loop.md` "Sessions"
@@ -39,8 +45,8 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   `tools/files-overlap.ps1`, `tools/scan-delta.ps1` + `/scan-backlog`, strict gate scope, `tools/loop-lint.ps1`,
   read-only Codex audits; dormant v2.2 absorbed (`tools/v2.2/` removed). Rehearsal 8/8 PASS. Left: the wiki pages, after
   the user's OK on the flow diagram (https://claude.ai/artifact/4CfTQAuvL4ZXwBXwYsqWi7). Next: Master 2 starts the backlog.
-- **Era one ended (2026-10-29).** Process redesign settled (`.coord/process-redesign.md`) and rolled out as **loop v3**
-  by Loop1-process-v3 (squash-merged; gate on dev PASS). History rewritten (see "Where things are"). Next: era two with
+- **Era 0 ended (2026-10-29); era 1 started (user, 2026-10-30: "Old era is Era 0, we are now in Era 1").** Process redesign settled (`.coord/process-redesign.md`) and rolled out as **loop v3**
+  by Loop1-process-v3 (squash-merged; gate on dev PASS). History rewritten (see "Where things are"). Next: era 1 with
   fresh counters and a new master, `Master 2 · Loop v3 · <slug>`; first candidates are the three file splits from
   `docs/coding.md`, `D1-ui-region-names` and `idea: wiki-loop-v3`. Any other clone of the repo must be re-cloned.
 - C30-loop-docs-v22-plan merged into dev (e2898d1, 2026-10-29, user: "merge it to main"; gate on dev PASS, CONTRACTS 13
@@ -234,6 +240,17 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 |---|---|---|---|---|
 | **Loop v3.1 (first; the backlog waits for it, user 2026-10-30)** | | | | |
 | Loop2-loop-v3-1 | Loop v3.1: dormant v2.2 absorbed (overlap, catch-up, conflicts, hand-test queue), approve/merge preflights, strict scope, read-only audits, loop-lint, loop.md fixes, rehearsal; one branch, one commit per step, run by the loop chat | Low | Large | done |
+| **Era 1 start (proposed by Master 2, 2026-10-30; numbers only on your yes)** | | | | |
+| idea: selftest-split | Split `SelfTest.cs` (3,247 lines) into a `SelfTest/` folder by area, verbatim; first, because the LAYERS rows live there and every later split edits them. Would be A1 | Low | Medium | proposed |
+| idea: ui-region-names | Names for the parts of the window in `docs/glossary.md`, so cards, comments and chat use the same words; can run beside selftest-split (no shared files). Would be D1 | Low | Small | proposed |
+| idea: store-split | Split `Model/Store.cs` (1,006 lines) into `Model/Search/`, `Note.cs`, `Settings.cs`, `Store.cs`, verbatim; after selftest-split (shares LAYERS, `AGENTS.md`, `docs/coding.md`). Would be A2 | Low | Small | proposed |
+| idea: calc-split | Split `Calc/Calculator.cs` (1,383 lines) into five files in `Calc/` (units, dates, lexer, parser, format), verbatim; after store-split. Open: lettered steps if over 400 moved lines. Would be A3 | Low | Medium | proposed |
+| T1-roadmap-overview | The roadmap becomes your central overview, live from STATUS, item cards, Codex runs and read-only git (user, loop chat, 2026-10-30: "I need Roadmap to become my central overview of the project"; chose "Local server"). A fixed page `tools/roadmap/index.html` served by `tools/roadmap-serve.ps1` (built-in .NET HttpListener, localhost:47811, read-only) with `/data` from `tools/roadmap-data.ps1`; the page polls every 3 s and keeps its state; `/roadmap` starts the server; the hook rebuild retires. Design approved after three mockup rounds (2026-10-30, "Yes, write the plan"): Your turn, Moving without you, hand-test queue, recent Codex runs, Plan with ID column and release points, Work log, branch lanes with health, Releases, drawer, legend, light/dark. Steps T1a-roadmap-server, T1b-roadmap-page, T1c-roadmap-switch. Branch `chore/T1-roadmap-overview` | Low | Large | done |
+| Loop3-proposals-in-status | One rule line in `docs/loop.md`: every item or proposal a chat names goes into the STATUS Plan as an unnumbered `proposed` row at once, before or with the question; matching steps in `/next-task`, `/scan-backlog`, `/review-task` ("Noticed" follow-ups become rows at the time, not at Merge); no script. Also align `docs/loop.md` "Sessions" (auditor "commits") with "Branches" and `/next-task` step 2 (nothing committed before Approve). User confirmed "Loop3, rule + skills" in the loop chat; loop freeze lifted for this item only. **Proposed addition (loop chat, 2026-10-30; you decide at Approve):** the Era 0 / Era 1 rename in `docs/loop.md`, `docs/glossary.md`, `docs/coding.md`, the `/review-task` skill, three wiki pages and `tools/loop-lint.ps1`/`.allow` (old forms kept, loop-lint still passes); the wiki is republished after Merge on your go; tag names and old cards are not renamed. Branch `chore/` | Low | Small | planned |
+| idea: approve-moves-all-files | `tools/approve.ps1` moves only `.md` planning files; a card's mockups and samples had to be moved by hand (T1-roadmap-overview, Noticed). | Low | Small | idea |
+| idea: codex-run-no-caps | Remove per-role run caps and their failover from `.coord/tools/codex-run.sh` and `docs/agents.md`; the only Codex limit is the usage % (user, 2026-10-30). | Low | Small | idea |
+| idea: codex-speed-by-tier | T1-roadmap-overview took ~2 h 50 min of build for a Low item: Luna xhigh thinking (~85 min), manager gaps (~65 min), sandbox port probes. Proposal: effort by tier (Low = medium), Codex runs offline checks only, no builder relay on Low, `-NoProfile` shells. | Low | Medium | idea |
+| Release marker | dev -> main as `v0.7.0-rc1` after the splits, on your go | - | - | proposed |
 | **Bugs** | | | | |
 | A53-split-divider-height | Split-view divider stops short of the window's bottom edge; make it full height (was A58) | Low | Small | done |
 | A54-link-hover-click | Every URL opens on Ctrl+click; shortened links always show a hand, other URLs show it while Ctrl is held (widened in r3, user) | Low | Small | done |
@@ -243,13 +260,13 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | C27-session-naming | Master and sub-session names, loop version v2, master handover checklist and resume prompt | Low | Small | done |
 | C28-loop-cheap-checks | Gate format check on changed lines, worktree-safe Codex ledger, triage on failure, lessons and reviewer scores, quiet relays (loop v2.1) | Low | Small | done |
 | C30-loop-docs-v22-plan | Loop v2.2 plan (parallel items, catch-up, conflicts), GitHub wiki pages, dormant v2.2 drop (docs and scripts, inactive) | Low | Small | done |
-| idea: loop-md-contradictions | Fix the `docs/loop.md` contradictions C30 noticed (v2 attribution, gate row, rework counting, parallel items vs one dev copy) | Low | Small | proposed |
+| idea: loop-md-contradictions | Fix the `docs/loop.md` contradictions C30 noticed (v2 attribution, gate row, rework counting, parallel items vs one dev copy) **Proposed (Master 2, 2026-10-30):** add the auditor-commit wording (`docs/loop.md` "Sessions" vs "Branches" and `/next-task` step 2); held by the loop freeze. | Low | Small | proposed |
 | A55-split-view-clip | In split view, text scrolls across the divider; clip each pane at the divider (was A57) | Medium | Medium | done |
 | Release marker | dev -> main with a tag, on your go (r8, 42ad744) | - | - | done |
 | **Reorg leftovers** | | | | |
 | A42c-checkbox-indent | Move checkbox indent logic out of `PadView` into its own Editor class, behavior-neutral | Medium | Small | done |
 | A42d-list-commands | Move list commands out of `PadView` into its own Editor class, behavior-neutral | Medium | Medium | done |
-| C29-headless-render-probe | Off-screen Avalonia render helper for the selftest, so audits can reproduce visual bugs and `split-pane-clipping` checks pixels automatically instead of manually; run after A42d-list-commands (user order 2026-10-29: A42c, A42d, then C29; all touch the selftest) | Medium | Small | planned |
+| C29-headless-render-probe | Off-screen Avalonia render helper for the selftest, so audits can reproduce visual bugs and `split-pane-clipping` checks pixels automatically instead of manually; run after A42d-list-commands (user order 2026-10-29: A42c, A42d, then C29; all touch the selftest) **Proposed (Master 2, 2026-10-30):** renumber as an `A` item (product selftest code), run after selftest-split; you choose A, T or idea. | Medium | Small | proposed |
 | **Design system and ownership** | | | | |
 | idea: design-tokens | One source of truth for every design value (radius, fonts, colors, shadows, motion durations); the app looks and moves exactly as today | - | - | needs you |
 | step: token-scan | Gate check that counts hard-coded design values per file and fails if a count rises; no product change | Low | Small | needs you |
@@ -268,21 +285,21 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | step: apply-shadows | Apply the shadow tiers you picked | Medium | Small | needs you |
 | step: apply-motion | Apply the animation timings you picked | Medium | Small | needs you |
 | idea: code-ownership | Every responsibility has one owner and no copies; behavior unchanged | - | - | needs you |
-| step: store-split | Move `Note`, `Settings`, `StoreData` and the search types out of `Model/Store.cs`, verbatim | Low | Small | needs you |
-| step: selftest-split | Split `SelfTest.cs` into one file per area (incl. the notes-move checks), verbatim | Low | Small | needs you |
+| step: store-split | Move `Note`, `Settings`, `StoreData` and the search types out of `Model/Store.cs`, verbatim **Proposed (Master 2, 2026-10-30):** becomes its own item, see `idea: store-split` in the era-two block; this step row goes. | Low | Small | needs you |
+| step: selftest-split | Split `SelfTest.cs` into one file per area (incl. the notes-move checks), verbatim **Proposed (Master 2, 2026-10-30):** becomes its own item, see `idea: selftest-split` in the era-two block; this step row goes. | Low | Small | needs you |
 | step: notes-path-dedupe | One same-or-nested path rule in `Platform/` replacing the copies in `NotesSession`, `NotesLocation`, `SettingsWindow` and `KeepOldCopy`; CONTRACTS row | High | Small | needs you |
 | step: ui-kit-merge | One control kit: Settings' private controls merge into `Kit`; `Material()` and `Ago()` move to their owners | Medium | Medium | needs you |
 | step: ownership-map | `docs/architecture.md` owner per responsibility; `NotesSession`, `RuntimeLog` into `App/`; LAYERS rows for `App/` and `Motion/` | Low | Small | needs you |
 | step: behavior-timer-names | Optional: name save, debounce, toast and taskbar timers beside their owners, values unchanged | High | Small | needs you |
 | **Cleanup** | | | | |
-| C14-a38-audit-branch | Merge the A38 MVVM audit doc into dev or delete `feat/A38-mvvm-audit` | Low | Small | planned |
-| C15-worktree-branch-cleanup | Remove leftover worktrees and finished `reorg/*` branches (local and origin) | Low | Small | planned |
-| C16-archive-finished-sessions | Archive the finished A39-A44 Claude sessions | Low | Small | planned |
-| C18-tag-scheme | One tag naming scheme and a dev -> main release checklist that re-checks gate rules; doc only | Low | Small | needs you |
+| C14-a38-audit-branch | Merge the A38 MVVM audit doc into dev or delete `feat/A38-mvvm-audit` **Proposed (Master 2, 2026-10-30):** drop as obsolete: the history rewrite left only `main` and `dev` (checked 2026-10-30). | Low | Small | proposed |
+| C15-worktree-branch-cleanup | Remove leftover worktrees and finished `reorg/*` branches (local and origin) **Proposed (Master 2, 2026-10-30):** drop as obsolete: no extra branches or worktrees, `.claude/worktrees/` empty (checked 2026-10-30). | Low | Small | proposed |
+| C16-archive-finished-sessions | Archive the finished A39-A44 Claude sessions **Proposed (Master 2, 2026-10-30):** back to `idea: archive-finished-sessions` (era-0 ID retired); no code. | Low | Small | proposed |
+| C18-tag-scheme | One tag naming scheme and a dev -> main release checklist that re-checks gate rules; doc only **Proposed (Master 2, 2026-10-30):** back to `idea: release-checklist`: loop v3 settled tag names, only the dev -> main checklist is left. | Low | Small | proposed |
 | Release marker | dev -> main with a tag, on your go | - | - | planned |
 | **Performance** | | | | |
 | idea: settings-thread-count | Find why the Settings window runs about 90 threads; report, fix only if cheap (was A74) | Low | Small | needs you |
-| A49-large-note-perf | Measure then reduce typing lag in a 6,000-line note; one change at a time (ideas in Backlog) | Medium | Large | planned |
+| A49-large-note-perf | Measure then reduce typing lag in a 6,000-line note; one change at a time (ideas in Backlog) **Proposed (Master 2, 2026-10-30):** back to `idea: large-note-perf` (era-0 ID retired); scout with `/scan-backlog` after the splits. | Medium | Large | proposed |
 | **Features and polish (lab-first where visible)** | | | | |
 | idea: notes-folder-move-flow | Choosing and moving the notes folder is clear and safe; first step follows code-ownership's notes-path-dedupe | - | - | needs you |
 | step: path-validator | One shared Platform check for a chosen folder: blocks invalid, same, nested, not writable, has notes; warns new, non-empty, network, low space, cloud-synced | High | Medium | needs you |
@@ -291,17 +308,17 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | step: move-undo | "Move back" after a move, using the kept old copy | High | Medium | needs you |
 | step: picker-last-location | The folder picker opens at the last picked folder | Low | Small | needs you |
 | step: single-result-message | Settings shows the move's own result message instead of rebuilding it | Low | Small | needs you |
-| A51-recovered-folder-always-open | Recovered-notes folder always exists and its Open button always works | Low | Small | planned |
-| A48-answers-toggle-clarity | Rename the "Answers" toggle to say what it does, and apply it live | Low | Small | planned |
+| A51-recovered-folder-always-open | Recovered-notes folder always exists and its Open button always works **Proposed (Master 2, 2026-10-30):** back to `idea: recovered-folder-always-open` (era-0 ID retired), or number now. | Low | Small | proposed |
+| A48-answers-toggle-clarity | Rename the "Answers" toggle to say what it does, and apply it live **Proposed (Master 2, 2026-10-30):** back to `idea: answers-toggle-clarity` (era-0 ID retired), or number now; lab-first. | Low | Small | proposed |
 | idea: native-timer-notification | Windows notification when a timer ends (was A55) | Medium | Medium | needs you |
-| A47-hotkey-recorder | Set a hotkey in Settings by pressing the keys | Medium | Medium | planned |
+| A47-hotkey-recorder | Set a hotkey in Settings by pressing the keys **Proposed (Master 2, 2026-10-30):** back to `idea: hotkey-recorder` (era-0 ID retired), or number now; lab-first. | Medium | Medium | proposed |
 | idea: chime-picker | Choose the timer chime: native sound plus two more, stretch (was A56) | Low | Medium | needs you |
 | idea: floating-scrollbar | Modern floating scrollbar at the side, shown only while scrolling (user, 2026-10-29, A55 hand test: "a scroll bar shows, i didn't expect that"); open: hide vs fade, both split panes, existing bar styles | - | - | needs you |
 | idea: timer-enter-no-autostart | In a timer note, Enter after a timer line (e.g. `10s test`) starts that timer at once (`Editor/PadView.cs:698`, existing by design); user wants to write several timers first (user, 2026-10-29, A42c hand test: "that shouldnt be the case because i might be writing multiple timers"); open: what starts a timer then (Ctrl+Enter, chip click only?) | - | - | needs you |
 | idea: wrap-hanging-indent | When an indented bullet line soft-wraps, the wrapped part should start under the bullet's text, not under the bullet itself: in "• We're at a point w… they're easier to", "they're" sits about 4 columns left of "We're" (user, 2026-10-29, screenshots). Wanted: the same alignment as a typed new line, just without the bullet. Open: plain indented lines with no bullet, numbered lists and checkboxes | - | - | needs you |
 | idea: selection-convert-menu | Select several lines, right-click, and turn them into a list, checkboxes, timers etc.: each selected line gets the matching prefix (user, 2026-10-29, screenshot of the current right-click menu: Cut/Copy/Paste/Delete, Undo/Redo, Select all, New note, Search, split, pin, Settings, Hide). Open: which kinds (bullet, numbered, checkbox, timer, others?), a submenu or flat entries, toggling off or swapping lines that already have a prefix, blank lines in the selection | - | - | needs you |
 | idea: pinned-accent-ring | When the window is pinned (Ctrl+T), draw an accent-colored ring 2-4 px thick around the window's edge, so pinned is visible at a glance (user, 2026-10-29). Open: exact thickness, whether it follows the rounded corners, theme accent or a fixed color, a fade on pin/unpin, how it works with the frameless window and its shadow | - | - | needs you |
-| idea: wiki-loop-v3 | D item: bring `docs/wiki/` (GitHub wiki source) up to loop v3: Approve, A/Loop/D/T IDs and eras, branch prefixes, squash merges, roles, coding standard; then republish (user, 2026-10-29: kept out of Loop1-process-v3) | - | - | needs you |
+| idea: wiki-loop-v3 | D item: bring `docs/wiki/` (GitHub wiki source) up to loop v3: Approve, A/Loop/D/T IDs and eras, branch prefixes, squash merges, roles, coding standard; then republish (user, 2026-10-29: kept out of Loop1-process-v3) **Proposed (Master 2, 2026-10-30):** drop as done: Loop2-loop-v3-1-wiki rewrote and published the wiki for v3.1. | - | - | proposed |
 
 ## Open (needs the user)
 - Live check not yet done: A30 Windows restart/sign-out saving an edit typed just before.

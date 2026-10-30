@@ -181,12 +181,12 @@ These entries have **no model, reasoning effort or agent opening prompt**. A com
 | `tools/loop-lint.ps1` / PowerShell script | Gate when loop files changed, or `pwsh -NoProfile -File tools/loop-lint.ps1` | Live loop files and `tools/loop-lint.allow` | Read-only consistency, file/link/script-reference checks; PASS/FAIL output |
 | `tools/merge-preflight.ps1` / PowerShell script | Master: `pwsh -NoProfile -File tools/merge-preflight.ps1 -Task <ID-slug>` | Committed branch card, checkout state, newest gate, dev ancestry | Read-only refusal reason or PASS; does not perform the merge |
 | `tools/dev.ps1` / PowerShell launcher | Accepted tester: `pwsh -NoProfile -File tools/dev.ps1` | Worktree's source and disposable dev data | Builds and launches the separate dev copy, safely hands off the prior dev instance, prints paths; installed copy is excluded |
-| `tools/roadmap.ps1` / PowerShell script and hook | `/roadmap`: `pwsh -NoProfile -File tools/roadmap.ps1 -Open`; PostToolUse and Stop: same script with `-Hook` | Main checkout STATUS Plan | Rebuilds local .coord/roadmap.html; `-Open` opens it; hook skips worktrees; no automatic publishing |
+| `tools/roadmap-serve.ps1` / PowerShell server | `/roadmap`: `pwsh -NoProfile -File tools/roadmap-serve.ps1 -Background -Open`; auto-started by `tools/loop-card.ps1` | Main checkout STATUS, item cards, Codex usage log, read-only Git | Serves the live overview at http://localhost:47811; `-Stop` stops it; stops itself after 12 idle hours ([Roadmap Portal](Roadmap-Portal)) |
 | `tools/loop-card.ps1` / UserPromptSubmit hook | `.claude/settings.json`: `pwsh -NoProfile -File "$CLAUDE_PROJECT_DIR/tools/loop-card.ps1"` | Hook stdin (discarded) and live main-checkout STATUS | Adds card reminder and in-flight list to Claude context; warns above 3 past Approve; changes no item files |
 
 `tools/gate.ps1`, `Get-ChangedFiles`, excludes `.coord/` from Scope. Scope is strict on item branches but WARN on dev/base, `-Ci` or `-LooseScope`. `tools/merge-preflight.ps1` checks Request, Plan, Approve (or old Go), Check and Hand test content; it is not a separate natural-language audit of every phase. Both approval and merge checks permit specified STATUS changes, rather than requiring a completely empty working tree (named scripts' check blocks).
 
-Hook wiring is explicit in `.claude/settings.json`: UserPromptSubmit has a 15-second timeout; PostToolUse matches Edit/Write/MultiEdit and Stop also rebuilds the roadmap, with 30-second timeouts. The status hook reminds; it does not enforce reply wording. Approval's cap is the blocking check (`tools/loop-card.ps1`; `tools/approve.ps1`).
+Hook wiring is explicit in `.claude/settings.json`: UserPromptSubmit has a 15-second timeout, and the same hook starts the roadmap server when it is down. The status hook reminds; it does not enforce reply wording. Approval's cap is the blocking check (`tools/loop-card.ps1`; `tools/approve.ps1`).
 
 ## Sources
 
@@ -200,7 +200,7 @@ Hook wiring is explicit in `.claude/settings.json`: UserPromptSubmit has a 15-se
 - `.codex/agents/lens-reviewer.toml`, `.agents/skills/lens-review/SKILL.md` — in-run reviewer and proof rule.
 - `.claude/agents/design-reviewer.md` — design-review role and restrictions.
 - `.coord/tools/codex-run.sh` — actual stdin launch, caps, failover and outputs.
-- `.claude/settings.json`, `tools/loop-card.ps1`, `tools/roadmap.ps1` — hook wiring and outputs.
+- `.claude/settings.json`, `tools/loop-card.ps1`, `tools/roadmap-serve.ps1` — hook wiring and outputs.
 - `tools/approve.ps1`, `tools/files-overlap.ps1`, `tools/catch-up.ps1`, `tools/merge-preflight.ps1` — handoff checks.
 - `tools/gate.ps1`, `tools/check-platform-seam.ps1`, `tools/loop-lint.ps1`, `tools/loop-lint.allow` — scripted validation.
 - `tools/scan-delta.ps1`, `tools/dev.ps1`, `docs/dev-loop.md` — research delta and dev-copy boundary.

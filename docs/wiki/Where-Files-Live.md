@@ -30,7 +30,7 @@ The purpose and ownership of these files are defined in `docs/loop.md`, “Files
 | Location or example | Purpose and lifetime | Source |
 |---|---|---|
 | `.coord/STATUS.md` | Master-owned state and plan on dev; uncommitted edits ride the next item commit, or a `chore: status` commit at the end of the day if nothing lands | `docs/loop.md`, Branches |
-| .coord/roadmap.html (generated) | Local view of STATUS; rebuilt by hooks, reloads every three seconds | `docs/loop.md`, Rules; `.claude/settings.json` |
+| `tools/roadmap/index.html`, `tools/roadmap/eras.json` | Live overview page and its era list, served at http://localhost:47811 by `tools/roadmap-serve.ps1` | [Roadmap Portal](Roadmap-Portal) |
 | `.coord/templates/item.md` | Blank card: Request, Findings, Plan, Files, Contracts, Approve, For Codex, Check, Hand test | Template headings |
 | `.coord/templates/findings.md` | Read-only audit prompt | Template role and final-message sections |
 | `.coord/templates/scan.md` | Snapshot scout prompt and research format | Template opening and headings |
@@ -58,5 +58,5 @@ The dev launcher builds under build/dev and uses build/testdata for app home, wi
 - `docs/agents.md`, `docs/dev-loop.md`, `docs/coding.md`, `docs/decisions.md`, `docs/glossary.md` — specialist rules.
 - `.claude/skills/next-task/SKILL.md`, `.claude/skills/scan-backlog/SKILL.md`, `.claude/skills/review-task/SKILL.md`, `.claude/skills/merge-task/SKILL.md`, `.claude/skills/roadmap/SKILL.md` — command instructions.
 - `.coord/templates/item.md`, `.coord/templates/findings.md`, `.coord/templates/scan.md`, `.coord/templates/review.md`, `.coord/templates/round.md` — payloads.
-- `.coord/STATUS.md`, .coord/roadmap.html (generated), `.coord/lessons.md`, `.claude/settings.json`, `.coord/tools/codex-run.sh` — shared records and hooks.
+- `.coord/STATUS.md`, `tools/roadmap/index.html`, `.coord/lessons.md`, `.claude/settings.json`, `.coord/tools/codex-run.sh` — shared records and hooks.
 - `.coord/tasks/Loop2-loop-v3-1.md`, `.coord/reports/Loop2-loop-v3-1-rehearsal.md` — examples on this branch.

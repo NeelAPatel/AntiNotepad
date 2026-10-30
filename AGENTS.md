@@ -26,7 +26,7 @@ The earlier AntiQuickPad project (spikes A/B, `src/AntiQuickPad`) is retired and
   cannot write to .git), relays to the user. Keeps its own implementation to tiny gate fixes.
 
 ## Read when
-- Starting or resuming work: `.coord/STATUS.md`; the plan: `/roadmap` (local page `.coord/roadmap.html`, self-updating).
+- Starting or resuming work: `.coord/STATUS.md`; the plan: `/roadmap` (local server page `http://localhost:47811`, live from STATUS and git).
 - Building, installing/upgrading the user's copy, dev instance, hotkeys, data folders: `docs/dev-loop.md`.
 - The per-item loop (item card, phases Request > Findings > Plan > Approve > Build > Check > Hand test > Merge, gates,
   status card on every reply, sessions and roles): `docs/loop.md`. Terms: `docs/glossary.md`.

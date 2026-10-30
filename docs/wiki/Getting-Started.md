@@ -70,7 +70,7 @@ instance and initially disposable data (`docs/dev-loop.md`, "Installed and dev c
 | `/scan-backlog [slug ...]` | Snapshot scouts for ideas, then proposes an order for your choice | `.claude/skills/scan-backlog/SKILL.md` |
 | `/review-task <ID-slug>` | Check, bounds review, failure routing, hand-test handover | `.claude/skills/review-task/SKILL.md` |
 | `/merge-task <ID-slug>` | Merge an accepted and appropriately hand-tested item | `.claude/skills/merge-task/SKILL.md` |
-| `/roadmap` | Opens the local plan page derived from STATUS | `.claude/skills/roadmap/SKILL.md` |
+| `/roadmap` | Opens the live project overview at http://localhost:47811 ([Roadmap Portal](Roadmap-Portal)) | `.claude/skills/roadmap/SKILL.md` |
 
 Normally the builder runs `/review-task` automatically after Codex exits. You do not have to launch Codex by hand,
 commit the branch, or interpret and repair raw gate output yourself: the builder/reviewer and master own those jobs.

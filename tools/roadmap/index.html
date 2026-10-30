@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>AntiNotepad Overview</title>
+<style>
+/* Layout: top bar (era, theme, search) > Now strip (your turn, active, hand test, Codex) > tabs (Plan, Work log,
+   Branches, Releases) > one view per tab > a drawer from the right for any item. All data comes from one DATA object; in
+   the live version it is fetched from /data every 3 s and the views redraw without losing search, era, tab or scroll.
+   Color is kept for meaning: item family on the ID badge, state on the row stripe and badge, accents on cards. */
+:root{--bg:#f7f6f3;--panel:#ffffff;--sunk:#f1f0ec;--fg:#1f1e1d;--fg2:#5f5e5a;--muted:#9a9893;--line:rgba(40,30,20,.09);--line2:rgba(40,30,20,.18);
+--hl:#fff1a8;
+--app:#2f6fb5;--app-bg:#e7f0fa;--loop:#7a4fc0;--loop-bg:#efe8fa;--tool:#13807a;--tool-bg:#e0f3f1;--old:#6b6f78;--old-bg:#eceef1;--doc:#a26a12;--doc-bg:#f8eedc;
+--you:#b25e00;--you-bg:#fdecd4;--act:#23824a;--act-bg:#e1f3e7;--plan:#2f6fb5;--plan-bg:#e7f0fa;--bad:#b23a2e;--bad-bg:#fbe4e1;
+--rel:#c2410c;--rel-bg:#ffe8d6;
+--sans:'Segoe UI Variable Text','Segoe UI',system-ui,sans-serif;--mono:'Cascadia Mono',Consolas,ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#181817;--panel:#21201e;--sunk:#1c1b1a;--fg:#ecebe6;--fg2:#b4b2a9;--muted:#77756f;
+--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.17);--hl:#5a4b00;
+--app:#8cbcf0;--app-bg:#16304d;--loop:#c3a6f2;--loop-bg:#2e2342;--tool:#7fd3cb;--tool-bg:#123a37;--old:#b0b4bc;--old-bg:#2a2c30;--doc:#e9bf72;--doc-bg:#3d2d10;
+--you:#f6b867;--you-bg:#45290a;--act:#86d3a3;--act-bg:#15361f;--plan:#8cbcf0;--plan-bg:#16304d;--bad:#f2a49b;--bad-bg:#3b1714;--rel:#ff9a5c;--rel-bg:#4a1f05;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#181817;--panel:#21201e;--sunk:#1c1b1a;--fg:#ecebe6;--fg2:#b4b2a9;--muted:#77756f;
+--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.17);--hl:#5a4b00;
+--app:#8cbcf0;--app-bg:#16304d;--loop:#c3a6f2;--loop-bg:#2e2342;--tool:#7fd3cb;--tool-bg:#123a37;--old:#b0b4bc;--old-bg:#2a2c30;--doc:#e9bf72;--doc-bg:#3d2d10;
+--you:#f6b867;--you-bg:#45290a;--act:#86d3a3;--act-bg:#15361f;--plan:#8cbcf0;--plan-bg:#16304d;--bad:#f2a49b;--bad-bg:#3b1714;--rel:#ff9a5c;--rel-bg:#4a1f05;color-scheme:dark}
+:root[data-theme="light"]{color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.45 var(--sans);overflow-x:hidden}
+.wrap{max-width:1320px;margin:0 auto;padding-block:16px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+code,.mono{font-family:var(--mono);font-size:12px}
+button,select,input{font:inherit;color:inherit}
+
+/* top bar */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;padding-bottom:12px;border-bottom:1px solid var(--line2)}
+.top h1{font-size:18px;font-weight:600;margin:0;margin-right:auto;text-wrap:balance}
+.top h1 small{font-weight:400;color:var(--fg2);font-size:12px;margin-left:8px}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--fg2)}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--act);box-shadow:0 0 0 3px var(--act-bg)}
+.live.offline i{background:var(--you);box-shadow:0 0 0 3px var(--you-bg)}
+select,input[type=search],.btn{background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:5px 10px}
+select{max-width:150px}
+.btn{cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn svg{width:14px;height:14px}
+input[type=search]{width:min(260px,100%)}
+.search{flex:1 1 260px;display:flex;justify-content:flex-end}
+
+/* now strip */
+.now{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:10px;margin:14px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--ac,var(--line2));border-radius:10px;padding:10px 12px;display:grid;gap:7px;align-content:start;min-width:0}
+.card.you{--ac:var(--you)}.card.act{--ac:var(--act)}.card.ht{--ac:var(--plan)}.card.cx{--ac:var(--old)}
+.card h2{font-size:12px;font-weight:600;color:var(--fg2);margin:0;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.card h2 b{color:var(--fg);font-size:12px;font-weight:500;font-variant-numeric:tabular-nums}
+.card ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.card li{display:grid;gap:3px;min-width:0;cursor:pointer}
+.card li .row1{display:flex;gap:6px;align-items:center;flex-wrap:wrap;min-width:0}
+.card li .t{color:var(--fg2);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.card .foot{font-size:12px;color:var(--muted);border-top:1px dashed var(--line2);padding-top:6px}
+.empty{color:var(--muted);font-size:12px}
+.linkish{background:none;border:0;padding:0;color:var(--app);cursor:pointer;font-size:12px}
+.runs{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:3px 8px;font-size:12px;align-items:center}
+.runs .tm{color:var(--muted);font-variant-numeric:tabular-nums}
+.runs .tk{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* phase strip */
+.ph{display:flex;gap:2px}
+.ph i{flex:1;height:4px;border-radius:2px;background:var(--line2);min-width:10px}
+.ph i.d{background:var(--act)}.ph i.c{background:var(--you)}
+.phl{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);gap:2px}
+.phl span{flex:1;text-align:center;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.phl span.c{color:var(--you);font-weight:600}
+
+/* tabs */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line2);margin-top:6px;overflow-x:auto}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;cursor:pointer;color:var(--fg2);white-space:nowrap}
+.tabs button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--app);font-weight:600}
+.tabs .cnt{font-size:11px;background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:0 6px;margin-left:6px;font-variant-numeric:tabular-nums}
+.what{color:var(--fg2);font-size:12px;margin:10px 0 0}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.fchip{border:1px solid var(--line2);background:var(--panel);border-radius:999px;padding:2px 10px;cursor:pointer;font-size:12px;color:var(--fg2);display:inline-flex;align-items:center;gap:6px}
+.fchip i{width:8px;height:8px;border-radius:50%;background:var(--dot,var(--line2))}
+.fchip[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.tbl th{position:sticky;top:0;background:var(--sunk);text-align:left;font-size:11px;font-weight:600;color:var(--fg2);padding:7px 10px;border-bottom:1px solid var(--line2);white-space:nowrap}
+.tbl td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tbody tr[data-open]{cursor:pointer}
+.tbl tbody tr[data-open]:hover td{background:var(--sunk)}
+.tbl td:first-child{box-shadow:inset 3px 0 0 var(--st,transparent)}
+.tbl tr.st-you{--st:var(--you)}.tbl tr.st-act{--st:var(--act)}.tbl tr.st-plan{--st:var(--plan)}.tbl tr.st-prop{--st:var(--line2)}
+.tbl td.scope{color:var(--fg2);max-width:520px}
+.tbl td.scope div{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tbl tr.done td{color:var(--muted)}
+.tbl tr.done .b.id{opacity:.7}
+.tbl tr.grp td{background:var(--bg);font-weight:600;color:var(--fg);cursor:default;font-size:12px;padding:14px 10px 6px;border-bottom:1px solid var(--line2)}
+.tbl tr.grp td span{color:var(--muted);font-weight:400;margin-left:6px}
+.tbl tr.rel td{padding:6px 10px;font-size:12px;font-weight:600;color:var(--rel);background:var(--rel-bg);box-shadow:inset 4px 0 0 var(--rel);border-top:1px solid var(--rel);border-bottom:1px solid var(--rel)}
+.tbl tr.rel td div{display:flex;align-items:center;gap:8px}
+.tbl tr.rel td div span{font-weight:400}
+.tbl tr.rel td div::after{content:"";flex:1;border-top:2px solid var(--rel)}
+.tbl td.nm{white-space:nowrap}
+.tbl td.nm .step{color:var(--muted);margin-right:4px}
+.scroll{overflow-x:auto;border-radius:10px}
+.num{font-variant-numeric:tabular-nums;color:var(--fg2);white-space:nowrap}
+.sub{margin-top:4px;display:grid;gap:2px;font-size:12px;color:var(--fg2)}
+mark{background:var(--hl);color:inherit;border-radius:2px}
+
+/* badges */
+.b{display:inline-block;font-size:11px;line-height:1.55;padding:0 7px;border-radius:6px;background:var(--sunk);color:var(--fg2);white-space:nowrap;font-family:var(--sans);border:1px solid transparent}
+.b.id{font-family:var(--mono);font-weight:600}
+.f-app{background:var(--app-bg);color:var(--app)}.f-loop{background:var(--loop-bg);color:var(--loop)}.f-tool{background:var(--tool-bg);color:var(--tool)}
+.f-old{background:var(--old-bg);color:var(--old)}.f-doc{background:var(--doc-bg);color:var(--doc)}
+.b.br{font-family:var(--mono);background:transparent;border-color:var(--line2);color:var(--fg2)}
+.b.wt{font-family:var(--mono);background:var(--tool-bg);color:var(--tool)}
+.b.s-you{background:var(--you-bg);color:var(--you);font-weight:600}
+.b.s-unc{background:transparent;color:var(--fg2);border-color:var(--line2)}
+.b.s-prop{background:transparent;color:var(--muted);border:1px dashed var(--line2)}
+.b.s-plan{background:var(--plan-bg);color:var(--plan)}
+.b.s-act{background:var(--act-bg);color:var(--act)}
+.b.s-done{background:transparent;color:var(--muted)}
+.b.flag{background:var(--you-bg);color:var(--you)}
+.b.bad{background:var(--bad-bg);color:var(--bad)}
+.b.ok{background:var(--act-bg);color:var(--act)}
+.b.era{background:transparent;color:var(--muted);border-color:var(--line)}
+.cell-b{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+
+/* branch lanes: one pinned vertical line per local branch (main, dev, then the rest by latest commit) */
+.tbl.lanes td{vertical-align:middle;padding-top:0;padding-bottom:0;height:30px}
+.tbl.lanes td.ln{padding:0 6px 0 8px;border-bottom:0;width:1%}
+.ln .sl{position:relative;display:flex;width:max-content}
+.ln .s{position:relative;z-index:1;width:20px;height:30px;flex:none}
+.ln .s::before{content:"";position:absolute;left:9px;top:0;bottom:0;width:2px;background:var(--lc);opacity:.85}
+.ln .s.out::before{background:repeating-linear-gradient(var(--lc) 0 3px,transparent 3px 7px);opacity:.45}
+.ln .s i{position:absolute;left:5px;top:10px;width:10px;height:10px;border-radius:50%;background:var(--lc)}
+.ln .s i.hd{left:3px;top:8px;width:14px;height:14px;background:var(--panel);border:3px solid var(--lc)}
+.lane-curves{position:absolute;z-index:0;left:0;top:0;width:100%;height:30px;overflow:visible;pointer-events:none}
+.lane-curves path{fill:none;stroke-width:2.2;stroke-linecap:round;opacity:.95}
+.lane-note{font-size:11px;color:var(--fg2);white-space:nowrap}
+.curve-sample{width:42px;height:22px;vertical-align:middle}
+.curve-sample path{fill:none;stroke:var(--app);stroke-width:2;stroke-linecap:round}
+.tbl.lanes th.ln{padding-left:8px}
+.lh{display:flex}.lh span{width:20px;flex:none;display:flex;justify-content:center}.lh span i{width:10px;height:10px;border-radius:50%;background:var(--lc)}
+.tbl.lanes td.msg{max-width:460px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--fg2)}
+.b.lane{background:transparent;border-color:var(--lc);color:var(--fg);font-family:var(--mono)}
+.b.lane::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--lc);margin-right:5px}
+.keyt{margin-bottom:12px}
+.keyt td{vertical-align:middle}
+
+/* legend popover */
+.legw{position:relative}
+.leg{position:absolute;right:0;top:calc(100% + 6px);width:min(360px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--line2);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.16);padding:10px 12px;z-index:20;display:none;gap:6px;max-height:75vh;overflow:auto}
+.leg.open{display:grid}
+.leg h4{margin:4px 0 0;font-size:11px;color:var(--fg2)}
+.leg .r{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;align-items:center;font-size:12px}
+.leg .stripe{display:inline-block;width:4px;height:16px;border-radius:2px;background:var(--c)}
+.fchip .n{font-variant-numeric:tabular-nums;opacity:.7}
+.fchip svg{width:11px;height:11px}
+.btn[aria-pressed=true]{background:var(--fg);color:var(--bg)}
+.gsum{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.gsum .b{font-size:12px}
+h3.sec{font-size:12px;color:var(--fg2);margin:18px 0 8px;font-weight:600}
+
+/* drawer */
+.dr{position:fixed;inset:0 0 0 auto;width:min(560px,100%);background:var(--panel);border-left:1px solid var(--line2);box-shadow:-12px 0 40px rgba(0,0,0,.14);transform:translateX(105%);transition:transform .18s ease;display:flex;flex-direction:column;z-index:10}
+.dr.open{transform:none}
+.dr header{padding:14px 16px 12px;border-bottom:1px solid var(--line);display:grid;gap:8px;position:relative}
+.dr header .x{position:absolute;top:8px;right:10px;background:none;border:0;font-size:22px;cursor:pointer;color:var(--fg2)}
+.dr h3{margin:0;font-size:16px;padding-right:30px;text-wrap:balance}
+.dr .body{padding:12px 16px 24px;overflow:auto;display:grid;gap:12px;align-content:start}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.fact{background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:6px 9px;min-width:0}
+.fact small{display:block;font-size:10.5px;color:var(--muted)}
+.fact div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.sx{border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+details.sx summary{cursor:pointer;padding:8px 10px;display:grid;gap:3px;list-style:none}
+details.sx summary::-webkit-details-marker{display:none}
+details.sx summary .k{font-size:11px;font-weight:600;color:var(--fg2);display:flex;justify-content:space-between;gap:8px}
+details.sx summary .k::after{content:"show";font-weight:400;color:var(--app)}
+details.sx[open] summary .k::after{content:"hide"}
+details.sx summary .p{font-size:12.5px;color:var(--fg);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+details.sx summary ul{margin:2px 0 0;padding-left:16px;font-size:12.5px}
+details.sx .txt{white-space:pre-wrap;font-size:12.5px;border-top:1px solid var(--line);padding:8px 10px;max-height:320px;overflow:auto;color:var(--fg2)}
+.dr .lst{margin:0;padding:0;list-style:none;display:grid;gap:3px;font-size:12px}
+.dr .lst li{display:flex;gap:6px;align-items:baseline}
+.dr h4{margin:0 0 4px;font-size:11px;font-weight:600;color:var(--fg2)}
+.note{color:var(--muted);font-size:12px;margin-top:14px}
+.note code{overflow-wrap:anywhere}
+@media (max-width:640px){.tbl td.scope{max-width:none}.top h1{width:100%}.tbl.lanes td.msg{max-width:200px}.leg{position:fixed;left:16px;right:16px;top:64px;width:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>AntiNotepad overview <small id="upd"></small></h1>
+    <span class="live offline" title="Live version: polls /data every 3 s"><i></i><span id="liveText">offline · retrying</span></span>
+    <label>Era <select id="era"></select></label>
+    <button class="btn" id="theme" title="Switch theme"></button>
+    <div class="search"><input id="q" type="search" placeholder="Search everything…  ( / )" aria-label="Search everything: ID, name, branch, worktree, text"></div>
+    <div class="legw"><button class="btn" id="legBtn" aria-expanded="false" aria-controls="leg"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="4.6" r="1" fill="currentColor"/></svg>Legend</button><div class="leg" id="leg" role="dialog" aria-label="Legend"></div></div>
+  </div>
+
+  <section class="now" aria-label="Now">
+    <div class="card you"><h2>Your turn <b id="youN"></b></h2><ul id="you"></ul></div>
+    <div class="card act"><h2>Moving without you <b id="actN"></b></h2><ul id="act"></ul></div>
+    <div class="card ht"><h2>Hand-test queue <b id="htN"></b></h2><ul id="ht"></ul></div>
+    <div class="card cx"><h2>Recent Codex runs <b id="cxN"></b></h2><div class="runs" id="codex"></div></div>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="plan" aria-selected="true">Plan<span class="cnt" id="c-plan"></span></button>
+    <button role="tab" data-tab="log" aria-selected="false">Work log<span class="cnt" id="c-log"></span></button>
+    <button role="tab" data-tab="branches" aria-selected="false">Branches &amp; worktrees<span class="cnt" id="c-branches"></span></button>
+    <button role="tab" data-tab="releases" aria-selected="false">Releases<span class="cnt" id="c-releases"></span></button>
+  </nav>
+  <p class="what" id="what"></p>
+  <div class="filters" id="filters"></div>
+  <div id="view"></div>
+  <p class="note">Sources: <code>.coord/STATUS.md</code> (Plan, Where things are), <code>.coord/tasks/*.md</code> (drawer, branch per item), <code>.coord/logs/usage.tsv</code> (Codex runs), and read-only git: <code>log</code> of every local branch, <code>worktree list</code>, tags. Nothing here is written by a model.</p>
+</div>
+
+<aside class="dr" id="dr" aria-label="Item details"><header><button class="x" id="drX" aria-label="Close">×</button><div id="drHead" style="display:grid;gap:8px"></div></header><div class="body" id="drBody"></div></aside>
+
+<!-- ROADMAP_DATA_SLOT -->
+<script>
+let DATA = window.ROADMAP_DATA || null;
+const IDRE = /^([A-Z][A-Za-z]*\d+[a-z]?(?:-[a-z0-9]+)+)/;
+const SPLIT = /^([A-Z][A-Za-z]*\d+[a-z]?)-(.+)$/;
+const PHASES = ['Request','Findings','Plan','Approve','Build','Check','Hand test','Merge'];
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const md = s => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+const plain = s => String(s ?? '').replace(/[`*]/g, '');
+const state = {tab:'plan', era:'', q:'', filter:'all', open:new Set(), drawerId:'', legendOpen:false};
+let lastETag = '';
+let eraItems = new Map();
+let localBranches = [];
+let liveBranches = [];
+let wtByBranch = {};
+let planIds = new Set();
+
+// ---- theme: System > Light > Dark, remembered per browser ----
+const THEMES = ['system','light','dark'];
+let theme = 'system'; try { theme = localStorage.getItem('roadmap-theme') || 'system'; } catch {}
+function applyTheme(){
+  if (theme === 'system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.dataset.theme = theme;
+  const icon = {system:'<circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/>',
+    light:'<circle cx="8" cy="8" r="3.2" fill="currentColor"/><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M3 13l1.4-1.4M11.6 4.4 13 3"/></g>',
+    dark:'<path d="M13.5 10.2A6 6 0 0 1 5.8 2.5a6 6 0 1 0 7.7 7.7z" fill="currentColor"/>'}[theme];
+  $('theme').innerHTML = `<svg viewBox="0 0 16 16" aria-hidden="true">${icon}</svg>${theme[0].toUpperCase()+theme.slice(1)}`;
+}
+$('theme').onclick = () => { theme = THEMES[(THEMES.indexOf(theme)+1) % 3]; try { localStorage.setItem('roadmap-theme', theme); } catch {} applyTheme(); };
+applyTheme();
+
+// ---- derived model ----
+function itemOf(s){ const m = String(s).match(IDRE); return m ? m[1] : ''; }
+function splitId(s){ const m = String(s).match(SPLIT); return m ? {id:m[1], name:m[2]} : {id:'', name:String(s)}; }
+function family(id){ const p = (id.match(/^[A-Z][a-z]*/)||[''])[0]; return {A:'f-app',Loop:'f-loop',T:'f-tool',C:'f-old',D:'f-doc'}[p] || 'f-old'; }
+function baseItem(id){ return DATA.cards[id] ? id : (Object.keys(DATA.cards).filter(c => id.startsWith(c)).sort((a,b)=>b.length-a.length)[0] || id); }
+function branchOf(id){
+  const c = DATA.cards[id] || DATA.cards[baseItem(id)];
+  const live = liveBranches.find(b => b.name.endsWith('/' + id));
+  return live ? live.name : (c && c.branch && !c.branch.includes('<') ? c.branch.replace(/`/g,'').split(' ')[0] : '');
+}
+function rowEra(r){
+  const newest = Math.max(0, (DATA.eras || []).length - 1);
+  if (!/^(done|dropped)/i.test(r.state)) return newest;
+  const id = itemOf(r.item);
+  if (!id) return 0;
+  const found = [...eraItems.entries()].filter(([item]) => item === id || item.startsWith(id) || id.startsWith(item)).flatMap(([, eras]) => [...eras]);
+  return found.length ? Math.max(...found) : 0;
+}
+// State kinds. "needs you" in STATUS marks unconfirmed backlog ideas, not something blocked on the user right now.
+const YOUR_TURN = s => /with you|approve\b|awaiting approve|hand test|ask/i.test(s);
+function stKind(s){ s=(s||'').trim();
+  if (/^(done|dropped)/.test(s)) return 'done'; if (/defer|parked|on hold|someday/i.test(s)) return 'def'; if (YOUR_TURN(s)) return 'you';
+  if (s==='needs you') return 'unc'; if (s==='proposed') return 'prop'; if (s==='planned') return 'plan'; return 'act'; }
+// Proposed rows are suggestions a chat made; the sparkle marks them as Claude's, not yours.
+const SPARK = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 9.4 6.6 14.5 8 9.4 9.4 8 14.5 6.6 9.4 1.5 8 6.6 6.6z" fill="currentColor"/></svg>';
+const ACTIVE = s => ['you','act'].includes(stKind(s));
+function phaseOf(s){ s=(s||'').toLowerCase(); if (/^done/.test(s)) return 8;
+  const i = [/request/,/finding/,/^plan(?!ned)/,/approv/,/build/,/check|review/,/hand test|accepted/,/merge/].findIndex(re => re.test(s)); return i < 0 ? 0 : i; }
+const phaseBar = (s, labels) => { const p = phaseOf(s);
+  return `<div class="ph" title="${PHASES[Math.min(p,7)]}">${PHASES.map((_,i)=>`<i class="${i<p?'d':i===p?'c':''}"></i>`).join('')}</div>` +
+    (labels ? `<div class="phl">${PHASES.map((n,i)=>`<span class="${i===p?'c':''}">${n}</span>`).join('')}</div>` : ''); };
+
+// Search: every word must appear somewhere in the row's text (all columns, badges included).
+function matches(text){ const q = state.q.trim().toLowerCase(); if(!q) return true; const t = text.toLowerCase(); return q.split(/\s+/).every(w => t.includes(w)); }
+function hl(html){ const q = state.q.trim(); if(!q) return html; let out = html;
+  q.split(/\s+/).filter(w=>w.length>1).forEach(w => { const re = new RegExp('(?![^<]*>)(' + w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')','gi'); out = out.replace(re,'<mark>$1</mark>'); }); return out; }
+const eraOk = e => state.era === 'all' || String(e) === state.era;
+const eraName = e => (DATA.eras || [])[Number(e)]?.name || `Era ${e}`;
+
+function refreshDerived(){
+  eraItems = new Map();
+  (DATA.log || []).forEach(entry => {
+    if (!entry.item) return;
+    if (!eraItems.has(entry.item)) eraItems.set(entry.item, new Set());
+    eraItems.get(entry.item).add(Number(entry.era) || 0);
+  });
+  localBranches = (DATA.branches || []).filter(branch => !branch.name.startsWith('origin'));
+  liveBranches = localBranches.filter(branch => !['dev','main'].includes(branch.name));
+  wtByBranch = Object.fromEntries((DATA.worktrees || []).filter(worktree => worktree.branch)
+    .map(worktree => [worktree.branch.replace('refs/heads/',''), worktree.worktree]));
+  planIds = new Set((DATA.rows || []).map(row => itemOf(row.item)).filter(Boolean));
+}
+
+function updateEraSelect(){
+  const eras = DATA.eras || [];
+  const newest = String(Math.max(0, eras.length - 1));
+  const options = eras.map((era, index) => ({era, index})).reverse().map(({era, index}) =>
+    `<option value="${index}">${esc(era.name)}${String(index) === newest ? ' (now)' : ''}</option>`);
+  options.push('<option value="all">All eras</option>');
+  $('era').innerHTML = options.join('');
+  if (!eras.length) state.era = 'all';
+  else if (state.era !== 'all' && !eras[Number(state.era)]) state.era = newest;
+  $('era').value = state.era || newest;
+  state.era = $('era').value;
+}
+
+const badgeId = id => id ? `<span class="b id ${family(id)}">${esc(id)}</span>` : '';
+const badgeFull = full => { const {id} = splitId(full); return id ? `<span class="b id ${family(id)}">${esc(full)}</span>` : ''; };
+const badgeSt = s => `<span class="b s-${stKind(s)}">${stKind(s)==='prop'?SPARK.replace('<svg','<svg style="width:9px;height:9px;margin-right:3px"'):''}${esc(s)}</span>`;
+const wtName = wt => wt.includes('/.claude/') ? '.claude/' + wt.split('/.claude/')[1] : 'main checkout';
+function badgeBr(br){ if(!br) return ''; const wt = wtByBranch[br]; const live = localBranches.some(b=>b.name===br);
+  return `<span class="b br" title="${live?'branch exists':'merged and deleted'}">${esc(br)}${live?'':' ✓'}</span>` + (wt?` <span class="b wt">${esc(wtName(wt))}</span>`:''); }
+
+// ---- tab views: each returns {what, filters, html, count} ----
+function table(head, rows, cols){
+  const body = rows.map(r => `<tr class="${r.cls||''}" ${r.open?`data-open="${esc(r.open)}"`:''}>${hl(r.html)}</tr>`).join('') || `<tr><td class="empty" colspan="${cols}">Nothing matches.</td></tr>`;
+  return `<div class="scroll"><table class="tbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+function planView(){
+  let rows = DATA.rows.map(r => ({r, era: rowEra(r), k: stKind(r.state)})).filter(x => eraOk(x.era));
+  const all = rows, cnt = f => all.filter(x => x.r.item !== 'Release marker' && (f === 'all' || (f === 'active' ? ['you','act'].includes(x.k) : x.k === f))).length;
+  if (state.filter !== 'all') rows = rows.filter(x => state.filter === 'active' ? ['you','act'].includes(x.k) : x.k === state.filter);
+  const groups = [...new Set(DATA.rows.map(r => r.group))];
+  const out = []; let grp = null, n = 0;
+  rows.forEach(({r, era, k}) => {
+    if (r.item === 'Release marker') { if (!state.q && state.filter==='all') out.push({cls:'rel', html:`<td colspan="6"><div>⚑ Release point<span>plan a release once the rows above are done · ${esc(r.state)}</span></div></td>`}); return; }
+    const full = itemOf(r.item), {id, name} = splitId(full || r.item), br = full ? branchOf(full) : '';
+    const kind = (r.item.match(/^(idea|step|Decision):/)||[])[1] || '';
+    const nm = kind ? r.item.replace(/^(idea|step|Decision): ?/,'') : name;
+    const text = [r.item, id, nm, r.scope, r.tier, r.effort, r.state, r.group, br, wtByBranch[br]||'', 'era '+era].join(' ');
+    if (!matches(text)) return;
+    if (r.group !== grp && !state.q) { grp = r.group; const gn = rows.filter(x => x.r.group === grp && x.r.item !== 'Release marker').length;
+      out.push({html:`<td colspan="6">${groups.indexOf(grp)+1}. ${esc((grp||'').replace(/\*/g,''))}<span>${gn} rows</span></td>`, cls:'grp'}); }
+    n++;
+    const idCell = id ? badgeId(id) : `<span class="empty">${kind==='step'?'':'—'}</span>`;
+    const nmCell = (kind==='step' ? '<span class="step">↳</span>' : '') + esc(nm) + (kind==='idea' ? ' <span class="b">idea</span>' : '');
+    out.push({cls:(k==='done'?'done ':'') + 'st-'+k, open: full || r.item, text,
+      html:`<td>${idCell}</td><td class="nm">${nmCell}</td><td class="scope"><div>${md(r.scope)}</div></td><td class="num">${esc(r.tier)} · ${esc(r.effort)}</td><td>${badgeSt(r.state)}</td><td><div class="cell-b">${badgeBr(br)}<span class="b era">${esc(eraName(era))}</span></div></td>`});
+  });
+  // Filter order follows importance and phase: what moves now, what is agreed, what was suggested, what is only an idea.
+  const opts = [['all','All',''],['active','Active','var(--act)'],['plan','Planned','var(--plan)'],['prop','Proposed','spark'],['unc','Ideas','var(--line2)'],['def','Deferred','var(--muted)'],['done','Done','var(--muted)']];
+  return {what:'Plan: everything to do. Groups and rows run top to bottom in your order from the STATUS Plan (set 2026-10-29, newer groups added on top). An ID is given only once you confirm an idea.',
+    filters: opts.map(([v,l,c]) => `<button class="fchip" data-f="${v}" aria-pressed="${state.filter===v}" style="--dot:${c&&c!=='spark'?c:'var(--fg2)'}">${c==='spark'?SPARK:'<i></i>'}${l}<span class="n">${cnt(v)}</span></button>`).join(''),
+    html: table('<th>ID</th><th>Name</th><th>Scope</th><th>Tier · size</th><th>State</th><th>Branch · worktree · era</th>', out, 6), count: n};
+}
+function logView(){
+  // One row per item run: consecutive commits for the same item fold together; expand to see each commit.
+  const groups = [];
+  DATA.log.filter(l => eraOk(l.era)).forEach(l => { const id = itemOf(l.item) || l.item || '';
+    const g = groups[groups.length-1]; if (g && g.id === id && id) g.c.push(l); else groups.push({id, c:[l], era:l.era}); });
+  const out = [];
+  groups.forEach((g, gi) => {
+    const {id, name} = splitId(g.id), br = g.id ? branchOf(baseItem(g.id)) || branchOf(g.id) : '';
+    const text = [g.id, br, eraName(g.era), ...g.c.map(c => c.hash+' '+c.subject+' '+c.date)].join(' ');
+    if (!matches(text)) return;
+    const first = g.c[0], last = g.c[g.c.length-1], key = `g:${g.id || first.hash}:${last.hash}`, open = state.open.has(key) || !!state.q.trim();
+    const wt = wtByBranch[br] || '';
+    const what = g.c.length === 1 ? md(first.subject.replace(/^[^:]+:\s*/,'')) :
+      `<button class="linkish" data-x="${key}">${open?'▾':'▸'} ${g.c.length} commits</button> <span class="empty">latest: ${md(first.subject.replace(/^[^:]+:\s*/,''))}</span>` +
+      (open ? `<div class="sub">${g.c.map(c=>`<div><code>${esc(c.hash)}</code> ${md(c.subject.replace(/^[^:]+:\s*/,''))}</div>`).join('')}</div>` : '');
+    out.push({open: g.id || null, text: [text, wt].join(' '), cls: g.id ? '' : '',
+      html:`<td class="num">${esc(first.date)}${last.date!==first.date?`<div class="empty">from ${esc(last.date)}</div>`:''}</td><td>${badgeId(id)}</td><td class="nm">${esc(id?name:g.id||'(no item)')}</td><td>${what}</td><td><div class="cell-b">${badgeBr(br)}<span class="b era">${esc(eraName(g.era))}</span></div></td>`});
+  });
+  return {what:'Work log: what has landed on dev, newest first. Plan shows what is left; this shows what was done, one row per item.',
+    html: table('<th>Date</th><th>ID</th><th>Name</th><th>What landed</th><th>Branch · worktree · era</th>', out, 5), count: out.length};
+}
+function branchFlags(b){
+  const id = itemOf(b.name.split('/').slice(-1)[0]), f = [];
+  if (!['dev','main'].includes(b.name) && !(id && planIds.has(id))) f.push('no STATUS row');
+  if (!['dev','main'].includes(b.name) && b.ahead === 0) f.push('no own commits');
+  if (!['dev','main'].includes(b.name) && b.behind > 0) f.push(`behind dev by ${b.behind}`);
+  return f;
+}
+function branchView(){
+  // One dot marks each commit home; branch rings mark heads and curves show forks and merges.
+  const G = DATA.graph, COLORS = ['var(--act)','var(--app)','var(--loop)','var(--tool)','var(--doc)','var(--bad)','var(--old)'];
+  const lc = i => COLORS[Math.min(i, COLORS.length-1)];
+  const info = n => DATA.branches.find(b => b.name === n) || {};
+  const pill = i => `<span class="b lane" style="--lc:${lc(i)}">${esc(G.lanes[i].name)}</span>`;
+  const rowAt = new Map(G.commits.map((c,i) => [c.hash,i]));
+  const commitByHash = new Map(G.commits.map(c => [c.hash,c]));
+  const homeAt = new Map(G.commits.map(c => [c.hash,(c.in||[]).length ? c.in[0] : -1]));
+  const localNames = new Set(G.lanes.map(l => l.name));
+  const parentName = l => Number.isInteger(l.parent) && G.lanes[l.parent] ? G.lanes[l.parent].name : '';
+  const landingGroups = new Map();
+  for (const entry of DATA.log || []) {
+    const item = entry.item || itemOf(entry.subject);
+    if (!item) continue;
+    const card = DATA.cards[item] || DATA.cards[baseItem(item)];
+    if (!card || !card.branch || String(card.branch).includes('<')) continue;
+    const branch = String(card.branch).replace(/`/g,'').trim().split(/\s+/)[0].replace(/[),.;]+$/,'');
+    if (!branch || branch.toLowerCase() === 'none' || localNames.has(branch)) continue;
+    if (!landingGroups.has(branch)) landingGroups.set(branch, []);
+    landingGroups.get(branch).push(entry);
+  }
+  const landingsByHash = new Map();
+  for (const [branch, commits] of landingGroups) {
+    const newest = commits[0];
+    if (newest?.hash) landingsByHash.set(newest.hash, `${commits.length === 1 ? 'squash of' : 'landed from'} ${branch}`);
+  }
+  const landingLabel = c => landingsByHash.get(c.hash) || '';
+  const laneHead = (hash, exclude) => {
+    const match = G.lanes.findIndex((l,i) => i >= 2 && i !== exclude && l.head === hash);
+    if (match >= 0) return match;
+    return G.lanes.findIndex((l,i) => i !== exclude && l.head === hash);
+  };
+  const mergeSource = (c, destination) => {
+    const second = (c.parents||[])[1];
+    if (!second) return -1;
+    const headLane = laneHead(second, destination);
+    if (headLane >= 0) return headLane;
+    const parent = commitByHash.get(second);
+    const otherBranch = (parent?.in||[]).find(i => i >= 2 && i !== destination);
+    if (Number.isInteger(otherBranch)) return otherBranch;
+    const home = homeAt.get(second);
+    return Number.isInteger(home) && home !== destination ? home : -1;
+  };
+  const keyRows = G.lanes.map((l, i) => { const b = info(l.name), fl = branchFlags(b.name ? b : {name:l.name, ahead:0, behind:0});
+    const text = [l.name, l.worktree, l.head, l.date, b.ahead, b.behind, fl.join(' ')].join(' '); if (!matches(text)) return null;
+    return {open: itemOf(l.name.split('/').slice(-1)[0]) || null, cls: fl.length ? 'st-you' : '', text,
+      html:`<td>${pill(i)}</td><td>${l.worktree?`<span class="b wt">${esc(wtName(l.worktree))}</span>`:'<span class="empty">no worktree</span>'}</td><td class="num"><code>${esc(l.head)}</code> · ${esc(l.date)}</td><td class="num">${l.name==='dev'?'–':l.name==='main'?`dev is ${b.behind} ahead`:`↑${b.ahead} ↓${b.behind}`}</td><td><div class="cell-b">${l.name==='main'||l.name==='dev'?'':(fl.map(x=>`<span class="b flag">${esc(x)}</span>`).join('')||'<span class="b ok">ok</span>')}</div></td>`}; }).filter(Boolean);
+  DATA.worktrees.filter(w => !w.branch).forEach(w => keyRows.push({cls:'st-you', text:[w.worktree, 'detached', w.HEAD].join(' '), html:`<td><span class="b flag">detached</span></td><td><span class="b wt">${esc(wtName(w.worktree))}</span></td><td class="num"><code>${esc((w.HEAD||'').slice(0,7))}</code></td><td>–</td><td><span class="b flag">worktree with no branch</span></td>`}));
+  const head = `<th class="ln"><div class="lh">${G.lanes.map((l,i)=>`<span title="${esc(l.name)}" style="--lc:${lc(i)}"><i></i></span>`).join('')}</div></th><th>Commit</th><th>Label</th><th>Message</th><th>Date</th>`;
+  const rows = G.commits.map(c => {
+    const heads = G.lanes.map((l,i) => l.head === c.hash ? i : -1).filter(i => i >= 0);
+    const item = itemOf(c.subject);
+    const home = homeAt.get(c.hash) ?? -1;
+    const forkLabels = G.lanes.map((l,i) => {
+      const parent = parentName(l);
+      return c.hash === l.fork && l.head !== c.hash && parent ? `${pill(i)}<span class="lane-note">↳ from ${esc(parent)}</span>` : '';
+    }).join('');
+    const headLabels = heads.map(i => {
+      const l = G.lanes[i], parent = c.hash === l.fork ? parentName(l) : '';
+      return pill(i) + (l.worktree ? `<span class="b wt">${esc(wtName(l.worktree))}</span>` : '') +
+        (parent ? `<span class="lane-note">↳ from ${esc(parent)}</span>` : '');
+    }).join('');
+    const mergeRows = G.lanes.map((l,i) => {
+      if (home !== i || (c.parents||[]).length < 2) return '';
+      const source = mergeSource(c, i);
+      return source >= 0 ? `<span class="lane-note">⤶ merged ${esc(G.lanes[source].name)}</span>` : '';
+    }).join('');
+    const landing = landingLabel(c);
+    const landingMarkup = landing ? `<span class="lane-note">⤶ ${esc(landing)}</span>` : '';
+    const mergeLabel = mergeRows || landingMarkup;
+    const label = headLabels + forkLabels + (c.tags||[]).map(t => `<span class="b s-plan">${esc(t)}</span>`).join('') +
+      (heads.length || !item ? '' : badgeId(splitId(item).id)) + mergeLabel;
+    const text = [c.hash, c.subject, c.date, ...heads.map(i => G.lanes[i].name + ' ' + G.lanes[i].worktree),
+      ...G.lanes.filter(l => c.hash === l.fork).map(l => `from ${parentName(l)}`),
+      ...G.lanes.filter((l,i) => home === i && (c.parents||[]).length > 1).map(() => {
+        const source = mergeSource(c, home);
+        return source >= 0 ? `merged ${G.lanes[source].name}` : '';
+      }), landing, ...(c.tags||[])].join(' ');
+    if (!matches(text)) return null;
+    const headAt = G.lanes.map(l => rowAt.get(l.head));
+    const forkAt = G.lanes.map(l => rowAt.get(l.fork));
+    const lanes = G.lanes.map((l,i) => {
+      let solid = (c.in||[]).includes(i);
+      if (i > 0 && Number.isInteger(l.parent) && Number.isInteger(headAt[i]) && Number.isInteger(forkAt[i])) {
+        solid = rowAt.get(c.hash) >= Math.min(headAt[i],forkAt[i]) && rowAt.get(c.hash) <= Math.max(headAt[i],forkAt[i]);
+      }
+      const marker = l.head === c.hash ? '<i class="hd"></i>' : home === i ? '<i></i>' : '';
+      return `<span class="s ${solid?'':'out'}" style="--lc:${lc(i)}">${marker}</span>`;
+    }).join('');
+    const curves = [];
+    G.lanes.forEach((l,i) => {
+      if (i === 0 || c.hash !== l.fork || !Number.isInteger(l.parent) || l.parent === i) return;
+      const x1 = l.parent*20+10, x2 = i*20+10, mid = (x1+x2)/2;
+      curves.push(`<path d="M ${x1} 15 C ${mid} 2 ${mid} 28 ${x2} 15" stroke="${lc(i)}"/>`);
+    });
+    if (home >= 0 && (c.parents||[]).length > 1) {
+      const source = mergeSource(c, home);
+      if (source >= 0 && source !== home) {
+        const x1 = source*20+10, x2 = home*20+10, mid = (x1+x2)/2;
+        curves.push(`<path d="M ${x1} 15 C ${mid} 28 ${mid} 2 ${x2} 15" stroke="${lc(source)}"/>`);
+      }
+    }
+    const curveSvg = curves.length ? `<svg class="lane-curves" viewBox="0 0 ${Math.max(20,G.lanes.length*20)} 30" preserveAspectRatio="none" aria-hidden="true">${curves.join('')}</svg>` : '';
+    return {open: item || null, text, html:`<td class="ln"><div class="sl">${curveSvg}${lanes}</div></td><td class="num"><code>${esc(c.hash)}</code></td><td><div class="cell-b">${label}</div></td><td class="msg">${md(c.subject.replace(/^[^:]+:\s*/,''))}</td><td class="num">${esc(c.date)}</td>`};
+  }).filter(Boolean);
+  const lanesTbl = `<div class="scroll"><table class="tbl lanes"><thead><tr>${head}</tr></thead><tbody>${rows.map(r=>`<tr ${r.open?`data-open="${esc(r.open)}"`:''}>${hl(r.html)}</tr>`).join('')||'<tr><td colspan="5" class="empty">Nothing matches.</td></tr>'}</tbody></table></div>`;
+  return {what:'Branches & worktrees: every local branch and worktree on this machine (not the remote). One line per branch, commits newest first, back through the configured eras.',
+    html:`<div class="keyt">${table('<th>Branch</th><th>Worktree</th><th>Head · last commit</th><th>vs dev</th><th>Health</th>', keyRows, 5)}</div>${lanesTbl}`, count: G.lanes.length};
+}
+function releaseView(){
+  const out = [];
+  const inst = (DATA.where||'').match(/Installed copy: (.+?)\.\s/);
+  DATA.tags.forEach(t => {
+    const kind = t.name.startsWith('archive/') ? 'archive' : /^v\d/.test(t.name) ? 'release' : t.name.startsWith('antinotepad-') ? 'old name' : 'other';
+    const text = [t.name, t.hash, t.date, kind].join(' '); if (!matches(text)) return;
+    out.push({cls: kind==='release'?'st-plan':kind==='old name'?'st-you':'', text, html:`<td><code>${esc(t.name)}</code></td><td class="num">${esc(t.date)}</td><td><code>${esc(t.hash)}</code></td><td><div class="cell-b"><span class="b ${kind==='release'?'s-plan':kind==='archive'?'f-loop':''}">${kind}</span>${kind==='old name'?'<span class="b flag">deleted on GitHub per STATUS; still local</span>':''}</div></td>`});
+  });
+  return {what:'Releases: what main and your installed copy are on, and every tag.',
+    filters:`<div class="now" style="margin:0;width:100%"><div class="card ht"><h2>main</h2><div><code>${esc(DATA.main)}</code></div></div><div class="card act"><h2>dev vs main</h2><div><b>${DATA.devAhead}</b> commits on dev not yet released</div></div><div class="card you"><h2>Installed copy</h2><div>${inst?md(inst[1]):'<span class="empty">not in STATUS</span>'}</div></div></div>`,
+    html: table('<th>Tag</th><th>Date</th><th>Commit</th><th>Kind</th>', out, 4), count: out.length};
+}
+const V = {plan:planView, log:logView, branches:branchView, releases:releaseView};
+
+function render(){
+  const focus = captureFocus();
+  const res = V[state.tab]();
+  $('what').textContent = res.what; $('filters').innerHTML = res.filters || ''; $('view').innerHTML = res.html;
+  for (const t of Object.keys(V)) $('c-'+t).textContent = t === state.tab ? res.count : V[t]().count;
+  restoreFocus(focus);
+}
+function captureFocus(){
+  const element = document.activeElement;
+  if (!element || element === document.body) return null;
+  const focus = {};
+  if (element.id) focus.id = element.id;
+  for (const key of ['tab','f','x']) {
+    if (element.dataset && element.dataset[key] !== undefined) focus[key] = element.dataset[key];
+  }
+  if (element === $('q')) {
+    focus.start = element.selectionStart;
+    focus.end = element.selectionEnd;
+  }
+  if (element.matches && element.matches('details.sx > summary')) {
+    focus.detailIndex = [...$('drBody').querySelectorAll('details.sx > summary')].indexOf(element);
+  }
+  return Object.keys(focus).length ? focus : null;
+}
+function restoreFocus(focus){
+  if (!focus) return;
+  let target = focus.id ? $(focus.id) : null;
+  if (!target && focus.tab !== undefined) target = [...document.querySelectorAll('[data-tab]')].find(element => element.dataset.tab === focus.tab);
+  if (!target && focus.f !== undefined) target = [...document.querySelectorAll('[data-f]')].find(element => element.dataset.f === focus.f);
+  if (!target && focus.x !== undefined) target = [...document.querySelectorAll('[data-x]')].find(element => element.dataset.x === focus.x);
+  if (!target && focus.detailIndex !== undefined) target = $('drBody').querySelectorAll('details.sx > summary')[focus.detailIndex];
+  if (!target || document.activeElement === target) return;
+  target.focus({preventScroll:true});
+  if (target === $('q') && focus.start !== undefined && focus.end !== undefined) target.setSelectionRange(focus.start, focus.end);
+}
+function setLive(isLive){
+  $('liveText').textContent = isLive ? 'live' : 'offline · retrying';
+  $('liveText').parentElement.classList.toggle('offline', !isLive);
+}
+function redrawForData(){
+  const focus = captureFocus();
+  const scrollX = window.scrollX, scrollY = window.scrollY;
+  const drawerOpen = $('dr').classList.contains('open');
+  const drawerScroll = $('drBody').scrollTop;
+  const detailsOpen = [...$('drBody').querySelectorAll('details.sx')].map(details => details.open);
+
+  updateEraSelect();
+  document.querySelectorAll('[data-tab]').forEach(button => button.setAttribute('aria-selected', button.dataset.tab === state.tab));
+  renderNow();
+  render();
+  if (state.legendOpen) renderLegend();
+  if (drawerOpen && state.drawerId) {
+    openItem(state.drawerId);
+    [...$('drBody').querySelectorAll('details.sx')].forEach((details, index) => { details.open = !!detailsOpen[index]; });
+    $('drBody').scrollTop = drawerScroll;
+  }
+  restoreFocus(focus);
+  window.scrollTo(scrollX, scrollY);
+}
+let lastDataJSON = '';
+async function pollData(){
+  const pollStarted = Date.now();
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 10000);
+  try {
+    const headers = lastETag ? {'If-None-Match':lastETag} : {};
+    const response = await fetch('/data', {cache:'no-store', headers, signal:controller.signal});
+    if (response.status === 304) {
+      setLive(true);
+      return;
+    }
+    if (!response.ok) throw new Error(`Roadmap data request failed: ${response.status}`);
+    const nextData = await response.json();
+    const nextJSON = JSON.stringify(nextData);
+    const nextETag = response.headers.get('ETag') || '';
+    setLive(true);
+    if (nextJSON === lastDataJSON) {
+      lastETag = nextETag;
+      return;
+    }
+    DATA = nextData;
+    refreshDerived();
+    redrawForData();
+    lastDataJSON = nextJSON;
+    lastETag = nextETag;
+  }
+  catch {
+    setLive(false);
+  }
+  finally {
+    window.clearTimeout(timeout);
+    window.setTimeout(pollData, Math.max(0, 3000 - (Date.now() - pollStarted)));
+  }
+}
+function renderNow(){
+  $('upd').textContent = `Updated ${DATA.updated}`;
+  const live = DATA.rows.filter(r => ACTIVE(r.state));
+  const you = live.filter(r => stKind(r.state) === 'you'), moving = live.filter(r => stKind(r.state) !== 'you');
+  const li = r => { const full = itemOf(r.item); return `<li data-open="${esc(full||r.item)}"><div class="row1">${badgeFull(full)}${badgeSt(r.state)}</div>${phaseBar(r.state)}<span class="t">${esc(plain(r.scope).slice(0,120))}</span></li>`; };
+  $('youN').textContent = you.length;
+  $('you').innerHTML = you.length ? you.map(li).join('') : '<li class="empty">Nothing waits on you.</li>';
+  const past = live.filter(r => phaseOf(r.state) >= 4 && phaseOf(r.state) < 8).length;
+  $('actN').textContent = `${moving.length} · ${past} of 3 past Approve`;
+  $('act').innerHTML = moving.length ? moving.map(li).join('') : '<li class="empty" style="cursor:default">Nothing else in flight.</li>';
+  const ht = DATA.rows.filter(r => /hand test|accepted/.test(r.state));
+  $('htN').textContent = ht.length;
+  $('ht').innerHTML = ht.length ? ht.map(li).join('') : '<li class="empty" style="cursor:default">Nothing waiting for the dev copy.</li>';
+  const runs = DATA.usage.slice(-6).reverse();
+  $('cxN').textContent = DATA.usage.length ? DATA.usage[DATA.usage.length-1].day : '';
+  $('codex').innerHTML = runs.map(u => { const ok = /exit=0/.test(u.exit);
+    return `<span class="tm">${esc(u.at.slice(11,16))}</span><span class="tk" title="${esc(u.task)}">${esc(u.task)}</span><span class="b ${ok?'ok':'bad'}">${esc(u.role)} · ${esc(u.secs)}</span>`; }).join('') || '<span class="empty">No runs logged.</span>';
+}
+
+// ---- legend: explains the marks used on the current tab ----
+const st = (c, t) => `<div class="r"><span><span class="stripe" style="--c:${c}"></span></span><span>${t}</span></div>`;
+const row = (k, t) => `<div class="r"><span class="cell-b">${k}</span><span>${t}</span></div>`;
+const dotS = cls => `<span class="ln"><span class="s ${cls==='out'?'out':''}" style="--lc:var(--app);display:inline-block">${cls==='out'?'':`<i class="${cls}"></i>`}</span></span>`;
+const curveS = kind => `<svg class="curve-sample" viewBox="0 0 42 22" aria-hidden="true"><path d="${kind==='fork'?'M 4 11 C 15 1 27 21 38 11':'M 4 11 C 15 21 27 1 38 11'}"/></svg>`;
+const LEG_COMMON = () => `<h4>Item IDs, by family</h4>${row(badgeId('A53'),'App')}${row(badgeId('Loop2'),'Dev loop')}${row(badgeId('T1'),'Tooling')}${row(badgeId('C26'),'Old coordination items')}${row(badgeId('D1'),'Docs')}`;
+const LEG = {
+  plan: () => `<h4>Row stripe and state</h4>${st('var(--you)','Your turn: approve, answer, hand test')}${st('var(--act)','Active: moving without you')}${st('var(--plan)','Planned: agreed, not started')}${st('var(--line2)','Proposed by a chat, or an idea')}` +
+    `${row(badgeSt('proposed'),'Suggested by Claude, not yet agreed')}${row(badgeSt('needs you'),'An idea you have not confirmed (no ID yet)')}${row('<span class="step">↳</span>','A step under the idea above it')}` +
+    `${row('<span class="b" style="background:var(--rel-bg);color:var(--rel);font-weight:600">⚑ Release point</span>','Plan a release once the rows above are done')}` +
+    `<h4>Branch column</h4>${row('<span class="b br">feat/A1-x</span>','Branch still exists')}${row('<span class="b br">feat/A1-x ✓</span>','Merged into dev and deleted')}${row('<span class="b wt">.claude/…</span>','Has a worktree folder')}${LEG_COMMON()}`,
+  log: () => `${row('<span class="linkish">▸ 12 commits</span>','One item, several commits; click to list them')}${row('<span class="b br">x ✓</span>','The branch it came from, merged and deleted')}${row(`<span class="b era">${esc(eraName((DATA.eras || []).length - 1))}</span>`,'The newest configured era')}${LEG_COMMON()}`,
+  branches: () => `<h4>Lanes</h4>${row('<span class="b lane" style="--lc:var(--act)">main</span>','Lane 1, always main')}${row('<span class="b lane" style="--lc:var(--app)">dev</span>','Lane 2, always dev')}${row('<span class="b lane" style="--lc:var(--loop)">other</span>','Then every other local branch, latest commit first')}` +
+    `${row(dotS(''),'Commit is in this branch')}${row(dotS('hd'),'Branch head (its latest commit)')}${row(dotS('out'),'Branch exists, but not at this commit')}` +
+    `${row(curveS('fork'),'Fork: parent lane curves into the new branch')}${row(curveS('merge'),'Merge: source lane curves into the merge commit')}${row('<span class="lane-note">↳ from dev</span>','The branch starts at this fork')}${row('<span class="lane-note">⤶ landed from branch</span>','Merge, squash, or fast-forward label')}` +
+    `<h4>Health</h4>${row('<span class="b flag">no STATUS row</span>','Not tied to any Plan item')}${row('<span class="b flag">no own commits</span>','Nothing on it that dev lacks')}${row('<span class="b flag">behind dev by 7</span>','Started before the newest dev commits')}${row('<span class="b wt">.claude/…</span>','Its worktree folder')}`,
+  releases: () => `${row('<span class="b s-plan">release</span>','Version tag on main')}${row('<span class="b f-loop">archive</span>','Backup of history before the 2026-10-29 rewrite')}${row('<span class="b flag">old name</span>','Old tag scheme; gone on GitHub, still local')}`};
+function renderLegend(){ $('leg').innerHTML = `<h4 style="margin-top:0">Legend · ${esc({plan:'Plan',log:'Work log',branches:'Branches & worktrees',releases:'Releases'}[state.tab])}</h4>` + LEG[state.tab]() +
+  `<h4>Phase bar (cards and drawer)</h4>${row(phaseBar('build'),'Green: phases done · orange: current phase')}`; }
+
+// ---- drawer: facts first, then each card section as a one-line preview that opens to the full text ----
+function lead(t, n=170){ const s = plain(t).replace(/\s+/g,' ').trim(); const m = s.match(/^(.{40,}?[.!?])\s/); const x = m && m[1].length <= n ? m[1] : s.slice(0,n); return x + (x.length < s.length ? ' …' : ''); }
+function bulletLeads(t){ return (String(t||'').match(/^- \*\*([^*]+)\*\*/gm)||[]).map(x => x.replace(/^- \*\*|\*\*$/g,'').replace(/:$/,'')).slice(0,6); }
+function openItem(id){
+  if (!id) return;
+  state.drawerId = id;
+  const base = baseItem(id), c = DATA.cards[id] || DATA.cards[base];
+  const row = DATA.rows.find(r => itemOf(r.item) === id || r.item === id);
+  const br = branchOf(id) || '';
+  const commits = DATA.log.filter(l => (l.item||'').startsWith(id));
+  const runs = DATA.usage.filter(u => u.task.startsWith(id));
+  const gate = c && (c.check||'').match(/GATE:\s*(PASS|FAIL)/);
+  const hand = c && c.hand && !/^</.test(c.hand) ? (/fail/i.test(c.hand) && !/pass/i.test(c.hand) ? 'failed' : /pass/i.test(c.hand) ? 'passed' : 'noted') : '';
+  const title = c ? c.title.replace(/^[^:]+:\s*/,'') : row ? plain(row.scope).split(/[.(]/)[0] : id;
+  const st = row ? row.state : (commits.length ? 'done' : '');
+  $('drHead').innerHTML = `<div class="cell-b">${badgeFull(id) || `<span class="b">${esc(id)}</span>`}${st?badgeSt(st):''}</div><h3>${esc(title)}</h3>${st?phaseBar(st, true):''}`;
+  const fact = (k, v) => `<div class="fact"><small>${k}</small><div>${v}</div></div>`;
+  const facts = [
+    fact('Tier · size', row ? esc(row.tier+' · '+row.effort) : c ? esc(c.tier.split(' ')[0]) : '–'),
+    fact('Branch', br ? badgeBr(br) : '<span class="empty">none yet</span>'),
+    fact('Commits on dev', commits.length ? `${commits.length} · last <code>${esc(commits[0].hash)}</code>` : '<span class="empty">none</span>'),
+    fact('Gate', gate ? `<span class="b ${gate[1]==='PASS'?'ok':'bad'}">${gate[1]}</span>` : '<span class="empty">not run</span>'),
+    fact('Hand test', hand ? `<span class="b ${hand==='passed'?'ok':hand==='failed'?'bad':''}">${hand}</span>` : '<span class="empty">not yet</span>'),
+    fact('Codex runs', runs.length ? `${runs.length} · ${[...new Set(runs.map(u=>u.role))].join(', ')}` : '<span class="empty">none</span>')].join('');
+  const sec = (h, t, bullets) => { if (!t || /^</.test(t.trim())) return '';
+    const bl = bullets ? bulletLeads(t) : [];
+    return `<details class="sx"><summary><span class="k">${h}</span>${bl.length ? `<ul>${bl.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>` : `<span class="p">${esc(lead(t))}</span>`}</summary><div class="txt">${md(t)}</div></details>`; };
+  $('drBody').innerHTML = `<div class="facts">${facts}</div>` +
+    (row ? sec('Scope (STATUS)', row.scope) : '') +
+    (c ? sec('Request', c.request) + sec('Plan', c.plan, true) + sec('Check', c.check, true) + sec('Hand test', c.hand) :
+      '<div class="empty">No item card on dev for this item yet (cards start at Request; older era cards were archived).</div>') +
+    (commits.length ? `<div><h4>Commits</h4><ul class="lst">${commits.slice(0,8).map(l=>`<li><code>${esc(l.hash)}</code><span class="empty">${esc(l.date)}</span><span>${md(l.subject.replace(/^[^:]+:\s*/,''))}</span></li>`).join('')}${commits.length>8?`<li class="empty">and ${commits.length-8} more in the Work log</li>`:''}</ul></div>` : '') +
+    (runs.length ? `<div><h4>Codex runs</h4><ul class="lst">${runs.slice(-8).reverse().map(u=>`<li><span class="b ${/exit=0/.test(u.exit)?'ok':'bad'}">${esc(u.role)}</span><span class="empty">${esc(u.at.slice(5,16).replace('T',' '))}</span><span>${esc(u.model)} · ${esc(u.secs)}</span></li>`).join('')}</ul></div>` : '') +
+    `<div><h4>Files</h4><ul class="lst"><li><code>.coord/tasks/${esc(base)}.md</code></li><li><code>.coord/reports/${esc(base)}*.md</code></li></ul></div>`;
+  $('dr').classList.add('open');
+}
+function closeItem(){ state.drawerId = ''; $('dr').classList.remove('open'); }
+function goTab(tab){ state.tab = tab; document.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab===tab)); render(); renderLegend(); }
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeItem(); state.legendOpen = false; $('leg').classList.remove('open'); $('legBtn').setAttribute('aria-expanded', false); }
+  if (e.key === '/' && document.activeElement !== $('q') && !e.target.closest('input,textarea,select')) { e.preventDefault(); $('q').focus(); }
+});
+document.addEventListener('click', e => {
+  const target = e.target instanceof Element ? e.target : null;
+  if (!target) return;
+  const legendButton = target.closest('#legBtn');
+  if (legendButton) {
+    state.legendOpen = !state.legendOpen;
+    $('leg').classList.toggle('open', state.legendOpen);
+    $('legBtn').setAttribute('aria-expanded', state.legendOpen);
+    renderLegend();
+    return;
+  }
+  if (!target.closest('.legw')) {
+    state.legendOpen = false;
+    $('leg').classList.remove('open');
+    $('legBtn').setAttribute('aria-expanded', false);
+  }
+  if (target.closest('#drX')) { closeItem(); return; }
+  const x = target.closest('[data-x]'); if (x) { const k = x.dataset.x; state.open.has(k) ? state.open.delete(k) : state.open.add(k); render(); return; }
+  const g = target.closest('[data-gof]'); if (g) { state.filter = g.dataset.gof; goTab('plan'); return; }
+  const o = target.closest('[data-open]'); if (o && !target.closest('.dr')) { openItem(o.dataset.open); return; }
+  const t = target.closest('[data-tab]'); if (t) { goTab(t.dataset.tab); return; }
+  const f = target.closest('[data-f]'); if (f) { state.filter = f.dataset.f; render(); }
+});
+$('q').oninput = e => { state.q = e.target.value; render(); };
+$('era').onchange = e => { state.era = e.target.value; render(); };
+if (DATA) {
+  refreshDerived();
+  redrawForData();
+  $('liveText').textContent = `snapshot ${DATA.updated}`;
+  $('liveText').parentElement.classList.remove('offline');
+  $('liveText').parentElement.title = 'Static snapshot';
+}
+else pollData();
+</script>
+</body>
+</html>

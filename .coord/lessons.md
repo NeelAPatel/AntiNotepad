@@ -23,6 +23,10 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 | 2026-10-30 | Loop2-loop-v3-1 | Check 3.1f | code | codex-review | codex-review | report copy broke after failover; capacity match too wide | - |
 | 2026-10-30 | Loop2-loop-v3-1 | Build | env | manager | gate | Codex "model is at capacity" did not fail over to the backup | Loop2-loop-v3-1 (3.1f failover) |
 | 2026-10-30 | Loop2-loop-v3-1 | Check 3.1g | code | codex-review | codex-review | lint failed escaped Markdown links; file as -Root passed | - |
+| 2026-10-30 | T1-roadmap-overview | Check T1a | judgment | manager | manager | builder skipped the live refresh check in Done means; loop chat ran it | - |
+| 2026-10-30 | T1-roadmap-overview | Hand test r1 | plan | hand-test | plan | approved lane design never drew where a branch starts or joins | - |
+| 2026-10-30 | T1-roadmap-overview | Check r2 | plan | manager | plan | r2 brief set the fork parent as merge-base with dev; wrong for branch-from-branch | - |
+| 2026-10-30 | T1-roadmap-overview | Build r3 | env | user | plan | Codex runs kept starting servers its sandbox cannot bind; xhigh on a Low item; user stopped the run | idea: codex-speed-by-tier |
 
 ## Scores
 One row per merged item: what each check found. A reviewer with many empty rows on items that later had misses is not
@@ -36,3 +40,4 @@ earning its run.
 | 2026-10-29 | C30-loop-docs-v22-plan | Low | 1 (dormant follow-up) | 0 | - | - | - | - |
 | 2026-10-29 | Loop1-process-v3 | Low | 0 | 0 | - | - | - | - |
 | 2026-10-30 | Loop2-loop-v3-1 | Low | 5 (-r2 on a, b, c, f, g) | 0 | 7 | - | - | - |
+| 2026-10-30 | T1-roadmap-overview | Low | 2 (-r2, -r3; r3 finished by the loop chat) | 0 | - | - | 1 | - |

@@ -1,0 +1,3102 @@
+{
+ "updated": "2026-10-30 (refreshed)",
+ "rows": [
+  {
+   "item": "Loop2-loop-v3-1",
+   "scope": "Loop v3.1: dormant v2.2 absorbed (overlap, catch-up, conflicts, hand-test queue), approve/merge preflights, strict scope, read-only audits, loop-lint, loop.md fixes, rehearsal; one branch, one commit per step, run by the loop chat",
+   "tier": "Low",
+   "effort": "Large",
+   "state": "done",
+   "section": "Pending work",
+   "group": "Loop v3.1 (first; the backlog waits for it, user 2026-10-30)"
+  },
+  {
+   "item": "idea: selftest-split",
+   "scope": "Split `SelfTest.cs` (3,247 lines) into a `SelfTest/` folder by area, verbatim; first, because the LAYERS rows live there and every later split edits them. Would be A1",
+   "tier": "Low",
+   "effort": "Medium",
+   "state": "proposed",
+   "section": "Pending work",
+   "group": "Era 1 start (proposed by Master 2, 2026-10-30; numbers only on your yes)"
+  },
+  {
+   "item": "idea: ui-region-names",
+   "scope": "Names for the parts of the window in `docs/glossary.md`, so cards, comments and chat use the same words; can run beside selftest-split (no shared files). Would be D1",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "proposed",
+   "section": "Pending work",
+   "group": "Era 1 start (proposed by Master 2, 2026-10-30; numbers only on your yes)"
+  },
+  {
+   "item": "idea: store-split",
+   "scope": "Split `Model/Store.cs` (1,006 lines) into `Model/Search/`, `Note.cs`, `Settings.cs`, `Store.cs`, verbatim; after selftest-split (shares LAYERS, `AGENTS.md`, `docs/coding.md`). Would be A2",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "proposed",
+   "section": "Pending work",
+   "group": "Era 1 start (proposed by Master 2, 2026-10-30; numbers only on your yes)"
+  },
+  {
+   "item": "idea: calc-split",
+   "scope": "Split `Calc/Calculator.cs` (1,383 lines) into five files in `Calc/` (units, dates, lexer, parser, format), verbatim; after store-split. Open: lettered steps if over 400 moved lines. Would be A3",
+   "tier": "Low",
+   "effort": "Medium",
+   "state": "proposed",
+   "section": "Pending work",
+   "group": "Era 1 start (proposed by Master 2, 2026-10-30; numbers only on your yes)"
+  },
+  {
+   "item": "T1-roadmap-overview",
+   "scope": "The roadmap becomes your central overview of the project (grew from roadmap-era-archive; user confirmed in the loop chat, 2026-10-30: \"I need Roadmap to become my central overview of the project\", data \"served purely from a couple .md files\", chose \"Local server\"). A fixed front end (`tools/roadmap/index.html` + one .js) served by `tools/roadmap-serve.ps1` (built-in .NET HttpListener on localhost, read-only) with a `/data` JSON built per request from STATUS, `.coord/tasks/*.md`, `.coord/logs/usage.tsv` and read-only git; the page polls every 3 s and keeps search/filter state; `/roadmap` starts the server; the hook rebuild retires; zero model tokens. Panels: work log with searchable worktree/branch badges, era dropdown (fed by a `### Era 0 (done)` STATUS section), worktrees and branches with their items, Now strip (in flight, phase, 3-item cap, waiting on you), item drawer (card summary, gate, reviews, rounds, links), branch health flags, releases, Codex run counter, hand-test queue. Lab-first: a mockup page goes to you before Build. Suggested steps, lettered at Plan: server and /data; era dropdown, work log and search; branches, worktrees and health; drawer, releases, run counter and hand-test queue. Branch `chore/`",
+   "tier": "Low",
+   "effort": "Large",
+   "state": "findings (mockup with you)",
+   "section": "Pending work",
+   "group": "Era 1 start (proposed by Master 2, 2026-10-30; numbers only on your yes)"
+  },
+  {
+   "item": "Loop3-proposals-in-status",
+   "scope": "One rule line in `docs/loop.md`: every item or proposal a chat names goes into the STATUS Plan as an unnumbered `proposed` row at once, before or with the question; matching steps in `/next-task`, `/scan-backlog`, `/review-task` (\"Noticed\" follow-ups become rows at the time, not at Merge); no script. Also align `docs/loop.md` \"Sessions\" (auditor \"commits\") with \"Branches\" and `/next-task` step 2 (nothing committed before Approve). User confirmed \"Loop3, rule + skills\" in the loop chat; loop freeze lifted for this item only. **Proposed addition (loop chat, 2026-10-30; you decide at Approve):** the Era 0 / Era 1 rename in `docs/loop.md`, `docs/glossary.md`, `docs/coding.md`, the `/review-task` skill, three wiki pages and `tools/loop-lint.ps1`/`.allow` (old forms kept, loop-lint still passes); the wiki is republished after Merge on your go; tag names and old cards are not renamed. Branch `chore/`",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "planned",
+   "section": "Pending work",
+   "group": "Era 1 start (proposed by Master 2, 2026-10-30; numbers only on your yes)"
+  },
+  {
+   "item": "Release marker",
+   "scope": "dev -> main as `v0.7.0-rc1` after the splits, on your go",
+   "tier": "-",
+   "effort": "-",
+   "state": "proposed",
+   "section": "Pending work",
+   "group": "Era 1 start (proposed by Master 2, 2026-10-30; numbers only on your yes)"
+  },
+  {
+   "item": "A53-split-divider-height",
+   "scope": "Split-view divider stops short of the window's bottom edge; make it full height (was A58)",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "done",
+   "section": "Pending work",
+   "group": "Bugs"
+  },
+  {
+   "item": "A54-link-hover-click",
+   "scope": "Every URL opens on Ctrl+click; shortened links always show a hand, other URLs show it while Ctrl is held (widened in r3, user)",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "done",
+   "section": "Pending work",
+   "group": "Bugs"
+  },
+  {
+   "item": "C25-dev-instance-handoff",
+   "scope": "`tools/dev.ps1` closes whatever dev copy is running from any checkout (shared record, dev-only, never the installed copy) and launches its own; the implementation sub-session starts its dev copy when the gate passes",
+   "tier": "High",
+   "effort": "Small",
+   "state": "done",
+   "section": "Pending work",
+   "group": "Bugs"
+  },
+  {
+   "item": "A45-dev-build-badge",
+   "scope": "Dev badge names the exact build: branch glyph U+E0A0 (fallback ⎇), `dev/<branch>@<ISO build time>` stamped at build; short form expands on hover, tooltip always shows the full text; approved at its hand test (dev-only)",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "done",
+   "section": "Pending work",
+   "group": "Bugs"
+  },
+  {
+   "item": "C26-item-card-loop",
+   "scope": "One item card per item (Request > Findings > Plan > Go > Build > Check > Hand test > Merge), findings every tier, reproduction before bug builds, gates per item, bounds check, status card hook",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "done",
+   "section": "Pending work",
+   "group": "Bugs"
+  },
+  {
+   "item": "C27-session-naming",
+   "scope": "Master and sub-session names, loop version v2, master handover checklist and resume prompt",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "done",
+   "section": "Pending work",
+   "group": "Bugs"
+  },
+  {
+   "item": "C28-loop-cheap-checks",
+   "scope": "Gate format check on changed lines, worktree-safe Codex ledger, triage on failure, lessons and reviewer scores, quiet relays (loop v2.1)",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "done",
+   "section": "Pending work",
+   "group": "Bugs"
+  },
+  {
+   "item": "C30-loop-docs-v22-plan",
+   "scope": "Loop v2.2 plan (parallel items, catch-up, conflicts), GitHub wiki pages, dormant v2.2 drop (docs and scripts, inactive)",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "done",
+   "section": "Pending work",
+   "group": "Bugs"
+  },
+  {
+   "item": "idea: loop-md-contradictions",
+   "scope": "Fix the `docs/loop.md` contradictions C30 noticed (v2 attribution, gate row, rework counting, parallel items vs one dev copy) **Proposed (Master 2, 2026-10-30):** add the auditor-commit wording (`docs/loop.md` \"Sessions\" vs \"Branches\" and `/next-task` step 2); held by the loop freeze.",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "proposed",
+   "section": "Pending work",
+   "group": "Bugs"
+  },
+  {
+   "item": "A55-split-view-clip",
+   "scope": "In split view, text scrolls across the divider; clip each pane at the divider (was A57)",
+   "tier": "Medium",
+   "effort": "Medium",
+   "state": "done",
+   "section": "Pending work",
+   "group": "Bugs"
+  },
+  {
+   "item": "Release marker",
+   "scope": "dev -> main with a tag, on your go (r8, 42ad744)",
+   "tier": "-",
+   "effort": "-",
+   "state": "done",
+   "section": "Pending work",
+   "group": "Bugs"
+  },
+  {
+   "item": "A42c-checkbox-indent",
+   "scope": "Move checkbox indent logic out of `PadView` into its own Editor class, behavior-neutral",
+   "tier": "Medium",
+   "effort": "Small",
+   "state": "done",
+   "section": "Pending work",
+   "group": "Reorg leftovers"
+  },
+  {
+   "item": "A42d-list-commands",
+   "scope": "Move list commands out of `PadView` into its own Editor class, behavior-neutral",
+   "tier": "Medium",
+   "effort": "Medium",
+   "state": "done",
+   "section": "Pending work",
+   "group": "Reorg leftovers"
+  },
+  {
+   "item": "C29-headless-render-probe",
+   "scope": "Off-screen Avalonia render helper for the selftest, so audits can reproduce visual bugs and `split-pane-clipping` checks pixels automatically instead of manually; run after A42d-list-commands (user order 2026-10-29: A42c, A42d, then C29; all touch the selftest) **Proposed (Master 2, 2026-10-30):** renumber as an `A` item (product selftest code), run after selftest-split; you choose A, T or idea.",
+   "tier": "Medium",
+   "effort": "Small",
+   "state": "proposed",
+   "section": "Pending work",
+   "group": "Reorg leftovers"
+  },
+  {
+   "item": "idea: design-tokens",
+   "scope": "One source of truth for every design value (radius, fonts, colors, shadows, motion durations); the app looks and moves exactly as today",
+   "tier": "-",
+   "effort": "-",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: token-scan",
+   "scope": "Gate check that counts hard-coded design values per file and fails if a count rises; no product change",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: theme-tokens-core",
+   "scope": "Define the full token catalog in `Theme/` at today's values; `WithAlpha(byte)` and `Faded(opacity)` kept separate; no call sites changed",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: tokens-pad-chrome",
+   "scope": "Pad window chrome (toast, card, pill, divider) uses the tokens; looks identical",
+   "tier": "Medium",
+   "effort": "Medium",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: tokens-overlays",
+   "scope": "Menu, search and help overlays and `Kit` use the tokens; looks identical",
+   "tier": "Medium",
+   "effort": "Medium",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: tokens-editor",
+   "scope": "Editor drawing uses the tokens; shared brush/pen factories, each cache keeps its limits; looks identical",
+   "tier": "Medium",
+   "effort": "Medium",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: tokens-settings",
+   "scope": "Settings window, its parts and the motion preview use the tokens; looks identical",
+   "tier": "Medium",
+   "effort": "Medium",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: motion-tokens",
+   "scope": "One named duration per animation role at today's values; timing identical",
+   "tier": "Medium",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "Release marker",
+   "scope": "dev -> main after the look-identical work, on your go",
+   "tier": "-",
+   "effort": "-",
+   "state": "planned",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "idea: design-unify",
+   "scope": "You choose a unified look (radius scale, font sizes, shadows, motion timings) and it is applied; nothing changes without your lab approval",
+   "tier": "-",
+   "effort": "-",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: design-reference",
+   "scope": "Claude Design System page from today's values plus a canvas comparing options; no code",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: unify-lab",
+   "scope": "Lab build: today's look next to the proposed scales and Windows 11 timings; you pick",
+   "tier": "Medium",
+   "effort": "Medium",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: apply-radius",
+   "scope": "Apply the corner-radius scale you picked",
+   "tier": "Medium",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: apply-type",
+   "scope": "Apply the font-size ramp you picked",
+   "tier": "Medium",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: apply-shadows",
+   "scope": "Apply the shadow tiers you picked",
+   "tier": "Medium",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: apply-motion",
+   "scope": "Apply the animation timings you picked",
+   "tier": "Medium",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "idea: code-ownership",
+   "scope": "Every responsibility has one owner and no copies; behavior unchanged",
+   "tier": "-",
+   "effort": "-",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: store-split",
+   "scope": "Move `Note`, `Settings`, `StoreData` and the search types out of `Model/Store.cs`, verbatim **Proposed (Master 2, 2026-10-30):** becomes its own item, see `idea: store-split` in the era-two block; this step row goes.",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: selftest-split",
+   "scope": "Split `SelfTest.cs` into one file per area (incl. the notes-move checks), verbatim **Proposed (Master 2, 2026-10-30):** becomes its own item, see `idea: selftest-split` in the era-two block; this step row goes.",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: notes-path-dedupe",
+   "scope": "One same-or-nested path rule in `Platform/` replacing the copies in `NotesSession`, `NotesLocation`, `SettingsWindow` and `KeepOldCopy`; CONTRACTS row",
+   "tier": "High",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: ui-kit-merge",
+   "scope": "One control kit: Settings' private controls merge into `Kit`; `Material()` and `Ago()` move to their owners",
+   "tier": "Medium",
+   "effort": "Medium",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: ownership-map",
+   "scope": "`docs/architecture.md` owner per responsibility; `NotesSession`, `RuntimeLog` into `App/`; LAYERS rows for `App/` and `Motion/`",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "step: behavior-timer-names",
+   "scope": "Optional: name save, debounce, toast and taskbar timers beside their owners, values unchanged",
+   "tier": "High",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Design system and ownership"
+  },
+  {
+   "item": "C14-a38-audit-branch",
+   "scope": "Merge the A38 MVVM audit doc into dev or delete `feat/A38-mvvm-audit` **Proposed (Master 2, 2026-10-30):** drop as obsolete: the history rewrite left only `main` and `dev` (checked 2026-10-30).",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "proposed",
+   "section": "Pending work",
+   "group": "Cleanup"
+  },
+  {
+   "item": "C15-worktree-branch-cleanup",
+   "scope": "Remove leftover worktrees and finished `reorg/*` branches (local and origin) **Proposed (Master 2, 2026-10-30):** drop as obsolete: no extra branches or worktrees, `.claude/worktrees/` empty (checked 2026-10-30).",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "proposed",
+   "section": "Pending work",
+   "group": "Cleanup"
+  },
+  {
+   "item": "C16-archive-finished-sessions",
+   "scope": "Archive the finished A39-A44 Claude sessions **Proposed (Master 2, 2026-10-30):** back to `idea: archive-finished-sessions` (era-0 ID retired); no code.",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "proposed",
+   "section": "Pending work",
+   "group": "Cleanup"
+  },
+  {
+   "item": "C18-tag-scheme",
+   "scope": "One tag naming scheme and a dev -> main release checklist that re-checks gate rules; doc only **Proposed (Master 2, 2026-10-30):** back to `idea: release-checklist`: loop v3 settled tag names, only the dev -> main checklist is left.",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "proposed",
+   "section": "Pending work",
+   "group": "Cleanup"
+  },
+  {
+   "item": "Release marker",
+   "scope": "dev -> main with a tag, on your go",
+   "tier": "-",
+   "effort": "-",
+   "state": "planned",
+   "section": "Pending work",
+   "group": "Cleanup"
+  },
+  {
+   "item": "idea: settings-thread-count",
+   "scope": "Find why the Settings window runs about 90 threads; report, fix only if cheap (was A74)",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Performance"
+  },
+  {
+   "item": "A49-large-note-perf",
+   "scope": "Measure then reduce typing lag in a 6,000-line note; one change at a time (ideas in Backlog) **Proposed (Master 2, 2026-10-30):** back to `idea: large-note-perf` (era-0 ID retired); scout with `/scan-backlog` after the splits.",
+   "tier": "Medium",
+   "effort": "Large",
+   "state": "proposed",
+   "section": "Pending work",
+   "group": "Performance"
+  },
+  {
+   "item": "idea: notes-folder-move-flow",
+   "scope": "Choosing and moving the notes folder is clear and safe; first step follows code-ownership's notes-path-dedupe",
+   "tier": "-",
+   "effort": "-",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "step: path-validator",
+   "scope": "One shared Platform check for a chosen folder: blocks invalid, same, nested, not writable, has notes; warns new, non-empty, network, low space, cloud-synced",
+   "tier": "High",
+   "effort": "Medium",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "step: editable-path-field",
+   "scope": "Editable path box plus Browse in Settings with a validation line; Migrate enabled only when valid or warned; lab mock first",
+   "tier": "Medium",
+   "effort": "Medium",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "step: move-preview",
+   "scope": "Before moving, show note count, size and what happens to the old folder",
+   "tier": "Medium",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "step: move-undo",
+   "scope": "\"Move back\" after a move, using the kept old copy",
+   "tier": "High",
+   "effort": "Medium",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "step: picker-last-location",
+   "scope": "The folder picker opens at the last picked folder",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "step: single-result-message",
+   "scope": "Settings shows the move's own result message instead of rebuilding it",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "A51-recovered-folder-always-open",
+   "scope": "Recovered-notes folder always exists and its Open button always works **Proposed (Master 2, 2026-10-30):** back to `idea: recovered-folder-always-open` (era-0 ID retired), or number now.",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "proposed",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "A48-answers-toggle-clarity",
+   "scope": "Rename the \"Answers\" toggle to say what it does, and apply it live **Proposed (Master 2, 2026-10-30):** back to `idea: answers-toggle-clarity` (era-0 ID retired), or number now; lab-first.",
+   "tier": "Low",
+   "effort": "Small",
+   "state": "proposed",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "idea: native-timer-notification",
+   "scope": "Windows notification when a timer ends (was A55)",
+   "tier": "Medium",
+   "effort": "Medium",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "A47-hotkey-recorder",
+   "scope": "Set a hotkey in Settings by pressing the keys **Proposed (Master 2, 2026-10-30):** back to `idea: hotkey-recorder` (era-0 ID retired), or number now; lab-first.",
+   "tier": "Medium",
+   "effort": "Medium",
+   "state": "proposed",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "idea: chime-picker",
+   "scope": "Choose the timer chime: native sound plus two more, stretch (was A56)",
+   "tier": "Low",
+   "effort": "Medium",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "idea: floating-scrollbar",
+   "scope": "Modern floating scrollbar at the side, shown only while scrolling (user, 2026-10-29, A55 hand test: \"a scroll bar shows, i didn't expect that\"); open: hide vs fade, both split panes, existing bar styles",
+   "tier": "-",
+   "effort": "-",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "idea: timer-enter-no-autostart",
+   "scope": "In a timer note, Enter after a timer line (e.g. `10s test`) starts that timer at once (`Editor/PadView.cs:698`, existing by design); user wants to write several timers first (user, 2026-10-29, A42c hand test: \"that shouldnt be the case because i might be writing multiple timers\"); open: what starts a timer then (Ctrl+Enter, chip click only?)",
+   "tier": "-",
+   "effort": "-",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "idea: wrap-hanging-indent",
+   "scope": "When an indented bullet line soft-wraps, the wrapped part should start under the bullet's text, not under the bullet itself: in \"• We're at a point w… they're easier to\", \"they're\" sits about 4 columns left of \"We're\" (user, 2026-10-29, screenshots). Wanted: the same alignment as a typed new line, just without the bullet. Open: plain indented lines with no bullet, numbered lists and checkboxes",
+   "tier": "-",
+   "effort": "-",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "idea: selection-convert-menu",
+   "scope": "Select several lines, right-click, and turn them into a list, checkboxes, timers etc.: each selected line gets the matching prefix (user, 2026-10-29, screenshot of the current right-click menu: Cut/Copy/Paste/Delete, Undo/Redo, Select all, New note, Search, split, pin, Settings, Hide). Open: which kinds (bullet, numbered, checkbox, timer, others?), a submenu or flat entries, toggling off or swapping lines that already have a prefix, blank lines in the selection",
+   "tier": "-",
+   "effort": "-",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "idea: pinned-accent-ring",
+   "scope": "When the window is pinned (Ctrl+T), draw an accent-colored ring 2-4 px thick around the window's edge, so pinned is visible at a glance (user, 2026-10-29). Open: exact thickness, whether it follows the rounded corners, theme accent or a fixed color, a fade on pin/unpin, how it works with the frameless window and its shadow",
+   "tier": "-",
+   "effort": "-",
+   "state": "needs you",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  },
+  {
+   "item": "idea: wiki-loop-v3",
+   "scope": "D item: bring `docs/wiki/` (GitHub wiki source) up to loop v3: Approve, A/Loop/D/T IDs and eras, branch prefixes, squash merges, roles, coding standard; then republish (user, 2026-10-29: kept out of Loop1-process-v3) **Proposed (Master 2, 2026-10-30):** drop as done: Loop2-loop-v3-1-wiki rewrote and published the wiki for v3.1.",
+   "tier": "-",
+   "effort": "-",
+   "state": "proposed",
+   "section": "Pending work",
+   "group": "Features and polish (lab-first where visible)"
+  }
+ ],
+ "now": [
+  "Loop2-loop-v3-1-wiki (Low, docs-tools): **done**, squashed onto dev (2026-10-30, user: \"Merge to dev and publish\"); gate",
+  "Loop2-loop-v3-1 (Low, docs-tools): **done**, step commits fast-forwarded onto dev (2026-10-30, user: \"manage it to",
+  "**Era 0 ended (2026-10-29); era 1 started (user, 2026-10-30: \"Old era is Era 0, we are now in Era 1\").** Process redesign settled (`.coord/process-redesign.md`) and rolled out as **loop v3**",
+  "C30-loop-docs-v22-plan merged into dev (e2898d1, 2026-10-29, user: \"merge it to main\"; gate on dev PASS, CONTRACTS 13",
+  "Release r9 (user, 2026-10-29): dev merged into main --no-ff (8ec1423), tag `antinotepad-v0.6.0-untested-r9`, pushed.",
+  "A42d-list-commands merged into dev (6089740, 2026-10-29; user hand test \"all passed\" on checks 1-6): list Enter",
+  "A42c-checkbox-indent merged into dev (178d4c0, 2026-10-29; user hand test \"All of these pass\" on checks 1-5):",
+  "C28-loop-cheap-checks merged into dev (c30a063, 2026-10-29, user: \"lets do 1-5\"; gate on dev PASS): loop v2.1. Gate",
+  "Release r8 (user, 2026-10-29: \"Release now\"): dev merged into main --no-ff (42ad744), tag",
+  "A55-split-view-clip merged into dev (2a7a482, 2026-10-29; user hand test \"all passed\" on checks 0-5): cause was each",
+  "C27-session-naming merged into dev (c719c06, 2026-10-29, user request; gate on dev PASS): loop version v2; one orchestrating master named",
+  "C26-item-card-loop merged into dev (2d99362, 2026-10-29, user: \"Yes, merge it\"): every item has one item card",
+  "A45-dev-build-badge merged into dev (56a85cd, 2026-10-29; user hand test passed): `tools/dev.ps1` stamps the branch and",
+  "C25-dev-instance-handoff merged into dev (2f6c123, 2026-10-29; user hand test passed 4 of 4): cause was every dev run",
+  "C24a-roadmap-local-page merged into dev (6b5483f, 2026-10-29, user: \"local page is fine\"): `/roadmap` opens",
+  "A54-link-hover-click merged into dev (f32b92a, 2026-10-29; user hand test passed): cause was `PadView.OnViewMoved`",
+  "A53-split-divider-height merged into dev (7299e8b, 2026-10-29): after hand-test rounds (full height, mirrored gap) the user",
+  "C24-roadmap-artifact (user, 2026-10-29): `/roadmap` widget replaced by a roadmap Artifact",
+  "C23-idea-numbering (user, 2026-10-29): numbers only on user confirmation; A53+ dissolved; Plan redrawn as unnumbered",
+  "A52-move-old-folder-rename-warning merged into dev (3ced024, 2026-10-29; user hand test passed 3 of 3): cause was a trailing",
+  "C22-roadmap-step-rows (user, 2026-10-29): one ID = one idea, work toward it = lettered steps under it; A52's six",
+  "C20-branch-worktree-loop (user, 2026-10-29): every item runs on `feat/<ID-slug>` in `.claude/worktrees/<ID-slug>`; dev gets",
+  "C19-subsession-routing (user, 2026-10-29): every Codex run gets its own linked sub-session (Haiku for pure runs, Sonnet medium",
+  "C17-roadmap-view (user, 2026-10-28): `/roadmap` and `tools/roadmap.ps1` render the Plan section as a table (Claude hook",
+  "C13-dev-loop-kit (user, 2026-10-28): new dev loop, runbook `docs/loop.md`. Tiers, `tools/gate.ps1`, `CONTRACTS`",
+  "GitHub (user, 2026-10-28): private repo `NeelAPatel/AntiNotepad` created as origin; all branches and tags pushed,",
+  "C4-coord-archive (user, 2026-10-28): finished A35-A44 briefs, Codex reports and the A35 handoff committed, tagged",
+  "A35-bar-insets merged into dev (fad7d61, user-approved live): design tokens + insets, ink-centered glyphs, scrollable",
+  "A36-drop-pill-lab merged: dev-only Lab row and pill blur code removed; Solid pill ships; top-bar blur now in",
+  "A37-caret-drag-jump merged (user-approved live): SmoothCaret glide restarts from the drawn position, fixing the caret",
+  "A38-mvvm-audit done (branch `feat/A38-mvvm-audit`, `docs/A38-mvvm-audit.md`, not merged): no MVVM; targeted",
+  "A39-motion-out-of-ui merged into dev (bac8a6c, user-approved live 2026-10-26): Editor no longer depends on UI",
+  "Reorg series, one at a time from the latest dev, in order: A40-settings-change-event, A41-padwindow-split,",
+  "A41-padwindow-split re-audit done (6b91ebe on `reorg/A41-padwindow-split`): original scope dropped. User's sequence",
+  "A41b-clipboard-policy re-audit done (21b318b on `reorg/A41-padwindow-split`): do it now, before A42; small and optional",
+  "A41b-clipboard-policy implemented on `reorg/A41b-clipboard-policy` (`Editor/ClipboardCapturePolicy`, `CLIPBOARD policy`",
+  "A42-padview-commands re-audit done (on `reorg/A42-padview-commands`): split, stop after A42b. User's sequence",
+  "A42b-note-analysis-file (`reorg/A42b-note-analysis-file`): `NoteAnalysis` moved verbatim; `PadView.cs` 1,132 -> 864 lines; build 0 warnings/errors and `SELFTEST PASS`, all 16 new LAYERS rows 0 refs. Report: `.coord/reports/A42b-note-analysis-file.md`. Guard probes (PadView, Window, TextArea, Dispatcher fields) each failed the selftest. User hand test passed 2026-10-26 (about half-second lag in a 6,000-line note, accepted; see A49-large-note-perf in Backlog); merged into dev (6230aa9, 0 warnings, SELFTEST PASS, 73 LAYERS rows). A42 stopped at the gate:",
+  "A43-app-context re-audit done (3fe4004 on `reorg/A43-app-context`): smaller scope, no broad AppRuntime. User's sequence",
+  "A43b-notes-session re-audit done (5787060 on `reorg/A43-app-context`): one task, two review stages (services injection,",
+  "A43b-notes-session implemented on `reorg/A43b-notes-session` (6993485: `NotesSession`, `INotesLocation`, Store/SettingsService injected; `Program.` tokens 21 -> 0; 89 LAYERS lines, `NOTES SESSION move`, static-exposure and DATA/DEV selftests; gate passed, guards proven). Hand test by Claude via GUI passed (second move, edit saved in new folder, nested refusal, restart reload). Not merged. Report: `.coord/reports/A43b-notes-session.md`.",
+  "A43b-notes-session approved by the user 2026-10-27 (\"Approve\") after live checks; parent session merges into dev. A43b-notes-session-r2 completed on `reorg/A43b-notes-session`: unavailable stores retain a valid in-memory selection; `UNAVAILABLE STORE startup` passes. Build 0 warnings/errors and SELFTEST PASS; check-output removal was refused by tool policy. Report: `.coord/reports/A43b-notes-session-r2.md`.",
+  "A43b-notes-session-r3 implemented on `reorg/A43b-notes-session`: unavailable-folder recovery now writes a validated folder pointer for the next start; build 0 warnings/errors and `SELFTEST PASS`, including `NOTES SESSION use-folder`, with the 89 existing LAYERS rows unchanged. No GUI launched; manager hand check remains. Report: `.coord/reports/A43b-notes-session-r3.md`.",
+  "A43b-notes-session merged into dev 2026-10-27 (ffca0fb; includes r2 crash fix 79d2f7b and r3 recovery a44a636, both",
+  "A44-platform-seam re-audit done (6c7f5e6 on `reorg/A44-platform-seam`): split A44a-native-facade -> A44b-interop-guards",
+  "A44b-interop-guards committed on `reorg/A44b-interop-guards` (98d91f8), user signed off 2026-10-28 (computer-use hand test passed; Explorer restart and tray right-click menu not exercised): GlobalHotkey/TaskbarProxy externs",
+  "A40-settings-change-event merged into dev (565a1e5, user-approved live 2026-10-26): SettingsService + one Changed event,",
+  "Native-window work (A32/A34) parked; any retry must not change the window's frame styles and"
+ ],
+ "log": [
+  {
+   "hash": "01bb862",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1-wiki: wiki rewritten for loop v3.1 with sources",
+   "item": "Loop2-loop-v3-1-wiki",
+   "era": 1
+  },
+  {
+   "hash": "12e9e1c",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: close, card Check, STATUS and lessons",
+   "item": "Loop2-loop-v3-1",
+   "era": 1
+  },
+  {
+   "hash": "a50c538",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1i rehearsal",
+   "item": "Loop2-loop-v3-1",
+   "era": 1
+  },
+  {
+   "hash": "68b4d9b",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1h rules text says loop v3.1",
+   "item": "Loop2-loop-v3-1",
+   "era": 1
+  },
+  {
+   "hash": "f9240eb",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1g loop-lint",
+   "item": "Loop2-loop-v3-1",
+   "era": 1
+  },
+  {
+   "hash": "479afd3",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1f strict scope and read-only audits",
+   "item": "Loop2-loop-v3-1",
+   "era": 1
+  },
+  {
+   "hash": "464abc8",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1e scan-backlog and scan-delta",
+   "item": "Loop2-loop-v3-1",
+   "era": 1
+  },
+  {
+   "hash": "b000381",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1d conflict route and hand-test turns",
+   "item": "Loop2-loop-v3-1",
+   "era": 1
+  },
+  {
+   "hash": "093c4e8",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: re-plan round 2 (trim, scan-backlog, diagram)",
+   "item": "Loop2-loop-v3-1",
+   "era": 1
+  },
+  {
+   "hash": "665aa6c",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1c catch-up points",
+   "item": "Loop2-loop-v3-1",
+   "era": 1
+  },
+  {
+   "hash": "0909d14",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1b approve and merge preflights",
+   "item": "Loop2-loop-v3-1",
+   "era": 1
+  },
+  {
+   "hash": "ac450d2",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1a fix-loop-scripts",
+   "item": "Loop2-loop-v3-1",
+   "era": 1
+  },
+  {
+   "hash": "c644877",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: card",
+   "item": "Loop2-loop-v3-1",
+   "era": 1
+  },
+  {
+   "hash": "8d18f72",
+   "date": "2026-10-29",
+   "subject": "Loop1-process-v3: loop v3 rules, coding standard, glossary, editorconfig",
+   "item": "Loop1-process-v3",
+   "era": 0
+  },
+  {
+   "hash": "a2b7b5e",
+   "date": "2026-10-29",
+   "subject": "process-redesign: Markdown status card, attribution off, redesign notes",
+   "item": "process-redesign",
+   "era": 0
+  },
+  {
+   "hash": "4aad278",
+   "date": "2026-10-29",
+   "subject": "C30-loop-docs-v22-plan: build - loop v2.2 plan, wiki pages",
+   "item": "C30-loop-docs-v22-plan",
+   "era": 0
+  },
+  {
+   "hash": "7e01b28",
+   "date": "2026-10-29",
+   "subject": "C30-loop-docs-v22-plan: plan - v2.2 plan and wiki pages",
+   "item": "C30-loop-docs-v22-plan",
+   "era": 0
+  },
+  {
+   "hash": "ac5bc63",
+   "date": "2026-10-29",
+   "subject": "A42d-list-commands: build - list continuation and renumber decisions",
+   "item": "A42d-list-commands",
+   "era": 0
+  },
+  {
+   "hash": "c2737dd",
+   "date": "2026-10-29",
+   "subject": "A42d-list-commands: plan - card (request) and findings audit brief",
+   "item": "A42d-list-commands",
+   "era": 0
+  },
+  {
+   "hash": "dcf3c0d",
+   "date": "2026-10-29",
+   "subject": "A42c-checkbox-indent: build - checkbox toggle and indent edits",
+   "item": "A42c-checkbox-indent",
+   "era": 0
+  },
+  {
+   "hash": "5342ccf",
+   "date": "2026-10-29",
+   "subject": "A42c-checkbox-indent: plan - card (request) and findings audit brief",
+   "item": "A42c-checkbox-indent",
+   "era": 0
+  },
+  {
+   "hash": "45304af",
+   "date": "2026-10-29",
+   "subject": "C28-loop-cheap-checks: build - format check, worktree-safe Codex",
+   "item": "C28-loop-cheap-checks",
+   "era": 0
+  },
+  {
+   "hash": "6639e2c",
+   "date": "2026-10-29",
+   "subject": "A55-split-view-clip: build - clip each split pane at the divider",
+   "item": "A55-split-view-clip",
+   "era": 0
+  },
+  {
+   "hash": "52cf1c8",
+   "date": "2026-10-29",
+   "subject": "A55-split-view-clip: plan - card (request) and findings audit brief",
+   "item": "A55-split-view-clip",
+   "era": 0
+  },
+  {
+   "hash": "d16b7ff",
+   "date": "2026-10-29",
+   "subject": "C27-session-naming: build - master and sub-session names",
+   "item": "C27-session-naming",
+   "era": 0
+  },
+  {
+   "hash": "1c2f8a2",
+   "date": "2026-10-29",
+   "subject": "C26-item-card-loop: build - one item card per item",
+   "item": "C26-item-card-loop",
+   "era": 0
+  },
+  {
+   "hash": "a5a3f3a",
+   "date": "2026-10-29",
+   "subject": "A45-dev-build-badge: build - dev badge shows branch glyph",
+   "item": "A45-dev-build-badge",
+   "era": 0
+  },
+  {
+   "hash": "39364cd",
+   "date": "2026-10-29",
+   "subject": "A45-dev-build-badge: plan - brief and dispatch",
+   "item": "A45-dev-build-badge",
+   "era": 0
+  },
+  {
+   "hash": "2c5a6a7",
+   "date": "2026-10-29",
+   "subject": "C25-dev-instance-handoff: build - dev.ps1 replaces any running dev copy",
+   "item": "C25-dev-instance-handoff",
+   "era": 0
+  },
+  {
+   "hash": "88ee3a1",
+   "date": "2026-10-29",
+   "subject": "C25-dev-instance-handoff: plan - brief and dispatch",
+   "item": "C25-dev-instance-handoff",
+   "era": 0
+  },
+  {
+   "hash": "d0402ab",
+   "date": "2026-10-29",
+   "subject": "C24a-roadmap-local-page: build - local self-reloading roadmap page",
+   "item": "C24a-roadmap-local-page",
+   "era": 0
+  },
+  {
+   "hash": "bdb996f",
+   "date": "2026-10-29",
+   "subject": "C24-roadmap-artifact: build - roadmap is a Claude Artifact kept current",
+   "item": "C24-roadmap-artifact",
+   "era": 0
+  },
+  {
+   "hash": "fec6948",
+   "date": "2026-10-29",
+   "subject": "A54-link-hover-click: build - every URL opens on Ctrl+click",
+   "item": "A54-link-hover-click",
+   "era": 0
+  },
+  {
+   "hash": "2f5a550",
+   "date": "2026-10-29",
+   "subject": "A54-link-hover-click: plan - brief and dispatch",
+   "item": "A54-link-hover-click",
+   "era": 0
+  },
+  {
+   "hash": "2a06e4e",
+   "date": "2026-10-29",
+   "subject": "A53-split-divider-height: build - divider stays above the pager",
+   "item": "A53-split-divider-height",
+   "era": 0
+  },
+  {
+   "hash": "3ffb4c9",
+   "date": "2026-10-29",
+   "subject": "A53-split-divider-height: plan - brief and dispatch",
+   "item": "A53-split-divider-height",
+   "era": 0
+  },
+  {
+   "hash": "1d38f7b",
+   "date": "2026-10-29",
+   "subject": "C23-idea-numbering: build - numbers only on user confirmation",
+   "item": "C23-idea-numbering",
+   "era": 0
+  },
+  {
+   "hash": "c19a9a3",
+   "date": "2026-10-29",
+   "subject": "A52-move-old-folder-rename-warning: build - old notes folder renamed",
+   "item": "A52-move-old-folder-rename-warning",
+   "era": 0
+  },
+  {
+   "hash": "06c417a",
+   "date": "2026-10-29",
+   "subject": "A52-move-old-folder-rename-warning: plan - brief and audit brief (High)",
+   "item": "A52-move-old-folder-rename-warning",
+   "era": 0
+  },
+  {
+   "hash": "9a05b07",
+   "date": "2026-10-29",
+   "subject": "C22-roadmap-step-rows: build - one ID per idea with lettered steps",
+   "item": "C22-roadmap-step-rows",
+   "era": 0
+  },
+  {
+   "hash": "83d9d29",
+   "date": "2026-10-29",
+   "subject": "C20-branch-worktree-loop: build - every item on its own branch",
+   "item": "C20-branch-worktree-loop",
+   "era": 0
+  },
+  {
+   "hash": "38e7317",
+   "date": "2026-10-29",
+   "subject": "A59-design-ownership-audit: check - done, 7 corrections applied",
+   "item": "A59-design-ownership-audit",
+   "era": 0
+  },
+  {
+   "hash": "227085f",
+   "date": "2026-10-29",
+   "subject": "C19-subsession-routing: plan - every Codex run in a linked sub-session",
+   "item": "C19-subsession-routing",
+   "era": 0
+  },
+  {
+   "hash": "5d5f6e1",
+   "date": "2026-10-29",
+   "subject": "A59-design-ownership-audit: check - in review (design review",
+   "item": "A59-design-ownership-audit",
+   "era": 0
+  },
+  {
+   "hash": "a79cc0a",
+   "date": "2026-10-29",
+   "subject": "A59-design-ownership-audit: build - read-only audit report and 642-row",
+   "item": "A59-design-ownership-audit",
+   "era": 0
+  },
+  {
+   "hash": "11f5f08",
+   "date": "2026-10-29",
+   "subject": "A59-design-ownership-audit: check - decisions 1-3 recorded",
+   "item": "A59-design-ownership-audit",
+   "era": 0
+  },
+  {
+   "hash": "dff671f",
+   "date": "2026-10-29",
+   "subject": "C17-roadmap-view: check - plan rewritten with scoped ID-slug rows",
+   "item": "C17-roadmap-view",
+   "era": 0
+  },
+  {
+   "hash": "ed1b610",
+   "date": "2026-10-28",
+   "subject": "C17-roadmap-view: plan - /roadmap plan table from STATUS",
+   "item": "C17-roadmap-view",
+   "era": 0
+  },
+  {
+   "hash": "25427b3",
+   "date": "2026-10-28",
+   "subject": "C13-dev-loop-kit: build - gate script, CONTRACTS selftest",
+   "item": "C13-dev-loop-kit",
+   "era": 0
+  },
+  {
+   "hash": "5874a77",
+   "date": "2026-10-28",
+   "subject": "C4-coord-archive: check - done (tag archive/coord-2026-10-28)",
+   "item": "C4-coord-archive",
+   "era": 0
+  },
+  {
+   "hash": "e43f038",
+   "date": "2026-10-28",
+   "subject": "C4-coord-archive: build - ignore .claude/settings.local.json",
+   "item": "C4-coord-archive",
+   "era": 0
+  },
+  {
+   "hash": "fbc249d",
+   "date": "2026-10-28",
+   "subject": "C4-coord-archive: plan - remove finished A35-A44 briefs",
+   "item": "C4-coord-archive",
+   "era": 0
+  },
+  {
+   "hash": "5915627",
+   "date": "2026-10-28",
+   "subject": "C4-coord-archive: check - add the A35-A44 Codex reports left untracked",
+   "item": "C4-coord-archive",
+   "era": 0
+  },
+  {
+   "hash": "e94acb9",
+   "date": "2026-10-28",
+   "subject": "A44c-shell-folder: check - private GitHub repo NeelAPatel/AntiNotepad",
+   "item": "A44c-shell-folder",
+   "era": 0
+  },
+  {
+   "hash": "48057db",
+   "date": "2026-10-28",
+   "subject": "A44c-shell-folder: build - DesktopPlatform.OpenFolder",
+   "item": "A44c-shell-folder",
+   "era": 0
+  },
+  {
+   "hash": "061fffb",
+   "date": "2026-10-28",
+   "subject": "A44c-shell-folder: plan - brief and dispatch",
+   "item": "A44c-shell-folder",
+   "era": 0
+  },
+  {
+   "hash": "39b79be",
+   "date": "2026-10-28",
+   "subject": "A44c-shell-folder: plan - brief and dispatch",
+   "item": "A44c-shell-folder",
+   "era": 0
+  },
+  {
+   "hash": "99b590f",
+   "date": "2026-10-28",
+   "subject": "A44b-interop-guards: build - externs nested in",
+   "item": "A44b-interop-guards",
+   "era": 0
+  },
+  {
+   "hash": "aae4232",
+   "date": "2026-10-28",
+   "subject": "A44b-interop-guards: plan - brief and dispatch",
+   "item": "A44b-interop-guards",
+   "era": 0
+  },
+  {
+   "hash": "6d32d86",
+   "date": "2026-10-28",
+   "subject": "A44a-native-facade: build - DesktopPlatform facade",
+   "item": "A44a-native-facade",
+   "era": 0
+  },
+  {
+   "hash": "ba614fb",
+   "date": "2026-10-27",
+   "subject": "A44a-native-facade: plan - impact brief, report and plan",
+   "item": "A44a-native-facade",
+   "era": 0
+  },
+  {
+   "hash": "8e39af0",
+   "date": "2026-10-27",
+   "subject": "A43b-notes-session: build - NotesSession owns the notes location",
+   "item": "A43b-notes-session",
+   "era": 0
+  },
+  {
+   "hash": "8ef5d24",
+   "date": "2026-10-26",
+   "subject": "A43b-notes-session: plan - brief and dispatch",
+   "item": "A43b-notes-session",
+   "era": 0
+  },
+  {
+   "hash": "5760ba7",
+   "date": "2026-10-26",
+   "subject": "A43a-runtime-log-and-launch: build - RuntimeLog owner",
+   "item": "A43a-runtime-log-and-launch",
+   "era": 0
+  },
+  {
+   "hash": "4c90bb7",
+   "date": "2026-10-26",
+   "subject": "A43a-runtime-log-and-launch: plan - impact brief, Codex report and plan",
+   "item": "A43a-runtime-log-and-launch",
+   "era": 0
+  },
+  {
+   "hash": "01f4198",
+   "date": "2026-10-26",
+   "subject": "A42b-note-analysis-file: build - NoteAnalysis moved verbatim",
+   "item": "A42b-note-analysis-file",
+   "era": 0
+  },
+  {
+   "hash": "b49ffdf",
+   "date": "2026-10-26",
+   "subject": "A42b-note-analysis-file: plan - impact brief (read-only re-audit)",
+   "item": "A42b-note-analysis-file",
+   "era": 0
+  },
+  {
+   "hash": "cbfe31d",
+   "date": "2026-10-26",
+   "subject": "A42a-math-notes: build - MathNotes and ListEditing out of PadView",
+   "item": "A42a-math-notes",
+   "era": 0
+  },
+  {
+   "hash": "221cb60",
+   "date": "2026-10-26",
+   "subject": "A42a-math-notes: plan - impact-analysis brief (read-only)",
+   "item": "A42a-math-notes",
+   "era": 0
+  },
+  {
+   "hash": "1b0af4a",
+   "date": "2026-10-26",
+   "subject": "A41b-clipboard-policy: build - clipboard capture rules",
+   "item": "A41b-clipboard-policy",
+   "era": 0
+  },
+  {
+   "hash": "d57d11e",
+   "date": "2026-10-26",
+   "subject": "A41b-clipboard-policy: plan - impact audit on dev 9e8e04d and plan",
+   "item": "A41b-clipboard-policy",
+   "era": 0
+  },
+  {
+   "hash": "412d5b0",
+   "date": "2026-10-26",
+   "subject": "A41a-hotkeys: build - hotkey registration moved",
+   "item": "A41a-hotkeys",
+   "era": 0
+  },
+  {
+   "hash": "edeb9c0",
+   "date": "2026-10-26",
+   "subject": "A41a-hotkeys: plan - impact brief, Codex impact report and plan",
+   "item": "A41a-hotkeys",
+   "era": 0
+  },
+  {
+   "hash": "3f1d2f0",
+   "date": "2026-10-26",
+   "subject": "A40-settings-change-event: check - reorg rule - each next investigator",
+   "item": "A40-settings-change-event",
+   "era": 0
+  },
+  {
+   "hash": "1f8c2d2",
+   "date": "2026-10-26",
+   "subject": "A40-settings-change-event: build - SettingsService with one Changed",
+   "item": "A40-settings-change-event",
+   "era": 0
+  },
+  {
+   "hash": "0b60544",
+   "date": "2026-10-26",
+   "subject": "A40-settings-change-event: plan - brief and dispatch",
+   "item": "A40-settings-change-event",
+   "era": 0
+  },
+  {
+   "hash": "eb7ca84",
+   "date": "2026-10-26",
+   "subject": "A39-motion-out-of-ui: build - editor no longer depends on UI",
+   "item": "A39-motion-out-of-ui",
+   "era": 0
+  },
+  {
+   "hash": "5674ee8",
+   "date": "2026-10-25",
+   "subject": "A37-caret-drag-jump: build - caret glide no longer jumps back",
+   "item": "A37-caret-drag-jump",
+   "era": 0
+  },
+  {
+   "hash": "eea47e4",
+   "date": "2026-10-25",
+   "subject": "A36-drop-pill-lab: build - remove the A35 material lab",
+   "item": "A36-drop-pill-lab",
+   "era": 0
+  },
+  {
+   "hash": "301a2c0",
+   "date": "2026-10-25",
+   "subject": "A36-drop-pill-lab: plan - brief and dispatch",
+   "item": "A36-drop-pill-lab",
+   "era": 0
+  },
+  {
+   "hash": "3e829fa",
+   "date": "2026-10-25",
+   "subject": "A35-bar-insets: build - design tokens, bar insets, ink-centered glyphs",
+   "item": "A35-bar-insets",
+   "era": 0
+  },
+  {
+   "hash": "1864756",
+   "date": "2026-10-25",
+   "subject": "A35-bar-insets: check - lab build ready for the user's material pick",
+   "item": "A35-bar-insets",
+   "era": 0
+  },
+  {
+   "hash": "593be68",
+   "date": "2026-10-25",
+   "subject": "A35-bar-insets: plan - user-locked values and mockup source",
+   "item": "A35-bar-insets",
+   "era": 0
+  },
+  {
+   "hash": "49c19a6",
+   "date": "2026-10-25",
+   "subject": "A35-bar-insets: build - the user's inset and fall-off spec for the top",
+   "item": "A35-bar-insets",
+   "era": 0
+  },
+  {
+   "hash": "54cbbd2",
+   "date": "2026-10-25",
+   "subject": "A31-no-windows-show-animation: check - r6 released (user-approved good",
+   "item": "A31-no-windows-show-animation",
+   "era": 0
+  },
+  {
+   "hash": "f42781a",
+   "date": "2026-10-25",
+   "subject": "A31-no-windows-show-animation: check - reverted in the r6 rollback",
+   "item": "A31-no-windows-show-animation",
+   "era": 0
+  },
+  {
+   "hash": "8a31ecc",
+   "date": "2026-10-25",
+   "subject": "A32-native-show-hide-animation: check - reverted in the r6 rollback",
+   "item": "A32-native-show-hide-animation",
+   "era": 0
+  },
+  {
+   "hash": "b934eea",
+   "date": "2026-10-25",
+   "subject": "A33-taskbar-dead-code: check - reverted in the r6 rollback",
+   "item": "A33-taskbar-dead-code",
+   "era": 0
+  },
+  {
+   "hash": "3648940",
+   "date": "2026-10-25",
+   "subject": "A33-taskbar-dead-code: build - the pad is a fully native Windows 11",
+   "item": "A33-taskbar-dead-code",
+   "era": 0
+  },
+  {
+   "hash": "daa6c04",
+   "date": "2026-10-25",
+   "subject": "A33-taskbar-dead-code: build - remove the A22-A25 taskbar helpers A32",
+   "item": "A33-taskbar-dead-code",
+   "era": 0
+  },
+  {
+   "hash": "ab9aed4",
+   "date": "2026-10-25",
+   "subject": "C3-coord-docs-tidy: build - ignore agent worktrees",
+   "item": "C3-coord-docs-tidy",
+   "era": 0
+  },
+  {
+   "hash": "1b86403",
+   "date": "2026-10-25",
+   "subject": "C3-coord-docs-tidy: check - remove finished task briefs",
+   "item": "C3-coord-docs-tidy",
+   "era": 0
+  },
+  {
+   "hash": "495bca5",
+   "date": "2026-10-25",
+   "subject": "A32-native-show-hide-animation: build - native Windows show/hide",
+   "item": "A32-native-show-hide-animation",
+   "era": 0
+  },
+  {
+   "hash": "267164b",
+   "date": "2026-10-25",
+   "subject": "A32-native-show-hide-animation: check - Codex out, Haiku subagents",
+   "item": "A32-native-show-hide-animation",
+   "era": 0
+  },
+  {
+   "hash": "bd4a47b",
+   "date": "2026-10-25",
+   "subject": "A32-native-show-hide-animation: build - the user's route-by-route spec",
+   "item": "A32-native-show-hide-animation",
+   "era": 0
+  },
+  {
+   "hash": "81bc96a",
+   "date": "2026-10-25",
+   "subject": "A29-incremental-analysis: plan - done (user-tested; A1-8, A1-14 fixed)",
+   "item": "A29-incremental-analysis",
+   "era": 0
+  },
+  {
+   "hash": "21bd64d",
+   "date": "2026-10-25",
+   "subject": "A30-background-save-and-log: check - Codex reports and status",
+   "item": "A30-background-save-and-log",
+   "era": 0
+  },
+  {
+   "hash": "a475528",
+   "date": "2026-10-25",
+   "subject": "A30-background-save-and-log: build - saves and log writes off the UI",
+   "item": "A30-background-save-and-log",
+   "era": 0
+  },
+  {
+   "hash": "3db5bbb",
+   "date": "2026-10-25",
+   "subject": "A30-folder-returns-fix: check - A30 third pass",
+   "item": "A30-folder-returns-fix",
+   "era": 0
+  },
+  {
+   "hash": "2ee0f0d",
+   "date": "2026-10-25",
+   "subject": "A30-save-unavailable-fix: build - A30 sent back for two regressions",
+   "item": "A30-save-unavailable-fix",
+   "era": 0
+  },
+  {
+   "hash": "b711b31",
+   "date": "2026-10-25",
+   "subject": "A29-incremental-analysis: check - Codex reports and status",
+   "item": "A29-incremental-analysis",
+   "era": 0
+  },
+  {
+   "hash": "4113cc6",
+   "date": "2026-10-25",
+   "subject": "A29-incremental-analysis: build - re-analyse only the edited region",
+   "item": "A29-incremental-analysis",
+   "era": 0
+  },
+  {
+   "hash": "24f0bc1",
+   "date": "2026-10-25",
+   "subject": "A31-no-windows-show-animation: check - Codex reports and status",
+   "item": "A31-no-windows-show-animation",
+   "era": 0
+  },
+  {
+   "hash": "365bb83",
+   "date": "2026-10-25",
+   "subject": "A31-no-windows-show-animation: build - no Windows animation on pad",
+   "item": "A31-no-windows-show-animation",
+   "era": 0
+  },
+  {
+   "hash": "ac729da",
+   "date": "2026-10-25",
+   "subject": "A29-incremental-analysis: plan - briefs: incremental analysis",
+   "item": "A29-incremental-analysis",
+   "era": 0
+  },
+  {
+   "hash": "1f4b0b3",
+   "date": "2026-10-25",
+   "subject": "A28-editor-render-memory: check - done; user-tested live, A1-7, A1-9",
+   "item": "A28-editor-render-memory",
+   "era": 0
+  },
+  {
+   "hash": "0faa2a2",
+   "date": "2026-10-25",
+   "subject": "A28-editor-render-memory: plan - fix brief, Codex reports and status",
+   "item": "A28-editor-render-memory",
+   "era": 0
+  },
+  {
+   "hash": "74be717",
+   "date": "2026-10-25",
+   "subject": "A28-editor-render-memory: build - editor drawing reuses its resources",
+   "item": "A28-editor-render-memory",
+   "era": 0
+  },
+  {
+   "hash": "c43c747",
+   "date": "2026-10-25",
+   "subject": "A28-editor-render-memory: plan - brief (A1-7, A1-9, A1-10)",
+   "item": "A28-editor-render-memory",
+   "era": 0
+  },
+  {
+   "hash": "94a41e9",
+   "date": "2026-10-25",
+   "subject": "A27-settings-search-build-matches: check - dev merged into main",
+   "item": "A27-settings-search-build-matches",
+   "era": 0
+  },
+  {
+   "hash": "d8bd56f",
+   "date": "2026-10-25",
+   "subject": "A27-settings-search-build-matches: check - done; user-tested live",
+   "item": "A27-settings-search-build-matches",
+   "era": 0
+  },
+  {
+   "hash": "00fca94",
+   "date": "2026-10-25",
+   "subject": "A27-settings-search-build-matches: plan - rework brief",
+   "item": "A27-settings-search-build-matches",
+   "era": 0
+  },
+  {
+   "hash": "417aa6c",
+   "date": "2026-10-24",
+   "subject": "A27-settings-search-build-matches: build - Settings search builds",
+   "item": "A27-settings-search-build-matches",
+   "era": 0
+  },
+  {
+   "hash": "a53d054",
+   "date": "2026-10-24",
+   "subject": "A22-taskbar-button-fixes: check - Codex last-message reports",
+   "item": "A22-taskbar-button-fixes",
+   "era": 0
+  },
+  {
+   "hash": "0a8c9c1",
+   "date": "2026-10-24",
+   "subject": "A26-allow-windows-shutdown: check - verified on dev; prod reinstall next",
+   "item": "A26-allow-windows-shutdown",
+   "era": 0
+  },
+  {
+   "hash": "be03175",
+   "date": "2026-10-24",
+   "subject": "A26-allow-windows-shutdown: build - no more shutdown veto",
+   "item": "A26-allow-windows-shutdown",
+   "era": 0
+  },
+  {
+   "hash": "e26bacf",
+   "date": "2026-10-24",
+   "subject": "A26-allow-windows-shutdown: check - prod reinstalled with taskbar",
+   "item": "A26-allow-windows-shutdown",
+   "era": 0
+  },
+  {
+   "hash": "2530bbf",
+   "date": "2026-10-24",
+   "subject": "A26-allow-windows-shutdown: build - both copies vetoed a Windows",
+   "item": "A26-allow-windows-shutdown",
+   "era": 0
+  },
+  {
+   "hash": "3d9d665",
+   "date": "2026-10-24",
+   "subject": "A25-taskbar-click-foreground-loss: check - taskbar click fixed",
+   "item": "A25-taskbar-click-foreground-loss",
+   "era": 0
+  },
+  {
+   "hash": "989fd10",
+   "date": "2026-10-24",
+   "subject": "A25-taskbar-click-foreground-loss: build - focused-pad taskbar click",
+   "item": "A25-taskbar-click-foreground-loss",
+   "era": 0
+  },
+  {
+   "hash": "09e3e2c",
+   "date": "2026-10-24",
+   "subject": "A24-taskbar-click-diagnose: build - taskbar click trace and earlier",
+   "item": "A24-taskbar-click-diagnose",
+   "era": 0
+  },
+  {
+   "hash": "a97f01d",
+   "date": "2026-10-24",
+   "subject": "A23-taskbar-click-hides: build - click a focused pad's taskbar button",
+   "item": "A23-taskbar-click-hides",
+   "era": 0
+  },
+  {
+   "hash": "2561ac1",
+   "date": "2026-10-24",
+   "subject": "A22-taskbar-button-fixes: check - merged and tested live",
+   "item": "A22-taskbar-button-fixes",
+   "era": 0
+  },
+  {
+   "hash": "22db663",
+   "date": "2026-10-24",
+   "subject": "A22-taskbar-button-fixes: build - working taskbar button",
+   "item": "A22-taskbar-button-fixes",
+   "era": 0
+  },
+  {
+   "hash": "514bbc6",
+   "date": "2026-10-24",
+   "subject": "A22-taskbar-button-fixes: plan - prod on 0.6.0-untested",
+   "item": "A22-taskbar-button-fixes",
+   "era": 0
+  },
+  {
+   "hash": "764436e",
+   "date": "2026-10-24",
+   "subject": "D1-install-outside-claude: check - 0.6.0 untested on main",
+   "item": "D1-install-outside-claude",
+   "era": 0
+  },
+  {
+   "hash": "63f3c87",
+   "date": "2026-10-24",
+   "subject": "D1-install-outside-claude: build - dev-loop says to run install",
+   "item": "D1-install-outside-claude",
+   "era": 0
+  },
+  {
+   "hash": "4483f32",
+   "date": "2026-10-24",
+   "subject": "V06-untested-version: build - 0.6.0 (untested)",
+   "item": "V06-untested-version",
+   "era": 0
+  },
+  {
+   "hash": "278ccdc",
+   "date": "2026-10-24",
+   "subject": "A14-swipe-close-cancel: check - briefs and Codex last-message reports",
+   "item": "A14-swipe-close-cancel",
+   "era": 0
+  },
+  {
+   "hash": "904e859",
+   "date": "2026-10-24",
+   "subject": "A17-tool-script-checks: build - launcher task-name check",
+   "item": "A17-tool-script-checks",
+   "era": 0
+  },
+  {
+   "hash": "69556ab",
+   "date": "2026-10-24",
+   "subject": "A20-taskbar-icon-setting: build - three-way taskbar icon setting",
+   "item": "A20-taskbar-icon-setting",
+   "era": 0
+  },
+  {
+   "hash": "4210180",
+   "date": "2026-10-24",
+   "subject": "A21-dev-identity: build - the dev copy has its own name and icon color",
+   "item": "A21-dev-identity",
+   "era": 0
+  },
+  {
+   "hash": "b12d2e9",
+   "date": "2026-10-24",
+   "subject": "A18-search-speed: build - background, debounced note search",
+   "item": "A18-search-speed",
+   "era": 0
+  },
+  {
+   "hash": "fb1a1a5",
+   "date": "2026-10-24",
+   "subject": "A19-demo-slot-notes: build - demo notes in slots 1-5 and the new feel",
+   "item": "A19-demo-slot-notes",
+   "era": 0
+  },
+  {
+   "hash": "3f3e5cb",
+   "date": "2026-10-24",
+   "subject": "A16-staged-upgrade-rollback: build - installer upgrade with backup",
+   "item": "A16-staged-upgrade-rollback",
+   "era": 0
+  },
+  {
+   "hash": "95576e6",
+   "date": "2026-10-24",
+   "subject": "A14-swipe-close-cancel: build - swipe timers stop when the Settings",
+   "item": "A14-swipe-close-cancel",
+   "era": 0
+  },
+  {
+   "hash": "a15f47b",
+   "date": "2026-10-24",
+   "subject": "A15-startup-quit-pending: build - early show and quit requests are held",
+   "item": "A15-startup-quit-pending",
+   "era": 0
+  },
+  {
+   "hash": "d5b6e60",
+   "date": "2026-10-24",
+   "subject": "A14-swipe-close-cancel: plan - dispatch A14 to A19",
+   "item": "A14-swipe-close-cancel",
+   "era": 0
+  },
+  {
+   "hash": "7dbab00",
+   "date": "2026-10-24",
+   "subject": "A6-audit-decisions: build - the user's 8 audit decisions",
+   "item": "A6-audit-decisions",
+   "era": 0
+  },
+  {
+   "hash": "fc5e2ce",
+   "date": "2026-10-23",
+   "subject": "A6-audit-decisions: plan - re-audit of all 91 tracked files",
+   "item": "A6-audit-decisions",
+   "era": 0
+  },
+  {
+   "hash": "fa04e2b",
+   "date": "2026-10-23",
+   "subject": "A1-codebase-audit: check - next step names the 20 open findings",
+   "item": "A1-codebase-audit",
+   "era": 0
+  },
+  {
+   "hash": "40cd9eb",
+   "date": "2026-10-23",
+   "subject": "A1-codebase-audit: build - audit report plus the 7 safe fixes",
+   "item": "A1-codebase-audit",
+   "era": 0
+  },
+  {
+   "hash": "f9fee57",
+   "date": "2026-10-23",
+   "subject": "A1-codebase-audit: plan - read-only audit of all 78 tracked files",
+   "item": "A1-codebase-audit",
+   "era": 0
+  },
+  {
+   "hash": "a0606aa",
+   "date": "2026-10-23",
+   "subject": "C2-stale-branch-cleanup: check - release plan now lives on tag",
+   "item": "C2-stale-branch-cleanup",
+   "era": 0
+  },
+  {
+   "hash": "b04e05a",
+   "date": "2026-10-23",
+   "subject": "C2-stale-branch-cleanup: build - only main and dev remain",
+   "item": "C2-stale-branch-cleanup",
+   "era": 0
+  },
+  {
+   "hash": "a6ee470",
+   "date": "2026-10-23",
+   "subject": "C1-remove-archive: build - archive/ removed from the tree",
+   "item": "C1-remove-archive",
+   "era": 0
+  },
+  {
+   "hash": "791d59e",
+   "date": "2026-10-23",
+   "subject": "N1-antinotepad-identity: build - AntiNotepad rename",
+   "item": "N1-antinotepad-identity",
+   "era": 0
+  },
+  {
+   "hash": "a4c2035",
+   "date": "2026-10-23",
+   "subject": "V05-version: build - mark the app as AntiNotepad v0.5",
+   "item": "V05-version",
+   "era": 0
+  },
+  {
+   "hash": "752f589",
+   "date": "2026-10-23",
+   "subject": "R1-antipad-replaces-antiquickpad: build - retire AntiQuickPad",
+   "item": "R1-antipad-replaces-antiquickpad",
+   "era": 0
+  },
+  {
+   "hash": "215020e",
+   "date": "2026-10-23",
+   "subject": "chrome-overlays: build - bar styles, Settings memory fixes",
+   "item": "chrome-overlays",
+   "era": 0
+  },
+  {
+   "hash": "91bbf1b",
+   "date": "2026-10-22",
+   "subject": "S6-preview-bottom-gap: check - session atlas state",
+   "item": "S6-preview-bottom-gap",
+   "era": 0
+  },
+  {
+   "hash": "1bfad8e",
+   "date": "2026-10-22",
+   "subject": "S6-preview-bottom-gap: build - Settings previews drop the pad's 40 px",
+   "item": "S6-preview-bottom-gap",
+   "era": 0
+  },
+  {
+   "hash": "6029bea",
+   "date": "2026-10-22",
+   "subject": "settings-redesign: build - Settings window (rail, cards, live preview",
+   "item": "settings-redesign",
+   "era": 0
+  },
+  {
+   "hash": "44c5d83",
+   "date": "2026-10-22",
+   "subject": "settings-redesign: plan - one note exercising every editor feature",
+   "item": "settings-redesign",
+   "era": 0
+  },
+  {
+   "hash": "20b6db7",
+   "date": "2026-10-22",
+   "subject": "V10-settings-preview: build - editor and Feel open with a live preview",
+   "item": "V10-settings-preview",
+   "era": 0
+  },
+  {
+   "hash": "05b885e",
+   "date": "2026-10-22",
+   "subject": "V9-editor-options: build - changing either global hotkey releases",
+   "item": "V9-editor-options",
+   "era": 0
+  },
+  {
+   "hash": "6d35420",
+   "date": "2026-10-22",
+   "subject": "V8-settings-rail: build - Settings becomes a left rail of sections",
+   "item": "V8-settings-rail",
+   "era": 0
+  },
+  {
+   "hash": "6b16f89",
+   "date": "2026-10-22",
+   "subject": "V7-scroll-lab-picks: build - scrolling gains Rate-matched glide",
+   "item": "V7-scroll-lab-picks",
+   "era": 0
+  },
+  {
+   "hash": "969f8cb",
+   "date": "2026-10-22",
+   "subject": "V6-free-scrolling: build - Settings > Behavior > Scrolling: Lines",
+   "item": "V6-free-scrolling",
+   "era": 0
+  },
+  {
+   "hash": "2d01265",
+   "date": "2026-10-22",
+   "subject": "V5-bubble-column-baseline: build - fences, fold chevrons and indent",
+   "item": "V5-bubble-column-baseline",
+   "era": 0
+  },
+  {
+   "hash": "fdd9f28",
+   "date": "2026-10-22",
+   "subject": "V4-atlas-snapshot: check - pre-compaction state",
+   "item": "V4-atlas-snapshot",
+   "era": 0
+  },
+  {
+   "hash": "a946f8c",
+   "date": "2026-10-22",
+   "subject": "V4-atlas-snapshot: build - native-weight ink icons",
+   "item": "V4-atlas-snapshot",
+   "era": 0
+  },
+  {
+   "hash": "ff2a351",
+   "date": "2026-10-22",
+   "subject": "V3-polish: build - grayscale text antialiasing on the glass",
+   "item": "V3-polish",
+   "era": 0
+  },
+  {
+   "hash": "2beefb4",
+   "date": "2026-10-22",
+   "subject": "V3-polish: check - Segoe Fluent icons back",
+   "item": "V3-polish",
+   "era": 0
+  },
+  {
+   "hash": "5aa9272",
+   "date": "2026-10-22",
+   "subject": "V2-chrome-and-swipe: build - notes stored one file",
+   "item": "V2-chrome-and-swipe",
+   "era": 0
+  },
+  {
+   "hash": "870460d",
+   "date": "2026-10-22",
+   "subject": "overnight-spike: build - overnight rebuild of the app replaces v0.1",
+   "item": "overnight-spike",
+   "era": 0
+  },
+  {
+   "hash": "906a14d",
+   "date": "2026-10-22",
+   "subject": "antiquickpad-v0.1: build - v0.1 AntiQuickPad built and discarded",
+   "item": "antiquickpad-v0.1",
+   "era": 0
+  },
+  {
+   "hash": "d508bbe",
+   "date": "2026-10-17",
+   "subject": "stack-spikes: check - confirmed Avalonia stack via spike testing across stacks",
+   "item": "stack-spikes",
+   "era": 0
+  },
+  {
+   "hash": "1367635",
+   "date": "2026-10-17",
+   "subject": "project-setup: build - scaffold repo, AGENTS.md and coordination files",
+   "item": "project-setup",
+   "era": 0
+  }
+ ],
+ "worktrees": [
+  {
+   "worktree": "F:/LocalVSProj/Visual Studio Apps/AntiQuickPad",
+   "HEAD": "01bb862ed5914b9cd802822529a928e8b9260d80",
+   "branch": "refs/heads/dev"
+  },
+  {
+   "worktree": "F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/.claude/worktrees/side-experiment-892c98",
+   "HEAD": "b0003818448a5463a78b4991203e18a949e0249d",
+   "branch": "refs/heads/claude/side-experiment-892c98"
+  }
+ ],
+ "branches": [
+  {
+   "name": "claude/side-experiment-892c98",
+   "head": "b000381",
+   "date": "2026-10-30 02:22:39 -0400",
+   "behind": 7,
+   "ahead": 0,
+   "fork": "b000381"
+  },
+  {
+   "name": "dev",
+   "head": "01bb862",
+   "date": "2026-10-30 10:16:51 -0400",
+   "behind": 0,
+   "ahead": 0,
+   "fork": null
+  },
+  {
+   "name": "main",
+   "head": "8d18f72",
+   "date": "2026-10-29 23:07:09 -0400",
+   "behind": 13,
+   "ahead": 0,
+   "fork": "8d18f72"
+  },
+  {
+   "name": "origin/dev",
+   "head": "01bb862",
+   "date": "2026-10-30 10:16:51 -0400",
+   "behind": 0,
+   "ahead": 0,
+   "fork": null
+  },
+  {
+   "name": "origin/main",
+   "head": "8d18f72",
+   "date": "2026-10-29 23:07:09 -0400",
+   "behind": 13,
+   "ahead": 0,
+   "fork": "8d18f72"
+  }
+ ],
+ "tags": [
+  {
+   "name": "archive/full-history-2026-10-29",
+   "hash": "f34dafd",
+   "date": "2026-10-29"
+  },
+  {
+   "name": "archive/main-2026-10-29",
+   "hash": "cc2eb2d",
+   "date": "2026-10-29"
+  },
+  {
+   "name": "antinotepad-v0.6.0-untested-r9",
+   "hash": "f37adc1",
+   "date": "2026-10-29"
+  },
+  {
+   "name": "v0.6.0-rc9",
+   "hash": "ac5bc63",
+   "date": "2026-10-29"
+  },
+  {
+   "name": "antinotepad-v0.6.0-untested-r8",
+   "hash": "9a3cc39",
+   "date": "2026-10-29"
+  },
+  {
+   "name": "v0.6.0-rc8",
+   "hash": "6639e2c",
+   "date": "2026-10-29"
+  },
+  {
+   "name": "archive/coord-2026-10-28",
+   "hash": "e6aa67c",
+   "date": "2026-10-28"
+  },
+  {
+   "name": "antinotepad-v0.6.0-untested-r7",
+   "hash": "e8be771",
+   "date": "2026-10-28"
+  },
+  {
+   "name": "v0.6.0-rc7",
+   "hash": "48057db",
+   "date": "2026-10-28"
+  },
+  {
+   "name": "antinotepad-v0.6.0-untested-r6",
+   "hash": "ec3f53a",
+   "date": "2026-10-25"
+  },
+  {
+   "name": "v0.6.0-rc6",
+   "hash": "f42781a",
+   "date": "2026-10-25"
+  },
+  {
+   "name": "antinotepad-v0.6.0-untested-r5",
+   "hash": "b5b4902",
+   "date": "2026-10-25"
+  },
+  {
+   "name": "v0.6.0-rc5",
+   "hash": "daa6c04",
+   "date": "2026-10-25"
+  },
+  {
+   "name": "archive/coord-2026-10-25",
+   "hash": "570c46f",
+   "date": "2026-10-25"
+  },
+  {
+   "name": "antinotepad-v0.6.0-untested-r4",
+   "hash": "608376e",
+   "date": "2026-10-25"
+  },
+  {
+   "name": "v0.6.0-rc4",
+   "hash": "1f4b0b3",
+   "date": "2026-10-25"
+  },
+  {
+   "name": "antinotepad-v0.6.0-untested-r3",
+   "hash": "399d0df",
+   "date": "2026-10-25"
+  },
+  {
+   "name": "v0.6.0-rc3",
+   "hash": "d8bd56f",
+   "date": "2026-10-25"
+  },
+  {
+   "name": "antinotepad-v0.6.0-untested-r2",
+   "hash": "892e287",
+   "date": "2026-10-24"
+  },
+  {
+   "name": "v0.6.0-rc2",
+   "hash": "a53d054",
+   "date": "2026-10-24"
+  },
+  {
+   "name": "antinotepad-v0.6.0-untested",
+   "hash": "e7f2724",
+   "date": "2026-10-24"
+  },
+  {
+   "name": "v0.6.0-rc1",
+   "hash": "4483f32",
+   "date": "2026-10-24"
+  },
+  {
+   "name": "proposal/N3-release-plan",
+   "hash": "7d7e479",
+   "date": "2026-10-23"
+  },
+  {
+   "name": "v0.5",
+   "hash": "5a1e932",
+   "date": "2026-10-23"
+  },
+  {
+   "name": "v0.5.0",
+   "hash": "a4c2035",
+   "date": "2026-10-23"
+  },
+  {
+   "name": "antipad-v8.1",
+   "hash": "7aec51d",
+   "date": "2026-10-23"
+  },
+  {
+   "name": "antipad-v8",
+   "hash": "776556d",
+   "date": "2026-10-23"
+  },
+  {
+   "name": "antipad-v7",
+   "hash": "029f6f1",
+   "date": "2026-10-22"
+  },
+  {
+   "name": "antipad-v5",
+   "hash": "cf55d91",
+   "date": "2026-10-22"
+  },
+  {
+   "name": "antipad-v1",
+   "hash": "76a056f",
+   "date": "2026-10-22"
+  },
+  {
+   "name": "milestone/overnight-rebuild",
+   "hash": "870460d",
+   "date": "2026-10-22"
+  },
+  {
+   "name": "v0.1.0",
+   "hash": "906a14d",
+   "date": "2026-10-22"
+  },
+  {
+   "name": "baseline/m8c-v1-compact",
+   "hash": "e339a6d",
+   "date": "2026-10-21"
+  },
+  {
+   "name": "v0.1",
+   "hash": "37bec06",
+   "date": "2026-10-18"
+  }
+ ],
+ "usage": [
+  {
+   "day": "2026-10-25",
+   "at": "2026-10-25T03:51:54",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "A32-native-show-hide-animation",
+   "exit": "exit=0",
+   "secs": "1193s"
+  },
+  {
+   "day": "2026-10-25",
+   "at": "2026-10-25T15:16:52",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "A35-bar-insets",
+   "exit": "exit=0",
+   "secs": "1724s"
+  },
+  {
+   "day": "2026-10-25",
+   "at": "2026-10-25T16:39:07",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "A35-bar-insets-r2",
+   "exit": "exit=0",
+   "secs": "1870s"
+  },
+  {
+   "day": "2026-10-25",
+   "at": "2026-10-25T18:52:09",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "A35-bar-insets-r3",
+   "exit": "exit=0",
+   "secs": "740s"
+  },
+  {
+   "day": "2026-10-25",
+   "at": "2026-10-25T18:58:17",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "A35-bar-insets-r4",
+   "exit": "exit=0",
+   "secs": "323s"
+  },
+  {
+   "day": "2026-10-25",
+   "at": "2026-10-25T19:41:57",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "A36-drop-pill-lab",
+   "exit": "exit=0",
+   "secs": "317s"
+  },
+  {
+   "day": "2026-10-25",
+   "at": "2026-10-25T20:31:27",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "A39-motion-out-of-ui",
+   "exit": "exit=0",
+   "secs": "506s"
+  },
+  {
+   "day": "2026-10-26",
+   "at": "2026-10-26T01:31:01",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "A40-settings-change-event",
+   "exit": "exit=0",
+   "secs": "887s"
+  },
+  {
+   "day": "2026-10-26",
+   "at": "2026-10-26T01:41:38",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "A40-settings-change-event-r2",
+   "exit": "exit=0",
+   "secs": "544s"
+  },
+  {
+   "day": "2026-10-26",
+   "at": "2026-10-26T09:29:34",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "A41a-hotkeys",
+   "exit": "exit=0",
+   "secs": "394s"
+  },
+  {
+   "day": "2026-10-26",
+   "at": "2026-10-26T11:50:05",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "A41b-clipboard-policy",
+   "exit": "exit=0",
+   "secs": "284s"
+  },
+  {
+   "day": "2026-10-26",
+   "at": "2026-10-26T13:14:15",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "A42a-math-notes",
+   "exit": "exit=0",
+   "secs": "298s"
+  },
+  {
+   "day": "2026-10-26",
+   "at": "2026-10-26T17:14:48",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "A42b-note-analysis-file",
+   "exit": "exit=0",
+   "secs": "264s"
+  },
+  {
+   "day": "2026-10-26",
+   "at": "2026-10-26T22:02:11",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "A43a-runtime-log-and-launch",
+   "exit": "exit=0",
+   "secs": "450s"
+  },
+  {
+   "day": "2026-10-26",
+   "at": "2026-10-26T23:19:57",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "A43b-notes-session",
+   "exit": "exit=0",
+   "secs": "819s"
+  },
+  {
+   "day": "2026-10-27",
+   "at": "2026-10-27T10:07:30",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "A43b-notes-session-r2",
+   "exit": "exit=0",
+   "secs": "447s"
+  },
+  {
+   "day": "2026-10-27",
+   "at": "2026-10-27T10:58:35",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "A43b-notes-session-r3",
+   "exit": "exit=0",
+   "secs": "334s"
+  },
+  {
+   "day": "2026-10-27",
+   "at": "2026-10-27T22:48:45",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "A44a-native-facade",
+   "exit": "exit=0",
+   "secs": "509s"
+  },
+  {
+   "day": "2026-10-28",
+   "at": "2026-10-28T03:53:18",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "A44b-interop-guards",
+   "exit": "exit=0",
+   "secs": "991s"
+  },
+  {
+   "day": "2026-10-28",
+   "at": "2026-10-28T10:39:34",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "A44c-shell-folder",
+   "exit": "exit=0",
+   "secs": "295s"
+  },
+  {
+   "day": "2026-10-28",
+   "at": "2026-10-28T16:09:53",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "C13-dev-loop-kit",
+   "exit": "exit=0",
+   "secs": "549s"
+  },
+  {
+   "day": "2026-10-28",
+   "at": "2026-10-28T16:12:56",
+   "role": "reviewer",
+   "model": "gpt-6.1-sol",
+   "task": "C13-dev-loop-kit-review",
+   "exit": "exit=0",
+   "secs": "145s"
+  },
+  {
+   "day": "2026-10-28",
+   "at": "2026-10-28T16:17:56",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "C13-dev-loop-kit-r2",
+   "exit": "exit=0",
+   "secs": "276s"
+  },
+  {
+   "day": "2026-10-28",
+   "at": "2026-10-28T16:27:13",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "C13-dev-loop-kit-r3",
+   "exit": "exit=0",
+   "secs": "410s"
+  },
+  {
+   "day": "2026-10-29",
+   "at": "2026-10-29T01:03:23",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "A59-design-ownership-audit",
+   "exit": "exit=0",
+   "secs": "1111s"
+  },
+  {
+   "day": "2026-10-29",
+   "at": "2026-10-29T16:03:07",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "A42c-checkbox-indent",
+   "exit": "exit=0",
+   "secs": "391s"
+  },
+  {
+   "day": "2026-10-29",
+   "at": "2026-10-29T16:05:10",
+   "role": "reviewer",
+   "model": "gpt-6.1-sol",
+   "task": "A42c-checkbox-indent-review",
+   "exit": "exit=0",
+   "secs": "71s"
+  },
+  {
+   "day": "2026-10-29",
+   "at": "2026-10-29T16:30:30",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "A42d-list-commands-audit",
+   "exit": "exit=0",
+   "secs": "137s"
+  },
+  {
+   "day": "2026-10-29",
+   "at": "2026-10-29T16:40:11",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "A42d-list-commands",
+   "exit": "exit=0",
+   "secs": "418s"
+  },
+  {
+   "day": "2026-10-29",
+   "at": "2026-10-29T16:43:09",
+   "role": "reviewer",
+   "model": "gpt-6.1-sol",
+   "task": "A42d-list-commands-review",
+   "exit": "exit=0",
+   "secs": "92s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T01:38:46",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-fix-loop-scripts",
+   "exit": "exit=0",
+   "secs": "361s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T01:41:22",
+   "role": "reviewer",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-fix-loop-scripts-review",
+   "exit": "exit=0",
+   "secs": "134s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T01:43:26",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-fix-loop-scripts-r2",
+   "exit": "exit=0",
+   "secs": "105s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T01:52:56",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-preflights",
+   "exit": "exit=0",
+   "secs": "445s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T01:55:17",
+   "role": "reviewer",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-preflights-review",
+   "exit": "exit=0",
+   "secs": "113s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T01:58:13",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-preflights-r2",
+   "exit": "exit=0",
+   "secs": "158s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T02:00:52",
+   "role": "reviewer",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-preflights-r2-review",
+   "exit": "exit=0",
+   "secs": "134s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T02:06:12",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-catch-up-points",
+   "exit": "exit=0",
+   "secs": "253s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T02:09:36",
+   "role": "reviewer",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-catch-up-points-review",
+   "exit": "exit=0",
+   "secs": "181s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T02:13:15",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-catch-up-points-r2",
+   "exit": "exit=0",
+   "secs": "205s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T02:15:46",
+   "role": "reviewer",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-catch-up-points-r2-review",
+   "exit": "exit=0",
+   "secs": "127s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T02:22:02",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "Loop2-loop-v3-1-conflicts-and-queue",
+   "exit": "exit=0",
+   "secs": "93s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T02:29:45",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-scan-backlog",
+   "exit": "exit=0",
+   "secs": "409s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T02:30:07",
+   "role": "reviewer",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-scan-backlog-review",
+   "exit": "exit=1",
+   "secs": "2s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T02:33:00",
+   "role": "reviewer",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-scan-backlog-review",
+   "exit": "exit=0",
+   "secs": "153s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T02:40:08",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-gate-and-audit-hardening",
+   "exit": "exit=0",
+   "secs": "379s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T02:42:45",
+   "role": "reviewer",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-gate-and-audit-hardening-review",
+   "exit": "exit=0",
+   "secs": "122s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T02:45:20",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-gate-and-audit-hardening-r2",
+   "exit": "exit=0",
+   "secs": "134s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T02:46:44",
+   "role": "reviewer",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-gate-and-audit-hardening-r2-review",
+   "exit": "exit=0",
+   "secs": "61s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T02:47:12",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "Loop2-loop-v3-1-sandbox-smoke",
+   "exit": "exit=0",
+   "secs": "18s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T02:55:29",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-loop-lint",
+   "exit": "exit=0",
+   "secs": "446s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T03:00:02",
+   "role": "reviewer",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-loop-lint-review",
+   "exit": "exit=0",
+   "secs": "244s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T03:02:29",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-loop-lint-r2",
+   "exit": "exit=0",
+   "secs": "134s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T03:05:02",
+   "role": "backup",
+   "model": "gpt-5.6-luna",
+   "task": "Loop2-loop-v3-1-loop-lint-r2-review",
+   "exit": "exit=0",
+   "secs": "129s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T08:35:43",
+   "role": "worker",
+   "model": "gpt-6-luna",
+   "task": "Loop2-loop-v3-1-loop-md-v3-1",
+   "exit": "exit=0",
+   "secs": "333s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T08:37:38",
+   "role": "backup",
+   "model": "gpt-5.6-luna",
+   "task": "Loop2-loop-v3-1-loop-md-v3-1-review",
+   "exit": "exit=0",
+   "secs": "84s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T09:53:31",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-wiki",
+   "exit": "exit=0",
+   "secs": "466s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T10:05:28",
+   "role": "backup",
+   "model": "gpt-5.6-luna",
+   "task": "Loop2-loop-v3-1-wiki-review",
+   "exit": "exit=0",
+   "secs": "679s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T10:07:12",
+   "role": "director",
+   "model": "gpt-6.1-sol",
+   "task": "Loop2-loop-v3-1-wiki-r2",
+   "exit": "exit=0",
+   "secs": "83s"
+  },
+  {
+   "day": "2026-10-30",
+   "at": "2026-10-30T10:08:54",
+   "role": "backup",
+   "model": "gpt-5.6-luna",
+   "task": "Loop2-loop-v3-1-wiki-r2-review",
+   "exit": "exit=0",
+   "secs": "82s"
+  }
+ ],
+ "main": "8d18f72 Loop1-process-v3: loop v3 rules, coding standard, glossary, editorconfig",
+ "devAhead": 13,
+ "cards": {
+  "A42c-checkbox-indent": {
+   "title": "A42c-checkbox-indent: move checkbox toggle and indent out of PadView, behavior-neutral",
+   "branch": "feat/A42c-checkbox-indent",
+   "tier": "Medium (raised from the plan row's Low at Request: not a verbatim move; it reshapes editor input commands (Tab, Ctrl+Enter, checkbox click) and their undo grouping) (rules: `docs/loop.md`)",
+   "request": "Plan row Scope (user order, 2026-10-29): \"Move checkbox indent logic out of `PadView` into its own Editor class,\nbehavior-neutral\". Origin: A42-padview-commands re-audit, user's sequence 2026-10-26 (A42c optional, after A42b).\nUser, 2026-10-29: \"Upgraded, start A42c\". Screenshots: none.",
+   "plan": "- **After:** `ListEditing` decides each toggle/indent as one small edit (offset, length removed, text inserted), as pure\n  code; new `DocumentCommands` applies that edit to the current line of a `TextDocument`; the checkbox regex moves to\n  `ListEditing` unchanged (same groups) and its three readers point there. `PadView` keeps `ToggleCheckbox` as a thin\n  facade, keeps all key routing, keeps the Tab `RunUpdate` with indent then `Renumber` inside it. You see no difference.\n- **Must not change:**",
+   "check": "- **Gate (online, `-Task A42c-checkbox-indent`):** GATE: PASS. Build 0 warnings; SELFTEST PASS; CONTRACTS 12 rows, 11 pass, 1 manual; Seam 0 violations in 50 files; Format PASS (8 files); Scope PASS (8 allowed files); Size WARN: SelfTest.cs 2980 -> 3089 (planned tests and LAYERS guards). PadView shrank 28 lines.\n- **Codex review (director's lens_reviewer + fresh reviewer run):** both `VERDICT: accept`, no proven findings (`.coord/reports/A42c-checkbox-indent.review.md`). Unproven: caret, selection, click geometry and combined indent+renumber undo are for the hand test.\n- **Bounds check:**\n  - ListEditing owns regex and pure edits, DocumentCommands applies them, PadView keeps facades, key rou",
+   "hand": "- **Build checked:** dev copy from the worktree, EXE `build\\dev\\AntiNotepad.exe` (pid 23836), DATA `build\testdata`, log `build\testdata\u0007ntinotepad.log` (pad shown). Dev badge text not seen by this session (no Computer Use); the user ran it.\n- **Result (user, 2026-10-29, checks 1-5):** \"All of these pass\"\n- **Separate request, not part of A42c (not fixed; Master 1 handles it as a new idea):** user, 2026-10-29: \"timer note: typing `10s test` and [enter] immediately starts the timer. that shouldnt be the case because i might be writing multiple timers.\"\n- **Misses:** none."
+  },
+  "A42d-list-commands": {
+   "title": "A42d-list-commands: move list continue and renumber commands out of PadView, behavior-neutral",
+   "branch": "feat/A42d-list-commands",
+   "tier": "Medium (editor input: Enter, Tab renumber, caret and undo grouping) (rules: `docs/loop.md`)",
+   "request": "Plan row Scope (user order, 2026-10-29): \"Move list commands out of `PadView` into its own Editor class,\nbehavior-neutral\". Origin: A42-padview-commands re-audit (A42d optional, after A42c).\nUser, 2026-10-29: \"Lets do A42c then A42d and finally C29\"; \"Start A42d\". Screenshots: none.\nBoundary: timer start on Enter in timer notes stays as today (separate idea timer-enter-no-autostart, user 2026-10-29).",
+   "plan": "- **After:** `ListEditing` decides continuation (what marker to insert, or how to empty/outdent, or decline) and\n  numbering (which line gets which number), as pure code. `DocumentCommands` applies them to a live `TextDocument`, line\n  by line, with live offsets (no whole-block replace). `Renumber` moves too. `PadView` keeps key/modifier/selection/\n  completion routing, the two `RunUpdate` scopes, the post-edit `CaretLine` read, the timer fall-through, and a thin\n  `Insert` (insert at caret + `B",
+   "check": "- **Gate (online, run by Master 1, 2026-10-29):** GATE: PASS. Build 0 warnings 0 errors; SELFTEST PASS; CONTRACTS 13 rows, 12 pass, 1 manual; Seam PASS; Format PASS (5 changed files); Scope PASS (5 files); Size WARN (SelfTest.cs 3089 -> 3247 lines, planned tests; PadView shrank by 75); Cleanup PASS.\n- **Gate (this session):** online run failed twice on NU1900 only (nuget.org unreachable in sandbox, env); `-Offline` run GATE: PASS, same results.\n- **Codex review:** `.coord/reports/A42d-list-commands.review.md` VERDICT: accept, no proven findings. Unproven: live caret/scroll feel (hand test).\n- **Bounds check:** Change list (5 Files-listed product files) = within plan. Behavior changes \"None\" ",
+   "hand": "Dev copy from the worktree (PID 12308, build/dev, DATA build/testdata, log checked). Checks 1-6 given.\nUser, 2026-10-29: \"all passed\""
+  },
+  "A55-split-view-clip": {
+   "title": "A55-split-view-clip: clip each split pane at the divider",
+   "branch": "feat/A55-split-view-clip",
+   "tier": "Medium (bug without a proven cause; editor rendering) (rules: `docs/loop.md`)",
+   "request": "User, 2026-10-28 (A44a-native-facade hand test, recorded in STATUS Backlog as old A57): \"in split view, scrolling text\noverlaps across the divider; the divider should crop the visual of each pane.\"\nPlan row Scope (user order, 2026-10-29): \"In split view, text scrolls across the divider; clip each pane at the divider.\"\nUser go to start, 2026-10-29: \"Go, start it\".\nUser at Plan, 2026-10-29, with screenshots in `.coord/tasks/A55-split-view-clip-shots/`: \"Image 1: Right side trying to\nswipe to next page / Image 2: Left side trying to swipe to previous page / Expectation: The grapic should not go over the\nline / Image 3 is how i expect it to look\" (1-right-swipe-next.png, 2-left-swipe-prev.png, 3",
+   "plan": "- **After:** each pane sits in its own stationary clipping host in its existing column. Swipe and arrival motion stay\n  exactly as they are, but a pane's text, caret, selection and decorations stop at its column edge and never paint over the\n  divider or the other pane. Single view: the right host hides with the right pane.\n- **Must not change:** divider look, height and its gap above the pager (`split-divider-above-pager`); swipe/arrival\n  distances, timings and fades; note binding, focus and p",
+   "check": "- **Gate (online, `tools/gate.ps1 -Task A55-split-view-clip`):** `GATE: PASS`; build 0 warnings, `SELFTEST PASS`, `CONTRACTS: 11 rows, 10 pass, 1 manual`, LAYERS 0 violations, seam 0, scope 4 files allowed. Warning: SelfTest.cs 2950 -> 2980 lines (+30).\n- **Codex fresh review** (`.coord/reports/A55-split-view-clip.review.md`): no proven findings, behavior list matches the diff; `VERDICT: accept`. Builder's own lens review also accept.\n- **Contracts:** `split-pane-clipping` added (structural checks pass; pixel containment manual), `split-divider-above-pager` still passes.\n- **Bounds check:**\n  - Files changed = the 4 in `## Files`: within plan.\n  - Stationary ClipToBounds Border host per pane",
+   "hand": "Build checked: dev copy from this worktree (`build/dev`, PID 43556, DATA `build/testdata`, log clean); the dev badge was not read by me (no Computer Use), expected `A55 · <time>`.\nUser, 2026-10-29, on checks 0-5 (verbatim): \"all passed\"\n\nSeparate request, not part of A55 (user, same message, with a screenshot of the vertical scrollbar): \"a scroll bar shows, i didn't expect that. can we get one of those modern floating scroll bars on the side thats visible only when scrolling?\"\nProposed as a new idea for the master (unnumbered until the user confirms scope): idea: floating-scrollbar (overlay scrollbar that fades in only while scrolling)."
+  },
+  "C26-item-card-loop": {
+   "title": "C26-item-card-loop: one item card per item, phases Request > Findings > Plan > Go > Build > Check > Hand test > Merge",
+   "branch": "feat/C26-item-card-loop",
+   "tier": "Low",
+   "request": "User, 2026-10-29, after reviewing how A52-A54, C25 and A45 went:\n\"It should've been straight forward: here's the task, this is what i want to change ... ai: let me find out where this\nchange would occur and what is unsatisfactory right now that justifies this task request to exist ... here's what i\nfound, and here's my recommendation. currently its like this, after the change it should be like this, and this is how\nim going to test it ... these are the code review gates that will be run ... Okay plan looks good, go ahead ... performs\nthe review gates according to plan ... keeps eye out on bugs ... feedback loop of this is what i requested, this is what\ni planned and approved, this is what i ",
+   "plan": "- **After:** one card per item that grows Request > Findings > Plan > Go > Check > Hand test; Findings for every tier\n  (scout for Low), reproduction required for bugs, plan with Now/After, test plan, gates menu and needs-from-you; Check\n  adds a bounds check (requested vs approved vs done); status card defined in `docs/loop.md` and reminded every turn by a\n  `UserPromptSubmit` hook listing the items in flight.\n- **Must not change:** product code; gate behavior; branch, worktree, numbering and S",
+   "check": "- Gate: `GATE: PASS` (build 0 warnings, `SELFTEST PASS`, CONTRACTS 10 rows / 9 pass / 1 manual, seam 0, scope PASS).\n- Hook: prints the card reminder (ASCII, the console code page mangled `→`/`✓`); on a sample STATUS lists only\n  `A55-split-view-clip (building, Medium)`, skipping planned rows, groups and release markers. Settings JSON parses.\n- Bounds: all within plan. Justified: `.coord/templates/brief.md` renamed to `item.md` (the card replaces the brief);\n  `round.md` added for rework rounds, which the old loop wrote from the brief template.\n- Noticed: Codex runs inside worktrees write `usage.tsv` and logs to the worktree (`codex-run.sh` ROOT), so caps and logs\n  are lost on worktree remo",
+   "hand": "None (not visible)."
+  },
+  "C27-session-naming": {
+   "title": "C27-session-naming: master and sub-session names, loop version, master handover",
+   "branch": "feat/C27-session-naming",
+   "tier": "Low",
+   "request": "User, 2026-10-29: \"cleanly shut down [AntiNotepad task execution plan], we'll make a new master chat to pick up where it\nleft off. It will still use the same artifact/local html roadmap file from that chat. It should know about the latest\nchanges made to the dev loop and always adhere to it for how it decides to create claude subagents and codex subagents.\nWe're aiming for well scoped agents orchestrated by the claude master chat. The master chats from now on will always\nhave a Master <increasing ID number> - <dev loop version> - slug for overall remaining work for its chat name. Subchat\nnames will be the same <ID slug>-<devloop step>-<task name slug> i.e scan/audit, build, review, test, etc",
+   "plan": "- **After:** `docs/loop.md` \"Sessions\": loop version v2, one orchestrating master named `Master <N> - loop v<V> - <slug>`,\n  one sub-session per step named `<ID>-<step>-<slug>` with its model (scan, audit Haiku; build, review, test Sonnet\n  medium), build sessions rename themselves per step, same roadmap page, handover checklist and resume prompt.\n- **Must not change:** phases, gates, branch and STATUS rules.\n- **Test plan, code:** gate passes. **UI:** none.\n- **Gates:** gate.\n- **Needs from you",
+   "check": "- Gate: `GATE: PASS` (build 0 warnings, `SELFTEST PASS`, seam 0, scope PASS).\n- Bounds: within plan. The duplicate sub-session model bullet in Rules now points to \"Sessions\".",
+   "hand": "None (not visible)."
+  },
+  "C28-loop-cheap-checks": {
+   "title": "C28-loop-cheap-checks: format check, worktree-safe ledger, triage, lessons, reviewer scores, quiet relays",
+   "branch": "feat/C28-loop-cheap-checks",
+   "tier": "Low",
+   "request": "User, 2026-10-29: \"Okay lets do 1-5 and improve the dev loop. While we're making it more strict i dont want to waste too\nmany tokens and usage% on these instead of the actual work at hand.\" (Items: 1 zero-token checks, 2 triage on failure,\n3 lessons and retro, 4 reviewer scores, 5 quieter relays.)",
+   "plan": "- **After:** gate Format step fails only on problems on changed lines; ledger and logs in the main checkout; triage table\n  in `/review-task` (no extra agent); `.coord/lessons.md` (master-owned) with Misses and Scores, filled at Merge; repeated\n  causes become user-approved `idea:` rows; quiet relays; dev badge named as the user's first hand check while Computer\n  Use is off; loop version v2.1.\n- **Must not change:** product code, existing gate steps, phases.\n- **Test plan, code:** a probe bad i",
+   "check": "- Format probe: indent change on `UI/SettingsWindow.cs:62` -> `[FAIL] Format: 1 format problem(s) on changed lines; 18\n  older one(s) ignored`; reverted. `dotnet format` reports whitespace at the end of the line before, so line N-1 counts.\n- Ledger dry run: `log=F:/.../AntiQuickPad/.coord/logs/C28-loop-cheap-checks.worker.log` (main checkout).\n- Bounds: within plan. Justified: triage done by the Check session rather than a separate Haiku bot (same result, no\n  extra context to load); lessons master-owned so branches never conflict on it.\n- Misses: None.",
+   "hand": "None (not visible)."
+  },
+  "C30-loop-docs-v22-plan": {
+   "title": "C30-loop-docs-v22-plan: plan loop v2.2 (parallel items, catch-up, conflicts) and write the loop as a readable wiki",
+   "branch": "feat/C30-loop-docs-v22-plan",
+   "tier": "Low (docs/tools, no product code) (rules: `docs/loop.md`)",
+   "request": "User, 2026-10-29 (verbatim): \"plan out what we can update in a future v2.2 dev loop for parallelism, merge conflict\nresolution, and catch up with dev portions as you mentioned. We should also start making documentation of the dev loop,\nmaybe with GH Wiki features perhaps. This way i can also read my own documentation and pick up on how things was planned\nout, both with graphics/visualizations and a easy to interpret guide for the potentially non tech savy.\"",
+   "plan": "- **After:** `docs/loop-v2.2-plan.md` (a proposal with Now / Proposed / cost / touches for parallelism, catch-up with dev,\n  conflict resolution, and lettered unnumbered `step:` names) and `docs/wiki/` (GitHub Wiki pages with Mermaid diagrams, a\n  glossary, a history page, and a worked example following A55-split-view-clip), ready to publish on the user's word.\n- **Must not change:** `docs/loop.md` rules (user, 2026-10-29 follow-up: v2.2 stays dormant; only a one-line pointer to `docs/v2.2/` is ",
+   "check": "- **Gate (`tools/gate.ps1 -Task C30-loop-docs-v22-plan`):** `GATE: PASS`; build 0 warnings, `SELFTEST PASS`, `CONTRACTS: 11 rows, 10 pass, 1 manual`, seam 0 violations, Format skipped (no C# changed), Scope PASS (12 files, all allowed), Size PASS.\n- **Bounds check:**\n  - Requested: v2.2 plan (parallelism, catch-up, conflicts, lettered steps) and readable docs with diagrams. Done: `docs/loop-v2.2-plan.md` plus 10 wiki pages and `_Sidebar.md`: within plan.\n  - `docs/loop.md`, skills, scripts, STATUS, lessons untouched: within plan.\n  - Mermaid diagrams were not rendered here (no renderer offline); written conservatively (flowchart, sequenceDiagram, gitGraph): justified, noted in the report.\n  ",
+   "hand": "None (not visible)."
+  },
+  "Loop1-process-v3": {
+   "title": "Loop1-process-v3: roll the 2026-10-29 process redesign into the loop docs, skills, templates and tools (loop v3)",
+   "branch": "chore/Loop1-process-v3",
+   "tier": "Low · docs-tools (rules: `docs/loop.md`)",
+   "request": "User, 2026-10-29 (verbatim): \"Yes, start rollout\", answering \"Start the rollout of the new process docs?\" after the\nprocess-redesign summary. Every rule below was agreed in that discussion; the record is `.coord/process-redesign.md`.",
+   "plan": "- **After:**\n  1. **Loop v3** (major: phases, roles, branches and commit rules change). `docs/loop.md` rewritten where the rules\n     changed, its length kept about the same:\n     - Phases `Request → Findings → Plan → Approve → Build → Check → Hand test → Merge`; STATUS state `approved` stays.\n     - IDs `A` / `Loop` / `D` / `T`, steps `A1a`, rework `-r<N>`, eras; counters start at 1 in the new era. Retired:\n       `C`, `N`, `P`, `S<n>-status`.\n     - Branches `<prefix>/<ID-slug>` (`feat/`, `fix",
+   "check": "- **Gate (`tools/gate.ps1 -Task Loop1-process-v3`):** `GATE: PASS`; build 0 warnings, `SELFTEST PASS`, `CONTRACTS: 13\n  rows, 12 pass, 1 manual`, seam 0 violations, Format PASS (no changed product C#), Scope PASS (16 files, all allowed),\n  Size PASS.\n- **`.editorconfig`:** full-project `dotnet format --verify-no-changes` gives 339 findings (all WHITESPACE) with and\n  without it, so it adds none. A first draft set `dotnet_sort_system_directives_first`, which enabled using-sorting\n  (+35 IMPORTS findings); removed.\n- **`tools/dev.ps1`:** parses with 0 errors; the allowed-root rule tested on sample paths: main True, nested\n  `<prefix>/<ID-slug>` True, flat True, outside False, deeper False.\n- *",
+   "hand": "None (not visible)."
+  },
+  "Loop2-loop-v3-1-preflights": {
+   "title": "Loop2-loop-v3-1-preflights: step 3.1b, scripted Approve and Merge preflights",
+   "branch": "",
+   "tier": "Low · docs-tools",
+   "request": "",
+   "plan": "",
+   "check": "",
+   "hand": ""
+  },
+  "Loop2-loop-v3-1-wiki": {
+   "title": "Loop2-loop-v3-1-wiki: the wiki explains loop v3.1, with evidence, and teaches how to start using it",
+   "branch": "docs/Loop2-loop-v3-1-wiki",
+   "tier": "Low · docs-tools",
+   "request": "User, 2026-10-30 (verbatim), after seeing the flow diagram:\n\"The diagram alone should convince me that the dev loop is reasonable for both parallel worktrees and branch based work.\nThe documentation in the final wiki should convince me that each stage in each layer is well thought out and robust,\nwith exact evidence and file references. If it doesn't exist in codebase, it will not exist in wiki. The documentation\nalso serves as an instruction guide on how to start using this dev loop instead of traditional chat-and-respond\ndevelopment. Technical detail is good, but simplifying into normal layman terms, as if you're presenting to junior devs\nand stake holders is key.\"\nAnd on the boxes: \"I exp",
+   "plan": "",
+   "check": "",
+   "hand": ""
+  },
+  "Loop2-loop-v3-1": {
+   "title": "Loop2-loop-v3-1: loop v3.1, parallel-safe and scripted (dormant v2.2 absorbed)",
+   "branch": "chore/Loop2-loop-v3-1",
+   "tier": "Low · docs-tools (rules: `docs/loop.md`); script steps add a Codex review (see Gates)",
+   "request": "User, 2026-10-30 (verbatim): \"okay lets wake up the dormant v2.2. Assess the full loop end to end and see where the gaps\nare and we'll discuss to upgrade v3 to v3.0.1\" — then: \"assess the loop with the intention of best version yet and come\nup with a strong update patch for v3.1. (calling it 3.0.1 was my mistake)\" — then: \"everything is fine but all of this\nneeds to be built in a branch. Commits need to be minimal and well scoped.\" — then: \"confirm. but theres no need for\nworktrees here.\"\n\nDecisions (question cards, 2026-10-30): this chat runs the items with Codex builders in sub-sessions; gate scope strict\nby default; re-test after a catch-up automatically when incoming dev changes touch th",
+   "plan": "- **After** (one commit per step, in this order; nearly all touch hot files, so no parallel steps):\n  | Step | After |\n  |---|---|\n  | 3.1a fix-loop-scripts | `files-overlap.ps1`, `catch-up.ps1` accept any `<prefix>/<ID-slug>`, move to `tools/`; hot files (`Contracts.cs`, `SelfTest*.cs`, `docs/loop.md`, the three skills) warn only |\n  | 3.1b preflights | `tools/approve.ps1`: cap 3 (from STATUS), overlap, then branch (+ worktree when used), move and commit the card. `tools/merge-preflight.ps1`: c",
+   "check": "- **Steps:** 3.1a-3.1i committed one per step (c644877 card ... a50c538 rehearsal). Gate PASS on each step; loop-lint\n  PASS from 3.1g on.\n- **Codex review (lens-review) on a, b, c, e, f, g:** rework on a, b, c, f, g (one `-r2` round each, all then accept);\n  e accepted first time. Proven findings fixed: catch-up false PASS on a git enumeration failure (a); labeled template\n  placeholders passing the merge preflight (b); RETEST missing paths with spaces (c); report copy after failover and a\n  too-wide capacity match (f); escaped Markdown links and a file passed as `-Root` (g). One minor left: a multiline\n  placeholder is not matched by the helper, but the Check guard still rejects the templa",
+   "hand": "None (not visible)."
+  }
+ },
+ "where": "- **History rewritten (2026-10-29, user: \"Yes, rewrite\"):** 623 era-0 commits became 156 (option B, preview\n  `.coord/history-preview.md`). `main` and `dev` both at 8d18f72 (`Loop1-process-v3`), files identical to the old dev.\n  Commit hashes quoted below and in older cards and reports point into the old history.\n- **Tags now:** `v0.1.0`, `milestone/overnight-rebuild`, `v0.5.0`, `v0.6.0-rc1` to `rc9` (rc9 = the old\n  `antinotepad-v0.6.0-untested-r9`; each release tag checked to carry exactly the files it shipped). All other old tags\n  were deleted locally and on GitHub.\n- **Old history kept:** tags `archive/full-history-2026-10-29` (old dev tip) and `archive/main-2026-10-29` (old main\n  tip) on GitHub, plus the bundle `F:\\LocalVSProj\\Visual Studio Apps\\AntiNotepad-history-backup-2026-10-29.bundle`\n  (all refs, verified).\n- Installed copy: r8 (= `v0.6.0-rc8`; user upgraded 2026-10-29). Windowing is still r4's (r6 rollback, 2026-10-25).\n- Locked choices: `docs/decisions.md`.",
+ "devLine": [
+  {
+   "hash": "01bb862",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1-wiki: wiki rewritten for loop v3.1 with sources"
+  },
+  {
+   "hash": "12e9e1c",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: close, card Check, STATUS and lessons"
+  },
+  {
+   "hash": "a50c538",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1i rehearsal"
+  },
+  {
+   "hash": "68b4d9b",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1h rules text says loop v3.1"
+  },
+  {
+   "hash": "f9240eb",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1g loop-lint"
+  },
+  {
+   "hash": "479afd3",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1f strict scope and read-only audits"
+  },
+  {
+   "hash": "464abc8",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1e scan-backlog and scan-delta"
+  },
+  {
+   "hash": "b000381",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1d conflict route and hand-test turns"
+  },
+  {
+   "hash": "093c4e8",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: re-plan round 2 (trim, scan-backlog, diagram)"
+  },
+  {
+   "hash": "665aa6c",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1c catch-up points"
+  },
+  {
+   "hash": "0909d14",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1b approve and merge preflights"
+  },
+  {
+   "hash": "ac450d2",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: 3.1a fix-loop-scripts"
+  },
+  {
+   "hash": "c644877",
+   "date": "2026-10-30",
+   "subject": "Loop2-loop-v3-1: card"
+  },
+  {
+   "hash": "8d18f72",
+   "date": "2026-10-29",
+   "subject": "Loop1-process-v3: loop v3 rules, coding standard, glossary, editorconfig"
+  },
+  {
+   "hash": "a2b7b5e",
+   "date": "2026-10-29",
+   "subject": "process-redesign: Markdown status card, attribution off, redesign notes"
+  },
+  {
+   "hash": "4aad278",
+   "date": "2026-10-29",
+   "subject": "C30-loop-docs-v22-plan: build - loop v2.2 plan, wiki pages"
+  },
+  {
+   "hash": "7e01b28",
+   "date": "2026-10-29",
+   "subject": "C30-loop-docs-v22-plan: plan - v2.2 plan and wiki pages"
+  },
+  {
+   "hash": "ac5bc63",
+   "date": "2026-10-29",
+   "subject": "A42d-list-commands: build - list continuation and renumber decisions"
+  },
+  {
+   "hash": "c2737dd",
+   "date": "2026-10-29",
+   "subject": "A42d-list-commands: plan - card (request) and findings audit brief"
+  },
+  {
+   "hash": "dcf3c0d",
+   "date": "2026-10-29",
+   "subject": "A42c-checkbox-indent: build - checkbox toggle and indent edits"
+  },
+  {
+   "hash": "5342ccf",
+   "date": "2026-10-29",
+   "subject": "A42c-checkbox-indent: plan - card (request) and findings audit brief"
+  },
+  {
+   "hash": "45304af",
+   "date": "2026-10-29",
+   "subject": "C28-loop-cheap-checks: build - format check, worktree-safe Codex"
+  },
+  {
+   "hash": "6639e2c",
+   "date": "2026-10-29",
+   "subject": "A55-split-view-clip: build - clip each split pane at the divider"
+  },
+  {
+   "hash": "52cf1c8",
+   "date": "2026-10-29",
+   "subject": "A55-split-view-clip: plan - card (request) and findings audit brief"
+  },
+  {
+   "hash": "d16b7ff",
+   "date": "2026-10-29",
+   "subject": "C27-session-naming: build - master and sub-session names"
+  },
+  {
+   "hash": "1c2f8a2",
+   "date": "2026-10-29",
+   "subject": "C26-item-card-loop: build - one item card per item"
+  },
+  {
+   "hash": "a5a3f3a",
+   "date": "2026-10-29",
+   "subject": "A45-dev-build-badge: build - dev badge shows branch glyph"
+  },
+  {
+   "hash": "39364cd",
+   "date": "2026-10-29",
+   "subject": "A45-dev-build-badge: plan - brief and dispatch"
+  },
+  {
+   "hash": "2c5a6a7",
+   "date": "2026-10-29",
+   "subject": "C25-dev-instance-handoff: build - dev.ps1 replaces any running dev copy"
+  },
+  {
+   "hash": "88ee3a1",
+   "date": "2026-10-29",
+   "subject": "C25-dev-instance-handoff: plan - brief and dispatch"
+  },
+  {
+   "hash": "d0402ab",
+   "date": "2026-10-29",
+   "subject": "C24a-roadmap-local-page: build - local self-reloading roadmap page"
+  },
+  {
+   "hash": "bdb996f",
+   "date": "2026-10-29",
+   "subject": "C24-roadmap-artifact: build - roadmap is a Claude Artifact kept current"
+  },
+  {
+   "hash": "fec6948",
+   "date": "2026-10-29",
+   "subject": "A54-link-hover-click: build - every URL opens on Ctrl+click"
+  },
+  {
+   "hash": "2f5a550",
+   "date": "2026-10-29",
+   "subject": "A54-link-hover-click: plan - brief and dispatch"
+  },
+  {
+   "hash": "2a06e4e",
+   "date": "2026-10-29",
+   "subject": "A53-split-divider-height: build - divider stays above the pager"
+  },
+  {
+   "hash": "3ffb4c9",
+   "date": "2026-10-29",
+   "subject": "A53-split-divider-height: plan - brief and dispatch"
+  },
+  {
+   "hash": "1d38f7b",
+   "date": "2026-10-29",
+   "subject": "C23-idea-numbering: build - numbers only on user confirmation"
+  },
+  {
+   "hash": "c19a9a3",
+   "date": "2026-10-29",
+   "subject": "A52-move-old-folder-rename-warning: build - old notes folder renamed"
+  },
+  {
+   "hash": "06c417a",
+   "date": "2026-10-29",
+   "subject": "A52-move-old-folder-rename-warning: plan - brief and audit brief (High)"
+  },
+  {
+   "hash": "9a05b07",
+   "date": "2026-10-29",
+   "subject": "C22-roadmap-step-rows: build - one ID per idea with lettered steps"
+  }
+ ],
+ "graph": {
+  "lanes": [
+   {
+    "name": "main",
+    "head": "8d18f72",
+    "date": "2026-10-29 23:07",
+    "worktree": ""
+   },
+   {
+    "name": "dev",
+    "head": "01bb862",
+    "date": "2026-10-30 10:16",
+    "worktree": "F:/LocalVSProj/Visual Studio Apps/AntiQuickPad"
+   },
+   {
+    "name": "claude/side-experiment-892c98",
+    "head": "b000381",
+    "date": "2026-10-30 02:22",
+    "worktree": "F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/.claude/worktrees/side-experiment-892c98"
+   }
+  ],
+  "commits": [
+   {
+    "hash": "01bb862",
+    "date": "2026-10-30 10:16",
+    "subject": "Loop2-loop-v3-1-wiki: wiki rewritten for loop v3.1 with sources",
+    "in": [
+     1
+    ],
+    "tags": []
+   },
+   {
+    "hash": "12e9e1c",
+    "date": "2026-10-30 09:10",
+    "subject": "Loop2-loop-v3-1: close, card Check, STATUS and lessons",
+    "in": [
+     1
+    ],
+    "tags": []
+   },
+   {
+    "hash": "a50c538",
+    "date": "2026-10-30 09:09",
+    "subject": "Loop2-loop-v3-1: 3.1i rehearsal",
+    "in": [
+     1
+    ],
+    "tags": []
+   },
+   {
+    "hash": "68b4d9b",
+    "date": "2026-10-30 09:04",
+    "subject": "Loop2-loop-v3-1: 3.1h rules text says loop v3.1",
+    "in": [
+     1
+    ],
+    "tags": []
+   },
+   {
+    "hash": "f9240eb",
+    "date": "2026-10-30 08:29",
+    "subject": "Loop2-loop-v3-1: 3.1g loop-lint",
+    "in": [
+     1
+    ],
+    "tags": []
+   },
+   {
+    "hash": "479afd3",
+    "date": "2026-10-30 02:47",
+    "subject": "Loop2-loop-v3-1: 3.1f strict scope and read-only audits",
+    "in": [
+     1
+    ],
+    "tags": []
+   },
+   {
+    "hash": "464abc8",
+    "date": "2026-10-30 02:33",
+    "subject": "Loop2-loop-v3-1: 3.1e scan-backlog and scan-delta",
+    "in": [
+     1
+    ],
+    "tags": []
+   },
+   {
+    "hash": "b000381",
+    "date": "2026-10-30 02:22",
+    "subject": "Loop2-loop-v3-1: 3.1d conflict route and hand-test turns",
+    "in": [
+     1,
+     2
+    ],
+    "tags": []
+   },
+   {
+    "hash": "093c4e8",
+    "date": "2026-10-30 02:20",
+    "subject": "Loop2-loop-v3-1: re-plan round 2 (trim, scan-backlog, diagram)",
+    "in": [
+     1,
+     2
+    ],
+    "tags": []
+   },
+   {
+    "hash": "665aa6c",
+    "date": "2026-10-30 02:16",
+    "subject": "Loop2-loop-v3-1: 3.1c catch-up points",
+    "in": [
+     1,
+     2
+    ],
+    "tags": []
+   },
+   {
+    "hash": "0909d14",
+    "date": "2026-10-30 02:01",
+    "subject": "Loop2-loop-v3-1: 3.1b approve and merge preflights",
+    "in": [
+     1,
+     2
+    ],
+    "tags": []
+   },
+   {
+    "hash": "ac450d2",
+    "date": "2026-10-30 01:44",
+    "subject": "Loop2-loop-v3-1: 3.1a fix-loop-scripts",
+    "in": [
+     1,
+     2
+    ],
+    "tags": []
+   },
+   {
+    "hash": "c644877",
+    "date": "2026-10-30 01:31",
+    "subject": "Loop2-loop-v3-1: card",
+    "in": [
+     1,
+     2
+    ],
+    "tags": []
+   },
+   {
+    "hash": "8d18f72",
+    "date": "2026-10-29 23:07",
+    "subject": "Loop1-process-v3: loop v3 rules, coding standard, glossary, editorconfig",
+    "in": [
+     0,
+     1,
+     2
+    ],
+    "tags": []
+   }
+  ]
+ }
+}

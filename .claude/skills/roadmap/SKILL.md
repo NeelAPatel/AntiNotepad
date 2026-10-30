@@ -1,16 +1,16 @@
 ---
 name: roadmap
-description: Open the AntiNotepad plan, the local roadmap page rendered from the STATUS "Plan" section (run order, ID-slug, scope, tier, state). Use when the user says "/roadmap", "roadmap", "show the plan" or "plan table".
+description: Open the AntiNotepad project overview served live from STATUS and Git. Use when the user says "/roadmap", "roadmap", "show the plan" or "plan table".
 ---
 
 # /roadmap
 
-The roadmap is the local page `.coord/roadmap.html`. Claude hooks (`tools/roadmap.ps1 -Hook`, on every Edit/Write and at
-the end of every turn) rebuild it from STATUS, and the page reloads itself every 3 seconds, so an open tab stays current.
+The roadmap is served live from the main checkout at `http://localhost:47811`.
 
-1. Run `pwsh -NoProfile -File tools/roadmap.ps1 -Open` (rebuilds and opens the page).
+1. From the main checkout, run `pwsh -NoProfile -File tools/roadmap-serve.ps1 -Background -Open` (starts or reuses the
+   server, then opens `http://localhost:47811`).
 2. Do not rewrite, reorder or add rows: STATUS is the source of truth. If something is wrong, fix STATUS.
 3. In chat, at most three lines: what is next and what needs the user. Name every item as `<ID>-<slug>` with its scope.
 
-Only when the user asks for it elsewhere (phone): publish `.coord/roadmap.html` to the Artifact URL in `tools/roadmap.url`
-(read it first if this session has not).
+Only when the user asks for it elsewhere (phone): run `tools/roadmap-data.ps1 -Snapshot <scratch file>` and publish that
+file to the Artifact URL in `tools/roadmap.url` (read it first if this session has not).

@@ -30,4 +30,39 @@ if (Test-Path $status) {
 "AntiNotepad loop: if this reply is about an item or project work, open it with the status card from docs/loop.md (""Status card""): '>> ID-slug', tier and current phase; the phase strip Request | Findings | Plan | Approve | Build | Check | Hand test | Merge with each phase marked done, current or not reached; sub-sessions add their role (scout, auditor, builder, reviewer, tester) to the first line; Tier with its reason slug; Goal; Now; then a divider and Waiting on you."
 if ($live.Count) { "In flight per STATUS: $($live -join '; ')." } else { 'In flight per STATUS: none.' }
 if ($pastApprove -gt 3) { "WARNING: $pastApprove items past Approve (cap 3)." }
+
+try {
+    $roadmapScript = Join-Path $Root 'tools/roadmap-serve.ps1'
+    if (Test-Path -LiteralPath $roadmapScript -PathType Leaf) {
+        $handler = [System.Net.Http.HttpClientHandler]::new()
+        $handler.UseProxy = $false
+        $client = [System.Net.Http.HttpClient]::new($handler)
+        $client.Timeout = [TimeSpan]::FromMilliseconds(300)
+        $response = $null
+        $roadmapRunning = $false
+        try {
+            $response = $client.GetAsync('http://localhost:47811/health').GetAwaiter().GetResult()
+            if ($response.IsSuccessStatusCode) {
+                $health = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json -ErrorAction Stop
+                $roadmapRunning = ($health.app -eq 'antinotepad-roadmap' -and [int]$health.port -eq 47811)
+            }
+        }
+        catch {
+            # The status card must still print when the roadmap is unavailable.
+        }
+        finally {
+            if ($null -ne $response) { $response.Dispose() }
+            $client.Dispose()
+        }
+
+        if (-not $roadmapRunning) {
+            $powerShell = (Get-Process -Id $PID -ErrorAction Stop).Path
+            Start-Process -FilePath $powerShell -ArgumentList @('-NoProfile', '-File', ('"{0}"' -f $roadmapScript)) -WindowStyle Hidden | Out-Null
+        }
+    }
+}
+catch {
+    # Starting the roadmap is best-effort and does not change the status-card hook.
+}
+
 exit 0

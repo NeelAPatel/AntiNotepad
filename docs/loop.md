@@ -159,10 +159,9 @@ usage is back-and-forth to get things right, so use whatever cuts that:
   of a few lines may be made by the builder session itself and says so in the report.
 - **Loop freeze** (user, 2026-10-30): after v3.1, no new `Loop` items until about five app items have merged; after that,
   loop rules change only when `.coord/lessons.md` shows the same miss twice (the existing self-improvement rule).
-- The plan table: the local page `.coord/roadmap.html` (`/roadmap` opens it). Claude hooks rebuild it in the main checkout
-  on every Edit/Write and at each turn's end, so STATUS edits from any path (Edit, shell, merge) reach it, and the open page
-  reloads itself every 3 seconds. The Artifact (`tools/roadmap.url`) is published only on request. `/next-task` and
-  `/merge-task` keep State current.
+- The plan table: the local server page `http://localhost:47811` (`/roadmap` opens it), live from STATUS and Git. The
+  `UserPromptSubmit` hook starts the server when needed; the Artifact (`tools/roadmap.url`) is published only on request.
+  `/next-task` and `/merge-task` keep State current.
 
 ## IDs and numbering (user, 2026-10-29)
 | Prefix | Covers | Example |
@@ -212,7 +211,8 @@ handover); new checks, scripts, routes or research steps bump the minor version 
   A build session moving into Check or Hand test renames itself to that step (`A1 · review · list-commands`,
   `A1 · test · list-commands`) and changes its role, so the sidebar shows where it is; the master renames it if it
   cannot. Codex models inside a run stay as in `docs/agents.md`.
-- **Roadmap:** every master uses the same local page `.coord/roadmap.html` (`/roadmap`), rebuilt by the hooks from STATUS.
+- **Roadmap:** every master uses the same local server page `http://localhost:47811` (`/roadmap`), served live from STATUS
+  and Git.
 - **Handing over to a new master** (the chat grew long, or the loop version changed): no sub-session mid-step (or each one
   named in STATUS with its state), STATUS "Now" says where every item stands, dev clean and pushed. Retitle the old master
   `Master <N> · Loop v<V> · <slug> (closed)`, stop and archive it. The user opens the new master with:
@@ -302,5 +302,5 @@ Three commands drive the loop: `/next-task` (Request to Approve, then starts Bui
 | `tools/loop-card.ps1` | `UserPromptSubmit` hook: status-card reminder and the items in flight |
 | `.coord/lessons.md` | misses (cause, caught by, should have caught) and per-item reviewer scores; master-owned |
 | `.github/workflows/gate.yml` | CI gate, manual trigger |
-| `tools/roadmap.ps1`, `tools/roadmap.url`, `.claude/skills/roadmap/SKILL.md` | local roadmap page from STATUS (`/roadmap`); Artifact on request |
-| `.claude/settings.json` | hooks: roadmap rebuild (PostToolUse, Stop), status card (UserPromptSubmit); attribution off |
+| `tools/roadmap-data.ps1`, `tools/roadmap-serve.ps1`, `tools/roadmap/index.html`, `tools/roadmap.url`, `.claude/skills/roadmap/SKILL.md` | live roadmap from STATUS and Git (`/roadmap`); snapshot Artifact on request |
+| `.claude/settings.json` | hooks: status card plus roadmap auto-start (UserPromptSubmit); no roadmap rebuild; attribution off |
