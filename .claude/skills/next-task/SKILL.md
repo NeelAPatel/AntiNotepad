@@ -50,9 +50,10 @@ lettered steps (`docs/loop.md`, "Plan"). A touched file over 600 lines: answer t
 Show the user, under the status card: Now -> After, the test plan (code and UI), the gates and what they catch, Files,
 and what you need from them. Ask one question: approve, change, or drop. Record their answer verbatim under
 `## Approve`. Change: back to Plan. Drop: STATUS `dropped`, delete the untracked card on their word.
-On approval, from the master checkout (on dev, at most 3 items past Approve, Files not overlapping theirs):
-`git worktree add .claude/worktrees/<prefix>/<ID-slug> -b <prefix>/<ID-slug> dev`, move the card and audit files into
-the worktree's `.coord/tasks` and `.coord/reports`, and commit them there (`<ID-slug>: card`). STATUS: `approved`.
+On approval, from the master checkout, run
+`pwsh -NoProfile -File tools/approve.ps1 -Task <ID-slug> -Prefix <prefix>` (add `-NoWorktree` only when the user said so).
+FAIL: stop and tell the user the reason. PASS: the script created the branch and committed the card and audit files.
+STATUS: `approved`.
 
 ## 5. Start Build
 Start the Build sub-session titled `<ID> · build · <slug>` (linked, **Sonnet medium**, use_worktree false; names, roles

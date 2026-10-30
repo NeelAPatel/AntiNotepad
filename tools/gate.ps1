@@ -1,3 +1,4 @@
+# Builds and checks an item, recording the results and the tested checkout revision in its gate report.
 [CmdletBinding()]
 param(
     [string]$Task,
@@ -36,6 +37,13 @@ $script:baseRevision = $null
 $script:steps = [Collections.Generic.List[object]]::new()
 $script:buildExitCode = $null
 $script:reportPath = Join-Path $script:repoRoot ".coord/reports/$Task.gate.md"
+$script:head = (& git -C $script:repoRoot rev-parse HEAD)
+if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve HEAD for the gate report.' }
+$trackedChanges = @(& git -C $script:repoRoot status --porcelain --untracked-files=no)
+if ($LASTEXITCODE -ne 0) { throw 'Cannot read tracked changes for the gate report.' }
+if (@($trackedChanges | Where-Object { $_ -cnotmatch '^.. \.coord/STATUS\.md$' }).Count -gt 0) {
+    $script:head += '-dirty'
+}
 
 function Add-Step {
     param(
@@ -237,6 +245,7 @@ function Write-GateReport {
     $lines = [Collections.Generic.List[string]]::new()
     $lines.Add('## Summary')
     $lines.Add("GATE: $gateStatus")
+    $lines.Add("Head: $script:head")
     foreach ($step in $script:steps) { $lines.Add("$($step.Name): $($step.Status) - $($step.Summary)") }
     foreach ($step in $script:steps) {
         $lines.Add('')

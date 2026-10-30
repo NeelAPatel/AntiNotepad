@@ -11,10 +11,10 @@ and, if it had UI checks, `## Hand test` with the user's pass in their own words
 and tagging happen only on the user's explicit go. Every reply opens with the status card.
 `<branch>` is `<prefix>/<ID-slug>`; `<wt>` is `.claude/worktrees/<prefix>/<ID-slug>`.
 
-1. In `<wt>`, check the card: `## Request`, `## Plan`, `## Approve` (`## Go` on era-one cards), `## Check` (no open
-   "ask the user" line) and `## Hand test` are filled. Missing: stop and tell the user which phase was skipped.
-2. Check `git status` and `git diff --name-only dev...<branch>`: only the card's Files and the item's `.coord/tasks` and
-   `.coord/reports` files. Anything else (STATUS included): ask the user. Commit anything still uncommitted on the branch.
+1. From the master checkout, run `pwsh -NoProfile -File tools/merge-preflight.ps1 -Task <ID-slug>`.
+   FAIL: stop and tell the user the reason. For a `-NoWorktree` item, switch to dev before step 3 as the script directs.
+2. Check `git diff --name-only dev...<branch>`: only the card's Files and the item's `.coord/tasks` and
+   `.coord/reports` files. Anything else (STATUS included): ask the user.
 3. In the master checkout (dev): `git merge --squash <branch>`. Conflicts: stop and tell the user (`git merge --abort`
    leaves dev as it was).
 4. Re-gate on dev: `pwsh -NoProfile -File tools/gate.ps1 -Task <ID-slug>` (scope step is expected to warn on dev; build,

@@ -11,6 +11,7 @@ try {
 $status = Join-Path $Root '.coord/STATUS.md'
 
 $live = @()
+$pastApprove = 0
 if (Test-Path $status) {
     $inPlan = $false
     foreach ($l in Get-Content $status -Encoding utf8) {
@@ -19,6 +20,7 @@ if (Test-Path $status) {
         if (-not $inPlan -or $l -notmatch '^\|' -or $l -match '^\|[\s|:-]+\|\s*$') { continue }
         $c = $l.Trim().Trim('|').Split('|') | ForEach-Object { $_.Trim() }
         if ($c.Count -lt 5 -or $c[0] -eq 'Item' -or $c[0] -match '^\*\*' -or $c[0] -match '^Release marker') { continue }
+        if ($c[4] -match '^(approved|building|rework r[0-9]+|checking|accepted|ask-user|hand test|hand-tested)$') { $pastApprove++ }
         if ($c[4] -match '^(done|dropped|planned|needs you|proposed|-)?$') { continue }
         $live += "$($c[0]) ($($c[4]), $($c[2]))"
     }
@@ -27,4 +29,5 @@ if (Test-Path $status) {
 # ASCII only: hook output passes through the console code page.
 "AntiNotepad loop: if this reply is about an item or project work, open it with the status card from docs/loop.md (""Status card""): '>> ID-slug', tier and current phase; the phase strip Request | Findings | Plan | Approve | Build | Check | Hand test | Merge with each phase marked done, current or not reached; sub-sessions add their role (scout, auditor, builder, reviewer, tester) to the first line; Tier with its reason slug; Goal; Now; then a divider and Waiting on you."
 if ($live.Count) { "In flight per STATUS: $($live -join '; ')." } else { 'In flight per STATUS: none.' }
+if ($pastApprove -gt 3) { "WARNING: $pastApprove items past Approve (cap 3)." }
 exit 0
