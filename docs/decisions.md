@@ -4,7 +4,7 @@ Newest first. History before 2026-10-23 (overnight build log and write-up) is in
 `antipad-v*` and `baseline/m8c-v1-compact`.
 
 ## 2026-10-29
-- **Loop v3 process** (Loop1-process-v3; record of the discussion: `.coord/process-redesign.md`): IDs `A` app, `Loop`
+- **Loop v3 process** (Loop1-process-v3; the discussion record `.coord/process-redesign.md` was deleted on 2026-10-31, in git history): IDs `A` app, `Loop`
   dev loop, `D` docs, `T` non-AI tooling, counters reset per era; phase "Go" renamed **Approve**; branches
   `<prefix>/<ID-slug>` with `feat/`, `fix/`, `refactor/`, `docs/`, `chore/`, created at Approve, worktrees mirroring them;
   one squashed commit per item on dev carrying its STATUS edits (no separate status commits); items over about 400

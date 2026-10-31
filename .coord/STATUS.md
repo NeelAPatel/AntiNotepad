@@ -15,7 +15,8 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - **Loop v3.2 is live** (Loop4-retro-fixes, 2026-10-31; v3.1 was Loop2-loop-v3-1). **Loop freeze:** no new `Loop` items until the open questions from
   the T1-roadmap-overview retro are settled (user, 2026-10-31: "once we finalize all open questions, we'll unfreeze loop
   changes"); after that, rules change only on a miss repeated in `.coord/lessons.md`.
-- Codex roles are picked by the job (Loop4-retro-fixes, `docs/agents.md`): quick = Luna medium, terra = Terra medium,
+- **Codex is paused** (user, 2026-10-31: "For the foreseeable time codex is not allowed"). Claude sub-sessions implement and check; nothing launches
+  `codex-run.sh` until the user lifts this. When it returns: Codex roles are picked by the job (Loop4-retro-fixes, `docs/agents.md`): quick = Luna medium, terra = Terra medium,
   worker = Luna xhigh, director = Sol medium; no run caps; Codex checks run offline only. Claude briefs, reviews, commits.
 - Computer Use is off until the user's explicit go-ahead; live checks are done by the user by hand in the dev copy.
 - Never run `AntiNotepad.exe --quit` without `ANTINOTEPAD_DATA`: it targets the installed copy's instance.
@@ -230,7 +231,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   goes lab-first. A34 (lab) was dropped: thick native border, bars broken in all three styles.
 
 ## Plan (user order, 2026-10-29)
-Rendered as the roadmap Artifact (`tools/roadmap.url`; `/roadmap` opens it), republished by a Claude Stop hook on change.
+Shown live by the roadmap server (http://localhost:47811, `/roadmap`); a snapshot Artifact (`tools/roadmap.url`) only on request.
 Format (the script parses this section): `###` = priority; a row with only a bold first cell = block; Item is a numbered
 `<ID>-<slug>` (confirmed by the user), an unnumbered `idea: <slug>` with its `step: <slug>` rows right under it, a
 `Decision: ...` or `Release marker`. Rows run in the order listed; the script numbers them by position. Numbering rules:

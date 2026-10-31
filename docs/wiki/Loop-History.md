@@ -4,7 +4,7 @@ The loop grew from repeatable checks into a process with explicit ownership, app
 
 # Loop History
 
-Version meanings come from `docs/loop.md`, "Sessions". The v2.2 disposition comes from `docs/v2.2/README.md`. The table uses subjects from the rewritten dev history; the archive tag preserves the original era-one history, as recorded in `.coord/STATUS.md`, "Where things are".
+Version meanings come from `docs/loop.md`, "Sessions". The v2.2 notes (`docs/v2.2/`, `docs/loop-v2.2-plan.md`) were deleted on 2026-10-31 as complete; they remain in git history. The table uses subjects from the rewritten dev history; the archive tag preserves the original era-one history, as recorded in `.coord/STATUS.md`, "Where things are".
 
 ## Milestones in dev history
 
@@ -21,7 +21,7 @@ Version meanings come from `docs/loop.md`, "Sessions". The v2.2 disposition come
 
 ## Why there is no active v2.2 page
 
-`docs/v2.2/README.md` maps the absorbed parts: overlap, cap, hand-test ordering, catch-up, conflict triage and rehearsal. A separate conflict Codex round was dropped. Historical activation material is not an instruction to enable another process; the live rules are `docs/loop.md`.
+v3.1 absorbed the useful parts of v2.2: overlap, cap, hand-test ordering, catch-up, conflict triage and rehearsal. A separate conflict Codex round was dropped. Historical activation material is not an instruction to enable another process; the live rules are `docs/loop.md`.
 
 ## What changes a version
 
@@ -32,7 +32,6 @@ For evidence of the latest update, read [Worked Example: Loop2](Worked-Example-L
 ## Sources
 
 - `docs/loop.md` — Sessions, Rules, IDs and numbering, Branches/worktrees/commits.
-- `docs/v2.2/README.md` — absorbed status and step mapping.
 - `docs/coding.md` — Formatting.
 - `docs/agents.md` — Launch and shared run ledger.
 - `.coord/STATUS.md` — history rewrite and archive tags, Where things are.

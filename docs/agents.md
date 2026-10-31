@@ -1,5 +1,8 @@
 # Codex agents
 
+**Paused** (user, 2026-10-31: "For the foreseeable time codex is not allowed"). Nothing launches the wrapper until the user lifts this; Claude
+sub-sessions implement (`docs/loop.md`, "Rules"). This page applies when Codex returns.
+
 ## Launch
 Headless, in the background; the process exit wakes the manager:
 

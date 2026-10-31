@@ -161,6 +161,8 @@ usage is back-and-forth to get things right, so use whatever cuts that:
   the card can be a few lines or none, no audit, no Codex when the Claude session can do it in minutes, and only the
   checks the change touches. A master still lands it as one commit on dev and gives the user a short change list.
 - `Loop` and `D` items keep a short card and a branch (they change how everyone works); Findings can be one paragraph.
+- **Codex is paused** (user, 2026-10-31: "For the foreseeable time codex is not allowed"): until the user lifts it, the builder sub-session implements
+  itself and says so in its report; the Codex rules below wait for its return.
 - **Who builds:** every item, `Loop`, `D` and `T` included, is built by Codex in a builder sub-session, with the role
   picked by the job (`docs/agents.md`); a docs-only change of a few lines may be made by the builder session itself and
   says so in the report. Codex "Done means" lists offline checks only; live servers, browser and screen checks belong to
@@ -205,7 +207,7 @@ compaction. v3.1 was 2026-10-30, `Loop2-loop-v3-1`: approve and merge preflights
 read-only audits, backlog scans with a delta at task time, loop-lint; the dormant v2.2 drop absorbed). v3 was
 `Loop1-process-v3`: Approve phase, A/Loop/D/T IDs and eras, type-prefixed branches and nested worktrees, squash merges
 with STATUS inside, roles, widgets, `docs/coding.md`. v2 was C26-item-card-loop, v2.1
-C28-loop-cheap-checks; v1 was C13-dev-loop-kit through C25. v2.2 was never activated; v3.1 absorbed it (`docs/v2.2/README.md`).
+C28-loop-cheap-checks; v1 was C13-dev-loop-kit through C25. v2.2 was never activated; v3.1 absorbed it (its notes were deleted on 2026-10-31; git history keeps them).
 A merged item that changes the phases, the roles or who runs which phase bumps the major version (new master at the next
 handover); new checks, scripts, routes or research steps bump the minor version (v3.1) and need no new master.
 
