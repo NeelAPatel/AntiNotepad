@@ -38,7 +38,7 @@ The master explains current behavior, relevant files, and risk before recommendi
 CODEX_SANDBOX=read-only bash .coord/tools/codex-run.sh director <ID-slug>-audit .coord/tasks/<ID-slug>-audit.md
 ```
 
-The wrapper passes the brief on stdin to `codex exec`. Director is `gpt-6.1-sol` medium, with wrapper failover on caps or
+The wrapper passes the brief on stdin to `codex exec`. Director is `gpt-6.1-sol` medium, with wrapper failover on
 usage limits. The final audit answers kind, Now, reproduction, Where, risk, tier, and recommendation, ending `READY:`.
 The Haiku chat copies only the report named on this invocation's successful `DONE` line and commits nothing
 (`.claude/skills/next-task/SKILL.md`, step 2; `.coord/tools/codex-run.sh`, `attempt()`; `docs/agents.md`, "Launch").
@@ -94,14 +94,15 @@ path. It runs this command there:
 bash .coord/tools/codex-run.sh director <ID-slug> .coord/tasks/<ID-slug>.md
 ```
 
-The complete card goes on stdin to `codex exec --sandbox workspace-write`. Sol medium directs Luna xhigh workers and
-must spawn `lens_reviewer` (Sol medium) before reporting. Outputs are changed files, the implementation report, wrapper
+The complete card goes on stdin to `codex exec --sandbox workspace-write`. The card names the Codex role picked by the job
+(`quick` Luna medium, `terra` Terra medium, `worker` Luna xhigh, `director` Sol medium); a director must spawn
+`lens_reviewer` (Sol medium) before reporting. Outputs are changed files, the implementation report, wrapper
 last-message report, and logs. Claude commits and pushes; Codex cannot write `.git`
 (`docs/agents.md`, "Launch" and "Briefs"; `.codex/agents/lens-reviewer.toml`; `.claude/skills/next-task/SKILL.md`, step 5).
 
 **Why it is safe.** Codex reads but never edits the card, never commits, and never launches or kills AntiNotepad.
-Headless checks use a task-specific build folder. The wrapper caps run time at 45 minutes by default and stops on
-non-limit failures (`docs/agents.md`, "Briefs"; `.coord/tools/codex-run.sh`, `attempt()`).
+Headless checks use a task-specific build folder. The wrapper stops a run after 45 minutes by default and stops on
+non-limit failures. "Done means" lists offline checks only, since the sandbox cannot bind ports or open a browser (`docs/agents.md`, "Briefs"; `.coord/tools/codex-run.sh`, `attempt()`).
 
 ## 6. Check: compare request, approval, and result
 

@@ -21,9 +21,11 @@ The earlier AntiQuickPad project (spikes A/B, `src/AntiQuickPad`) is retired and
 - Update `.coord/STATUS.md` at every dispatch, milestone and completion. Keep this file minimal; detail goes in linked docs.
 
 ## Roles
-- Implementation: Codex. Director `gpt-6.1-sol` medium, workers `gpt-6-luna` xhigh. Launch and routing: `docs/agents.md`.
-- Manager: the driving Claude session. Writes briefs, gates results (build, selftest, a look in the dev copy), commits (Codex
-  cannot write to .git), relays to the user. Keeps its own implementation to tiny gate fixes.
+- Implementation: Codex, with the role picked by the job (Luna medium for surgical changes, Terra medium or Luna xhigh for
+  harder work). Codex checks run offline only. Launch and routing: `docs/agents.md`.
+- Masters (directors): top-level Claude chats, one per area (app, loop). They plan, dispatch, and alone merge to dev and main.
+- Sub-sessions: one per item or phase. They brief and check Codex, commit on their branch (Codex cannot write to .git),
+  and talk with the user directly about their item. Details: `docs/loop.md`, "Sessions".
 
 ## Read when
 - Starting or resuming work: `.coord/STATUS.md`; the plan: `/roadmap` (local server page `http://localhost:47811`, live from STATUS and git).

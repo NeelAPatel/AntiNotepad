@@ -45,6 +45,9 @@ Where file deleted, requires a fresh scout or audit; Medium/High audits still ru
 
 ### 3. Plan: what the user approves
 - **After**: what it will do, written next to "Now" so the difference is the change.
+- **Expected time**: request to merge, from similar runs in `.coord/logs/usage.tsv` and past cards. Over an hour is said
+  plainly, with a smaller cut offered, even when the user wants the full scope (T1-roadmap-overview: expected 30
+  minutes, took 4 h 45 min, never called).
 - **Scope questions**: anything the request leaves open, asked now (A54 found "all URLs or only shortened ones?" only at
   the hand test).
 - **Test plan**: selftest or `CONTRACTS` rows in code, and the exact UI checks for the hand test.
@@ -140,9 +143,9 @@ usage is back-and-forth to get things right, so use whatever cuts that:
 
 ## Rules
 - A failed gate, a `rework` verdict or a user scope change goes back to Build as `<ID-slug>-r2`, `-r3` (STATUS `rework rN`),
-  with the round's brief listing what changed and why. Max two rework rounds (`-r2`, `-r3`); a third rework (`-r4`)
-  goes to the user. A round's gate and review run under
-  the round's name (`-Task <ID-slug>-rN`): the gate allows the Files of the base card and every round's brief, and the
+  with the round's brief listing what changed and why, written by the item's own sub-session (it saw the failure).
+  Counting: the first build is round 1 (no suffix), so two rework rounds (`-r2`, `-r3`) run without asking; a fourth
+  round (`-r4`) needs the user's go. A round's gate and review run under the round's name (`-Task <ID-slug>-rN`): the gate allows the Files of the base card and every round's brief, and the
   reviews read that round's report plus the base report.
 - Gate reports (`.coord/reports/*.gate.md`) are regenerated on every run and not committed; the result lines go into the
   card's `## Check`.
@@ -153,12 +156,26 @@ usage is back-and-forth to get things right, so use whatever cuts that:
   STATUS. A sub-session that needs a user decision asks it with the card, and records the answer verbatim.
 - Release markers in the STATUS plan: the master asks the user before moving `main`. Only on the user's go.
 - Design changes stay lab-first (`AGENTS.md`): Build to Hand test run on a lab build, and the user approves before the real change.
-- Process, docs and tooling items (`Loop`, `D`, `T`) run the same phases. Findings can be one paragraph, but the card, the
-  gate and the bounds check are not skipped.
-- **Who builds:** every item, `Loop`, `D` and `T` included, is built by Codex in a builder sub-session; a docs-only change
-  of a few lines may be made by the builder session itself and says so in the report.
-- **Loop freeze** (user, 2026-10-30): after v3.1, no new `Loop` items until about five app items have merged; after that,
-  loop rules change only when `.coord/lessons.md` shows the same miss twice (the existing self-improvement rule).
+- **Side tasks take the fast lane** (user, 2026-10-31: side tasks such as roadmap work may skip the pipeline "as its not
+  a critical piece of the project"). `T` items and tooling that does not ship in the product skip whatever does not help:
+  the card can be a few lines or none, no audit, no Codex when the Claude session can do it in minutes, and only the
+  checks the change touches. A master still lands it as one commit on dev and gives the user a short change list.
+- `Loop` and `D` items keep a short card and a branch (they change how everyone works); Findings can be one paragraph.
+- **Who builds:** every item, `Loop`, `D` and `T` included, is built by Codex in a builder sub-session, with the role
+  picked by the job (`docs/agents.md`); a docs-only change of a few lines may be made by the builder session itself and
+  says so in the report. Codex "Done means" lists offline checks only; live servers, browser and screen checks belong to
+  the Claude session (`docs/agents.md`, "What Codex can and cannot check").
+- **Progress checks need evidence:** "is it done?" is answered from two samples about 30 seconds apart, never from one
+  timestamp (`docs/agents.md`).
+- **Rule overrides:** when the user asks for something a rule forbids, the chat names the rule once; if the user still
+  says go, it proceeds and logs the override in the item's `.coord/lessons.md` row, so repeated overrides show up as a
+  rule worth changing.
+- **Proposals go into STATUS at once:** every item or idea a chat names (a follow-up, a "Noticed" side bug, a backlog
+  idea) becomes an unnumbered `idea:` or `proposed` plan row when it is named, not later at Merge.
+- **Merging:** only a master merges to dev or moves `main`. A sub-session suggests the merge to its master (or the user
+  tells the master directly) and merges only into branches it created itself, such as catching up from dev.
+- **Loop freeze** (user, 2026-10-31): lifted for `Loop4-retro-fixes`; after it, loop rules change only when
+  `.coord/lessons.md` shows the same miss twice (the existing self-improvement rule) or the user asks.
 - The plan table: the local server page `http://localhost:47811` (`/roadmap` opens it), live from STATUS and Git. The
   `UserPromptSubmit` hook starts the server when needed; the Artifact (`tools/roadmap.url`) is published only on request.
   `/next-task` and `/merge-task` keep State current.
@@ -182,7 +199,9 @@ usage is back-and-forth to get things right, so use whatever cuts that:
 - Always write `<ID>-<slug>` plus its scope, never a bare ID or a range.
 
 ## Sessions: master, sub-sessions, names (user, 2026-10-29)
-**Loop version: v3.1** (2026-10-30, `Loop2-loop-v3-1`: approve and merge preflights, catch-up with dev, strict scope,
+**Loop version: v3.2** (2026-10-31, `Loop4-retro-fixes`: Codex roles by job and no run caps, offline-only Codex checks,
+expected time in the plan, a side-task fast lane, masters per area with sub-sessions per phase, master notes after
+compaction. v3.1 was 2026-10-30, `Loop2-loop-v3-1`: approve and merge preflights, catch-up with dev, strict scope,
 read-only audits, backlog scans with a delta at task time, loop-lint; the dormant v2.2 drop absorbed). v3 was
 `Loop1-process-v3`: Approve phase, A/Loop/D/T IDs and eras, type-prefixed branches and nested worktrees, squash merges
 with STATUS inside, roles, widgets, `docs/coding.md`. v2 was C26-item-card-loop, v2.1
@@ -190,27 +209,37 @@ C28-loop-cheap-checks; v1 was C13-dev-loop-kit through C25. v2.2 was never activ
 A merged item that changes the phases, the roles or who runs which phase bumps the major version (new master at the next
 handover); new checks, scripts, routes or research steps bump the minor version (v3.1) and need no new master.
 
-- **One master chat at a time** orchestrates: it owns STATUS and the roadmap, runs Request to Approve and Merge, and
-  starts sub-sessions. It never runs Codex, builds or hand-test launches itself; its own reading is the Low-tier scout.
-- **Loop discussion chat** (optional, at most one): observes and discusses the loop beside the master, proposes `idea:`
-  rows for the master to number; it edits no STATUS, merges nothing and runs no item unless the user hands it one
-  (`Loop2-loop-v3-1` was such a hand-over).
+- **The picture** (user, 2026-10-30): the user is the CEO; masters are directors, one per area (today the app master and
+  the loop chat for `Loop` and `T`); sub-sessions are managers who hire Codex for one item or phase and let it go when
+  done. It is a guide, not a wall: the user talks to either level directly. Testing an item or changing its scope goes
+  to its sub-session; backlog and cross-item matters go to the master. Assume the master always finds out; it may give
+  its view through the sub-session but does not override what the user asked there.
+- **A master** owns its area's STATUS rows and the roadmap, runs Request to Approve and Merge, checks Files overlap
+  before dispatching (`tools/files-overlap.ps1`), and starts sub-sessions. It never runs Codex, builds or hand-test
+  launches itself; its own reading is the Low-tier scout. Masters of different areas tell each other in one line before
+  a merge when both are active.
+- **Master notes:** each master keeps `.coord/directors/<slug>.md` (gitignored; slug from its name): its role, open
+  threads, decisions waiting on the user, linked sub-sessions, and where it left off. It updates the file when a
+  decision is made, not later. After a context compaction a `SessionStart` hook (`tools/director-notes.ps1`) prints the
+  notes back into the chat, so the master resumes from its own notes rather than the summary alone.
 - **Master name:** `Master <N> · Loop v<V> · <slug>`, N one higher than the last master (STATUS "Working rules" names the
   current one), V the loop version above (written with "v" so it never reads as a `Loop` item ID), the slug the
   remaining work it was opened for. Example: `Master 2 · Loop v3 · era-two-start`.
 - **Sub-session per step, well scoped:** each has one item, one step, one worktree, and a brief that names its done
-  condition. Name: `<ID> · <step> · <slug>`, for example `A1 · build · list-commands`. Its **role** is shown in its
+  condition. Several sub-sessions per item, one per phase, is normal and often better (`A55` ran an audit chat, then a
+  test chat); the item card is what they share. A sub-session records the user's scope changes on its card in the
+  user's words and gets a design approval from the user itself. Name: `<ID> · <step> · <slug>`, for example `A1 · build · list-commands`. Its **role** is shown in its
   status card.
   | Step | Role | When | Model | Does |
   |---|---|---|---|---|
   | `scan` | `scout` | rarely: a Low scout too big for the master | Haiku | read-only findings, no Codex |
-  | `audit` | `auditor` | Findings for Medium, High | Haiku | runs the Codex findings audit, commits it, reports |
+  | `audit` | `auditor` | Findings for Medium, High | Haiku | runs the Codex findings audit, leaves it untracked until Approve, reports |
   | `build` | `builder` | after Approve | Sonnet medium | runs Codex, then Check (`/review-task`) and the hand-test handover |
   | `review` | `reviewer` | Check; a fresh one only when the build session stalled | Sonnet medium | `/review-task` |
   | `test` | `tester` | the hand test; a separate one only for a re-test the user asked for | Sonnet medium | launches the build, gives the UI checks, records the result |
   A build session moving into Check or Hand test renames itself to that step (`A1 · review · list-commands`,
   `A1 · test · list-commands`) and changes its role, so the sidebar shows where it is; the master renames it if it
-  cannot. Codex models inside a run stay as in `docs/agents.md`.
+  cannot. The Codex role for each run is picked by the job (`docs/agents.md`).
 - **Roadmap:** every master uses the same local server page `http://localhost:47811` (`/roadmap`), served live from STATUS
   and Git.
 - **Handing over to a new master** (the chat grew long, or the loop version changed): no sub-session mid-step (or each one
@@ -235,7 +264,8 @@ handover); new checks, scripts, routes or research steps bump the minor version 
   paths; Codex runs from the worktree's own `.coord/tools/codex-run.sh`. **At most 3 items** past Approve at once, and
   only if their Files lists do not overlap. After Check accepts, the implementation sub-session runs `tools/dev.ps1`
   from the worktree immediately before the hand checks; it verifies the dev badge and EXE/DATA/log paths. One dev copy
-  runs at a time, so hand tests take turns, oldest accepted item first.
+  runs at a time, so up to 3 items can build in parallel but hand tests take turns, oldest accepted item first.
+  Without worktrees there is no parallel work at all (user, 2026-10-30).
 - **No worktree** (only when the user says so, docs or tooling items): the branch is checked out in the main checkout
   (`tools/approve.ps1 -NoWorktree`) and nothing else runs until it merges.
 - **Before Approve** there is no branch: the card and any audit brief and report live untracked in the master checkout;
@@ -293,7 +323,7 @@ Three commands drive the loop: `/next-task` (Request to Approve, then starts Bui
 | `product/AntiNotepad/SelfTest/Contracts.cs` | the `CONTRACTS` table of cross-feature promises |
 | `.agents/skills/lens-review/SKILL.md` | Codex review checklist (logic, coupling, reliability, plan bounds, proof rule) |
 | `.codex/agents/lens-reviewer.toml` | Codex role the director spawns before reporting |
-| `.coord/tools/codex-run.sh` | Codex wrapper: tiers, failover, caps (`docs/agents.md`) |
+| `.coord/tools/codex-run.sh` | Codex wrapper: roles by job, failover on usage limits, ledger (`docs/agents.md`) |
 | `.claude/agents/design-reviewer.md` | Claude design reviewer (Opus, read-only) |
 | `.claude/skills/next-task/SKILL.md` | `/next-task [ID-slug]`: Request, Findings, Plan, Approve, start Build |
 | `.claude/skills/scan-backlog/SKILL.md` | `/scan-backlog [slug ...]`: snapshot scouts and proposed backlog order |
@@ -303,4 +333,5 @@ Three commands drive the loop: `/next-task` (Request to Approve, then starts Bui
 | `.coord/lessons.md` | misses (cause, caught by, should have caught) and per-item reviewer scores; master-owned |
 | `.github/workflows/gate.yml` | CI gate, manual trigger |
 | `tools/roadmap-data.ps1`, `tools/roadmap-serve.ps1`, `tools/roadmap/index.html`, `tools/roadmap.url`, `.claude/skills/roadmap/SKILL.md` | live roadmap from STATUS and Git (`/roadmap`); snapshot Artifact on request |
-| `.claude/settings.json` | hooks: status card plus roadmap auto-start (UserPromptSubmit); no roadmap rebuild; attribution off |
+| `tools/director-notes.ps1` | `SessionStart` hook after compaction: prints the master's `.coord/directors/<slug>.md` |
+| `.claude/settings.json` | hooks: status card plus roadmap auto-start (UserPromptSubmit), master notes after compaction (SessionStart); attribution off |

@@ -4,7 +4,7 @@ Rework round of `<ID-slug>` (`docs/loop.md`). Read the item card `.coord/tasks/<
 Contracts and "For Codex" section still apply unless this file says otherwise.
 
 Tier: <same as the card, or raised: why>
-Role: <director | worker>
+Role: <quick | terra | worker | director>, because <one-line reason>
 
 ## Why this round
 <Exactly what failed or changed: the failing gate lines, the proven review findings, or the user's scope change in their
@@ -18,6 +18,7 @@ Files added for this round only (the gate allows the card's Files plus these).
 - `product/AntiNotepad/<path>`
 
 ## Done means
+Offline checks only (`docs/agents.md`, "What Codex can and cannot check").
 - <observable result>
 - Build 0 warnings, `SELFTEST PASS`, `pwsh -NoProfile -File tools/gate.ps1 -Task <ID-slug>-rN -Offline` passes.
 

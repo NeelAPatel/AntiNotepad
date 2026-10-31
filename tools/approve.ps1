@@ -74,7 +74,7 @@ try {
         throw 'research file must be untracked'
     }
     $files = @($untracked | Where-Object {
-        $_ -ceq $card -or $_ -ceq $research -or $_ -cmatch "^\.coord/tasks/$([regex]::Escape($Task))-.*\.md$" -or
+        $_ -ceq $card -or $_ -ceq $research -or $_ -cmatch "^\.coord/tasks/$([regex]::Escape($Task))[.-]" -or
         $_ -cmatch "^\.coord/reports/$([regex]::Escape($Task))-"
     })
     if ($NoWorktree) { Write-Host "COMMAND: git switch -c $branch dev" }

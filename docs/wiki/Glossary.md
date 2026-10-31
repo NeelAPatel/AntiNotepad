@@ -43,13 +43,13 @@ These definitions follow `docs/glossary.md`, “People and sessions,” `docs/lo
 
 | Term | Plain meaning |
 |---|---|
-| Master | One Claude main chat coordinating planning and Merge; its model is not fixed in the rules |
-| Loop discussion chat | Optional observer beside the master; runs no item unless the user hands it one |
+| Master | Top-level Claude chat for one area (app, loop); plans, dispatches and alone merges to dev and main |
+| Master notes | `.coord/directors/<slug>.md`, gitignored; reloaded into the master after a context compaction |
 | Sub-session / sub-chat | Linked Claude chat for one item's step; sidebar title and status card show its role |
 | Scout / auditor | Scout reads evidence; auditor launches and relays a read-only Codex Findings run |
 | Builder / reviewer / tester | Sonnet medium roles for Build, Check, and Hand test; normally one chat renamed as it advances |
 | Codex director | Headless Sol medium run that delegates implementation and obtains lens review |
-| Codex worker | Luna xhigh subagent or wrapper worker-tier run; distinct from a Claude sub-chat |
+| Codex role | `quick`, `terra`, `worker`, `director`, `reviewer`, `backup`: model and effort picked by the job (`docs/agents.md`) |
 | Lens reviewer | Codex subagent checking proven logic, coupling, and reliability problems |
 | Fresh reviewer | Separate headless Codex run used at Check for Medium/High |
 | Design reviewer | Read-only Opus Claude subagent checking architecture for High |

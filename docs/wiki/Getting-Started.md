@@ -1,6 +1,6 @@
 **In short**
 
-Start in one master chat and describe the change you want in ordinary words.
+Start in the master chat for the area (the app, or the loop and tooling) and describe the change you want in ordinary words.
 The master gathers evidence and asks you to approve a plan before a builder starts.
 For visible work, you try the accepted build in the dev copy, report the result, and tell the master to merge it
 (`docs/loop.md`, "Triggers in practice").
@@ -25,7 +25,7 @@ These are the tools the repository uses, not an installer checklist or a claim t
 
 ## Open the master chat
 
-Keep one master at a time. When replacing one, finish or name its active sub-sessions in STATUS, make dev clean and
+Keep one master per area (`docs/loop.md`, "Sessions", "The picture"). When replacing one, finish or name its active sub-sessions in STATUS, make dev clean and
 pushed, and close/archive the old master first (`docs/loop.md`, "Sessions").
 Use the handover prompt from that section, replacing its name placeholders:
 

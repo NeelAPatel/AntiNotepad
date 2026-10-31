@@ -19,6 +19,7 @@ Branch: `<feat|fix|refactor|docs|chore>/<ID-slug>` in `.claude/worktrees/<prefix
 
 ## Plan
 - **After:** <what it will do, next to "Now">
+- **Expected time:** <request to merge, from similar rows in `.coord/logs/usage.tsv` and past cards; say so plainly when it is over an hour>
 - **Must not change:** <behavior, look or files that stay as they are>
 - **Scope questions:** <asked at Approve and answered there, or "None">
 - **Test plan, code:** <selftest checks and `CONTRACTS` rows, named>
@@ -41,7 +42,7 @@ promise and for every bug fixed.
 <The user's answer, verbatim, with the date: go, or the scope change.>
 
 ## For Codex
-Role: <director (gpt-6.1-sol medium) | worker (gpt-6-luna xhigh)>. Product `product/AntiNotepad`. The branch is already
+Role: <quick | terra | worker | director> (`docs/agents.md`), because <one-line reason>. Product `product/AntiNotepad`. The branch is already
 checked out: never switch, merge or commit (you cannot write to `.git`). Read `AGENTS.md`, then the files above. Line
 numbers are from the current tree; re-read before editing.
 
@@ -54,7 +55,7 @@ Constraints:
   re-runs it online.
 - Never launch or kill AntiNotepad. Never run `--quit`. Never edit `.coord/STATUS.md` or this card.
 
-Done means:
+Done means (offline checks only: build, selftest, gate, script checks, files; never ports, servers, browser or screen):
 - <observable result 1, from the Plan's "After">
 - The Plan's code tests exist and pass; build 0 warnings, `SELFTEST PASS`, the gate passes.
 

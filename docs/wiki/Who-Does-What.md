@@ -19,15 +19,15 @@ Source: `docs/loop.md`, "Phases", "Triggers in practice"; `.claude/skills/next-t
 
 ### Master
 
-- **Kind/model:** one main Claude chat; the rules do not fix its model or effort.
+- **Kind/model:** a top-level Claude chat, one per area (the app; the loop and tooling); the rules do not fix its model or effort.
 - **Started by:** the user's new-master prompt in `docs/loop.md`, "Sessions"; [Getting Started](Getting-Started) quotes it in full. Its opening is: "You are `Master <N+1> · Loop v<V> · <slug>` for AntiNotepad."
 - **Given:** `AGENTS.md`, all of `docs/loop.md`, `.coord/STATUS.md`, then the user's request and the item card. `/next-task` is defined in `.claude/skills/next-task/SKILL.md`.
-- **May/may not:** owns Request through Approve, STATUS, the roadmap and Merge; does the short Low-tier scout; starts linked sub-chats. It does not launch Codex, build or launch the hand test itself. It cannot silently approve an idea's scope for the user.
+- **May/may not:** owns Request through Approve, its area's STATUS rows, the roadmap and Merge (only masters merge to dev and main); keeps its notes in `.coord/directors/<slug>.md`; does the short Low-tier scout; starts linked sub-chats. It does not launch Codex, build or launch the hand test itself. It cannot silently approve an idea's scope for the user.
 - **Leaves:** the approved card, linked sessions, current STATUS, and the merged item plus lessons on dev through `/merge-task`.
 
 Source: `docs/loop.md`, "Sessions"; `.claude/skills/next-task/SKILL.md`, steps 1–5; `.claude/skills/merge-task/SKILL.md`, steps 1–8.
 
-The optional **loop discussion chat** is a separate main chat, with no fixed model. It observes the loop and proposes ideas; it edits no STATUS, merges nothing and runs no item unless the user hands one over. Loop2-loop-v3-1 was that exception (`docs/loop.md`, "Sessions"; `.coord/tasks/Loop2-loop-v3-1.md`, opening and Approve).
+Since loop v3.2 the loop chat is the master for `Loop` and `T` items, beside the app master (`docs/loop.md`, "Sessions", "The picture"). Sub-chats talk with the user directly about their item and suggest merges to their master.
 
 ## Claude sub-chats
 
@@ -52,7 +52,7 @@ Source: `.coord/templates/scan.md`; `.claude/skills/scan-backlog/SKILL.md`, step
 - **May/may not:** no product edits or commits before Approve; no report reuse from an earlier run.
 - **Leaves:** the audit report path, its `READY:` line and the wrapper's last lines.
 
-Source: `.claude/skills/next-task/SKILL.md`, step 2. The rule files are inconsistent: `docs/loop.md:208` (Sessions) says the auditor "commits it," while `docs/loop.md:241-242` (Branches) defers the commit to Approve and `.claude/skills/next-task/SKILL.md:37-46` (step 2) says to commit nothing. This wiki follows the skill's step 2: no commits before Approve.
+Source: `.claude/skills/next-task/SKILL.md`, step 2. The auditor commits nothing; the report stays untracked until Approve (`docs/loop.md`, "Sessions" and "Branches").
 
 ### Builder
 
@@ -111,7 +111,7 @@ Source: `.coord/templates/findings.md`; `.claude/skills/next-task/SKILL.md`, ste
 
 - **Kind/model:** headless Codex run, `gpt-6.1-sol` medium, delegating to Luna workers.
 - **Started by:** builder runs `bash .coord/tools/codex-run.sh director <ID-slug> .coord/tasks/<ID-slug>.md` from the item worktree.
-- **Given/opening:** the whole card on stdin, including its For Codex instructions. The exact template role line starts: "Role: <director (gpt-6.1-sol medium) | worker (gpt-6-luna xhigh)>. Product `product/AntiNotepad`." The filled card selects the role; the template is not an additional hidden prompt.
+- **Given/opening:** the whole card on stdin, including its For Codex instructions. The template role line asks for a role picked by the job with a one-line reason: "Role: <quick | terra | worker | director> (`docs/agents.md`), because <one-line reason>." The filled card selects the role; the template is not an additional hidden prompt.
 - **May/may not:** implements only the approved After and Files; stops if Findings proves wrong; never edits STATUS or the card. Before reporting it spawns `lens_reviewer`, fixes proven issues or explains why not.
 - **Leaves:** implementation plus the nine-section report requested by `.coord/templates/item.md`; wrapper last message and log.
 
@@ -119,7 +119,7 @@ Source: `.coord/templates/item.md`, "For Codex"; `docs/agents.md`, "Briefs"; `.c
 
 ### Codex workers
 
-- **Kind/model:** Codex subagents delegated by the director, `gpt-6-luna` xhigh. The wrapper also supports a separate headless `worker` tier with that model.
+- **Kind/model:** Codex subagents delegated by the director, or a direct headless run in a role picked by the job: `quick` (Luna medium), `terra` (Terra medium), `worker` (Luna xhigh).
 - **Started by/given:** the director delegates a bounded task; the rules fix neither a per-worker command nor an exact opening prompt. A direct worker run uses `bash .coord/tools/codex-run.sh worker <ID-slug> <brief-file>` and the same stdin mechanism.
 - **May/may not:** obey the parent/card scope and Codex restrictions. A worker without spawning performs the same lens checklist itself and says so.
 - **Leaves:** delegated results to the director, or the card-format report for a direct worker run.
@@ -146,11 +146,11 @@ Source: `.codex/agents/lens-reviewer.toml`; `.agents/skills/lens-review/SKILL.md
 
 Source: `.claude/skills/review-task/SKILL.md`, step 3; `.coord/templates/review.md`; `.coord/tools/codex-run.sh`, `tier`.
 
-### Backup and run counter
+### Backup and failover
 
-The backup is a headless `gpt-5.6-luna` xhigh run with the same brief and sandbox as the attempt it replaces. It has no separate role opening: stdin still contains the original card/audit/review brief. `.coord/tools/codex-run.sh`, `next`, defines director → worker → backup → stop and reviewer → backup → stop.
+The backup is a headless `gpt-5.6-luna` xhigh run with the same brief and sandbox as the attempt it replaces. It has no separate role opening: stdin still contains the original card/audit/review brief. `.coord/tools/codex-run.sh`, `next`, defines quick, worker and reviewer → backup; terra and director → worker; backup → stop.
 
-Failover happens on a reached counter cap or a matching usage/rate-limit/capacity error. Other failures, including the timeout, stop rather than retry. Default counters per date/budget tag are director 20, worker 10, reviewer 10, backup 5. These count wrapper attempts, including failures, rather than tokens or delegated subagent calls. `CODEX_MAX_DIRECTOR`, `CODEX_MAX_WORKER`, `CODEX_MAX_REVIEWER` and `CODEX_MAX_BACKUP` override caps; `CODEX_BUDGET_TAG` changes the bucket. `CODEX_TIMEOUT_MIN` defaults to 45 minutes; `CODEX_DRY=1` prints the plan without a run (`.coord/tools/codex-run.sh`, `tier`, `attempt` and main loop).
+Failover happens only on a matching usage/rate-limit/capacity error; there are no run caps (user, 2026-10-30). Other failures, including the timeout, stop rather than retry. `CODEX_EFFORT` overrides one run's effort; `CODEX_BUDGET_TAG` changes the ledger tag. `CODEX_TIMEOUT_MIN` defaults to 45 minutes; `CODEX_DRY=1` prints the plan without a run (`.coord/tools/codex-run.sh`, `tier`, `attempt` and main loop).
 
 The ledger and logs are under the main checkout's .coord/logs/, found through Git's common directory so worktree removal does not lose them. Last-message output goes under the invoking checkout's `.coord/reports/`. The successful role determines the output suffix, so a failover audit must use the DONE line rather than assume a director filename (`.coord/tools/codex-run.sh`, `MAIN`, `LEDGER`, `attempt`; `.claude/skills/next-task/SKILL.md`, step 2).
 
@@ -199,7 +199,7 @@ Hook wiring is explicit in `.claude/settings.json`: UserPromptSubmit has a 15-se
 - `.coord/templates/item.md`, `.coord/templates/findings.md`, `.coord/templates/review.md`, `.coord/templates/scan.md` — exact payload openings.
 - `.codex/agents/lens-reviewer.toml`, `.agents/skills/lens-review/SKILL.md` — in-run reviewer and proof rule.
 - `.claude/agents/design-reviewer.md` — design-review role and restrictions.
-- `.coord/tools/codex-run.sh` — actual stdin launch, caps, failover and outputs.
+- `.coord/tools/codex-run.sh` — actual stdin launch, roles, failover and outputs.
 - `.claude/settings.json`, `tools/loop-card.ps1`, `tools/roadmap-serve.ps1` — hook wiring and outputs.
 - `tools/approve.ps1`, `tools/files-overlap.ps1`, `tools/catch-up.ps1`, `tools/merge-preflight.ps1` — handoff checks.
 - `tools/gate.ps1`, `tools/check-platform-seam.ps1`, `tools/loop-lint.ps1`, `tools/loop-lint.allow` — scripted validation.

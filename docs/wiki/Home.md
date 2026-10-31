@@ -12,7 +12,7 @@ Guide dated **2026-10-30**, for loop **v3.1** (`docs/loop.md`, "Sessions").
 ## Why use this instead of one long chat?
 
 The loop gives each job a bounded brief and a worker suited to it: Haiku for launch-and-relay audits and backlog scouts,
-Sonnet medium for build/check/test sub-chats, and Codex Sol medium with Luna xhigh workers for implementation
+Sonnet medium for build/check/test sub-chats, and a Codex role picked by the job for implementation (Luna medium, Terra medium, Luna xhigh or Sol medium)
 (`docs/loop.md`, "Sessions"; `docs/agents.md`, "Launch"). This is how it assigns the cheapest capable worker per job;
 the files specify routing, not a measured cost saving.
 

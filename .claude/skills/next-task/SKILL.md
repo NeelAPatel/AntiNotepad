@@ -50,8 +50,10 @@ Answer the card's Findings lines with evidence. Never skip this, whatever the ti
 - STATUS: `findings`.
 
 ## 3. Plan
-Fill the card's `## Plan`, `## Files` (exact paths; the gate reads them), `## Contracts`, `Tier:` and "For Codex" (role,
-Done means). Pick gates from the menu in `docs/loop.md`: the tier's defaults plus what this item needs, each with what it
+Fill the card's `## Plan`, `## Files` (exact paths; the gate reads them), `## Contracts`, `Tier:` and "For Codex" (role
+picked by the job with a one-line reason, `docs/agents.md`; Done means with offline checks only). Write "Expected time"
+from similar runs in `.coord/logs/usage.tsv`; over an hour, say so and offer a smaller cut. Side tasks (`T`, tooling
+that does not ship) take the fast lane in `docs/loop.md` "Rules" instead of this skill. Pick gates from the menu in `docs/loop.md`: the tier's defaults plus what this item needs, each with what it
 catches here. Put every open scope question in "Scope questions" now. Over about 400 lines of product code: split into
 lettered steps (`docs/loop.md`, "Plan"). A touched file over 600 lines: answer the "one job?" check from
 `docs/coding.md`. STATUS: `plan ready (<tier>)`.

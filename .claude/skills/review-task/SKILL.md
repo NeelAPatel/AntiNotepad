@@ -40,10 +40,11 @@ deviations, and `git diff --stat dev...HEAD`. Write `## Check` on the card:
 - Gate and review result lines.
 - One line per difference: **within plan**, **justified** (why the user need not decide), or **ask the user**.
 - Comments and formatting in the changed files follow `docs/coding.md` (on touch); a gap is a `code` rework line.
-- "Noticed": side bugs or follow-ups, as proposals only.
+- "Noticed": side bugs or follow-ups, as proposals only. Tell the master each one in one line now, so it becomes an
+  `idea:` row in STATUS at once (`docs/loop.md`, "Proposals go into STATUS at once").
 Then decide:
 - Any review `rework`, a blocker or major finding, a missing Behavior changes entry, or a Plan's "Must not change" broken:
-  triage it (4a). Max two rework rounds (`-r2`, `-r3`); a third rework (`-r4`) goes to the user.
+  triage it (4a). Two rework rounds (`-r2`, `-r3`) run without asking; a fourth round (`-r4`) needs the user's go.
 - Any "ask the user" line, or a review `ask-user`: ask the user that one question with the card; STATUS `ask-user`.
   A scope change they give becomes a round brief with their words under "Why this round".
 - Otherwise accept. Commit the card and reports on the branch (`<ID-slug>: check`). STATUS `accepted`.
@@ -55,7 +56,7 @@ findings, and route by it (`docs/loop.md`, "Triage, lessons, scores"):
 |---|---|
 | `code`: the build does not do what the Plan says | `<ID-slug>-rN` round brief from `.coord/templates/round.md` with exactly the failing lines or proven findings; relaunch Codex; run this skill again when it exits |
 | `test`: a selftest, contract or probe is wrong, not the product | round brief limited to the test files; say so under "Why this round" |
-| `plan`: Findings or Plan were wrong (wrong cause, missed caller, impossible After) | stop; tell the master with the card; the master re-plans and asks the user to approve again |
+| `plan`: Findings or Plan were wrong (wrong cause, missed caller, impossible After) | stop; write the corrected plan as the round brief, ask the user to approve it, and tell the master in one line |
 | `env`: tooling, build cache, flaky run, sandbox | re-run the gate once; still failing: one-line gate fix if it is the manager's to make, else tell the master |
 | `conflict`: a catch-up stopped on conflicts | resolve on the branch in the item's session, keeping both sides as the two plans intend; commit the merge and re-run the gate. If the other item changed something this item's Plan relies on (a semantic clash), abort the merge (`git merge --abort`) and route it as `plan` instead |
 | `judgment`: only the user can decide | ask the user that one question with the card; STATUS `ask-user` |

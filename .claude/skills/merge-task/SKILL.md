@@ -21,8 +21,8 @@ and tagging happen only on the user's explicit go. Every reply opens with the st
    leaves dev as it was).
 4. Re-gate on dev: `pwsh -NoProfile -File tools/gate.ps1 -Task <ID-slug>` (scope step is expected to warn on dev; build,
    selftest and seam must pass; the gate report is not committed). Fail: tell the user, `git reset --merge`, do not push.
-5. STATUS: the plan row's State cell `done`, "Now" updated, gate line, the card's "Noticed" follow-ups as unnumbered
-   plan or Backlog rows. `.coord/lessons.md`: copy the card's "Misses" lines, add the item's Scores row (rework rounds,
+5. STATUS: the plan row's State cell `done`, "Now" updated, gate line, any of the card's "Noticed" follow-ups not
+   already in STATUS as unnumbered plan or Backlog rows. `.coord/lessons.md`: copy the card's "Misses" lines, add the item's Scores row (rework rounds,
    gate fails, Codex review proven findings, design review findings, hand-test fails). If a Misses cause and "should
    have caught" pair now appears twice without a rule change, add an unnumbered `idea:` plan row naming the rule or bot
    file to change (e.g. `.agents/skills/lens-review/SKILL.md`) and tell the user; never edit the rule yourself here.

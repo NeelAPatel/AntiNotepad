@@ -33,13 +33,16 @@ UI region names (the parts of the window) come with `D1-ui-region-names`.
 - **Loop freeze**: the pause on new `Loop` items and repeat-miss rule (`docs/loop.md`, "Rules").
 
 ## People and sessions
-- **Master**: the one Claude chat that runs the loop, named `Master <N> · Loop v<V> · <slug>`.
+- **Master**: a top-level Claude chat for one area (app, loop) that plans, dispatches and alone merges, named
+  `Master <N> · Loop v<V> · <slug>`; a director in the user's picture.
+- **Master notes**: `.coord/directors/<slug>.md`, gitignored; reloaded after a context compaction.
 - **Sub-session**: a linked Claude chat for one step of one item, named `<ID> · <step> · <slug>`.
 - **Role**: what a sub-session does: `scout`, `auditor`, `builder`, `reviewer`, `tester`; shown in its status card.
-- **Codex director / worker**: the Codex models that implement (`docs/agents.md`).
+- **Codex role**: `quick`, `terra`, `worker`, `director`, `reviewer`, `backup`; model and effort picked by the job
+  (`docs/agents.md`).
+- **Fast lane**: side tasks (`T`, tooling that does not ship) skip the steps that do not help (`docs/loop.md`, "Rules").
 - **Lens reviewer**: the Codex reviewer a director spawns before reporting.
 - **Design reviewer**: the read-only Claude reviewer for High-tier items.
-- **Loop discussion chat**: optional chat that discusses the loop and proposes ideas to the master; it runs no item by default.
 
 ## Git
 - **dev**: the integration branch; one commit per item.
