@@ -26,7 +26,7 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 | 2026-10-30 | T1-roadmap-overview | Check T1a | judgment | manager | manager | builder skipped the live refresh check in Done means; loop chat ran it | - |
 | 2026-10-30 | T1-roadmap-overview | Hand test r1 | plan | hand-test | plan | approved lane design never drew where a branch starts or joins | - |
 | 2026-10-30 | T1-roadmap-overview | Check r2 | plan | manager | plan | r2 brief set the fork parent as merge-base with dev; wrong for branch-from-branch | - |
-| 2026-10-30 | T1-roadmap-overview | Build r3 | env | user | plan | Codex runs kept starting servers its sandbox cannot bind; xhigh on a Low item; user stopped the run | idea: codex-speed-by-tier |
+| 2026-10-30 | T1-roadmap-overview | Build r3 | env | user | plan | Codex runs kept starting servers its sandbox cannot bind; xhigh on a Low item; user stopped the run; override: loop chat finished r3 on the user's go (rule "Codex implements") | idea: codex-speed-by-tier |
 
 ## Scores
 One row per merged item: what each check found. A reviewer with many empty rows on items that later had misses is not

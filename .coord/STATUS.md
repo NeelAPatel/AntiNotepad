@@ -12,8 +12,9 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
   - Both squash-merge onto dev from the main checkout: before a merge, `git status`, check the other has no merge in
     progress, and tell the other chat in one line.
   - The previous master, `Master 1 - loop v2 - bugs-design-system-ownership` ("Era0 - ..."), is closed (2026-10-29).
-- **Loop v3.1 is live** (Loop2-loop-v3-1, 2026-10-30). **Loop freeze:** no new `Loop` items until about five app items
-  have merged; after that, rules change only on a miss repeated in `.coord/lessons.md`.
+- **Loop v3.1 is live** (Loop2-loop-v3-1, 2026-10-30). **Loop freeze:** no new `Loop` items until the open questions from
+  the T1-roadmap-overview retro are settled (user, 2026-10-31: "once we finalize all open questions, we'll unfreeze loop
+  changes"); after that, rules change only on a miss repeated in `.coord/lessons.md`.
 - Codex is back (user, 2026-10-25): director Sol medium delegating to Luna xhigh; Claude briefs, reviews, commits.
 - Computer Use is off until the user's explicit go-ahead; live checks are done by the user by hand in the dev copy.
 - Never run `AntiNotepad.exe --quit` without `ANTINOTEPAD_DATA`: it targets the installed copy's instance.
@@ -249,7 +250,7 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | Loop3-proposals-in-status | One rule line in `docs/loop.md`: every item or proposal a chat names goes into the STATUS Plan as an unnumbered `proposed` row at once, before or with the question; matching steps in `/next-task`, `/scan-backlog`, `/review-task` ("Noticed" follow-ups become rows at the time, not at Merge); no script. Also align `docs/loop.md` "Sessions" (auditor "commits") with "Branches" and `/next-task` step 2 (nothing committed before Approve). User confirmed "Loop3, rule + skills" in the loop chat; loop freeze lifted for this item only. **Proposed addition (loop chat, 2026-10-30; you decide at Approve):** the Era 0 / Era 1 rename in `docs/loop.md`, `docs/glossary.md`, `docs/coding.md`, the `/review-task` skill, three wiki pages and `tools/loop-lint.ps1`/`.allow` (old forms kept, loop-lint still passes); the wiki is republished after Merge on your go; tag names and old cards are not renamed. Branch `chore/` | Low | Small | planned |
 | idea: approve-moves-all-files | `tools/approve.ps1` moves only `.md` planning files; a card's mockups and samples had to be moved by hand (T1-roadmap-overview, Noticed). | Low | Small | idea |
 | idea: codex-run-no-caps | Remove per-role run caps and their failover from `.coord/tools/codex-run.sh` and `docs/agents.md`; the only Codex limit is the usage % (user, 2026-10-30). | Low | Small | idea |
-| idea: codex-speed-by-tier | T1-roadmap-overview took ~2 h 50 min of build for a Low item: Luna xhigh thinking (~85 min), manager gaps (~65 min), sandbox port probes. Proposal: effort by tier (Low = medium), Codex runs offline checks only, no builder relay on Low, `-NoProfile` shells. | Low | Medium | idea |
+| idea: codex-speed-by-tier | T1-roadmap-overview took 4 h 45 min, request to merge (retro 2026-10-30). User decisions: keep master + Claude work sub-chat (it may talk to the user); triage every Codex run by job (surgical = Luna medium; advanced = Luna xhigh or Terra medium); add `gpt-6.1-terra` medium as a role in `codex-run.sh`; never brief Codex with port, server or browser checks (red flag); time used vs history from `usage.tsv` on the status card. Measure on the next app items. Also write the org model into `docs/loop.md` (user = CEO; top-level directors merge; sub-chats per item and phase suggest merges, merge only their own branches; rule overrides logged in lessons). User 2026-10-30: "Not yet". | Low | Medium | idea |
 | Release marker | dev -> main as `v0.7.0-rc1` after the splits, on your go | - | - | proposed |
 | **Bugs** | | | | |
 | A53-split-divider-height | Split-view divider stops short of the window's bottom edge; make it full height (was A58) | Low | Small | done |
