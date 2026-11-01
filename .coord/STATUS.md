@@ -35,6 +35,9 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Locked choices: `docs/decisions.md`.
 
 ## Now
+- A1-selftest-split (Low, pure-move): **done**, squashed onto dev (2026-11-01, user: "Merge it"); gate on dev PASS.
+  `SelfTest.cs` is now ten `SelfTest/` files by area (each under 600 lines), moved verbatim (sorted lines 2,950 = 2,950).
+  Built by a Haiku sub-session. Next: D1-ui-region-names / store-split (numbers on your yes).
 - Loop4-retro-fixes (Low, docs-tools): **done**, squashed onto dev (2026-10-31, user: "fix these and merge"); gate on dev
   PASS. Loop v3.2: Codex roles by job, no caps, offline Codex checks, expected time, fast lane, masters per area,
   master notes in `.coord/directors/` (gitignored). Master 2 told in one line.
@@ -247,7 +250,9 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | **Loop v3.1 (first; the backlog waits for it, user 2026-10-30)** | | | | |
 | Loop2-loop-v3-1 | Loop v3.1: dormant v2.2 absorbed (overlap, catch-up, conflicts, hand-test queue), approve/merge preflights, strict scope, read-only audits, loop-lint, loop.md fixes, rehearsal; one branch, one commit per step, run by the loop chat | Low | Large | done |
 | **Era 1 start (proposed by Master 2, 2026-10-30; numbers only on your yes)** | | | | |
-| idea: selftest-split | Split `SelfTest.cs` (3,247 lines) into a `SelfTest/` folder by area, verbatim; first, because the LAYERS rows live there and every later split edits them. Would be A1 | Low | Medium | proposed |
+| A1-selftest-split | Split `SelfTest.cs` (3,247 lines) into ten `SelfTest/` files by area, verbatim; first, because the LAYERS rows live there and every later split edits them. Numbered by the user 2026-11-01 ("Start A1"); builder on Haiku (user: "replace codex subagents with haiku"). Card `.coord/tasks/A1-selftest-split.md` | Low | Medium | done |
+| idea: hot-files-stale-path | `tools/catch-up.ps1:12`, `tools/files-overlap.ps1:11` and `.coord/templates/item.md:34` still name `SelfTest.cs` after A1-selftest-split (harmless: `SelfTest/*.cs` is listed too). Loop Hub 1's area. Noticed by Master 2 | Low | Small | proposed |
+| idea: selftest-diff-skip-timing | A verbatim-move check that compares `--selftest` output should skip wall-clock lines (`A18-search-speed timing` differs per run). Noticed in A1-selftest-split Check | Low | Small | proposed |
 | idea: ui-region-names | Names for the parts of the window in `docs/glossary.md`, so cards, comments and chat use the same words; can run beside selftest-split (no shared files). Would be D1 | Low | Small | proposed |
 | idea: store-split | Split `Model/Store.cs` (1,006 lines) into `Model/Search/`, `Note.cs`, `Settings.cs`, `Store.cs`, verbatim; after selftest-split (shares LAYERS, `AGENTS.md`, `docs/coding.md`). Would be A2 | Low | Small | proposed |
 | idea: calc-split | Split `Calc/Calculator.cs` (1,383 lines) into five files in `Calc/` (units, dates, lexer, parser, format), verbatim; after store-split. Open: lettered steps if over 400 moved lines. Would be A3 | Low | Medium | proposed |
@@ -292,7 +297,6 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | step: apply-motion | Apply the animation timings you picked | Medium | Small | needs you |
 | idea: code-ownership | Every responsibility has one owner and no copies; behavior unchanged | - | - | needs you |
 | step: store-split | Move `Note`, `Settings`, `StoreData` and the search types out of `Model/Store.cs`, verbatim **Proposed (Master 2, 2026-10-30):** becomes its own item, see `idea: store-split` in the era-two block; this step row goes. | Low | Small | needs you |
-| step: selftest-split | Split `SelfTest.cs` into one file per area (incl. the notes-move checks), verbatim **Proposed (Master 2, 2026-10-30):** becomes its own item, see `idea: selftest-split` in the era-two block; this step row goes. | Low | Small | needs you |
 | step: notes-path-dedupe | One same-or-nested path rule in `Platform/` replacing the copies in `NotesSession`, `NotesLocation`, `SettingsWindow` and `KeepOldCopy`; CONTRACTS row | High | Small | needs you |
 | step: ui-kit-merge | One control kit: Settings' private controls merge into `Kit`; `Material()` and `Ago()` move to their owners | Medium | Medium | needs you |
 | step: ownership-map | `docs/architecture.md` owner per responsibility; `NotesSession`, `RuntimeLog` into `App/`; LAYERS rows for `App/` and `Motion/` | Low | Small | needs you |

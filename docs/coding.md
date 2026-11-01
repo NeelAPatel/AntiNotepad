@@ -75,7 +75,7 @@ Keep parts together when they share a lot of private state, or when neither can 
 Found 2026-10-29; each becomes an A item when the user confirms it.
 | File | Lines | Jobs found | Plan |
 |---|---|---|---|
-| `SelfTest.cs` | 3,247 | dozens of independent checks | a `SelfTest/` folder by area (`SelfTest/Contracts.cs` exists) |
+| `SelfTest.cs` | 3,247 | dozens of independent checks | done (A1-selftest-split): `SelfTest/` folder by area |
 | `Calc/Calculator.cs` | 1,383 | units, dates, lexer, parser, formatting | five files in `Calc/` |
 | `Model/Store.cs` | 1,006 | search (about 400 lines), `Note`, `Settings`, `Store` | `Model/Search/`, `Note.cs`, `Settings.cs`, `Store.cs` |
 | `Editor/PadView.cs` | 826 | one pane: edge fade, pointer and links, keys and timers | partial files, on touch only |
