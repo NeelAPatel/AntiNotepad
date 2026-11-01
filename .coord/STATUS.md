@@ -34,7 +34,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Locked choices: `docs/decisions.md`.
 
 ## Now
-- Loop Hub 2: T2-hot-files-stale-path (Low, docs-tools) **done**, squashed onto dev (2026-11-01, user: "Approve both"); gate on dev PASS. T3-codex-unpause-docs next.
+- Loop Hub 2: T2-hot-files-stale-path (Low, docs-tools) **done**, squashed onto dev (2026-11-01, user: "Approve both"); gate on dev PASS. T3-codex-unpause-docs (Low, docs-tools) **done** too: the "Codex is paused" rule is gone from `AGENTS.md`, `docs/loop.md`, `docs/agents.md`; gate on dev PASS.
 - D1-ui-region-names (Low, docs-tools): **building**, re-planned to an interactive region map (user, D1 chat). Page built
   (b3255a3); screenshots blocked (Computer Use resolved to the installed copy; user denied). Merges last.
 - A3-calc-split (Low, pure-move): **done**, squashed onto dev (2026-11-01, user's merge order A2, A3, D1); gate on dev PASS.
@@ -274,7 +274,7 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | T2-hot-files-stale-path | `tools/catch-up.ps1:12`, `tools/files-overlap.ps1:11` and `.coord/templates/item.md:34` still name `SelfTest.cs` after A1-selftest-split (harmless: `SelfTest/*.cs` is listed too). Noticed by Master 2. Numbered by the user 2026-11-01 ("Approve both"); fast lane, Loop Hub 2. Card `.coord/tasks/T2-hot-files-stale-path.md` | Low | Small | done |
 | idea: review-gate-stale-head | `tools/merge-preflight.ps1` failed "stale Head: re-run the gate" on both A1-selftest-split and A2-store-split, because `/review-task` commits the card after its gate run; make review run the gate last (or preflight accept card-only commits). Seen twice; Loop Hub 2's area | Low | Small | proposed |
 | idea: gate-format-split-baseline | `tools/gate.ps1` Format treats every line of a split's new files as changed, so a pure move must reformat (A3-calc-split did a whitespace pass and lost the sorted-lines proof); baseline new files against the file they were split from. Noticed in A3 Check; Loop Hub 2's area | Low | Small | proposed |
-| T3-codex-unpause-docs | User lifted the Codex pause (2026-11-01: "now that Codex is available to be used as intended originally", then "Codex allowed"); drop the "Codex is paused" lines in `AGENTS.md` Roles, `docs/loop.md` Rules and the `docs/agents.md` header. Numbered by the user 2026-11-01 ("Approve both"); fast lane, Loop Hub 2. Card `.coord/tasks/T3-codex-unpause-docs.md` | Low | Small | approved |
+| T3-codex-unpause-docs | User lifted the Codex pause (2026-11-01: "now that Codex is available to be used as intended originally", then "Codex allowed"); drop the "Codex is paused" lines in `AGENTS.md` Roles, `docs/loop.md` Rules and the `docs/agents.md` header. Numbered by the user 2026-11-01 ("Approve both"); fast lane, Loop Hub 2. Card `.coord/tasks/T3-codex-unpause-docs.md` | Low | Small | done |
 | **Bugs** | | | | |
 | A53-split-divider-height | Split-view divider stops short of the window's bottom edge; make it full height (was A58) | Low | Small | done |
 | A54-link-hover-click | Every URL opens on Ctrl+click; shortened links always show a hand, other URLs show it while Ctrl is held (widened in r3, user) | Low | Small | done |

@@ -52,3 +52,4 @@ earning its run.
 | 2026-11-01 | A2-store-split | Low | 0 | 0 | - | - | - | - |
 | 2026-11-01 | A3-calc-split | Low | 0 | 0 | - | - | - | - |
 | 2026-11-01 | T2-hot-files-stale-path | Low | 0 | 0 | - | - | - | - |
+| 2026-11-01 | T3-codex-unpause-docs | Low | 0 | 0 | - | - | - | - |

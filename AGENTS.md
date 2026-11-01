@@ -21,8 +21,6 @@ The earlier AntiQuickPad project (spikes A/B, `src/AntiQuickPad`) is retired and
 - Update `.coord/STATUS.md` at every dispatch, milestone and completion. Keep this file minimal; detail goes in linked docs.
 
 ## Roles
-- **Codex is paused** (user, 2026-10-31): Claude sub-sessions implement until the user lifts it. The rules below apply
-  when it returns.
 - Implementation: Codex, with the role picked by the job (Luna medium for surgical changes, Terra medium or Luna xhigh for
   harder work). Codex checks run offline only. Launch and routing: `docs/agents.md`.
 - Masters (directors): top-level Claude chats, one per area (app, loop). They plan, dispatch, and alone merge to dev and main.

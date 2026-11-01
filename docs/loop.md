@@ -161,8 +161,6 @@ usage is back-and-forth to get things right, so use whatever cuts that:
   the card can be a few lines or none, no audit, no Codex when the Claude session can do it in minutes, and only the
   checks the change touches. A master still lands it as one commit on dev and gives the user a short change list.
 - `Loop` and `D` items keep a short card and a branch (they change how everyone works); Findings can be one paragraph.
-- **Codex is paused** (user, 2026-10-31: "For the foreseeable time codex is not allowed"): until the user lifts it, the builder sub-session implements
-  itself and says so in its report; the Codex rules below wait for its return.
 - **Who builds:** every item, `Loop`, `D` and `T` included, is built by Codex in a builder sub-session, with the role
   picked by the job (`docs/agents.md`); a docs-only change of a few lines may be made by the builder session itself and
   says so in the report. Codex "Done means" lists offline checks only; live servers, browser and screen checks belong to
