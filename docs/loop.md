@@ -22,6 +22,8 @@ card and see why the item exists, what was agreed and where it stands.
 
 "Approve" was "Go" before loop v3; old cards keep `## Go`.
 
+`paused` (any state after Approve): the user set a started item aside. Its branch, worktree and card stay, it does not count against the 3-item cap, and resuming sets the earlier state back.
+
 ### 2. Findings: what they must answer
 - **Kind and why**: bug, feature, polish or process; what about today's behavior justifies the item.
 - **Now**: what the app does today, with evidence: a code path with file:line, a selftest or probe result, or the user's

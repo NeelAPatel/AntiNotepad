@@ -21,7 +21,7 @@ if (Test-Path $status) {
         $c = $l.Trim().Trim('|').Split('|') | ForEach-Object { $_.Trim() }
         if ($c.Count -lt 5 -or $c[0] -eq 'Item' -or $c[0] -match '^\*\*' -or $c[0] -match '^Release marker') { continue }
         if ($c[4] -match '^(approved|building|rework r[0-9]+|checking|accepted|ask-user|hand test|hand-tested)$') { $pastApprove++ }
-        if ($c[4] -match '^(done|dropped|planned|needs you|proposed|-)?$') { continue }
+        if ($c[4] -match '^(done|dropped|planned|needs you|proposed|paused|-)?$') { continue }
         $live += "$($c[0]) ($($c[4]), $($c[2]))"
     }
 }
