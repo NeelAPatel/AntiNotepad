@@ -20,6 +20,18 @@ function Test-UnfilledSection([string]$Text) {
         $Text -match '(?m)^[^\S\r\n]*(?:[-*][^\S\r\n]+)?(?:\*\*[^*\r\n]+:\*\*[^\S\r\n]*)?<[^>\r\n]+>(?=\s|$)'
 }
 
+# True when the gate report's Head is the branch tip, or an ancestor of it with only this item's card and reports changed since.
+function Test-GateHead([string]$Root, [string]$Task, [string]$Tip, [string]$Report) {
+    if ($Report -cmatch "(?m)^Head: $Tip\r?`$") { return $true }
+    if ($Report -cnotmatch '(?m)^Head: (?<head>[0-9a-f]{40})\r?$') { return $false }
+    $gateHead = $Matches.head
+    & git -C $Root merge-base --is-ancestor $gateHead $Tip 2>$null
+    if ($LASTEXITCODE -ne 0) { return $false }
+    $allowed = '^\.coord/(?:tasks|reports)/' + [regex]::Escape($Task) + '(?:[-.]|$)'
+    $files = @(Invoke-Git $Root @('diff', '--name-only', '--no-renames', $gateHead, $Tip))
+    @($files | Where-Object { $_ -cnotmatch $allowed }).Count -eq 0
+}
+
 try {
     if ($Task -cnotmatch '^[A-Z][A-Za-z0-9]*(-[a-z0-9]+)+$') { throw 'invalid task name' }
     $root = (Invoke-Git $PSScriptRoot @('rev-parse', '--show-toplevel')) -join ''
@@ -64,8 +76,11 @@ try {
     $report = [IO.File]::ReadAllText($gate[0].FullName)
     $head = (Invoke-Git $root @('rev-parse', $branch)) -join ''
     if ($report -notmatch '(?m)^GATE: PASS\r?$') { throw 'newest gate did not pass' }
-    if ($report -cnotmatch "(?m)^Head: $head\r?`$") { throw 'stale Head: re-run the gate' }
+    if (-not (Test-GateHead $root $Task $head $report)) { throw 'stale Head: re-run the gate' }
     Write-Host "CHECK: newest gate PASS at $head ($($gate[0].Name))"
+    if ($report -cnotmatch "(?m)^Head: $head\r?`$") {
+        Write-Host 'CHECK: commits after the gate touch only the card and reports'
+    }
 
     & git -C $root diff --cached --quiet
     if ($LASTEXITCODE -ne 0) { throw 'staged changes in main checkout' }
