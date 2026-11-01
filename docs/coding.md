@@ -60,6 +60,7 @@ Keep parts together when they share a lot of private state, or when neither can 
   - partial files named `<Type>.<Part>.cs` (like `UI/PadWindow.Layout.cs`) when the parts share state;
   - a separate class in its own file when a part stands alone;
   - a folder once three or more files belong together.
+  - prove a pure move by `--selftest` output equal to dev's, skipping lines that report wall-clock times (such as `A18-search-speed timing`), plus equal sorted moved lines.
 - One main type per file, and the file is named after it.
 
 ## Folders and namespaces
