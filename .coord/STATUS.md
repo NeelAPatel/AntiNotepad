@@ -34,6 +34,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Locked choices: `docs/decisions.md`.
 
 ## Now
+- Release `v0.7.0-rc1` (user, 2026-11-01): main fast-forwarded to dev after Era 1, tagged, pushed. Release build 0 warnings, SELFTEST PASS. Installed copy unchanged (still r8).
 - Loop Hub 2: T6-gate-format-split-baseline (Low, docs-tools) **done** (2026-11-01): gate Format counts lines moved verbatim into a new file as older code (limit: common lines like `}` always match); gate on dev PASS. All Loop Hub 2 items from the Era 1 go are done.
 - Loop Hub 2: T4-selftest-diff-skip-timing (Low, docs-tools) **done** (2026-11-01): `docs/coding.md` "How to split" says how to prove a pure move without timing lines; gate on dev PASS.
 - Loop Hub 2: T7-paused-state (Low, docs-tools) **done** (2026-11-01): plan rows can be `paused` (branch, worktree, card kept; not counted against the cap; hook skips them); gate on dev PASS. Master 2 sets D1-ui-region-names to `paused`.
@@ -277,6 +278,7 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | T6-gate-format-split-baseline | `tools/gate.ps1` Format treats every line of a split's new files as changed, so a pure move must reformat (A3-calc-split did a whitespace pass and lost the sorted-lines proof); baseline new files against the file they were split from. Noticed in A3 Check; Loop Hub 2's area Numbered by the user 2026-11-01 (go relayed by Master 2: "finish the remaining three Era 1 items"); fast lane, Loop Hub 2. Card `.coord/tasks/T6-gate-format-split-baseline.md` | Low | Small | done |
 | T7-paused-state | A `paused` State for plan rows: a started item the user set aside keeps its ID, branch, worktree and card and does not count against the 3-item cap (`docs/loop.md`, `tools/loop-card.ps1`); first user D1-ui-region-names (user, 2026-11-01: "State 'paused' (Recommended)" instead of a D1-PAUSED rename). Fast lane, Loop Hub 2. Card `.coord/tasks/T7-paused-state.md` | Low | Small | done |
 | T3-codex-unpause-docs | User lifted the Codex pause (2026-11-01: "now that Codex is available to be used as intended originally", then "Codex allowed"); drop the "Codex is paused" lines in `AGENTS.md` Roles, `docs/loop.md` Rules and the `docs/agents.md` header. Numbered by the user 2026-11-01 ("Approve both"); fast lane, Loop Hub 2. Card `.coord/tasks/T3-codex-unpause-docs.md` | Low | Small | done |
+| Release marker | dev -> main with tag `v0.7.0-rc1` after Era 1 (user, 2026-11-01: "Make a release marker at this point"); D1-ui-region-names stays paused and is not in it | - | - | done |
 | **Bugs** | | | | |
 | A53-split-divider-height | Split-view divider stops short of the window's bottom edge; make it full height (was A58) | Low | Small | done |
 | A54-link-hover-click | Every URL opens on Ctrl+click; shortened links always show a hand, other URLs show it while Ctrl is held (widened in r3, user) | Low | Small | done |
