@@ -30,11 +30,11 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - **Old history kept:** tags `archive/full-history-2026-10-29` (old dev tip) and `archive/main-2026-10-29` (old main
   tip) on GitHub, plus the bundle `F:\LocalVSProj\Visual Studio Apps\AntiNotepad-history-backup-2026-10-29.bundle`
   (all refs, verified).
-- Installed copy: r8 (= `v0.6.0-rc8`; user upgraded 2026-10-29). Windowing is still r4's (r6 rollback, 2026-10-25).
+- Installed copy: `v0.7.0-rc1` (user installed 2026-11-01 with `tools/install.ps1`; dev builds removed the same day). Windowing is still r4's (r6 rollback, 2026-10-25).
 - Locked choices: `docs/decisions.md`.
 
 ## Now
-- Release `v0.7.0-rc1` (user, 2026-11-01): main fast-forwarded to dev after Era 1, tagged, pushed. Release build 0 warnings, SELFTEST PASS. Installed copy unchanged (still r8).
+- Release `v0.7.0-rc1` (user, 2026-11-01): main fast-forwarded to dev after Era 1, tagged, pushed. Release build 0 warnings, SELFTEST PASS. User installed it on the production copy; dev builds removed.
 - Loop Hub 2: T6-gate-format-split-baseline (Low, docs-tools) **done** (2026-11-01): gate Format counts lines moved verbatim into a new file as older code (limit: common lines like `}` always match); gate on dev PASS. All Loop Hub 2 items from the Era 1 go are done.
 - Loop Hub 2: T4-selftest-diff-skip-timing (Low, docs-tools) **done** (2026-11-01): `docs/coding.md` "How to split" says how to prove a pure move without timing lines; gate on dev PASS.
 - Loop Hub 2: T7-paused-state (Low, docs-tools) **done** (2026-11-01): plan rows can be `paused` (branch, worktree, card kept; not counted against the cap; hook skips them); gate on dev PASS. Master 2 sets D1-ui-region-names to `paused`.
