@@ -76,6 +76,6 @@ Found 2026-10-29; each becomes an A item when the user confirms it.
 | File | Lines | Jobs found | Plan |
 |---|---|---|---|
 | `SelfTest.cs` | 3,247 | dozens of independent checks | done (A1-selftest-split): `SelfTest/` folder by area |
-| `Calc/Calculator.cs` | 1,383 | units, dates, lexer, parser, formatting | five files in `Calc/` |
-| `Model/Store.cs` | 1,006 | search (about 400 lines), `Note`, `Settings`, `Store` | `Model/Search/`, `Note.cs`, `Settings.cs`, `Store.cs` |
+| `Calc/Calculator.cs` | 1,383 | units, dates, lexer, parser, formatting | done (A3-calc-split): `Calculator.cs` plus partial parts `Calculator.Units.cs`, `.Dates.cs`, `.Values.cs`, `.Lexer.cs`, `.Parser.cs`, `.SelfTest.cs` in `Calc/` |
+| `Model/Store.cs` | 1,006 | search (about 400 lines), `Note`, `Settings`, `Store` | done (A2-store-split): `Model/Note.cs`, `Model/Settings.cs`, `Model/Search/SearchTypes.cs`, `Model/Search/Store.Search.cs`, `Model/Store.cs` |
 | `Editor/PadView.cs` | 826 | one pane: edge fade, pointer and links, keys and timers | partial files, on touch only |

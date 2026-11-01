@@ -36,5 +36,5 @@ The earlier AntiQuickPad project (spikes A/B, `src/AntiQuickPad`) is retired and
   status card on every reply, sessions and roles): `docs/loop.md`. Terms: `docs/glossary.md`.
 - Launching or briefing Codex: `docs/agents.md`. Briefs go in `.coord/tasks/<ID-slug>.md`, reports in `.coord/reports/`.
 - Why something is the way it is (locked choices): `docs/decisions.md`.
-- Code layout: `product/AntiNotepad` — `Model/` (store, settings, notes), `Editor/` (PadView, colorizers, renderers, motion),
-  `UI/` (windows, Settings, menu, Kit controls), `Calc/` (math mode), `Theme/` (palettes), `Platform/` (Win32, tray, hotkey), `SelfTest/` (selftest checks by area).
+- Code layout: `product/AntiNotepad` — `Model/` (store, settings, notes; `Search/` holds the search types and `Store.Search.cs`), `Editor/` (PadView, colorizers, renderers, motion),
+  `UI/` (windows, Settings, menu, Kit controls), `Calc/` (math mode; `Calculator.cs` plus partial parts Units, Dates, Values, Lexer, Parser, SelfTest), `Theme/` (palettes), `Platform/` (Win32, tray, hotkey), `SelfTest/` (selftest checks by area).
