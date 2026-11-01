@@ -9,7 +9,6 @@ param(
     [string]$Base = 'dev',
     [string[]]$HotFiles = @(
         'product/AntiNotepad/SelfTest/Contracts.cs',
-        'product/AntiNotepad/SelfTest.cs',
         'product/AntiNotepad/SelfTest/*.cs',
         'docs/loop.md',
         'docs/glossary.md',

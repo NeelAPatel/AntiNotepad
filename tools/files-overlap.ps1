@@ -8,7 +8,6 @@ param(
     [Parameter(Mandatory)][string]$Task,
     [string[]]$HotFiles = @(
         'product/AntiNotepad/SelfTest/Contracts.cs',
-        'product/AntiNotepad/SelfTest.cs',
         'product/AntiNotepad/SelfTest/*.cs',
         'docs/loop.md',
         'docs/glossary.md',

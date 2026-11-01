@@ -31,7 +31,7 @@ Branch: `<feat|fix|refactor|docs|chore>/<ID-slug>` in `.claude/worktrees/<prefix
 Only these files may change (exact paths; `tools/gate.ps1` reads this list). Any other file needs a line under
 "Out-of-scope files" in the report.
 - `product/AntiNotepad/<path>`
-- `product/AntiNotepad/SelfTest.cs` (or the matching `SelfTest/*.cs` part)
+- `product/AntiNotepad/SelfTest/<area>.cs`
 
 ## Contracts
 `CONTRACTS` rows this item touches (`product/AntiNotepad/SelfTest/Contracts.cs`). Keep them passing; add a row for any new
