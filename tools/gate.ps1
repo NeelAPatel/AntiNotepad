@@ -340,7 +340,8 @@ try {
     }
 
     # Format: `dotnet format` on the changed product C# files only. A problem on a line this change touched fails;
-    # problems on untouched lines are older code and only counted, so existing files never block a gate.
+    # problems on untouched lines are older code and only counted, so existing files never block a gate. In a new file, lines
+    # that the same change removed verbatim from product files (a split) count as untouched.
     if ($Ci) {
         Add-Step -Name 'Format' -Status 'SKIP' -Summary 'format is skipped in CI mode'
     }
@@ -353,11 +354,25 @@ try {
             else {
                 $baseRevision = Resolve-BaseRevision
                 $touched = @{}
+                $removed = $null
                 foreach ($file in $csFiles) {
                     $set = [Collections.Generic.HashSet[int]]::new()
                     $diff = Invoke-CapturedProcess -FileName 'git' -Arguments @('-C', $script:repoRoot, 'diff', '-U0', $baseRevision, '--', $file) -WorkingDirectory $script:repoRoot
                     $tracked = (Invoke-CapturedProcess -FileName 'git' -Arguments @('-C', $script:repoRoot, 'cat-file', '-e', "${baseRevision}:$file") -WorkingDirectory $script:repoRoot).ExitCode -eq 0
-                    if (-not $tracked) { $set = $null }
+                    if (-not $tracked) {
+                        if ($null -eq $removed) {
+                            $removed = [Collections.Generic.HashSet[string]]::new()
+                            $all = Invoke-CapturedProcess -FileName 'git' -Arguments @('-C', $script:repoRoot, 'diff', '-U0', '--no-renames', $baseRevision, '--', 'product/*.cs') -WorkingDirectory $script:repoRoot
+                            foreach ($l in (Get-OutputLines $all.StdOut)) {
+                                if ($l.StartsWith('-') -and -not $l.StartsWith('---')) { [void]$removed.Add($l.Substring(1).TrimEnd()) }
+                            }
+                        }
+                        $lineNo = 0
+                        foreach ($l in [IO.File]::ReadAllLines((Join-Path $script:repoRoot $file))) {
+                            $lineNo++
+                            if (-not $removed.Contains($l.TrimEnd())) { [void]$set.Add($lineNo) }
+                        }
+                    }
                     else {
                         foreach ($m in [regex]::Matches($diff.StdOut, '(?m)^@@ -\S+ \+(\d+)(?:,(\d+))? @@')) {
                             $start = [int]$m.Groups[1].Value

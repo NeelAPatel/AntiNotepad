@@ -56,3 +56,4 @@ earning its run.
 | 2026-11-01 | T5-review-gate-stale-head | Low | 0 | 0 | - | - | - | - |
 | 2026-11-01 | T7-paused-state | Low | 0 | 0 | - | - | - | - |
 | 2026-11-01 | T4-selftest-diff-skip-timing | Low | 0 | 0 | - | - | - | - |
+| 2026-11-01 | T6-gate-format-split-baseline | Low | 0 | 0 | - | - | - | - |
