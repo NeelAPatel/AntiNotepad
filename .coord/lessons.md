@@ -31,6 +31,7 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 | 2026-10-31 | Loop4-retro-fixes | Build | judgment | - | - | override: the loop chat built the item itself on the user's go (rule "Codex implements") | - |
 | 2026-11-01 | A1-selftest-split | Check | judgment | reviewer | builder | build report missing the `## Plan deviations` heading; added at review (fill the report from the template headings before committing) | - |
 | 2026-11-01 | A1-selftest-split | Build | judgment | - | - | override: the builder ran on Haiku, not Sonnet medium, on the user's go ("replace codex subagents with haiku"; rule: loop.md Sessions builder row) | - |
+| 2026-11-01 | A2-store-split | Merge | plan | master | review | merge preflight "stale Head": `/review-task` committed after its gate, gate re-run by the master (second time after A1) | idea: review-gate-stale-head |
 
 ## Scores
 One row per merged item: what each check found. A reviewer with many empty rows on items that later had misses is not
@@ -47,3 +48,4 @@ earning its run.
 | 2026-10-30 | T1-roadmap-overview | Low | 2 (-r2, -r3; r3 finished by the loop chat) | 0 | - | - | 1 | - |
 | 2026-10-31 | Loop4-retro-fixes | Low | 1 (-r2: wording the user asked for) | 0 | - | - | - | - |
 | 2026-11-01 | A1-selftest-split | Low | 0 | 0 | - | - | - | - |
+| 2026-11-01 | A2-store-split | Low | 0 | 0 | - | - | - | - |

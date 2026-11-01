@@ -6,15 +6,14 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 ## Working rules right now
 - Two points of contact (user, 2026-10-30: "This chat is Master point of contact for the actual app development. Loop Hub 1 is the master for the meta level items such as Dev Loop"):
   - `Master 2 · Loop v3 · era-1-start`: app development (`A`, `D` items).
-  - `Loop Hub 1 · Loop v3 · dev-loop`: meta items (`Loop`, `T`: the dev loop, the roadmap overview, tooling).
-  - Loop Hub 1 runs `Loop3-proposals-in-status` and `T1-roadmap-overview` (cards, branches, merges) and edits only its
-    own `Loop`/`T` rows plus one "Now" line of its own; Master 2 owns STATUS overall and every `A`/`D` row.
+  - `Loop Hub 2 · Loop v3 · loop-tools`: meta items (`Loop`, `T`: the dev loop, the roadmap portal, tooling). Took over
+    from `Loop Hub 1 · Loop v3 · dev-loop (closed)` on 2026-11-01 (user, relayed by Master 2); its notes are
+    `.coord/directors/loop-hub-2.md`. It edits only its own `Loop`/`T` rows plus one "Now" line of its own; Master 2
+    owns STATUS overall and every `A`/`D` row.
   - Both squash-merge onto dev from the main checkout: before a merge, `git status`, check the other has no merge in
     progress, and tell the other chat in one line.
   - The previous master, `Master 1 - loop v2 - bugs-design-system-ownership` ("Era0 - ..."), is closed (2026-10-29).
-- **Loop v3.2 is live** (Loop4-retro-fixes, 2026-10-31; v3.1 was Loop2-loop-v3-1). **Loop freeze:** no new `Loop` items until the open questions from
-  the T1-roadmap-overview retro are settled (user, 2026-10-31: "once we finalize all open questions, we'll unfreeze loop
-  changes"); after that, rules change only on a miss repeated in `.coord/lessons.md`.
+- **Loop v3.2 is live** (Loop4-retro-fixes, 2026-10-31; v3.1 was Loop2-loop-v3-1). **Loop freeze:** lifted (Loop4-retro-fixes settled the retro's questions); rules change only on a miss repeated in `.coord/lessons.md` or on the user's ask.
 - **Codex is paused** (user, 2026-10-31: "For the foreseeable time codex is not allowed"). Claude sub-sessions implement and check; nothing launches
   `codex-run.sh` until the user lifts this. When it returns: Codex roles are picked by the job (Loop4-retro-fixes, `docs/agents.md`): quick = Luna medium, terra = Terra medium,
   worker = Luna xhigh, director = Sol medium; no run caps; Codex checks run offline only. Claude briefs, reviews, commits.
@@ -35,6 +34,11 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Locked choices: `docs/decisions.md`.
 
 ## Now
+- A2-store-split (Low, pure-move): **done**, squashed onto dev (2026-11-01, user's merge order A2, A3, D1); gate on dev PASS.
+  `Model/Store.cs` 1,006 -> 556 lines plus `Note.cs`, `Settings.cs`, `Model/Search/SearchTypes.cs`, `Model/Search/Store.Search.cs`
+  (sorted lines 670 = 670). Built by Codex quick. A3-calc-split now catches up and writes the docs.
+- A2-store-split, A3-calc-split, D1-ui-region-names: **approved** (2026-11-01, user: "Approve all three"; merge
+  order A2, A3, D1). Worktrees made; builders: A2 local_1c232a07, A3 local_32249d8d (Codex quick), D1 lead local_7581a0e2.
 - A1-selftest-split (Low, pure-move): **done**, squashed onto dev (2026-11-01, user: "Merge it"); gate on dev PASS.
   `SelfTest.cs` is now ten `SelfTest/` files by area (each under 600 lines), moved verbatim (sorted lines 2,950 = 2,950).
   Built by a Haiku sub-session. Next: D1-ui-region-names / store-split (numbers on your yes).
@@ -249,19 +253,21 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 |---|---|---|---|---|
 | **Loop v3.1 (first; the backlog waits for it, user 2026-10-30)** | | | | |
 | Loop2-loop-v3-1 | Loop v3.1: dormant v2.2 absorbed (overlap, catch-up, conflicts, hand-test queue), approve/merge preflights, strict scope, read-only audits, loop-lint, loop.md fixes, rehearsal; one branch, one commit per step, run by the loop chat | Low | Large | done |
-| **Era 1 start (proposed by Master 2, 2026-10-30; numbers only on your yes)** | | | | |
-| A1-selftest-split | Split `SelfTest.cs` (3,247 lines) into ten `SelfTest/` files by area, verbatim; first, because the LAYERS rows live there and every later split edits them. Numbered by the user 2026-11-01 ("Start A1"); builder on Haiku (user: "replace codex subagents with haiku"). Card `.coord/tasks/A1-selftest-split.md` | Low | Medium | done |
-| idea: hot-files-stale-path | `tools/catch-up.ps1:12`, `tools/files-overlap.ps1:11` and `.coord/templates/item.md:34` still name `SelfTest.cs` after A1-selftest-split (harmless: `SelfTest/*.cs` is listed too). Loop Hub 1's area. Noticed by Master 2 | Low | Small | proposed |
-| idea: selftest-diff-skip-timing | A verbatim-move check that compares `--selftest` output should skip wall-clock lines (`A18-search-speed timing` differs per run). Noticed in A1-selftest-split Check | Low | Small | proposed |
-| idea: ui-region-names | Names for the parts of the window in `docs/glossary.md`, so cards, comments and chat use the same words; can run beside selftest-split (no shared files). Would be D1 | Low | Small | proposed |
-| idea: store-split | Split `Model/Store.cs` (1,006 lines) into `Model/Search/`, `Note.cs`, `Settings.cs`, `Store.cs`, verbatim; after selftest-split (shares LAYERS, `AGENTS.md`, `docs/coding.md`). Would be A2 | Low | Small | proposed |
-| idea: calc-split | Split `Calc/Calculator.cs` (1,383 lines) into five files in `Calc/` (units, dates, lexer, parser, format), verbatim; after store-split. Open: lettered steps if over 400 moved lines. Would be A3 | Low | Medium | proposed |
+| **Era 1 start (Master 2 priority, 2026-11-01: done rows first, then run order; numbers only on your yes)** | | | | |
 | T1-roadmap-overview | The roadmap becomes your central overview, live from STATUS, item cards, Codex runs and read-only git (user, loop chat, 2026-10-30: "I need Roadmap to become my central overview of the project"; chose "Local server"). A fixed page `tools/roadmap/index.html` served by `tools/roadmap-serve.ps1` (built-in .NET HttpListener, localhost:47811, read-only) with `/data` from `tools/roadmap-data.ps1`; the page polls every 3 s and keeps its state; `/roadmap` starts the server; the hook rebuild retires. Design approved after three mockup rounds (2026-10-30, "Yes, write the plan"): Your turn, Moving without you, hand-test queue, recent Codex runs, Plan with ID column and release points, Work log, branch lanes with health, Releases, drawer, legend, light/dark. Steps T1a-roadmap-server, T1b-roadmap-page, T1c-roadmap-switch. Branch `chore/T1-roadmap-overview` | Low | Large | done |
 | Loop3-proposals-in-status | One rule line in `docs/loop.md`: every item or proposal a chat names goes into the STATUS Plan as an unnumbered `proposed` row at once, before or with the question; matching steps in `/next-task`, `/scan-backlog`, `/review-task` ("Noticed" follow-ups become rows at the time, not at Merge); no script. Also align `docs/loop.md` "Sessions" (auditor "commits") with "Branches" and `/next-task` step 2 (nothing committed before Approve). User confirmed "Loop3, rule + skills" in the loop chat; loop freeze lifted for this item only. **Proposed addition (loop chat, 2026-10-30; you decide at Approve):** the Era 0 / Era 1 rename in `docs/loop.md`, `docs/glossary.md`, `docs/coding.md`, the `/review-task` skill, three wiki pages and `tools/loop-lint.ps1`/`.allow` (old forms kept, loop-lint still passes); the wiki is republished after Merge on your go; tag names and old cards are not renamed. Branch `chore/` | Low | Small | done |
 | idea: approve-moves-all-files | `tools/approve.ps1` moves only `.md` planning files; a card's mockups and samples had to be moved by hand (T1-roadmap-overview, Noticed). | Low | Small | done |
 | idea: codex-run-no-caps | Remove per-role run caps and their failover from `.coord/tools/codex-run.sh` and `docs/agents.md`; the only Codex limit is the usage % (user, 2026-10-30). | Low | Small | done |
 | Loop4-retro-fixes | A lighter, faster loop from the T1-roadmap-overview retro: Codex roles by job (Luna medium / Terra medium / Luna xhigh / Sol medium), no run caps, offline-only Codex checks, expected time in plans, side-task fast lane, masters per area with sub-sessions per phase, master notes reloaded after compaction, `approve.ps1` moves all planning files, loop.md wording fixes. Absorbed `idea: codex-speed-by-tier`, `idea: codex-run-no-caps`, `idea: approve-moves-all-files`, `idea: loop-md-contradictions`, `Loop3-proposals-in-status`. | Low | Medium | done |
+| A1-selftest-split | Split `SelfTest.cs` (3,247 lines) into ten `SelfTest/` files by area, verbatim; first, because the LAYERS rows live there and every later split edits them. Numbered by the user 2026-11-01 ("Start A1"); builder on Haiku (user: "replace codex subagents with haiku"). Card `.coord/tasks/A1-selftest-split.md` | Low | Medium | done |
+| A2-store-split | Split `Model/Store.cs` (1,006 lines) into `Model/Search/`, `Note.cs`, `Settings.cs`, `Store.cs`, verbatim; after selftest-split (shares LAYERS, `AGENTS.md`, `docs/coding.md`). Would be A2 Numbered by the user 2026-11-01 (parallel; merge order A2, A3, D1). Card `.coord/tasks/A2-store-split.md` | Low | Small | done |
+| A3-calc-split | Split `Calc/Calculator.cs` (1,383 lines) into five files in `Calc/` (units, dates, lexer, parser, format), verbatim; after store-split. Open: lettered steps if over 400 moved lines. Would be A3 Numbered by the user 2026-11-01 (parallel; merge order A2, A3, D1). Card `.coord/tasks/A3-calc-split.md`; also writes both `docs/coding.md` rows and `AGENTS.md` | Low | Medium | building |
+| D1-ui-region-names | Names for the parts of the window in `docs/glossary.md`, so cards, comments and chat use the same words; can run beside selftest-split (no shared files). Would be D1 Numbered by the user 2026-11-01 (parallel; merge order A2, A3, D1). Card `.coord/tasks/D1-ui-region-names.md`; a D1 lead session owned by Master 2 | Low | Small | building |
 | Release marker | dev -> main as `v0.7.0-rc1` after the splits, on your go | - | - | proposed |
+| idea: selftest-diff-skip-timing | A verbatim-move check that compares `--selftest` output should skip wall-clock lines (`A18-search-speed timing` differs per run). Noticed in A1-selftest-split Check | Low | Small | proposed |
+| idea: hot-files-stale-path | `tools/catch-up.ps1:12`, `tools/files-overlap.ps1:11` and `.coord/templates/item.md:34` still name `SelfTest.cs` after A1-selftest-split (harmless: `SelfTest/*.cs` is listed too). Loop Hub 1's area. Noticed by Master 2 | Low | Small | proposed |
+| idea: review-gate-stale-head | `tools/merge-preflight.ps1` failed "stale Head: re-run the gate" on both A1-selftest-split and A2-store-split, because `/review-task` commits the card after its gate run; make review run the gate last (or preflight accept card-only commits). Seen twice; Loop Hub 2's area | Low | Small | proposed |
+| idea: codex-unpause-docs | User lifted the Codex pause (2026-11-01: "now that Codex is available to be used as intended originally"); drop the "Codex is paused" lines in `AGENTS.md` Roles and `docs/loop.md` Rules. Loop Hub 2's area | Low | Small | proposed |
 | **Bugs** | | | | |
 | A53-split-divider-height | Split-view divider stops short of the window's bottom edge; make it full height (was A58) | Low | Small | done |
 | A54-link-hover-click | Every URL opens on Ctrl+click; shortened links always show a hand, other URLs show it while Ctrl is held (widened in r3, user) | Low | Small | done |
