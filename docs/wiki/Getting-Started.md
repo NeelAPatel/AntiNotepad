@@ -79,7 +79,8 @@ They ask you when the cause is a plan or judgment decision (`docs/loop.md`, "Tri
 
 ## What you see
 
-Each substantive item reply starts with a status card showing tier, goal, current phase, and what is waiting on you.
+Each item reply starts with a one-line status card (item, phase, what changed). The full card (tier, goal, phase strip)
+appears on a phase change, a session's first reply, or when a decision is waiting on you.
 Question cards carry decisions; the next-step box closes replies that did work. A sidebar sub-chat changes from build
 to review to test as the same session moves along. A quiet relay with no change may be just one line
 (`docs/loop.md`, "Status card," "Widgets," and "Sessions").

@@ -20,7 +20,8 @@ UI region names (the parts of the window) come with `D1-ui-region-names`.
 - **Hand test**: the user trying the change by hand in the dev copy.
 - **Lab build**: a build that shows a design before the user approves it.
 - **Triage**: naming one cause for a failure (`code`, `test`, `plan`, `env`, `conflict`, `judgment`) and routing it.
-- **Status card**: the Markdown block every reply about an item opens with.
+- **Status card**: the line every reply about an item opens with: one line by default, the full block (tier, phase
+  strip, goal, now, decision block or "nothing") on a phase change, a session's first reply, or a decision.
 - **Loop version**: the version of these rules, written `Loop v3.1`; not to be confused with a `Loop` item ID.
 - **Catch-up**: merging `dev` into an item branch with `tools/catch-up.ps1`.
 - **Overlap check**: compares an item's Files with other in-flight items (`tools/files-overlap.ps1`).

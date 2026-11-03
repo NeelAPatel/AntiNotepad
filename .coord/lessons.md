@@ -33,6 +33,8 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 | 2026-11-01 | A1-selftest-split | Build | judgment | - | - | override: the builder ran on Haiku, not Sonnet medium, on the user's go ("replace codex subagents with haiku"; rule: loop.md Sessions builder row) | - |
 | 2026-11-01 | A2-store-split | Merge | plan | master | review | merge preflight "stale Head": `/review-task` committed after its gate, gate re-run by the master (second time after A1) | idea: review-gate-stale-head |
 | 2026-11-01 | A3-calc-split | Check | env | reviewer | gate | gate Format flags every line of a split's new files; a whitespace pass was needed, so the sorted-lines proof ran before it, not after | idea: gate-format-split-baseline |
+| 2026-11-01 | A4a-token-scan | Merge | judgment | - | - | override: steps squash onto umbrella branch `feat/A4-design-tokens`, which lands on dev once at the end, on the user's go ("branch off dev for feat/design-tokens, and then sub branches"; rule: one squashed commit per item onto dev, `docs/loop.md`); `tools/approve.ps1` always bases on dev, so step branches are cut by hand | idea: approve-base-branch |
+| 2026-11-02 | A4b-design-dump | Build r1 | plan | reviewer | report | r1 wrote no code: brief left hidden-window cleanup and reaching the private `PadMenu.BuildMenu` undecided; r2 brief decided both | - |
 
 ## Scores
 One row per merged item: what each check found. A reviewer with many empty rows on items that later had misses is not
@@ -57,3 +59,4 @@ earning its run.
 | 2026-11-01 | T7-paused-state | Low | 0 | 0 | - | - | - | - |
 | 2026-11-01 | T4-selftest-diff-skip-timing | Low | 0 | 0 | - | - | - | - |
 | 2026-11-01 | T6-gate-format-split-baseline | Low | 0 | 0 | - | - | - | - |
+| 2026-11-02 | Loop5-reply-style | Low | 0 | 0 | - | - | - | - |

@@ -107,8 +107,12 @@ Set at Plan; findings may raise it. When unsure, pick the higher tier.
 | High | `Store`/`NotesSession`/notes folder, startup and quit, `Platform/` window styles and taskbar, timers and deferred work, save paths, memory | Codex audit | gate + Codex review + design review; hand test always |
 
 ## Status card (every reply about an item)
-Every Claude reply about project work, master and sub-sessions alike, opens with this card. Keep it to these lines;
-detail goes below it.
+Every Claude reply about project work, master and sub-sessions alike, opens with a card. The default is one line:
+```
+**>> <ID-slug>** · ● <phase> · <what changed>
+```
+The **full card** is required only when the phase changes, at the first reply in a session, or when the reply carries a
+decision block. Detail goes below the card.
 ```
 **>> <ID-slug>** · <Tier> tier · ● <phase>
 ✓ Request | ✓ Findings | ● Plan | ○ Approve | ○ Build | ○ Check | ○ Hand test | ○ Merge
@@ -118,8 +122,10 @@ detail goes below it.
 
 ---
 
-**Waiting on you:** <the one decision or check, or "nothing">; anything else below
+**Waiting on you:** <the decision block, or "nothing">
 ```
+- The decision block (one decision per reply: question, background, decisions already taken, options table) and the
+  body rules (plain words, glosses, tables) are in the output style `.claude/output-styles/antinotepad.md`.
 - `✓` done, `●` current, `○` not reached, `–` skipped by tier (Findings is never skipped). Rework shows as
   `● Build (r2)`.
 - **Sub-sessions add their role** to the first line: `**>> A1-list-commands** · Medium tier · ● Build · builder`. The

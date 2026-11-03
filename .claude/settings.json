@@ -4,6 +4,7 @@
     "pr": "",
     "sessionUrl": false
   },
+  "outputStyle": "AntiNotepad",
   "hooks": {
     "UserPromptSubmit": [
       {
