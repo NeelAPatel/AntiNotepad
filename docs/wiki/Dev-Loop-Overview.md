@@ -6,7 +6,7 @@ You approve the plan and test visible results before the master merges them (`do
 
 # Dev loop overview
 
-![Loop v3.1: phases across; you, main chat, Claude sub-chats, Codex runs, and scripts down](images/loop-v3-1-flow.svg)
+![Loop v5.0.0: phases across; you, masters, Claude sub-chats, Codex runs, and scripts down](images/loop-v5-flow.svg)
 
 Read left to right. The optional backlog scan comes before an item exists. Medium/High items add an audit and fresh
 Codex review; High adds design review. See [Who Does What](Who-Does-What) for exact brief headers and permissions
@@ -91,10 +91,10 @@ A builder sub-chat manages the implementation; the master stays focused on coord
 path. It runs this command there:
 
 ```bash
-bash .coord/tools/codex-run.sh director <ID-slug> .coord/tasks/<ID-slug>.md
+bash .coord/tools/codex-run.sh <role> <ID-slug> .coord/tasks/<ID-slug>.md
 ```
 
-The complete card goes on stdin to `codex exec --sandbox workspace-write`. The card names the Codex role picked by the job
+For side tasks, the fast lane can omit Codex when the Claude session can do the work in minutes; Loop and D items retain a short card and branch (`docs/loop.md`, "Rules"). The complete card goes on stdin to `codex exec --sandbox workspace-write`. The card names the Codex role picked by the job
 (`quick` Luna medium, `terra` Terra medium, `worker` Luna xhigh, `director` Sol medium); a director must spawn
 `lens_reviewer` (Sol medium) before reporting. Outputs are changed files, the implementation report, wrapper
 last-message report, and logs. Claude commits and pushes; Codex cannot write `.git`

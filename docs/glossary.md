@@ -22,7 +22,7 @@ UI region names (the parts of the window) come with `D1-ui-region-names`.
 - **Triage**: naming one cause for a failure (`code`, `test`, `plan`, `env`, `conflict`, `judgment`) and routing it.
 - **Status card**: the line every reply about an item opens with: one line by default, the full block (tier, phase
   strip, goal, now, decision block or "nothing") on a phase change, a session's first reply, or a decision.
-- **Loop version**: the version of these rules, written `Loop v3.1`; not to be confused with a `Loop` item ID.
+- **Loop version**: the version of these rules, written `Loop v5.0.0`; patch increments cover chat output only, not a `Loop` item ID.
 - **Catch-up**: merging `dev` into an item branch with `tools/catch-up.ps1`.
 - **Overlap check**: compares an item's Files with other in-flight items (`tools/files-overlap.ps1`).
 - **Hot file**: a shared file that only warns in the overlap check.

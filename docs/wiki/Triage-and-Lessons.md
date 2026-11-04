@@ -33,7 +33,7 @@ The card's Misses entry records where the failure was found, its cause, what cau
 | A54-link-hover-click | Reproduce first; ask scope questions at Plan | `.coord/lessons.md`, Misses, 2026-10-29 |
 | Loop2-loop-v3-1 | Review found seven proven problems across five steps | `.coord/lessons.md`, Scores, 2026-10-30; [worked example](Worked-Example-Loop2) |
 
-When the same cause and “should have caught” pair occurs twice without a rule change, the master proposes an unnumbered idea naming the rule or checklist to change. It does not rewrite rules at Merge. After v3.1, the loop freeze pauses new Loop items until about five app items have merged; thereafter repeated misses govern changes (`docs/loop.md`, “Rules” and “Triage, lessons, scores”).
+When the same cause and “should have caught” pair occurs twice without a rule change, the master proposes an unnumbered idea naming the rule or checklist to change. It does not rewrite rules at Merge. The freeze was lifted; loop rules change after a repeated miss or at the user's request (`docs/loop.md`, “Rules” and “Triage, lessons, scores”).
 
 Scores help assess whether reviews find useful problems. Empty reviews followed by escaped bugs point to a checklist change rather than automatically adding reviewers (`docs/loop.md`, “Triage, lessons, scores”).
 

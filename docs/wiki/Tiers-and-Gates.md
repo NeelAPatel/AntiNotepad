@@ -14,6 +14,8 @@ The master sets the tier at Plan; Findings can raise it. When unsure, use the hi
 | Medium | Editor features, Settings sections, new settings, shared state, unproven bug cause | Codex audit | Gate, fresh Codex review; hand test if visible |
 | High | Store/notes, startup/quit, platform window styles, timers/deferred work, saving, memory | Codex audit | Gate, fresh Codex review, design review, hand test always |
 
+The side-task fast lane can skip checks that do not help for T items and non-shipping tooling; Loop and D items keep a short card and branch (`docs/loop.md`, "Rules").
+
 These are the defaults in `docs/loop.md`, “Tiers.” The Plan names what each check catches for this item; it can add checks but cannot drop tier defaults. Every bug fix adds a CONTRACTS row and needs reproduction evidence. Design changes need a lab preview approved by the user (`docs/loop.md`, “Gates menu”; `AGENTS.md`, “Rules”).
 
 ## What the gate checks
@@ -25,7 +27,7 @@ Run `pwsh -NoProfile -File tools/gate.ps1 -Task <ID-slug>` in the item checkout.
 | Build | Requires zero warnings and errors | `tools/gate.ps1`, build result handling |
 | Selftest | Requires exit 0 and SELFTEST PASS; includes LAYERS dependency rules and CONTRACTS promises | `tools/gate.ps1`, selftest handling; `product/AntiNotepad/SelfTest/Contracts.cs` |
 | Seam | Platform calls crossing the intended boundary | `tools/check-platform-seam.ps1` |
-| Format | Problems on changed lines in changed product C# files | `tools/gate.ps1`, Format; `.editorconfig` |
+| Format | Problems on changed lines in changed product C# files; lines moved verbatim into a new file count as older code | `tools/gate.ps1`, Format; `.editorconfig` |
 | Scope | Changed files outside exact Files entries on the card and round briefs, excluding `.coord/` paths; untracked files count | `tools/gate.ps1`, Get-ChangedFiles and Scope |
 | LoopLint | Inconsistent live loop instructions and broken file references | `tools/loop-lint.ps1`; `tools/loop-lint.allow` |
 | Size | Warns at size/growth thresholds; defaults 600 lines and 25 lines of growth | `tools/gate.ps1`, Size |

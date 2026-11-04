@@ -27,7 +27,7 @@ Source: `docs/loop.md`, "Phases", "Triggers in practice"; `.claude/skills/next-t
 
 Source: `docs/loop.md`, "Sessions"; `.claude/skills/next-task/SKILL.md`, steps 1–5; `.claude/skills/merge-task/SKILL.md`, steps 1–8.
 
-Since loop v3.2 the loop chat is the master for `Loop` and `T` items, beside the app master (`docs/loop.md`, "Sessions", "The picture"). Sub-chats talk with the user directly about their item and suggest merges to their master.
+The loop chat is the master for `Loop` and `T` items, beside the app master (`docs/loop.md`, "Sessions", "The picture"). Sub-chats talk with the user directly about their item and suggest merges to their master.
 
 ## Claude sub-chats
 
@@ -59,7 +59,7 @@ Source: `.claude/skills/next-task/SKILL.md`, step 2. The auditor commits nothing
 - **Kind/model:** Claude sub-chat, Sonnet medium.
 - **Started by:** master `start_session` after Approve, titled `<ID> · build · <slug>`.
 - **Given:** the item path and the bullet brief in `.claude/skills/next-task/SKILL.md`, step 5. Its first role instruction is exactly: "your role is `builder`; show it on the status card's first line; rename yourself `<ID> · review · <slug>` (role `reviewer`) when Check starts and `<ID> · test · <slug>` (role `tester`) at the hand test;"
-- **Does:** reads the card, launches the Codex director in that worktree, then runs `/review-task` when it exits; relaunches permitted rework, commits each round on the item branch and pushes.
+- **Does:** reads the card, launches Codex in the role picked for the job in that worktree, then runs `/review-task` when it exits; relaunches permitted rework, commits each round on the item branch and pushes.
 - **May/may not:** works only in its assigned path, never edits dev or STATUS, never mints IDs. A docs change of a few lines may be made by the builder itself if its report says so.
 - **Leaves:** item-branch commits, reports and the card's Build/Check/Hand test evidence.
 
@@ -182,7 +182,7 @@ These entries have **no model, reasoning effort or agent opening prompt**. A com
 | `tools/merge-preflight.ps1` / PowerShell script | Master: `pwsh -NoProfile -File tools/merge-preflight.ps1 -Task <ID-slug>` | Committed branch card, checkout state, newest gate, dev ancestry | Read-only refusal reason or PASS; does not perform the merge |
 | `tools/dev.ps1` / PowerShell launcher | Accepted tester: `pwsh -NoProfile -File tools/dev.ps1` | Worktree's source and disposable dev data | Builds and launches the separate dev copy, safely hands off the prior dev instance, prints paths; installed copy is excluded |
 | `tools/roadmap-serve.ps1` / PowerShell server | `/roadmap`: `pwsh -NoProfile -File tools/roadmap-serve.ps1 -Background -Open`; auto-started by `tools/loop-card.ps1` | Main checkout STATUS, item cards, Codex usage log, read-only Git | Serves the live overview at http://localhost:47811; `-Stop` stops it; stops itself after 12 idle hours ([Roadmap Portal](Roadmap-Portal)) |
-| `tools/loop-card.ps1` / UserPromptSubmit hook | `.claude/settings.json`: `pwsh -NoProfile -File "$CLAUDE_PROJECT_DIR/tools/loop-card.ps1"` | Hook stdin (discarded) and live main-checkout STATUS | Adds card reminder and in-flight list to Claude context; warns above 3 past Approve; changes no item files |
+| `tools/loop-card.ps1` / UserPromptSubmit hook | `.claude/settings.json`: `pwsh -NoProfile -File "$CLAUDE_PROJECT_DIR/tools/loop-card.ps1"` | Hook stdin (discarded) and live main-checkout STATUS | Adds the loop version, card reminder and in-flight list to Claude context; warns above 3 past Approve; changes no item files |
 
 `tools/gate.ps1`, `Get-ChangedFiles`, excludes `.coord/` from Scope. Scope is strict on item branches but WARN on dev/base, `-Ci` or `-LooseScope`. `tools/merge-preflight.ps1` checks Request, Plan, Approve (or old Go), Check and Hand test content; it is not a separate natural-language audit of every phase. Both approval and merge checks permit specified STATUS changes, rather than requiring a completely empty working tree (named scripts' check blocks).
 

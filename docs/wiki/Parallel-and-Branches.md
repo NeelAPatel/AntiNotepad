@@ -11,7 +11,7 @@ A **branch** names a line of changes. A **worktree** checks one branch out into 
 
 ### Start only as much work as the checks can separate
 
-The default limit is **three items past Approve**, counted from active Plan states in `.coord/STATUS.md`. `tools/approve.ps1`, the count block, refuses a fourth; `tools/loop-card.ps1` also warns if the count is already above three. The limit depends on the master keeping those states current. A research snapshot is a separate read-only route, not an approved implementation item (`.claude/skills/scan-backlog/SKILL.md`, steps 2–3).
+The default limit is **three items past Approve**, counted from active Plan states in `.coord/STATUS.md`. `tools/approve.ps1`, the count block, refuses a fourth; `tools/loop-card.ps1` also warns if the count is already above three. The limit depends on the master keeping those states current. A user-paused item keeps its branch, worktree and card but does not count against the cap; resuming restores its earlier state (`docs/loop.md`, "Phases"). A research snapshot is a separate read-only route, not an approved implementation item (`.claude/skills/scan-backlog/SKILL.md`, steps 2–3).
 
 At approval the master runs:
 
@@ -57,11 +57,11 @@ Before squashing, the master runs:
 pwsh -NoProfile -File tools/merge-preflight.ps1 -Task <ID-slug>
 ```
 
-`tools/merge-preflight.ps1` checks the committed branch card's Request, Plan, Approve (or era-one Go), Check and Hand test sections for missing/template content, plus unanswered "ask the user" lines. It requires an item checkout with tracked changes limited to STATUS, dev as an ancestor, and the newest matching gate report to contain `GATE: PASS` and a `Head:` exactly matching the branch tip. It rejects staged main-checkout changes and merge markers. It checks the card before ancestry, so an unfilled card can be the first refusal even when the branch is also behind (script's ordered checks; `.coord/reports/Loop2-loop-v3-1-rehearsal.md`, check 3).
+`tools/merge-preflight.ps1` checks the committed branch card's Request, Plan, Approve (or era-one Go), Check and Hand test sections for missing/template content, plus unanswered "ask the user" lines. It requires an item checkout with tracked changes limited to STATUS, dev as an ancestor, and the newest matching gate report to contain `GATE: PASS` and a `Head:` matching the branch tip or an earlier revision followed only by this item's card/report commits. It rejects staged main-checkout changes and merge markers. It checks the card before ancestry, so an unfilled card can be the first refusal even when the branch is also behind (script's ordered checks; `.coord/reports/Loop2-loop-v3-1-rehearsal.md`, check 3).
 
-A dirty gate records a `-dirty` suffix, so it cannot satisfy that exact branch-tip comparison after a later commit without re-gating (`tools/gate.ps1`, initial HEAD/status block; `tools/merge-preflight.ps1`, report checks).
+A dirty gate records a `-dirty` suffix and cannot satisfy preflight; an earlier clean gate remains valid only when later commits touch only this item's card/report files (`tools/gate.ps1`, initial HEAD/status block; `tools/merge-preflight.ps1`, report checks).
 
-The normal merge is one squash commit on dev carrying the item, its STATUS edits and lessons. The master re-gates on dev, pushes, removes the worktree without `--force`, and deletes the branch. Unexpected files, failed gates and leftover worktree files stop that route (`.claude/skills/merge-task/SKILL.md`, steps 2–7).
+Active masters tell each other in one line before a merge (`docs/loop.md`, "Sessions"). The normal merge is one squash commit on dev carrying the item, its STATUS edits and lessons. The master re-gates on dev, pushes, removes the worktree without `--force`, and deletes the branch. Unexpected files, failed gates and leftover worktree files stop that route (`.claude/skills/merge-task/SKILL.md`, steps 2–7).
 
 ## One branch, no extra worktree
 

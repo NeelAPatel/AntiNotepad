@@ -48,7 +48,7 @@ rule are in `docs/loop.md`, "Sessions."
 3. **Approve, change, or drop.** Read Now → After, the Files list, the code/UI test plan, and what each gate catches.
    Your answer is recorded verbatim. Approval runs a preflight before creating the branch and worktree
    (`.claude/skills/next-task/SKILL.md`, steps 3–4; `tools/approve.ps1`).
-4. **Wait for Build and Check.** The master starts a Sonnet medium builder sub-chat. It launches Codex, then runs the
+4. **Wait for Build and Check.** The master starts a Sonnet medium builder sub-chat. It normally launches Codex with a role picked for the job, then runs the
    gate and required reviews. Rework is handled there; scope decisions come back to you
    (`.claude/skills/next-task/SKILL.md`, step 5; `.claude/skills/review-task/SKILL.md`, steps 1–4a).
 5. **Hand test in the dev copy.** After acceptance, the tester launches the worktree's dev build, verifies its EXE,
@@ -77,11 +77,13 @@ commit the branch, or interpret and repair raw gate output yourself: the builder
 They ask you when the cause is a plan or judgment decision (`docs/loop.md`, "Triggers in practice";
 `.claude/skills/review-task/SKILL.md`, step 4a; `.claude/skills/merge-task/SKILL.md`).
 
+Side tasks can take the fast lane: T items and non-shipping tooling skip steps that do not help; Loop and D items retain a short card and branch (`docs/loop.md`, "Rules").
+
 ## What you see
 
 Each item reply starts with a one-line status card (item, phase, what changed). The full card (tier, goal, phase strip)
 appears on a phase change, a session's first reply, or when a decision is waiting on you.
-Question cards carry decisions; the next-step box closes replies that did work. A sidebar sub-chat changes from build
+The output style uses plain language, explains names and presents one decision at a time (`.claude/output-styles/antinotepad.md`). Question cards carry decisions; the next-step box closes replies that did work. A sidebar sub-chat changes from build
 to review to test as the same session moves along. A quiet relay with no change may be just one line
 (`docs/loop.md`, "Status card," "Widgets," and "Sessions").
 

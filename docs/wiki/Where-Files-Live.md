@@ -1,6 +1,6 @@
 **In short**
 
-The item card explains one change; STATUS explains the whole project. Rules, briefs, reports, and scripts each have a separate home. The master owns the shared project record while item sessions work in isolated checkouts (`docs/loop.md`, “Files,” “Sessions,” and “Branches, worktrees and commits”).
+The item card explains one change; STATUS explains the whole project. Rules, briefs, reports, and scripts each have a separate home. Masters own their area's project record while item sessions work in isolated checkouts (`docs/loop.md`, “Files,” “Sessions,” and “Branches, worktrees and commits”).
 
 # Where Files Live
 
@@ -51,6 +51,8 @@ Each approved item normally gets a branch and a matching folder under .claude/wo
 Only a user-authorized docs/tooling item can run without a worktree; that blocks other work until merge. See [Parallel and Branches](Parallel-and-Branches) (`docs/loop.md`, “No worktree”).
 
 The dev launcher builds under build/dev and uses build/testdata for app home, with a separate dev identity and badge. One dev copy runs at a time. A moved notes-folder pointer still needs checking for disposable data before hand testing. The installed copy uses real data and is upgraded only on request (`docs/dev-loop.md`, “Installed and dev copies” and “Dev copy”; `AGENTS.md`, “Rules”).
+
+Master notes live in gitignored `.coord/directors/<slug>.md` and are restored after compaction by `tools/director-notes.ps1` (`docs/loop.md`, "Sessions").
 
 ## Sources
 
