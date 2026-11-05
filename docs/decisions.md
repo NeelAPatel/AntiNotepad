@@ -26,6 +26,10 @@ Newest first. History before 2026-10-23 (overnight build log and write-up) is in
   The overlay/float top gap is 40 px of scrollable whitespace before the document, not part of line 1. Toolbar glyphs
   are centered by their ink. Rejected in the lab: an Acrylic popup window for the pill (glitchy, wrong corners), the
   feathered gradient, Mica for the pill, and blur behind the pill (user picked solid; A36 removed the lab).
+  Values updated by A4n-scale-lab (user, 2026-11-05: "Use Recommended, everythign looks good"; hand test "looks good"):
+  where the numbers above differ, the Recommended column of `docs/design-scale.md` section 3.2 wins (for example
+  leftmost item 12, dot hover radius 8, dots 8, dot hit height 20, dividers 8). ChromeTokens stays the one owner;
+  pill bottom gap stays 4 (user tried 8, then "Reduce to 4 and 4").
 - **Native window** (user decision; implementation reverted): the pad is the product and must meet every native Windows 11
   window expectation, while its top stays chrome-free (no title text or caption buttons): Windows-drawn rounded corners,
   shadow, border, resize edges and native open/close/minimize/restore animations; Snap, Maximize, Alt+Tab while open or

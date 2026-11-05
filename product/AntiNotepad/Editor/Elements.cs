@@ -31,7 +31,7 @@ internal class GlyphElement : FormattedTextElement
         Pressed(e);
     }
 
-    public static TextLine Prepare(ITextRunConstructionContext context, string text, IBrush brush, double? size = null, FontWeight weight = FontWeight.Normal, TextDecorationCollection? decorations = null)
+    public static TextLine Prepare(ITextRunConstructionContext context, string text, IBrush brush, double? size = null, FontWeight weight = Typography.Regular, TextDecorationCollection? decorations = null)
     {
         var props = context.GlobalTextRunProperties;
         var run = new GenericTextRunProperties(new Typeface(props.Typeface.FontFamily, FontStyle.Normal, weight), size ?? props.FontRenderingEmSize,

@@ -64,7 +64,7 @@ The master asks one question: approve, change, or drop. Nothing is built, and no
 ### Gates menu
 | Gate | Catches | Default for |
 |---|---|---|
-| `tools/gate.ps1` (build 0 warnings, selftest, LAYERS, CONTRACTS, seam, format, scope, loop-lint, size) | compile errors, broken promises, layering leaks, new format problems on changed lines (rules: `.editorconfig`), files outside the plan (FAIL on item branches; WARN on dev, CI or `-LooseScope`), inconsistent loop files, god-file growth | every tier |
+| `tools/gate.ps1` (build 0 warnings, selftest, LAYERS, CONTRACTS, seam, tokens, format, scope, loop-lint, size) | compile errors, broken promises, layering leaks, rising design literal counts, new format problems on changed lines (rules: `.editorconfig`), files outside the plan (FAIL on item branches; WARN on dev, CI or `-LooseScope`), inconsistent loop files, god-file growth | every tier |
 | Codex fresh review (`lens-review`) | logic, behavioral coupling, shared state and latches, timing and caches, missed inputs, cleanup | Medium, High |
 | Claude `design-reviewer` | responsibility, boundaries, coupling between features, future cost | High |
 | New `CONTRACTS` row | the fixed bug or new promise coming back unseen | every bug fix |
@@ -321,7 +321,8 @@ Three commands drive the loop: `/next-task` (Request to Approve, then starts Bui
 | `.coord/templates/scan.md` | brief for one read-only Haiku backlog scout |
 | `.coord/templates/review.md` | brief for the fresh Codex review |
 | `.coord/templates/round.md` | brief for a rework round |
-| `tools/gate.ps1` | build, selftest (LAYERS, CONTRACTS), seam, format, scope, loop-lint, size |
+| `tools/gate.ps1` | build, selftest (LAYERS, CONTRACTS), seam, tokens, format, scope, loop-lint, size |
+| `tools/check-design-tokens.ps1` | inventory and ratchet literal design values |
 | `tools/loop-lint.ps1` | read-only consistency check of live loop files and their file references |
 | `tools/loop-lint.allow` | path, rule and line-substring exceptions for historical mentions |
 | `tools/catch-up.ps1` | merge local dev into an item branch; report conflicts and whether to repeat the hand test |

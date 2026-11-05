@@ -176,7 +176,7 @@ internal sealed class PadView : Grid
         Palette = palette; Settings = settings;
         _caret.SettingsChanged();
         _paper?.InvalidateVisual();
-        Editor.FontFamily = new FontFamily($"{settings.Font}, Cascadia Mono, Consolas, monospace");
+        Editor.FontFamily = new FontFamily(settings.Font + Typography.EditorFallback);
         Editor.FontSize = settings.FontSize;
         Editor.Foreground = new SolidColorBrush(palette.Ink);
         Editor.TextArea.SelectionBrush = new SolidColorBrush(palette.Selection);
@@ -186,7 +186,7 @@ internal sealed class PadView : Grid
         // SmoothCaret draws the caret; the built-in one stays (for IME placement) but invisible.
         Editor.TextArea.Caret.CaretBrush = Brushes.Transparent;
         _hint.FontFamily = Editor.FontFamily; _hint.FontSize = settings.FontSize;
-        _hint.Foreground = _loadHintError ? new SolidColorBrush(palette.Error, .78) : new SolidColorBrush(palette.Faint);
+        _hint.Foreground = _loadHintError ? new SolidColorBrush(palette.Error, Paint.ErrorHint) : new SolidColorBrush(palette.Faint);
         if (Math.Abs(Editor.Options.LineHeightFactor - settings.LineSpacing) > 0.001) Editor.Options.LineHeightFactor = settings.LineSpacing;
         ApplyMargins();
         ApplyCodeHighlighting();
@@ -278,7 +278,7 @@ internal sealed class PadView : Grid
         _loadHint = locationError is not null
             ? $"Error: Notes folder not found\n\n{_notesLocation.DataFolder}\n\nChoose a folder in Settings › Storage"
             : note.BodyUnavailable ? "Error: Note not found\n\nCheck recovered folder in Settings › Storage" : null;
-        _hint.Foreground = _loadHintError ? new SolidColorBrush(Palette.Error, .78) : new SolidColorBrush(Palette.Faint);
+        _hint.Foreground = _loadHintError ? new SolidColorBrush(Palette.Error, Paint.ErrorHint) : new SolidColorBrush(Palette.Faint);
         Editor.IsReadOnly = unavailable;
         var doc = unavailable ? new TextDocument() : Private
             ? _private.TryGetValue(note, out var own) ? own : _private[note] = new TextDocument(note.PeekText())
@@ -442,7 +442,7 @@ internal sealed class PadView : Grid
         _arrive?.Cancel();
         var shift = new TranslateTransform();
         RenderTransform = shift;
-        _arrive = Anim.Run(this, 190, t =>
+        _arrive = Anim.Run(this, MotionTokens.NoteArrive, t =>
         {
             shift.X = direction * 34 * (1 - t);
             Opacity = 0.25 + 0.75 * t;

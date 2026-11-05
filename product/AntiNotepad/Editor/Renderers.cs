@@ -7,6 +7,8 @@ using Avalonia.Media.TextFormatting;
 using AvaloniaEdit.Rendering;
 using AntiNotepad.Model;
 
+using AntiNotepad.Theme;
+
 namespace AntiNotepad.Editor;
 
 /// <summary>Small per-renderer resource caches use these immutable drawing resources.</summary>
@@ -80,7 +82,7 @@ internal sealed class PaperLayer(PadView pad) : Avalonia.Controls.Control
     {
         if (pad.Structure is not { } s || s.Fences.Count == 0 || !view.VisualLinesValid || pad.Mode == Model.NoteMode.Code) return;
         var p = pad.Palette;
-        var fill = Brush(p.Ink, p.Dark ? 0.085 : 0.075);
+        var fill = Brush(p.Ink, Paint.CompletionFill(p.Dark));
         using var clip = dc.PushClip(new Rect(0, origin.Y, Bounds.Width, view.Bounds.Height));
         foreach (var fence in s.Fences)
         {
@@ -180,7 +182,7 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
     {
         if (_typeface is { } cached && StringComparer.Ordinal.Equals(_typefaceFont, font)) return cached;
         _typefaceFont = font;
-        var typeface = new Typeface(new FontFamily(font + ", Cascadia Mono, Consolas"), FontStyle.Normal, FontWeight.SemiBold);
+        var typeface = new Typeface(new FontFamily(font + ", " + Typography.MonoFamily), FontStyle.Normal, Typography.Strong);
         _typeface = typeface;
         return typeface;
     }
@@ -290,7 +292,7 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
         // Baseline-aligned with the line's text.
         var y = c.Baseline - ft.Baseline;
         var rect = new Rect(x - 7, y - 2, width + 14, ft.Height + 4);
-        dc.DrawRectangle(Brush(c.Color, pad.Palette.Dark ? 0.14 : 0.10), null, rect, 7, 7);
+        dc.DrawRectangle(Brush(c.Color, Paint.BadgeFill(pad.Palette.Dark)), null, rect, 4, 4);
         if (icon is not null) DrawTimerIcon(dc, icon, new Rect(x, y, ft.Height * 0.62, ft.Height), c.Color, scale);
         dc.DrawText(ft, new Point(x + iconWidth, y));
         Chips.Add(new Chip(rect, c.Line, c.Kind, c.Value));
@@ -352,7 +354,7 @@ internal sealed class DividerRenderer(PadView pad) : IBackgroundRenderer
                 var key = new PenKey(pad.Palette.Marker, TopLevel.GetTopLevel(view)?.RenderScaling ?? 1);
                 if (!_pens.TryGet(key, out pen))
                 {
-                    pen = RenderPaint.Pen(RenderPaint.Brush(key.Color, .55), 1);
+                    pen = RenderPaint.Pen(RenderPaint.Brush(key.Color, Paint.KeyPen), 1);
                     _pens.Add(key, pen);
                 }
             }
@@ -397,7 +399,7 @@ internal sealed class CheckboxRenderer(PadView pad) : IBackgroundRenderer
         if (!_paints.TryGet(key, out var paint))
         {
             paint = new Paint(
-                RenderPaint.Pen(RenderPaint.Brush(p.Accent, .9), 1.6),
+                RenderPaint.Pen(RenderPaint.Brush(p.Accent, AntiNotepad.Theme.Paint.AccentPen), 1.6),
                 RenderPaint.Pen(RenderPaint.Brush(p.Canvas), 1.9, PenLineCap.Round, PenLineJoin.Round),
                 RenderPaint.Brush(p.Done));
             _paints.Add(key, paint);

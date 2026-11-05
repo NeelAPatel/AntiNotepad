@@ -6,6 +6,8 @@ using AvaloniaEdit.Rendering;
 using AntiNotepad.Calc;
 using AntiNotepad.Model;
 
+using AntiNotepad.Theme;
+
 namespace AntiNotepad.Editor;
 
 /// <summary>Per-colorizer immutable span brushes, capped so palette changes cannot grow a view's cache indefinitely.</summary>
@@ -45,7 +47,7 @@ internal sealed class NoteColorizer(PadView pad) : DocumentColorizingTransformer
         var o = line.Offset;
         if (line.LineNumber == 1 && pad.ModeKeywordLength > 0)
         {
-            Paint(o, o + Math.Min(pad.ModeKeywordLength, line.Length), p.Keyword, FontWeight.SemiBold);
+            Paint(o, o + Math.Min(pad.ModeKeywordLength, line.Length), p.Keyword, Typography.Strong);
             return;
         }
         if (pad.Mode is NoteMode.Code or NoteMode.Math) return; // their own colourizers own these notes
@@ -67,10 +69,10 @@ internal sealed class NoteColorizer(PadView pad) : DocumentColorizingTransformer
             // Hierarchy by colour (a rainbow, H1 red to H6 violet) and by size for the top three.
             var (size, weight) = heading switch
             {
-                1 => (1.32, FontWeight.Bold),
-                2 => (1.16, FontWeight.Bold),
-                3 => (1.06, FontWeight.SemiBold),
-                _ => (1.0, FontWeight.SemiBold),
+                1 => (1.32, Typography.Bold),
+                2 => (1.16, Typography.Bold),
+                3 => (1.06, Typography.Strong),
+                _ => (1.0, Typography.Strong),
             };
             Paint(o, line.EndOffset, HeadingColor(p, heading), weight);
             Paint(o + lead, o + lead + heading, p.Faint);
@@ -88,7 +90,7 @@ internal sealed class NoteColorizer(PadView pad) : DocumentColorizingTransformer
             return;
         }
         if (pad.Mode == NoteMode.Timer) foreach (Match m in Number.Matches(text)) Paint(o + m.Index, o + m.Index + m.Length, p.Number);
-        foreach (Match m in Bold.Matches(text)) { Markers(o + m.Index, m.Length, 2); Weight(o + m.Index + 2, o + m.Index + m.Length - 2, FontWeight.Bold); }
+        foreach (Match m in Bold.Matches(text)) { Markers(o + m.Index, m.Length, 2); Weight(o + m.Index + 2, o + m.Index + m.Length - 2, Typography.Bold); }
         foreach (Match m in Italic.Matches(text)) { Markers(o + m.Index, m.Length, 1); Style(o + m.Index + 1, o + m.Index + m.Length - 1); }
         foreach (Match m in Underline.Matches(text)) { Markers(o + m.Index, m.Length, 2); Decorate(o + m.Index + 2, o + m.Index + m.Length - 2, TextDecorations.Underline); }
         foreach (Match m in Strike.Matches(text)) { Markers(o + m.Index, m.Length, 2); Decorate(o + m.Index + 2, o + m.Index + m.Length - 2, TextDecorations.Strikethrough); }

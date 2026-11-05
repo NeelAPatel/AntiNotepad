@@ -1,0 +1,3 @@
+Completed **A4g-control-groups-r4**. The [control map](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/.claude/worktrees/refactor/A4g-control-groups/.coord/reports/A4g-control-groups-map.md>) now includes concrete comparisons, grouped preview and swatch instances, one proposed token row per group, and a short gaps list. The ChromeTokens alias table remains unchanged.
+
+The requested offline gate **passed**. No product files changed. The [round 4 report](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/.claude/worktrees/refactor/A4g-control-groups/.coord/reports/A4g-control-groups-r4.md>) records the checks and remaining limits.

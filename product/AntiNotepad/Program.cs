@@ -18,6 +18,7 @@ internal static class Program
     public static int Main(string[] args)
     {
         if (args is ["--selftest"]) return SelfTest.Run();
+        if (args is ["--design-dump", var path]) return SelfTest.WriteDesignDump(path);
         var log = new RuntimeLog();
         AppDomain.CurrentDomain.ProcessExit += (_, _) => log.Flush();
         try { return RunApplication(args, log); }

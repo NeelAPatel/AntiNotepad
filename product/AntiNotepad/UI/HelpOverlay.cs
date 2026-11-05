@@ -35,10 +35,19 @@ internal sealed class HelpOverlay : ScrollViewer
                 var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), Margin = new Thickness(8, 3) };
                 var key = new Border
                 {
-                    Background = new SolidColorBrush(p.Ink, p.Dark ? .1 : .06), CornerRadius = new CornerRadius(5), Padding = new Thickness(7, 2), MinWidth = 150,
-                    Child = new TextBlock { Text = keys, FontFamily = new FontFamily("Cascadia Mono, Consolas"), FontSize = 11.5, Foreground = new SolidColorBrush(p.Ink) }
+                    Background = new SolidColorBrush(p.Ink, Paint.HelpWash(p.Dark)),
+                    CornerRadius = new CornerRadius(Shape.Key),
+                    Padding = new Thickness(8, 2),
+                    MinWidth = 150,
+                    Child = new TextBlock
+                    {
+                        Text = keys,
+                        FontFamily = new FontFamily(Typography.MonoFamily),
+                        FontSize = Typography.Caption,
+                        Foreground = new SolidColorBrush(p.Ink)
+                    }
                 };
-                var text = new TextBlock { Text = what, Foreground = new SolidColorBrush(p.Muted), FontSize = 12.5, Margin = new Thickness(12, 0, 0, 0), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
+                var text = new TextBlock { Text = what, Foreground = new SolidColorBrush(p.Muted), FontSize = Typography.Label, Margin = new Thickness(12, 0, 0, 0), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
                 grid.Children.Add(key);
                 Grid.SetColumn(text, 1); grid.Children.Add(text);
                 panel.Children.Add(grid);

@@ -1,0 +1,3 @@
+The control map is **still incomplete**. I added the proposed group names, the slider search, and verified rows for Settings previews and editor result chips, but the per-instance tables and disagreements across all groups still need a full pass. The draft warning and a Gaps section remain in the [map](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/.claude/worktrees/refactor/A4g-control-groups/.coord/reports/A4g-control-groups-map.md>).
+
+The requested offline gate **passed**, and no product files were changed. I did not run a separate design dump or an independent lens review. Details are in the [rework report](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/.claude/worktrees/refactor/A4g-control-groups/.coord/reports/A4g-control-groups-r2.md>).

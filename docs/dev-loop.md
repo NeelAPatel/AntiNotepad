@@ -105,6 +105,8 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
 - `tools/make-icon.ps1` rebuilds `product/AntiNotepad/antinotepad.ico`.
 - `tools/make-dev-icon.ps1` derives every size in the distinct dev icon from the primary icon. Rerun it whenever the primary
   icon changes.
+- Token playground (live redraw of the pad with adjuster cards): `pwsh tools/playground-serve.ps1 -Background -Open`
+  opens `http://localhost:47812`; `-Stop` ends it.
 - Computer use: only act in the dev copy; the installed copy holds real user data.
 
 ## Product identity

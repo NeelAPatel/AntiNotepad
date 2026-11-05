@@ -48,13 +48,19 @@ internal sealed class SearchOverlay : Grid
 
         _query = new TextBox
         {
-            Text = query, PlaceholderText = trash ? "Search the trash" : "Search notes", FontSize = 15,
-            Background = new SolidColorBrush(_p.Surface), Foreground = new SolidColorBrush(_p.Ink), BorderThickness = new Thickness(1),
-            BorderBrush = new SolidColorBrush(_p.Faint, .5), CornerRadius = new CornerRadius(10), Padding = new Thickness(12, 8),
+            Text = query,
+            PlaceholderText = trash ? "Search the trash" : "Search notes",
+            FontSize = Typography.Input,
+            Background = new SolidColorBrush(_p.Surface),
+            Foreground = new SolidColorBrush(_p.Ink),
+            BorderThickness = new Thickness(1),
+            BorderBrush = new SolidColorBrush(_p.Faint, Paint.FieldBorder),
+            CornerRadius = new CornerRadius(Shape.Card),
+            Padding = new Thickness(12, 8),
             CaretBrush = new SolidColorBrush(_p.Caret), SelectionBrush = new SolidColorBrush(_p.Selection),
         };
         Avalonia.Automation.AutomationProperties.SetName(_query, "Search notes");
-        _status = Kit.Text("", _p.Faint, 11.5);
+        _status = Kit.Text("", _p.Faint, Typography.Caption);
         _status.Margin = new Thickness(4, 8, 0, 0);
         _query.TextChanged += (_, _) =>
         {
@@ -174,25 +180,34 @@ internal sealed class SearchOverlay : Grid
 
     private Border Card(Note note, SearchMatchResult match, int index, string[] terms)
     {
-        var title = Kit.Text(match.Title, _p.Ink, 13.5, FontWeight.SemiBold);
+        var title = Kit.Text(match.Title, _p.Ink, Typography.BodyEmphasis, Typography.Strong);
         title.TextTrimming = TextTrimming.CharacterEllipsis;
         var snippet = new TextBlock
         {
-            Foreground = new SolidColorBrush(_p.Muted), FontSize = 12, TextWrapping = TextWrapping.Wrap,
-            MaxLines = GridView ? 5 : 2, TextTrimming = TextTrimming.CharacterEllipsis, FontFamily = new FontFamily("Cascadia Mono, Consolas"),
+            Foreground = new SolidColorBrush(_p.Muted),
+            FontSize = Typography.Small,
+            TextWrapping = TextWrapping.Wrap,
+            MaxLines = GridView ? 5 : 2,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            FontFamily = new FontFamily(Typography.MonoFamily),
         };
         Highlight(snippet, match.Snippet, terms);
         var meta = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-        if (note.Slot > 0) meta.Children.Add(Kit.Text($"slot {note.Slot}", _p.Accent, 11, FontWeight.SemiBold));
-        if (match.Mode != NoteMode.Plain) meta.Children.Add(Kit.Text(Modes.Label(match.Mode, match.ModeArgument), _p.Keyword, 11, FontWeight.SemiBold));
-        meta.Children.Add(Kit.Text(ShowingTrash && note.Deleted is { } del ? "deleted " + Kit.Ago(del) : Kit.Ago(note.Modified), _p.Faint, 11));
+        if (note.Slot > 0) meta.Children.Add(Kit.Text($"slot {note.Slot}", _p.Accent, Typography.Micro, Typography.Strong));
+        if (match.Mode != NoteMode.Plain) meta.Children.Add(Kit.Text(Modes.Label(match.Mode, match.ModeArgument), _p.Keyword, Typography.Micro, Typography.Strong));
+        meta.Children.Add(Kit.Text(ShowingTrash && note.Deleted is { } del ? "deleted " + Kit.Ago(del) : Kit.Ago(note.Modified), _p.Faint, Typography.Micro));
         var body = new StackPanel { Spacing = 3, Children = { title, snippet, meta } };
         var border = new Border
         {
-            Child = body, Padding = new Thickness(12, 9), CornerRadius = new CornerRadius(10),
-            Background = new SolidColorBrush(_p.Surface, .55),
-            BorderBrush = new SolidColorBrush(_p.Faint, .25), BorderThickness = new Thickness(1),
-            Width = GridView ? CardWidth() : double.NaN, Height = GridView ? 150 : double.NaN, Margin = GridView ? new Thickness(0, 0, 8, 8) : new Thickness(0),
+            Child = body,
+            Padding = new Thickness(12, 8),
+            CornerRadius = new CornerRadius(Shape.Card),
+            Background = new SolidColorBrush(_p.Surface, Paint.ResultSurface),
+            BorderBrush = new SolidColorBrush(_p.Faint, Paint.ResultBorder),
+            BorderThickness = new Thickness(1),
+            Width = GridView ? CardWidth() : double.NaN,
+            Height = GridView ? 152 : double.NaN,
+            Margin = GridView ? new Thickness(0, 0, 8, 8) : new Thickness(0),
             Cursor = new Cursor(StandardCursorType.Hand),
         };
         border.PointerPressed += (_, e) =>
@@ -210,7 +225,7 @@ internal sealed class SearchOverlay : Grid
             if (!_dragging && Point.Distance(at, press.At) < 6) return;
             if (!CanReorder) return;
             _dragging = true;
-            border.Opacity = .55;
+            border.Opacity = Paint.Dimmed;
             border.RenderTransform = new TranslateTransform(GridView ? at.X - press.At.X : 0, at.Y - press.At.Y);
             _dropIndex = DropIndex(e);
         };
@@ -235,9 +250,9 @@ internal sealed class SearchOverlay : Grid
             var border = _cards[i];
             var current = i == _cursor;
             var picked = _selected.Contains(_items[i]);
-            border.Background = new SolidColorBrush(picked ? _p.Selection : _p.Surface, picked || current ? 1 : .55);
-            border.BorderBrush = new SolidColorBrush(current ? _p.Accent : _p.Faint, current ? .9 : .25);
-            border.BorderThickness = new Thickness(current ? 1.5 : 1);
+            border.Background = new SolidColorBrush(picked ? _p.Selection : _p.Surface, picked || current ? 1 : Paint.ResultSurface);
+            border.BorderBrush = new SolidColorBrush(current ? _p.Accent : _p.Faint, current ? Paint.ResultCurrent : Paint.ResultBorder);
+            border.BorderThickness = new Thickness(current ? 2 : 1);
         }
     }
 
@@ -298,7 +313,9 @@ internal sealed class SearchOverlay : Grid
             if (next.Index > at) inlines.Add(new Avalonia.Controls.Documents.Run(text[at..next.Index]));
             inlines.Add(new Avalonia.Controls.Documents.Run(text.Substring(next.Index, next.Term.Length))
             {
-                Foreground = new SolidColorBrush(_p.Ink), FontWeight = FontWeight.SemiBold, Background = new SolidColorBrush(_p.Selection),
+                Foreground = new SolidColorBrush(_p.Ink),
+                FontWeight = Typography.Strong,
+                Background = new SolidColorBrush(_p.Selection),
             });
             at = next.Index + next.Term.Length;
         }

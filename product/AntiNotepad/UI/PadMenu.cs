@@ -14,7 +14,7 @@ namespace AntiNotepad.UI;
 /// <summary>The right-click menu: a Windows-style popup with Fluent icons and dimmed shortcuts.</summary>
 internal static class PadMenu
 {
-    private static readonly FontFamily MenuFont = new("Segoe UI Variable Text, Segoe UI");
+    private static readonly FontFamily MenuFont = new(Typography.UiFamily);
     private static readonly string[] ActionLabels = ["Cut", "Copy", "Paste", "Delete"];
 
     public static void Show(Control anchor, IReadOnlyList<MenuEntry> entries, Palette p, Settings settings)
@@ -79,15 +79,15 @@ internal static class PadMenu
         {
             HorizontalAlignment = HorizontalAlignment.Left,
             Padding = new Thickness(4),
-            CornerRadius = new CornerRadius(8),
+            CornerRadius = new CornerRadius(Shape.Popup),
             Background = new SolidColorBrush(p.Surface),
-            BorderBrush = new SolidColorBrush(p.Faint, .45),
+            BorderBrush = new SolidColorBrush(p.Faint, Paint.PopupBorder),
             BorderThickness = new Thickness(1),
             BoxShadow = new BoxShadows(new BoxShadow
             {
-                Blur = 18,
-                OffsetY = 4,
-                Color = Color.FromArgb(p.Dark ? (byte)110 : (byte)40, 0, 0, 0),
+                Blur = Shape.MenuShadowBlur,
+                OffsetY = Shape.PopupShadowOffsetY,
+                Color = Color.FromArgb(p.Dark ? Shape.PopupShadowDarkAlpha : Shape.PopupShadowLightAlpha, 0, 0, 0),
             }),
             Child = content,
             Focusable = true,
@@ -112,7 +112,7 @@ internal static class PadMenu
             {
                 Text = entry.Header,
                 FontFamily = MenuFont,
-                FontSize = 14,
+                FontSize = Typography.Large,
                 Foreground = new SolidColorBrush(p.Ink),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis,
@@ -136,7 +136,7 @@ internal static class PadMenu
         {
             Text = entry.Header,
             FontFamily = MenuFont,
-            FontSize = 14,
+            FontSize = Typography.Large,
             Foreground = new SolidColorBrush(p.Ink),
             VerticalAlignment = VerticalAlignment.Center,
         };
@@ -147,8 +147,8 @@ internal static class PadMenu
         {
             Text = entry.Keys is null ? null : Display(entry.Keys),
             FontFamily = MenuFont,
-            FontSize = 13,
-            Foreground = new SolidColorBrush(p.Muted, .8),
+            FontSize = Typography.Body,
+            Foreground = new SolidColorBrush(p.Muted, Paint.MenuCaption),
             TextAlignment = TextAlignment.Right,
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(24, 0, 8, 0),
@@ -201,7 +201,7 @@ internal static class PadMenu
             MenuGlyphs.Delete => p.Error,
             _ => p.Ink,
         } : p.Ink;
-        return new GlyphIcon(glyph, color, 16, 0)
+        return new GlyphIcon(glyph, color, Typography.IconMedium, 0)
         {
             Width = 28,
             HorizontalAlignment = HorizontalAlignment.Center,
@@ -211,8 +211,8 @@ internal static class PadMenu
 
     private static void AddHover(Border border, Palette p)
     {
-        var hover = new SolidColorBrush(p.Ink, p.Dark ? .09 : .06);
-        var pressed = new SolidColorBrush(p.Ink, p.Dark ? .15 : .11);
+        var hover = new SolidColorBrush(p.Ink, Paint.Hover(p.Dark));
+        var pressed = new SolidColorBrush(p.Ink, Paint.Press(p.Dark));
         border.PointerEntered += (_, _) => border.Background = hover;
         border.PointerExited += (_, _) => border.Background = Brushes.Transparent;
         border.AddHandler(InputElement.PointerPressedEvent, (_, _) => border.Background = pressed,
@@ -225,7 +225,7 @@ internal static class PadMenu
     {
         Height = 1,
         Margin = new Thickness(0, 4),
-        Background = new SolidColorBrush(p.Faint, .4),
+        Background = new SolidColorBrush(p.Faint, Paint.MenuSeparator),
     };
 
     private static string Display(string keys) => keys.Replace("OemBackslash", "\\").Replace("OemComma", ",").Replace("Escape", "Esc").Replace("Delete", "Del");

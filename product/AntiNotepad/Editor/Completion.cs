@@ -8,6 +8,8 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
 using AntiNotepad.Model;
 
+using AntiNotepad.Theme;
+
 namespace AntiNotepad.Editor;
 
 /// <summary>Caret-side completion: mode keywords on line 1, and `/commands` anywhere (AntiNote's extensions, built in).</summary>
@@ -106,8 +108,8 @@ internal static class Completion
             Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10,
             Children =
             {
-                new TextBlock { Text = word, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = 70 },
-                new TextBlock { Text = name, Foreground = new SolidColorBrush(pad.Palette.Muted), FontSize = 12, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center },
+                new TextBlock { Text = word, FontWeight = Typography.Strong, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = 70 },
+                new TextBlock { Text = name, Foreground = new SolidColorBrush(pad.Palette.Muted), FontSize = Typography.Small, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center },
             }
         };
         public object Description => name;
@@ -133,8 +135,8 @@ internal static class Completion
             Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10,
             Children =
             {
-                new TextBlock { Text = text, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = 86 },
-                new TextBlock { Text = summary, Foreground = new SolidColorBrush(pad.Palette.Muted), FontSize = 12, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center },
+                new TextBlock { Text = text, FontWeight = Typography.Strong, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = 86 },
+                new TextBlock { Text = summary, Foreground = new SolidColorBrush(pad.Palette.Muted), FontSize = Typography.Small, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center },
             }
         };
         public object Description => summary;

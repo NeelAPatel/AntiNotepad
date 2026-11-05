@@ -108,7 +108,7 @@ internal sealed class MotionPreview : StackPanel
         // Same size and place on both pages, so switching tabs never moves it.
         _timers = new Timers();
         _pad = new PadView(palette, settings, _timers, notesLocation) { Height = 220, ClipToBounds = true, Private = true };
-        _frame = new Border { Child = _pad, CornerRadius = new CornerRadius(10), ClipToBounds = true, BorderThickness = new Thickness(1) };
+        _frame = new Border { Child = _pad, CornerRadius = new CornerRadius(Shape.Card), ClipToBounds = true, BorderThickness = new Thickness(1) };
         Children.Add(_frame);
 
         _swipe = new NoteSwipe(_pad, () => _s, () => _pad, direction =>
@@ -202,14 +202,14 @@ internal sealed class MotionPreview : StackPanel
     {
         _p = palette; _s = settings;
         _pad.ApplyLook(palette, settings);
-        _frame.Background = new SolidColorBrush(palette.Canvas, settings.Material == "solid" ? 1 : .6);
-        _frame.BorderBrush = new SolidColorBrush(palette.Ink, palette.Dark ? .09 : .10);
+        _frame.Background = new SolidColorBrush(palette.Canvas, settings.Material == "solid" ? 1 : Paint.GlassPreview);
+        _frame.BorderBrush = new SolidColorBrush(palette.Ink, Paint.PreviewFrame(palette.Dark));
         _trace.Palette = palette;
         _legend.Children.Clear();
         _legend.Children.Add(Key(palette.Accent, "scroll"));
         _legend.Children.Add(Key(palette.Number, "note"));
-        _legend.Children.Add(Kit.Text("last 2 seconds", palette.Muted, 11.5));
-        var hint = Kit.Text(_feel ? "Scroll up and down, or sideways to switch notes" : "Type, scroll or switch notes here", palette.Muted, 11.5);
+        _legend.Children.Add(Kit.Text("last 2 seconds", palette.Muted, Typography.Caption));
+        var hint = Kit.Text(_feel ? "Scroll up and down, or sideways to switch notes" : "Type, scroll or switch notes here", palette.Muted, Typography.Caption);
         hint.Margin = new Thickness(12, 0, 0, 0);
         _legend.Children.Add(hint);
         _trace.InvalidateVisual();
@@ -220,8 +220,8 @@ internal sealed class MotionPreview : StackPanel
         Orientation = Orientation.Horizontal, Spacing = 5,
         Children =
         {
-            new Border { Width = 14, Height = 3, CornerRadius = new CornerRadius(1.5), Background = new SolidColorBrush(color), VerticalAlignment = VerticalAlignment.Center },
-            Kit.Text(label, color, 11.5),
+            new Border { Width = 14, Height = 3, CornerRadius = new CornerRadius(Shape.Round(3)), Background = new SolidColorBrush(color), VerticalAlignment = VerticalAlignment.Center },
+            Kit.Text(label, color, Typography.Caption),
         }
     };
 
@@ -264,7 +264,7 @@ internal sealed class MotionPreview : StackPanel
         {
             if (_well is null)
             {
-                _well = new SolidColorBrush(_palette.Ink, _palette.Dark ? .06 : .045);
+                _well = new SolidColorBrush(_palette.Ink, Paint.PreviewWell(_palette.Dark));
                 _scrollPen = new Pen(new SolidColorBrush(_palette.Accent), 1.8, lineCap: PenLineCap.Round);
                 _notePen = new Pen(new SolidColorBrush(_palette.Number), 1.8, lineCap: PenLineCap.Round);
             }

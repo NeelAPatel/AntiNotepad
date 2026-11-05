@@ -24,7 +24,7 @@ internal static class Glyph
 /// <summary>
 /// A Segoe Fluent Icons glyph. Weight 0 draws it once; positive weights add four offset copies for faux bold.
 /// </summary>
-internal sealed class GlyphIcon(string glyph, Color color, double size = 13, double weight = 0.15, FontFamily? font = null) : Control
+internal sealed class GlyphIcon(string glyph, Color color, double size = Typography.IconBody, double weight = 0.15, FontFamily? font = null) : Control
 {
     private readonly Typeface _face = new(font ?? Glyph.Font);
     private readonly IBrush _brush = new ImmutableSolidColorBrush(color);
@@ -95,8 +95,9 @@ internal static class Kit
         if (filled && glyph == Glyph.Pin)
             icon = new Panel
             {
-                HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
-                Children = { new GlyphIcon(Glyph.PinFilled, Color.FromArgb(110, ink.R, ink.G, ink.B), ChromeTokens.IconGlyphSize, 0), icon },
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Children = { new GlyphIcon(Glyph.PinFilled, Color.FromArgb(Paint.PinnedGlyphAlpha, ink.R, ink.G, ink.B), ChromeTokens.IconGlyphSize, 0), icon },
             };
         var button = Plain(icon, p, size, size, radius: radius);
         button.Click += (_, _) => click();
@@ -107,10 +108,10 @@ internal static class Kit
     }
 
     /// <summary>A borderless button with a soft rounded hover fill.</summary>
-    public static Button Plain(Control content, Palette p, double width = double.NaN, double height = double.NaN, double radius = 7)
+    public static Button Plain(Control content, Palette p, double width = double.NaN, double height = double.NaN, double radius = 4)
     {
-        var hover = new SolidColorBrush(p.Ink, p.Dark ? 0.09 : 0.06);
-        var press = new SolidColorBrush(p.Ink, p.Dark ? 0.15 : 0.11);
+        var hover = new SolidColorBrush(p.Ink, Paint.Hover(p.Dark));
+        var press = new SolidColorBrush(p.Ink, Paint.Press(p.Dark));
         var border = new Border { CornerRadius = new CornerRadius(radius), Background = Brushes.Transparent, Child = content, Padding = new Thickness(0) };
         var button = new Button
         {
@@ -126,7 +127,7 @@ internal static class Kit
         return button;
     }
 
-    public static TextBlock Text(string text, Color color, double size = 13, FontWeight weight = FontWeight.Normal) =>
+    public static TextBlock Text(string text, Color color, double size = Typography.Body, FontWeight weight = Typography.Regular) =>
         new() { Text = text, Foreground = new SolidColorBrush(color), FontSize = size, FontWeight = weight, VerticalAlignment = VerticalAlignment.Center };
 
     /// <summary>Independent on/off pills (several can be on).</summary>
@@ -136,14 +137,14 @@ internal static class Kit
         foreach (var (value, label) in options)
         {
             var on = isOn(value);
-            var text = Text(label, on ? p.Ink : p.Faint, 12.5, on ? FontWeight.SemiBold : FontWeight.Normal);
-            text.Margin = new Thickness(10, 4);
-            var button = Plain(text, p, radius: 8);
+            var text = Text(label, on ? p.Ink : p.Faint, Typography.Body, on ? Typography.Strong : Typography.Regular);
+            text.Margin = new Thickness(8, 4);
+            var button = Plain(text, p, radius: 4);
             button.Margin = new Thickness(0, 0, 4, 4);
             if (on && button.Content is Border b)
             {
-                b.Background = new SolidColorBrush(p.Accent, p.Dark ? .22 : .18);
-                button.PointerExited += (_, _) => b.Background = new SolidColorBrush(p.Accent, p.Dark ? .22 : .18);
+                b.Background = new SolidColorBrush(p.Accent, Paint.Selected(p.Dark));
+                button.PointerExited += (_, _) => b.Background = new SolidColorBrush(p.Accent, Paint.Selected(p.Dark));
             }
             var chosen = value;
             button.Click += (_, _) => toggle(chosen);
@@ -157,7 +158,7 @@ internal static class Kit
     public static Control PanelHeader(string title, Palette p, Action close)
     {
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(8, 0, 0, 0) };
-        var text = Text(title, p.Ink, 18, FontWeight.SemiBold);
+        var text = Text(title, p.Ink, Typography.PanelTitle, Typography.Strong);
         grid.Children.Add(text);
         var x = IconButton(Glyph.Close, "Close (Esc)", p, close);
         x.VerticalAlignment = VerticalAlignment.Center;
@@ -167,7 +168,7 @@ internal static class Kit
     }
 
     public static Control Section(Palette p, string title) =>
-        new TextBlock { Text = title.ToUpperInvariant(), Foreground = new SolidColorBrush(p.Faint), FontSize = 11, FontWeight = FontWeight.SemiBold, LetterSpacing = 0.8, Margin = new Thickness(8, 22, 0, 2) };
+        new TextBlock { Text = title.ToUpperInvariant(), Foreground = new SolidColorBrush(p.Faint), FontSize = Typography.Micro, FontWeight = Typography.Strong, LetterSpacing = 0.8, Margin = new Thickness(8, 24, 0, 2) };
 
     /// <summary>The window material as a transparency request, best first.</summary>
     public static WindowTransparencyLevel[] Material(string material) => material switch
@@ -185,8 +186,8 @@ internal static class Kit
         {
             var style = new Avalonia.Styling.Style(x => (state.Length == 0 ? x.OfType<TextBox>() : x.OfType<TextBox>().Class(state)).Template().OfType<Border>().Name("PART_BorderElement"));
             style.Setters.Add(new Avalonia.Styling.Setter(Border.BackgroundProperty, new SolidColorBrush(p.Surface)));
-            style.Setters.Add(new Avalonia.Styling.Setter(Border.BorderBrushProperty, new SolidColorBrush(state == ":focus" ? p.Accent : p.Faint, state == ":focus" ? .9 : .5)));
-            style.Setters.Add(new Avalonia.Styling.Setter(Border.BorderThicknessProperty, new Thickness(state == ":focus" ? 1.5 : 1)));
+            style.Setters.Add(new Avalonia.Styling.Setter(Border.BorderBrushProperty, new SolidColorBrush(state == ":focus" ? p.Accent : p.Faint, state == ":focus" ? Paint.FocusBorder : Paint.RestBorder)));
+            style.Setters.Add(new Avalonia.Styling.Setter(Border.BorderThicknessProperty, new Thickness(state == ":focus" ? 2 : 1)));
             styles.Add(style);
         }
         var fg = new Avalonia.Styling.Style(x => x.OfType<TextBox>().Class(":focus"));

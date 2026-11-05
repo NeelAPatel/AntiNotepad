@@ -68,7 +68,7 @@ internal sealed partial class SettingsWindow : Window
         ExtendClientAreaToDecorationsHint = true;
         ExtendClientAreaTitleBarHeightHint = 42;
         Background = Brushes.Transparent;
-        FontFamily = new FontFamily("Segoe UI Variable Text, Segoe UI");
+        FontFamily = new FontFamily(Typography.UiFamily);
         TextOptions.SetTextRenderingMode(this, TextRenderingMode.Antialias);
         _preview = new MotionPreview(_p, S, _notes);
         ApplyLook();
@@ -167,12 +167,12 @@ internal sealed partial class SettingsWindow : Window
         WindowDecorationProperties.SetElementRole(drag, WindowDecorationsElementRole.TitleBar);
         Grid.SetColumnSpan(drag, 2);
         top.Children.Add(drag);
-        var title = Kit.Text($"{AppInfo.Name} Settings", _p.Muted, 12);
+        var title = Kit.Text($"{AppInfo.Name} Settings", _p.Muted, Typography.Small);
         title.Margin = new Thickness(18, 0, 0, 0);
         title.IsHitTestVisible = false;
         top.Children.Add(title);
-        var close = Kit.IconButton(Glyph.Close, "Close (Esc)", _p, Close, 34);
-        close.Margin = new Thickness(0, 0, 6, 0);
+        var close = Kit.IconButton(Glyph.Close, "Close (Esc)", _p, Close, 32);
+        close.Margin = new Thickness(0, 0, 8, 0);
         Grid.SetColumn(close, 1);
         top.Children.Add(close);
         root.Children.Add(top);
@@ -182,9 +182,14 @@ internal sealed partial class SettingsWindow : Window
         var railHost = new StackPanel { Margin = new Thickness(10, 4, 10, 10), Spacing = 12 };
         _find = new TextBox
         {
-            PlaceholderText = "Find a setting", FontSize = 13, Height = 34, CornerRadius = new CornerRadius(8), Padding = new Thickness(8, 7, 8, 0),
-            Foreground = new SolidColorBrush(_p.Ink), CaretBrush = new SolidColorBrush(_p.Caret),
-            InnerLeftContent = new GlyphIcon(char.ConvertFromUtf32(0xf68f), _p.Muted, 15, 0, Glyph.Fluent) { Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center },
+            PlaceholderText = "Find a setting",
+            FontSize = Typography.Body,
+            Height = 32,
+            CornerRadius = new CornerRadius(Shape.Control),
+            Padding = new Thickness(8, 8, 8, 0),
+            Foreground = new SolidColorBrush(_p.Ink),
+            CaretBrush = new SolidColorBrush(_p.Caret),
+            InnerLeftContent = new GlyphIcon(char.ConvertFromUtf32(0xf68f), _p.Muted, Typography.IconInput, 0, Glyph.Fluent) { Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center },
         };
         Avalonia.Automation.AutomationProperties.SetName(_find, "Find a setting");
         // Results build matching rows, so they wait for a pause in typing; clearing the box is instant.
@@ -216,13 +221,13 @@ internal sealed partial class SettingsWindow : Window
         {
             var on = id == selected;
             var face = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(12, 0), VerticalAlignment = VerticalAlignment.Center };
-            face.Children.Add(new GlyphIcon(char.ConvertFromUtf32(glyph), on ? IconInk : _p.Muted, 18, 0, Glyph.Fluent) { VerticalAlignment = VerticalAlignment.Center });
-            face.Children.Add(Kit.Text(name, on ? _p.Ink : _p.Muted, 14, on ? FontWeight.SemiBold : FontWeight.Normal));
-            var item = Kit.Plain(face, _p, height: 36, radius: 8);
+            face.Children.Add(new GlyphIcon(char.ConvertFromUtf32(glyph), on ? IconInk : _p.Muted, Typography.IconLarge, 0, Glyph.Fluent) { VerticalAlignment = VerticalAlignment.Center });
+            face.Children.Add(Kit.Text(name, on ? _p.Ink : _p.Muted, Typography.Large, on ? Typography.Strong : Typography.Regular));
+            var item = Kit.Plain(face, _p, height: 36, radius: Shape.Popup);
             item.HorizontalAlignment = HorizontalAlignment.Stretch;
             if (on && item.Content is Border b)
             {
-                var fill = new SolidColorBrush(_p.Accent, _p.Dark ? .22 : .18);
+                var fill = new SolidColorBrush(_p.Accent, Paint.Selected(_p.Dark));
                 b.Background = fill;
                 item.PointerExited += (_, _) => b.Background = fill;
             }
@@ -255,7 +260,7 @@ internal sealed partial class SettingsWindow : Window
         var shift = new TranslateTransform(0, 10);
         page.RenderTransform = shift;
         page.Opacity = 0;
-        Anim.Run(page, 150, t => { var e = Anim.EaseOut(t); page.Opacity = e; shift.Y = 10 * (1 - e); }, () => { page.Opacity = 1; page.RenderTransform = null; });
+        Anim.Run(page, MotionTokens.SettingsPage, t => { var e = Anim.EaseOut(t); page.Opacity = e; shift.Y = 10 * (1 - e); }, () => { page.Opacity = 1; page.RenderTransform = null; });
     }
 
     private StackPanel BuildSection(string section, bool withPreview, string? query = null)
@@ -304,7 +309,7 @@ internal sealed partial class SettingsWindow : Window
             page.Children.Add(Group(name));
             page.Children.Add(Card([.. matches]));
         }
-        if (!any) page.Children.Add(Kit.Text($"No setting matches “{query}”.", _p.Muted, 13));
+        if (!any) page.Children.Add(Kit.Text($"No setting matches “{query}”.", _p.Muted, Typography.Body));
         return page;
     }
 
@@ -325,8 +330,8 @@ internal sealed partial class SettingsWindow : Window
         Control CaretStyles()
         {
             var cells = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-            cells.Children.Add(Tile(CaretPicture(false), "Bar", S.CaretStyle != "block", () => Set(() => S.CaretStyle = "bar", rows: true), 58));
-            cells.Children.Add(Tile(CaretPicture(true), "Block", S.CaretStyle == "block", () => Set(() => S.CaretStyle = "block", rows: true), 58));
+            cells.Children.Add(Tile(CaretPicture(false), "Bar", S.CaretStyle != "block", () => Set(() => S.CaretStyle = "bar", rows: true), 56));
+            cells.Children.Add(Tile(CaretPicture(true), "Block", S.CaretStyle == "block", () => Set(() => S.CaretStyle = "block", rows: true), 56));
             return cells;
         }
         page.Children.Add(Card(
@@ -347,7 +352,7 @@ internal sealed partial class SettingsWindow : Window
         {
             var materials = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
             foreach (var (id, name) in new[] { ("acrylic", "Acrylic"), ("mica", "Mica"), ("solid", "Solid") })
-                materials.Children.Add(Tile(MaterialPicture(id), name, S.Material == id, () => Set(() => S.Material = id, rows: true), 78));
+                materials.Children.Add(Tile(MaterialPicture(id), name, S.Material == id, () => Set(() => S.Material = id, rows: true), 80));
             return materials;
         }
         page.Children.Add(Card(
@@ -502,7 +507,7 @@ internal sealed partial class SettingsWindow : Window
         {
             var tiles = new UniformGrid { Columns = 5 };
             foreach (var (id, name) in new[] { ("remember", "Where I left it"), ("center", "Center"), ("mouse", "Mouse"), ("tray", "Above the tray"), ("dropdown", "Drop down") })
-                tiles.Children.Add(Tile(new ScreenPicture(id, _p) { Height = 62 }, name, S.OpenAt == id, () => Set(() => S.OpenAt = id, rows: true), 104));
+                tiles.Children.Add(Tile(new ScreenPicture(id, _p) { Height = 64 }, name, S.OpenAt == id, () => Set(() => S.OpenAt = id, rows: true), 104));
             return tiles;
         }
         page.Children.Add(Card([
@@ -539,13 +544,17 @@ internal sealed partial class SettingsWindow : Window
         {
             var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
             var label = current();
-            if (label is "off" or "") row.Children.Add(Kit.Text("None", _p.Muted, 13));
+            if (label is "off" or "") row.Children.Add(Kit.Text("None", _p.Muted, Typography.Body));
             else
                 foreach (var key in label.Split('+', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
                     row.Children.Add(new Border
                     {
-                        BorderBrush = Line, BorderThickness = new Thickness(1, 1, 1, 2), CornerRadius = new CornerRadius(5), Padding = new Thickness(8, 2),
-                        Background = new SolidColorBrush(_p.Surface), Child = Kit.Text(key, _p.Ink, 12),
+                        BorderBrush = Line,
+                        BorderThickness = new Thickness(1, 1, 1, 2),
+                        CornerRadius = new CornerRadius(Shape.Key),
+                        Padding = new Thickness(8, 2),
+                        Background = new SolidColorBrush(_p.Surface),
+                        Child = Kit.Text(key, _p.Ink, Typography.Small),
                     });
             var change = TextButton("Change", ShowBox);
             change.Margin = new Thickness(8, 0, 0, 0);
@@ -557,10 +566,15 @@ internal sealed partial class SettingsWindow : Window
             var label = current();
             var box = new TextBox
             {
-                Text = label is "off" ? "" : label, Width = 200, FontSize = 13, PlaceholderText = allowEmpty ? "Empty for none" : "e.g. Ctrl+Alt+Shift+S",
-                Foreground = new SolidColorBrush(_p.Ink), CaretBrush = new SolidColorBrush(_p.Caret), CornerRadius = new CornerRadius(7),
+                Text = label is "off" ? "" : label,
+                Width = 200,
+                FontSize = Typography.Body,
+                PlaceholderText = allowEmpty ? "Empty for none" : "e.g. Ctrl+Alt+Shift+S",
+                Foreground = new SolidColorBrush(_p.Ink),
+                CaretBrush = new SolidColorBrush(_p.Caret),
+                CornerRadius = new CornerRadius(Shape.Control),
             };
-            var status = Kit.Text("Enter to apply, Esc to cancel", _p.Muted, 11.5);
+            var status = Kit.Text("Enter to apply, Esc to cancel", _p.Muted, Typography.Caption);
             box.KeyDown += (_, e) =>
             {
                 if (e.Key == Key.Escape) { e.Handled = true; ShowCaps(); }
@@ -597,7 +611,7 @@ internal sealed partial class SettingsWindow : Window
 
             if (_pendingNotesFolder is { } target)
             {
-                var pending = Kit.Text($"New location: {target}", _p.Muted, 12);
+                var pending = Kit.Text($"New location: {target}", _p.Muted, Typography.Small);
                 pending.TextWrapping = TextWrapping.Wrap;
                 details.Children.Add(pending);
             }
@@ -658,7 +672,7 @@ internal sealed partial class SettingsWindow : Window
 
     private Control InlineNote(string text, Color color)
     {
-        var label = new TextBlock { Text = text, FontSize = 12, Foreground = new SolidColorBrush(color), TextWrapping = TextWrapping.Wrap };
+        var label = new TextBlock { Text = text, FontSize = Typography.Small, Foreground = new SolidColorBrush(color), TextWrapping = TextWrapping.Wrap };
         return label;
     }
 

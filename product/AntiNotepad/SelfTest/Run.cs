@@ -125,6 +125,8 @@ internal static partial class SelfTest
         Check(SessionEndCloseChecks(out var sessionEndReport), "session-end close: " + sessionEndReport);
         ContractsChecks(failures);
 
+        Check(DesignChecks(out var designReport), "design dump: " + designReport);
+
         Console.WriteLine(failures.Count == 0 ? "SELFTEST PASS" : "SELFTEST FAIL\n" + string.Join("\n", failures));
         return failures.Count == 0 ? 0 : 1;
     }

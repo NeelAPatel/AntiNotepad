@@ -1,0 +1,1127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AntiNotepad Token Playground</title>
+<style>
+/* Layout: header (presets) > left column = sticky zoomable canvas with the redrawn pad, right column = scrolling
+   adjuster cards. The pad is drawn in client DIPs from docs/playground/measure.md and re-drawn on every token change;
+   every size, gap, radius, stroke and font on it is read through T(token, today) in the script below. Each drawn
+   element carries data-t (tokens) and data-r (roles) so the eye buttons can outline exactly what a value drives. */
+:root{--bg:#f7f6f3;--panel:#ffffff;--sunk:#f1f0ec;--fg:#1f1e1d;--fg2:#5f5e5a;--muted:#9a9893;--line:rgba(40,30,20,.09);--line2:rgba(40,30,20,.18);
+--acc:#2f6fb5;--acc-bg:#e7f0fa;--warn:#b25e00;--warn-bg:#fdecd4;--stage:#d9d7d1;
+--sans:'Segoe UI Variable Text','Segoe UI',system-ui,sans-serif;--mono:'Cascadia Mono',Consolas,ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#181817;--panel:#21201e;--sunk:#1c1b1a;--fg:#ecebe6;--fg2:#b4b2a9;--muted:#77756f;
+--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.17);--acc:#8cbcf0;--acc-bg:#16304d;--warn:#f6b867;--warn-bg:#45290a;--stage:#2b2a28;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.45 var(--sans)}
+button,input,select{font:inherit;color:inherit}
+code{font-family:var(--mono);font-size:12px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:12px 16px;border-bottom:1px solid var(--line2)}
+header h1{font-size:16px;font-weight:600;margin:0;margin-right:auto}
+header .state{color:var(--fg2);font-size:12px}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden}
+.seg button{background:var(--panel);border:0;padding:5px 12px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line2)}
+.seg button[aria-pressed=true]{background:var(--acc-bg);color:var(--acc);font-weight:600}
+.btn{background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:4px 10px;cursor:pointer}
+.btn:hover{background:var(--sunk)}
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,440px);align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}.left{position:static;height:auto;max-height:80vh}}
+
+/* canvas column */
+.left{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;border-right:1px solid var(--line2);min-width:0}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.bar label{display:inline-flex;align-items:center;gap:5px;color:var(--fg2);font-size:12px}
+.bar select{background:var(--panel);border:1px solid var(--line2);border-radius:6px;padding:2px 6px;font-size:12px}
+.zoom{display:inline-flex;align-items:center;gap:6px}
+.zoom input[type=range]{width:130px}
+.zoom output{min-width:42px;text-align:right;font-variant-numeric:tabular-nums}
+.stage{flex:1;overflow:auto;background:var(--stage);display:grid;padding:24px}
+.sizer{margin:auto;position:relative}
+.scaler{transform-origin:0 0;display:flex;gap:24px;align-items:flex-start}
+
+/* the redrawn pad (client DIPs; Segoe UI chrome, Cascadia Mono text, Segoe Fluent Icons glyphs) */
+.pad{position:relative;width:506px;height:643px;background:var(--pbg);border-radius:8px;overflow:hidden;color:var(--ink);flex:none;
+  font-family:'Segoe UI Variable Text','Segoe UI',system-ui,sans-serif}
+.pad .abs{position:absolute}
+.pad .saved{white-space:nowrap;color:var(--mute);line-height:20px}
+.pad .badge{display:flex;align-items:center;white-space:nowrap;color:var(--badge);height:20px;overflow:hidden}
+.pad .ib{position:absolute;display:grid;place-items:center;color:var(--ink);background:transparent}
+.pad .ib:hover,.pad .ib.hv,.pad .hov:hover,.pad .hov.hv{background:var(--hover)}
+.pad .ib.focus{background:var(--focusbg);border-radius:0 !important}
+.pad .gl{font-family:'Segoe Fluent Icons','Segoe MDL2 Assets';font-weight:400;display:block;text-align:center;font-style:normal;white-space:nowrap}
+.pad .pill{position:absolute;background-clip:padding-box}
+.pad .hov{position:absolute;display:grid;place-items:center;color:var(--mute)}
+.pad .cnt{font-variant-numeric:tabular-nums;color:var(--mute);white-space:nowrap}
+.pad .dot{display:block;box-sizing:border-box}
+.pad .editor{position:absolute;left:0;right:0;overflow:hidden}
+.pad .ln{position:absolute;left:36px;white-space:pre;font:15px/23px 'Cascadia Mono',Consolas,ui-monospace,monospace;color:var(--ink);height:23px}
+.pad .h1{color:var(--h1);font-size:19.5px}.pad .h2{color:var(--h2);font-size:17.25px}.pad .dim{color:var(--mute)}
+.pad .code{color:var(--code)}.pad .lnk{color:var(--lnk);text-decoration:underline}.pad .q{color:var(--mute);font-style:italic}
+.pad .bul{color:var(--mute)}.pad .strike{text-decoration:line-through}
+.pad .box{display:inline-block;width:12.9px;height:12.9px;border:1.9px solid var(--box);border-radius:3.612px;vertical-align:-2px;margin-right:9px;margin-left:1px;box-sizing:border-box}
+.pad .box.done{background:var(--boxdone);border-color:var(--boxdone)}
+.pad .guide{position:absolute;width:1px;background:var(--guide)}
+.refimg{flex:none;display:block}
+/* search, menu and toast views (drawn over the same pad) */
+.pad{--pbg:#1c1b19;--ink:#e8e4da;--inkc:232,228,218;--mute:#8f897d;--mutec:143,137,125;--badge:#c9a2f0;--badgec:201,162,240;--focusbg:#0b0b0a;--h1:#f07a70;--h2:#f0a05a;--lnk:#7fb7e6;--code:#9bd48e;--box:#dba745;--boxdone:#6e695f;--guide:#33302d;--gold:#e0a53d;--goldc:224,165,61;--pop:#21201e;--pill:#262522;--field:#262522;--card:40,38,35;--toastc:233,229,219;--toastink:#1c1b19;--caret:#f2b84b;--ring:#fff}
+.pad.light{--pbg:#e6e2d8;--ink:#2b2a27;--inkc:43,42,39;--mute:#8a857a;--mutec:138,133,122;--badge:#7a4fb0;--badgec:122,79,176;--focusbg:#f3f0e8;--h1:#c63a33;--h2:#c46614;--lnk:#2f6f9f;--code:#3d8a47;--box:#d88a3b;--boxdone:#a8a398;--guide:#c1b9af;--gold:#c98a1c;--goldc:201,138,28;--pop:#f7f4ed;--pill:#fffdf8;--field:#fffdf8;--card:255,253,248;--toastc:43,42,39;--toastink:#f4f1ea;--caret:#c98a1c;--ring:#2b2a27}
+.pad.pop{overflow:visible;margin-bottom:40px}
+.pad .gold{color:var(--gold)}
+.pad .rc{position:absolute;overflow:hidden;box-sizing:border-box}
+.pad .rt{position:absolute;left:12px;right:12px;white-space:nowrap;overflow:hidden}
+.pad .rb{position:absolute;left:12px;right:12px;white-space:pre;overflow:hidden;font-family:'Cascadia Mono',Consolas,ui-monospace,monospace;color:var(--mute)}
+.pad .rm{position:absolute;left:12px;white-space:nowrap;color:var(--mute)}
+.pad .menu{position:absolute;box-sizing:border-box;background:var(--pop);color:var(--ink);padding:4px;display:flex;flex-direction:column;font-family:'Segoe UI Variable Text','Segoe UI',system-ui,sans-serif}
+.pad .mrow{position:relative;display:flex;align-items:center;flex:none;padding:0 8px}
+.pad .mrow.hv,.pad .mrow:hover,.pad .mact>div.hv,.pad .mact>div:hover{background:var(--hover)}
+.pad .mrow .gl{flex:none;width:28px}
+.pad .mrow .sc{margin-left:auto;padding-left:24px;margin-right:8px;color:var(--mute);white-space:nowrap}
+.pad .dis{opacity:.4}
+.pad .mact{display:grid;grid-template-columns:repeat(4,1fr);flex:none}
+.pad .mact>div{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:6px}
+.pad .msep{flex:none;height:1px;margin:4px 0}
+.pad .toast{position:absolute;left:0;width:506px;display:flex;justify-content:center;pointer-events:none}
+.pad .toast>div{white-space:nowrap;color:var(--toastink);padding:var(--toast-pad) 12px}
+.pad.tin .toast>div{animation:tfade var(--tin) ease-out both}
+@keyframes tfade{from{opacity:0}to{opacity:1}}
+.pad.tout .toast>div{opacity:0;transition:opacity var(--tout) ease-in}
+.pad{isolation:isolate}
+#ovl{position:absolute;pointer-events:none;max-width:none}
+#ovl[hidden]{display:none}
+.ovl{display:inline-flex;align-items:center;gap:6px}
+.ovl output{min-width:34px;font-size:12px;color:var(--fg2);font-variant-numeric:tabular-nums}
+.ovl input[type=range]{width:90px}
+#flashLayer{position:absolute;inset:0;pointer-events:none}
+.flash{position:absolute;border:solid #ff2d8f;border-radius:4px;pointer-events:none;animation:fl 1s ease-out 1 forwards;box-shadow:0 0 0 1px rgba(255,255,255,.6)}
+@keyframes fl{0%{opacity:1}25%{opacity:.1}50%{opacity:1}75%{opacity:.1}100%{opacity:0}}
+
+/* adjuster pane */
+.right{padding:14px 16px 60px;display:grid;gap:14px;min-width:0}
+.hint{color:var(--fg2);font-size:12px;margin:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:10px}
+.card h2{margin:0;font-size:13px;font-weight:600;display:flex;justify-content:space-between;gap:8px}
+.card h2 span{color:var(--muted);font-weight:400;font-size:12px}
+.card h3{margin:6px 0 -4px;font-size:12px;font-weight:600;color:var(--fg2)}
+.tok{display:grid;gap:5px;padding-top:10px;border-top:1px solid var(--line)}
+.tok.first{border-top:0;padding-top:0}
+.tok .hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tok .hd b{font-family:var(--mono);font-size:12.5px;font-weight:600}
+.eye{background:none;border:1px solid var(--line2);border-radius:6px;width:24px;height:22px;padding:0;cursor:pointer;display:inline-grid;place-items:center;color:var(--fg2);flex:none}
+.eye:hover,.eye:focus-visible{background:var(--acc-bg);color:var(--acc)}
+.eye svg{width:15px;height:15px}
+.tag{font-size:11px;border-radius:6px;padding:0 6px;background:var(--sunk);color:var(--fg2);border:1px solid var(--line)}
+.tag.on{background:var(--acc-bg);color:var(--acc);border-color:transparent}
+.tag.cust{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.ctl{display:grid;grid-template-columns:76px minmax(0,1fr) auto;gap:8px;align-items:center}
+.ctl input[type=number]{width:100%;background:var(--panel);border:1px solid var(--line2);border-radius:6px;padding:3px 6px;font-variant-numeric:tabular-nums}
+.ctl input[type=range]{width:100%;accent-color:var(--acc)}
+.ctl input[type=range].un{opacity:.55}
+/* step markers under each slider: ticks = Recommended steps of the family, own step bold, hollow = Alternative, dots = Today */
+.rng{position:relative;height:40px;min-width:0}
+.rng input{display:block;margin:0;width:100%}
+.ticks{position:absolute;left:0;right:0;top:19px;height:20px;pointer-events:none}
+.ticks>*{position:absolute}
+.tk{top:0;width:1px;height:6px;background:var(--fg2);transform:translateX(-.5px)}
+.tk.own{width:2px;height:10px;background:var(--acc);transform:translateX(-1px)}
+.tl{top:9px;font-size:10px;line-height:1;color:var(--muted);transform:translateX(-50%);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tl.own{top:11px;color:var(--acc);font-weight:600}
+.ta{top:0;width:6px;height:6px;border:1px solid var(--fg2);transform:translateX(-50%) rotate(45deg);border-radius:1px}
+.td{top:1px;width:4px;height:4px;border-radius:50%;background:var(--muted);opacity:.55;transform:translateX(-50%)}
+.near{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg2)}
+.near .btn{padding:0 8px;line-height:18px}
+.near b{color:var(--fg);font-weight:600}
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:12px;color:var(--fg2);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.legend span.k{display:inline-flex;align-items:center;gap:6px}
+.legend i{position:relative;display:inline-block;width:12px;height:12px}
+.legend i::after{content:"";position:absolute;left:50%;top:50%}
+.legend .l-rec::after{width:1px;height:10px;background:var(--fg2);transform:translate(-50%,-50%)}
+.legend .l-own::after{width:2px;height:12px;background:var(--acc);transform:translate(-50%,-50%)}
+.legend .l-alt::after{width:6px;height:6px;border:1px solid var(--fg2);border-radius:1px;transform:translate(-50%,-50%) rotate(45deg)}
+.legend .l-today::after{width:4px;height:4px;border-radius:50%;background:var(--muted);opacity:.55;transform:translate(-50%,-50%)}
+.legend label{display:inline-flex;align-items:center;gap:5px;margin-left:auto;color:var(--fg)}
+.ctl select{background:var(--panel);border:1px solid var(--line2);border-radius:6px;padding:3px 6px;width:100%}
+.meta{font-size:12px;color:var(--fg2);display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
+.what{font-size:12px;color:var(--fg2)}
+.linkish{background:none;border:0;padding:0;color:var(--acc);cursor:pointer;font-size:12px}
+details{font-size:12px;color:var(--fg2)}
+details summary{cursor:pointer}
+details ul{margin:4px 0 0;padding:0;list-style:none;display:grid;gap:2px;font-family:var(--mono);font-size:11.5px;color:var(--fg2)}
+details li{display:flex;align-items:center;gap:6px}
+details li .eye{width:20px;height:18px}
+details li .eye svg{width:12px;height:12px}
+.rolemsg{font-family:var(--sans);font-size:12px;color:var(--warn);margin-top:3px}
+.note{font-size:12px;color:var(--muted)}
+.smp{display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 12px;border-radius:8px;background:#1c1b19;color:#e8e4da;overflow:hidden;font-family:'Segoe UI Variable Text','Segoe UI',system-ui,sans-serif}
+.smp.lite{background:#ece9e1;color:#1f1e1d}
+.smp.grey{background:#4a4741}
+.smp .gl{font-family:'Segoe Fluent Icons','Segoe MDL2 Assets';line-height:1}
+.smp .lbl{font-size:11px;color:#8f897d;margin-left:auto;white-space:nowrap}
+.smp.lite .lbl{color:#6b675e}
+.smp .mvtrack{position:relative;width:150px;height:14px;border-radius:7px;background:rgba(232,228,218,.12)}
+.smp .mvdot{position:absolute;left:0;top:0;width:14px;height:14px;border-radius:7px;background:#f2b84b;transition-property:transform;transition-timing-function:ease-out}
+.smp .mvdot.on{transform:translateX(136px)}
+.sflash{animation:sfl 1s ease-out 1}
+@keyframes sfl{0%,50%{outline:3px solid #ff2d8f;outline-offset:2px}25%,75%{outline-color:transparent}100%{outline:3px solid transparent}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Token playground <span class="state" id="presetState"></span></h1>
+  <span class="state">Set everything to</span>
+  <div class="seg" id="presets" role="group" aria-label="Presets">
+    <button type="button" data-preset="today" aria-pressed="false">Today</button>
+    <button type="button" data-preset="recommended" aria-pressed="false">Recommended</button>
+    <button type="button" data-preset="alternative" aria-pressed="false">Alternative</button>
+  </div>
+  <span class="state">Picks</span>
+  <button class="btn" type="button" id="saveBtn" title="Writes docs/playground/picks.json">Save picks</button>
+  <button class="btn" type="button" id="loadBtn" title="Restores the values from docs/playground/picks.json">Load picks</button>
+  <button class="btn" type="button" id="copyBtn" title="Copies the picks as JSON">Copy</button>
+  <span class="state" id="saveMsg" role="status"></span>
+</header>
+<main>
+  <section class="left" aria-label="Notepad canvas">
+    <div class="bar">
+      <div class="zoom">
+        <button class="btn" type="button" id="zOut" aria-label="Zoom out">&minus;</button>
+        <input type="range" id="zRange" min="50" max="400" step="5" value="100" aria-label="Zoom">
+        <button class="btn" type="button" id="zIn" aria-label="Zoom in">+</button>
+        <output id="zOut2">100%</output>
+        <button class="btn" type="button" id="zReset" title="Back to 1:1">1:1</button>
+      </div>
+      <label>Theme
+        <select id="themeSel" aria-label="Theme"><option value="dark">Dark</option><option value="light">Light</option></select>
+      </label>
+      <label>Pager mode
+        <select id="modeSel" aria-label="Pager mode"><option value="docked">Docked</option><option value="overlay">Overlay</option><option value="float">Float</option></select>
+      </label>
+      <label id="revealLbl" hidden title="Overlay and float hide the bar and pager until the pointer reaches the edge"><input type="checkbox" id="revealOn"> Reveal bar + pager</label>
+      <label>View
+        <select id="viewSel" aria-label="View on the canvas">
+          <option value="docked">Docked pad</option>
+          <option value="search">Search</option>
+          <option value="menu">Right-click menu</option>
+          <option value="toast">Toast</option>
+        </select>
+      </label>
+      <button class="btn" type="button" id="toastPlay" title="Replays the toast fade in and out with the Motion tokens" hidden>Replay toast</button>
+      <label><input type="checkbox" id="showHover"> Show hover states</label>
+      <label><input type="checkbox" id="showFocus"> Show focus ring</label>
+      <label>Capture
+        <select id="refSel" aria-label="Reference capture beside the canvas">
+          <option value="">off</option>
+          <option value="pad-stack-docked-solid-dark-default-2x.png">Solid 2x render</option>
+          <option value="pad-stack1-current-dark-default.png">Acrylic grab (pager visible)</option>
+          <option value="search-results-solid-dark-default-2x.png">Search, Solid 2x render</option>
+          <option value="menu-contextmenu-hover-row-solid-dark-default.png">Menu, Solid grab</option>
+          <option value="toast-copied-solid-dark-default-2x.png">Toast, Solid 2x render</option>
+        </select>
+      </label>
+      <span class="ovl">
+        <label><input type="checkbox" id="ovlOn"> Compare overlay</label>
+        <select id="ovlSel" aria-label="Capture to overlay">
+          <option value="pad-stack-docked-solid-dark-default-2x.png">Solid 2x render</option>
+          <option value="pad-stack1-current-dark-default.png">Acrylic grab</option>
+          <option value="search-results-solid-dark-default-2x.png">Search, Solid 2x render</option>
+          <option value="menu-contextmenu-hover-row-solid-dark-default.png">Menu, Solid grab</option>
+          <option value="toast-copied-solid-dark-default-2x.png">Toast, Solid 2x render</option>
+        </select>
+        <input type="range" id="ovlOp" min="0" max="100" step="1" value="50" aria-label="Overlay opacity">
+        <output id="ovlOpOut">50%</output>
+        <label><input type="checkbox" id="ovlDiff"> Difference</label>
+      </span>
+    </div>
+    <div class="stage" id="stage">
+      <div class="sizer" id="sizer"><div class="scaler" id="scaler"><div class="pad" id="pad"><div id="art"></div><img id="ovl" alt="" hidden><div id="flashLayer"></div></div></div></div>
+    </div>
+  </section>
+  <section class="right" id="cards" aria-label="Token adjusters">
+    <p class="hint">Docked pad, dark, default size (506 x 643). Move a value and the canvas redraws. <b>Today</b> shows each
+      role at its current value; touching a token sets every role it replaces to that one number. The eye button outlines
+      what a token (or one role in its Replaces list) drives; where that is not in this view, it flashes the sample.</p>
+    <div class="legend" aria-label="Slider marker legend">
+      <span class="k"><i class="l-rec"></i>Recommended step</span>
+      <span class="k"><i class="l-own"></i>this token's step</span>
+      <span class="k"><i class="l-alt"></i>Alternative step</span>
+      <span class="k"><i class="l-today"></i>Today's old values</span>
+      <label title="When on, sliders and number boxes land only on steps of the active preset (Alternative if you started from it, else Recommended)"><input type="checkbox" id="snapOn"> Snap to steps</label>
+    </div>
+  </section>
+</main>
+<script>
+"use strict";
+// ---- state ----------------------------------------------------------------------------------------------------
+// val[name] is null (every role keeps its own today value) or one number every role of the token takes.
+const CARDS = [
+  ["Corners", ["corners"]], ["Text size", ["text"]], ["Weight", ["weight"]], ["Icon size", ["icon"]],
+  ["Spacing", ["space"]], ["Stroke", ["stroke"]], ["Shadow", ["shadow"]],
+  ["Transparency", ["wash", "strength"]], ["Motion", ["motion"]]
+];
+const SUB = { wash: "Washes (ink over surface)", strength: "Strengths (one value, both themes)" };
+const q = new URLSearchParams(location.search);
+let TOK = [];            // every scale token with a card row
+let ALL = [];            // tokens that hold a value (everything except the Corner.Round formula)
+const val = {};
+let used = new Set();    // tokens attached to elements in the current view
+let ROLES = {};
+let zoom = 100;
+let flashTimer = 0;
+let theme = q.get("theme") === "light" ? "light" : "dark";
+let mode = ["docked", "overlay", "float"].includes(q.get("mode")) ? q.get("mode") : "docked";
+let light = false, TH = "Dark", pbc = "114,107,96";   // set at the start of each draw from the theme
+let view = ["docked", "search", "menu", "toast"].includes(q.get("view")) ? q.get("view") : "docked";
+
+const num = (x) => typeof x === "number";
+const T = (name, today, role) => {
+  const token = byName(name), v = val[name], mapping = ROLES[role];
+  if (base === "alternative" && mapping && mapping.stepsAlt && token && v === token.alternative) {
+    const alt = byName(mapping.stepsAlt[0]);
+    return val[alt.name] == null ? today : val[alt.name];
+  }
+  return v == null ? today : v;
+};
+const px = (n) => (Math.round(n * 1000) / 1000) + "px";
+const byName = (n) => TOK.find((t) => t.name === n);
+// the value a sample graphic shows: the set value, else the first old value, else the Alternative step
+const cur = (t) => val[t.name] != null ? val[t.name] : t.today.length ? t.today[0] : t.alternative;
+const curOf = (n) => cur(byName(n));
+
+// What each token drives in the app, one line, for the eye button and the card.
+const TARGETS = {
+  "Corner.Xs": "The thin text caret and 1 px hairline marks (the caret bar left of the heading).",
+  "Corner.Sm": "Keys, controls, in-page boxes and the bar badges (slot, mode, dev).",
+  "Corner.Mid": "Alternative only: a 6 px step between Sm and Md. Nothing uses it in Recommended.",
+  "Corner.Md": "Popups, cards, and the hover boxes behind bar icons and pager parts.",
+  "Corner.Lg": "The pager pill and dialogs.",
+  "Corner.Round": "Pager dots and other circles: always half the size.",
+  "Text.S": "Badges, the Saved label, the running-timer chip and the pager count.",
+  "Text.M": "Menu labels and body text in Settings (not in the docked view).",
+  "Text.L": "Input text: the search field and Settings inputs.",
+  "Text.XL": "Dialog and panel titles.",
+  "Text.2XL": "Display text, the largest title.",
+  "Weight.Regular": "Normal text weight: the Saved label and chrome text.",
+  "Weight.Strong": "Badge text, the pager count and emphasised labels.",
+  "Weight.Bold": "Markdown headings and bold in the editor only.",
+  "Icon.S": "Small glyphs in rows and chips.",
+  "Icon.M": "Bar icons, pager arrows, search-field and menu icons.",
+  "Icon.L": "Large glyphs such as Settings tiles.",
+  "Stroke.Thin": "Hairlines: pager separator, bar divider, pill border, empty-dot rings.",
+  "Stroke.Mid": "Alternative only: a 1.5 px half step for focus and tile rings.",
+  "Stroke.Thick": "Focus ring (search field, buttons), selected swatch and selected tile ring.",
+  "Shadow.Low.Blur": "Soft shadow under the pager pill, the toast and the save-failure card.",
+  "Shadow.Low.OffsetY": "How far the pill, toast and save-failure shadow drops.",
+  "Shadow.Low.DarkAlpha": "Strength of that shadow on the dark theme.",
+  "Shadow.Low.LightAlpha": "Strength of that shadow on the light theme.",
+  "Shadow.High.Blur": "Soft shadow under the right-click menu and dropdown popups.",
+  "Shadow.High.OffsetY": "How far the menu and dropdown shadow drops.",
+  "Shadow.High.DarkAlpha": "Strength of the menu shadow on the dark theme.",
+  "Shadow.High.LightAlpha": "Strength of the menu shadow on the light theme.",
+  "Motion.Quick": "Caret glide between positions.",
+  "Motion.Fast": "Overlay and toast fade-in.",
+  "Motion.Base": "Window slide and fade, content reveal, bars reveal, pill fade, toast out, Settings page.",
+  "Motion.Slow": "Chrome shift, nudge, note arrive and swipe spring-back.",
+  "Wash.Faint.Dark": "Faint row stripe over the dark surface.",
+  "Wash.Faint.Light": "Faint row stripe over the light surface.",
+  "Wash.Hover.Dark": "Hover fill on bar icons, pager parts and menu rows (dark).",
+  "Wash.Hover.Light": "Hover fill on bar icons, pager parts and menu rows (light).",
+  "Wash.Press.Dark": "Pressed fill and the bar badge fill (dark).",
+  "Wash.Press.Light": "Pressed fill and the bar badge fill (light).",
+  "Wash.Selected.Dark": "Selected row fill (dark).",
+  "Wash.Selected.Light": "Selected row fill (light).",
+  "Strength.Faint": "Result borders, menu separators, faint markers and the pager pill border.",
+  "Strength.Mid": "Popup and field borders, dimmed text, the pager separator and bar divider.",
+  "Strength.Strong": "Error hints, menu captions and strong markers.",
+  "Strength.Full": "Card and toast surfaces, the current result, focus border, accent pen and card border (on).",
+  "Space.XS": "Bar edge inset, badge spacing, pill inset, icon spacing, pager row spacing, separator margin.",
+  "Space.S": "Badge padding and right inset, meta spacing, float gap, pager dot size, divider clearances.",
+  "Space.S2": "Alternative only: a second 8 px step.",
+  "Space.M": "First item inset in the bar and the text edge fade band.",
+  "Space.L": "Pager separator height and the dot hit-box width.",
+  "Space.XL": "The selected dot's hit-box width (slot view).",
+  "Space.2XL": "Pager count base width.",
+  "Space.Nudge": "Small optical nudges: glyph box extra and toast clearance."
+};
+
+// ---- element attributes for the eye buttons -------------------------------------------------------------------
+const CT = (r) => r.split(" ").map((x) => "ChromeTokens." + x).join(" ");
+const at = (tokens, roles) => ' data-t="' + tokens + '" data-r="' + CT(roles) + '"';
+
+// ---- pad drawing ----------------------------------------------------------------------------------------------
+// Segoe Fluent Icons code points from product/AntiNotepad/UI/Kit.cs (Glyph) and the pager row in PadWindow.Layout.cs.
+const GLYPH = { search: "", dock: "", pin: "", settings: "", hide: "", back: "", forward: "" };
+const BADGE_BRANCH = "⎇";   // the dev badge's branch mark; the app draws U+E0A0 from a Cascadia PL font when installed, else this
+
+// The note shown on the canvas: [css class, html]. Blank lines are null.
+const NOTE = [
+  ['h1', '<span class="bul" style="font-weight:400;color:#6e695f">#</span> AntiNotepad showcase'],
+  ['', 'Every editor feature on one page. Scroll it, fold'],
+  ['', 'it, resize the window.'],
+  null,
+  ['h2', 'Text'],
+  ['', 'Plain text, <b>bold</b>, <i>italic</i>, <span class="strike">struck out</span> and <span class="code">inline</span>'],
+  ['', '<span class="code">code</span>.'],
+  ['q', '&gt; A quoted line, for things someone else said.'],
+  ['', 'A long link shrinks to its host:'],
+  ['', '<span class="lnk">learn.microsoft.com/…/acrylic</span>'],
+  null,
+  ['h2', 'Checklist'],
+  ['', '<span class="box"></span>an open task'],
+  ['dim', '<span class="box done"></span><span class="strike">a finished task</span>'],
+  ['', '<span class="box"></span>Ctrl+Enter ticks the line you\'re on'],
+  null,
+  ['h2', 'Lists'],
+  ['', '<span class="bul">•</span> groceries'],
+  ['', '  <span class="bul">•</span> lemons, garlic, parmesan'],
+  ['', '  <span class="bul">•</span> the dark-roast coffee'],
+  ['', '    <span class="bul">•</span> whole beans, not ground'],
+  ['', '<span class="bul">•</span> errands'],
+  ['', '1. book the car service'],
+  ['dim', '2. return the library books'],
+  ['', '3. renew the passport']
+];
+
+function drawPad() {
+  used = new Set();
+  light = theme === "light"; TH = light ? "Light" : "Dark"; pbc = light ? "138,133,122" : "114,107,96";
+  const reveal = document.getElementById("revealOn").checked;
+  const chromeHidden = mode !== "docked" && !reveal;   // overlay and float: bar and pager appear on hover
+  const W = 506, H = 643;
+  // Acrylic and Mica centre the bar at y 20.5; Solid sits 4 DIP higher, at 16.5 (measure.md 9, item 1).
+  // While a capture overlay is on, the bar follows that capture so Today lines up with it.
+  const ov = overlayOn() ? CAPTURES[document.getElementById("ovlSel").value] : null;
+  const barDy = ov ? ov.bar : q.get("bar") === "solid" ? -3.5 : 0.5;
+
+  // tokens, each with the old value of the role that reads it
+  const edge = T("Space.XS", 4), pillInset = T("Space.XS", 4), bottomInset = T("Space.XS", 4);
+  const iconGap = T("Space.XS", 3), rowGap = T("Space.XS", 3), sepMargin = T("Space.XS", 5);
+  const first = T("Space.M", 10), fadeBand = T("Space.M", 12);
+  const badgeRight = T("Space.S", 6), badgePad = T("Space.S", 7, "ChromeTokens.BadgeHorizontalPadding"), dotW = T("Space.S", 7, "ChromeTokens.PagerDotWidth"), dotH = T("Space.S", 7, "ChromeTokens.PagerDotHeight");
+  const sepH = T("Space.L", 14), dotBtnW = T("Space.L", 16), countBase = T("Space.2XL", 30);
+  const btn = 32, digitW = 14, dotBtnH = ROLES["ChromeTokens.PagerDotButtonHeight"].presetValues[base], rowH = 40, glyph = T("Icon.M", 16);
+  const fsBadge = T("Text.S", 11.5), fsSaved = T("Text.S", 12), fsCount = T("Text.S", 11.5);
+  const wStrong = T("Weight.Strong", 600), wRegular = T("Weight.Regular", 400), wBold = T("Weight.Bold", 700);
+  const rBadge = T("Corner.Sm", 6, "ChromeTokens.BadgeCornerRadius"), rPill = T("Corner.Lg", 12), rCaret = T("Corner.Xs", 1);
+  const rHoverIcon = T("Corner.Md", 8), rHoverArrow = T("Corner.Md", 8), rHoverCount = T("Corner.Md", 8), rHoverDot = T("Corner.Md", 9);
+  const sSep = T("Stroke.Thin", 1), sPill = T("Stroke.Thin", 1), sDot = T("Stroke.Thin", 1.2), sFocus = T("Stroke.Thick", 2, "focus ring (1.5, search current 1.5)");
+  const aPill = T("Strength.Faint", 0.35), aSep = T("Strength.Mid", 0.5), aHover = T("Wash.Hover." + TH, light ? 0.06 : 0.09), aBadge = T("Wash.Press." + TH, light ? 0.13 : 0.18);
+  const shBlur = T("Shadow.Low.Blur", 14), shY = T("Shadow.Low.OffsetY", 3), shA = T("Shadow.Low." + TH + "Alpha", light ? 28 : 90) / 255;
+
+  // top bar, laid out from the right edge
+  const barTop = (rowH - btn) / 2 + barDy;
+  const iconsW = 5 * btn + 4 * iconGap;
+  const iconsLeft = W - edge - iconsW;
+  const showHover = document.getElementById("showHover").checked;
+  const showFocus = document.getElementById("showFocus").checked;
+  const names = ["search", "dock", "pin", "settings", "hide"];
+  let html = '<div class="abs" style="left:0;top:0;width:' + W + 'px;height:' + H + 'px;--hover:rgba(var(--inkc),' + aHover + ')">';
+
+  // editor text
+  const stripH = btn + 2 * pillInset + 2 * sPill + 2 * bottomInset;
+  const edTop = 40, edBottom = mode === "docked" ? H - stripH : H;
+  const edH = edBottom - edTop;
+  const mask = 'linear-gradient(to bottom,#000 ' + (edH - fadeBand) + 'px,transparent ' + edH + 'px)';
+  const e0 = html.length;
+  html += '<div class="editor" data-t="Space.M" data-r="ChromeTokens.TextEdgeFadeBand" style="top:' + edTop + 'px;height:' + edH + 'px;-webkit-mask-image:' + mask + ';mask-image:' + mask + '">';
+  NOTE.forEach((l, i) => {
+    if (!l || (i === 24 && mode === "docked")) return;
+    const top = 44.5 + 23 * i - edTop;
+    const w = (l[0] === "h1" || l[0] === "h2") ? wBold : 400;
+    html += '<div class="ln ' + l[0] + '" style="top:' + px(top) + ';font-weight:' + w + '"' + (w === wBold ? ' data-t="Weight.Bold" data-r="Typography.Bold"' : '') + '>' +
+      l[1].replace(/<b>/g, '<b style="font-weight:' + wBold + '">') + '</div>';
+  });
+  html += '<div class="guide" style="left:40px;top:' + px(44.5 + 23 * 17 - edTop + 4) + ';height:' + 4 * 23 + 'px"></div>';
+  html += '<div class="guide" style="left:58px;top:' + px(44.5 + 23 * 19 - edTop + 4) + ';height:23px"></div>';
+  html += '<div class="abs" data-t="Corner.Xs" data-r="Shape.Hairline" style="left:35.5px;top:' + px(47 - edTop) + ';width:2px;height:18px;border-radius:' + px(rCaret) + ';background:var(--caret)"></div>';
+  html += '</div>';
+  const e1 = html.length;
+  const b0 = html.length;
+
+  // saved label and dev badge
+  html += '<div class="abs saved"' + at("Text.S Space.M Weight.Regular", "SavedLabelFontSize FirstItemInset") + ' style="left:' + px(first) + ';top:' + px(rowH / 2 - 10 + barDy) + ';font-size:' + px(fsSaved) + ';font-weight:' + wRegular + '">Saved 1:37 PM</div>';
+  const textW = 134 * fsBadge / 11.5;
+  const badgeW = textW + 2 * badgePad;
+  html += '<div class="abs badge"' + at("Corner.Sm Text.S Space.S Weight.Strong Wash.Press." + TH + (base === "alternative" ? " Corner.Mid Space.S2" : ""), "BadgeCornerRadius BadgeFontSize BadgeHorizontalPadding BadgeRightInset BadgeDarkFillAlpha") +
+    ' style="left:' + px(iconsLeft - badgeRight - badgeW) + ';top:' + px(rowH / 2 - 10 + barDy) + ';width:' + px(badgeW) +
+    ';padding:1px ' + px(badgePad) + ' 2px;border-radius:' + px(rBadge) + ';background:rgba(var(--badgec),' + aBadge + ');font-size:' + px(fsBadge) + ';font-weight:' + wStrong + '">' +
+    '<span style="font-family:\'Segoe UI Symbol\',\'Cascadia Mono\',monospace;font-weight:400">' + BADGE_BRANCH + ' </span><span style="white-space:nowrap">docs/A4k-pla · 1:37 PM</span></div>';
+
+  // five icon buttons, drawn as the app does: one Segoe Fluent Icons glyph in a 32 x 32 hit box
+  names.forEach((n, i) => {
+    const cls = "ib" + (showHover ? " hv" : "") + (showFocus && n === "search" ? " focus" : "");
+    let st = 'left:' + px(iconsLeft + i * (btn + iconGap)) + ';top:' + px(barTop) + ';width:' + btn + 'px;height:' + btn + 'px;border-radius:' + px(rHoverIcon);
+    let extra = at("Space.XS Icon.M Corner.Md Wash.Hover." + TH + "", "BarEdgeInset IconSpacing IconGlyphSize TopIconHoverRadius");
+    if (n === "search" && showFocus) extra = at("Space.XS Icon.M Corner.Md Wash.Hover." + TH + " Stroke.Thick" + (base === "alternative" ? " Stroke.Mid" : ""), "BarEdgeInset IconSpacing IconGlyphSize TopIconHoverRadius");
+    if (showFocus && n === "search") st += ';box-shadow:inset 0 0 0 ' + px(sFocus) + ' var(--ring)';
+    // the font glyph sits half a DIP above the box centre in the app's render (ink 9..23 in a box centred at 16.5)
+    html += '<div class="' + cls + '"' + extra + ' style="' + st + '"><i class="gl" style="transform:translateY(-0.5px);font-size:' + px(glyph) + ';line-height:' + px(glyph) + ';width:' + px(glyph) + ';height:' + px(glyph) + '">' + GLYPH[n] + '</i></div>';
+  });
+
+  const b1 = html.length;
+
+  // pager pill (stack view: 9 dots, 7 filled and 2 empty)
+  const countW = countBase + digitW;
+  const dots = 9;
+  const inner = btn + rowGap + countW + rowGap + btn + rowGap + (sepMargin + sSep + sepMargin) + rowGap + dots * dotBtnW + (dots - 1) * rowGap;
+  const pillW = inner + 2 * pillInset + 2 * sPill;
+  const pillH = btn + 2 * pillInset + 2 * sPill;
+  const pillTop = H - bottomInset - pillH;
+  const p0 = html.length;
+  html += '<div class="pill"' + at("Corner.Lg Stroke.Thin Space.XS Strength.Faint Shadow.Low.Blur Shadow.Low.OffsetY Shadow.Low." + TH + "Alpha", "PillCornerRadius PillBorderThickness PillInset PillBottomInset PillBorderAlpha PillShadowBlur PillShadowOffsetY PillShadowDarkAlpha") +
+    ' style="left:' + px((W - pillW) / 2) + ';top:' + px(pillTop) + ';width:' + px(pillW) + ';height:' + px(pillH) +
+    ';background:var(--pill);border:' + px(sPill) + ' solid rgba(' + pbc + ',' + aPill + ');border-radius:' + px(rPill) +
+    ';box-shadow:0 ' + px(shY) + ' ' + px(shBlur) + ' rgba(0,0,0,' + shA + ')">';
+  let x = pillInset;
+  const cy = (rowIn) => pillInset + (btn - rowIn) / 2;
+  const hv = showHover ? " hv" : "";
+  const arrowAt = at("Corner.Md Icon.M Space.XS Wash.Hover." + TH + "", "PagerArrowHoverRadius IconGlyphSize PagerRowSpacing");
+  const glStyle = 'font-size:' + px(glyph) + ';line-height:' + px(glyph) + ';width:' + px(glyph) + ';height:' + px(glyph);
+  html += '<div class="hov' + hv + '"' + arrowAt + ' style="left:' + px(x) + ';top:' + px(cy(btn)) + ';width:' + btn + 'px;height:' + btn + 'px;border-radius:' + px(rHoverArrow) + '"><i class="gl" style="' + glStyle + '">' + GLYPH.back + '</i></div>';
+  x += btn + rowGap;
+  html += '<div class="hov' + hv + '"' + at("Text.S Weight.Strong Space.2XL Corner.Md Wash.Hover." + TH + "", "PagerCountFontSize PagerCountBaseWidth PagerCountHoverRadius") +
+    ' style="left:' + px(x) + ';top:' + px(cy(20)) + ';width:' + px(countW) + ';height:20px;border-radius:' + px(rHoverCount) +
+    '"><span class="cnt" style="font-size:' + px(fsCount) + ';font-weight:' + wStrong + '">1 / 2</span></div>';
+  x += countW + rowGap;
+  html += '<div class="hov' + hv + '"' + arrowAt + ' style="left:' + px(x) + ';top:' + px(cy(btn)) + ';width:' + btn + 'px;height:' + btn + 'px;border-radius:' + px(rHoverArrow) + '"><i class="gl" style="' + glStyle + '">' + GLYPH.forward + '</i></div>';
+  x += btn + rowGap + sepMargin;
+  html += '<div class="abs"' + at("Stroke.Thin Space.L Space.XS Strength.Mid", "PagerSeparatorWidth PagerSeparatorHeight PagerSeparatorMargin PagerSeparatorAlpha") +
+    ' style="left:' + px(x) + ';top:' + px(cy(sepH)) + ';width:' + px(sSep) + ';height:' + px(sepH) + ';background:rgba(var(--mutec),' + aSep + ')"></div>';
+  x += sSep + sepMargin + rowGap;
+  for (let i = 0; i < dots; i++) {
+    const filled = i < 7;
+    html += '<div class="hov' + (showHover && i === 2 ? " hv" : "") + '"' + at("Space.L Space.S Corner.Round Corner.Md Stroke.Thin Wash.Hover." + TH + (base === "alternative" ? " Space.S2" : ""), "PagerDotButtonWidth PagerDotWidth PagerDotHeight PagerDotRadius PagerDotHoverRadius" + (filled ? "" : " PagerDotBorderThickness")) +
+      ' style="left:' + px(x) + ';top:' + px(cy(dotBtnH)) + ';width:' + px(dotBtnW) + ';height:' + dotBtnH + 'px;border-radius:' + px(rHoverDot) + '">' +
+      '<span class="dot" style="width:' + px(dotW) + ';height:' + px(dotH) + ';border-radius:' + px(dotH / 2) + ';' +
+      (filled ? 'background:var(--mute)' : 'border:' + px(sDot) + ' solid var(--mute)') + '"></span></div>';
+    x += dotBtnW + rowGap;
+  }
+  html += '</div>';
+  const p1 = html.length;
+
+  // the other views draw over the same bar; search replaces the editor and the pager
+  const cuts = [];
+  if (view === "search") cuts.push([e0, e1]);
+  if (chromeHidden && view !== "search") cuts.push([b0, b1]);
+  if (view === "search" || chromeHidden) cuts.push([p0, p1]);
+  cuts.sort((x, y) => y[0] - x[0]).forEach(([from, to]) => { html = html.slice(0, from) + html.slice(to); });
+  const ctx = { W, H, stripH, edBottom, btn, glyph, showHover, showFocus };
+  if (view === "search") html += searchHtml(ctx);
+  if (view === "menu") html += menuHtml(ctx);
+  if (view === "toast") html += toastHtml(ctx);
+  html += '</div>';
+
+  const padEl = document.getElementById("pad");
+  padEl.classList.toggle("pop", view === "menu");
+  padEl.classList.toggle("light", light);
+  document.getElementById("revealLbl").hidden = mode === "docked";
+  padEl.style.setProperty("--tin", T("Motion.Fast", 120, "MotionTokens.ToastIn") + "ms");
+  padEl.style.setProperty("--toast-pad", (base === "today" ? 7 : 8) + "px");
+  padEl.style.setProperty("--tout", T("Motion.Base", 160) + "ms");
+  document.getElementById("toastPlay").hidden = view !== "toast";
+  document.getElementById("art").innerHTML = html;
+  used = new Set([...document.querySelectorAll("#art [data-t]")].flatMap((el) => el.dataset.t.split(/\s+/)));
+  if (!showHover) used.delete("Wash.Hover." + TH);
+  syncOverlay();
+  refreshCards();
+}
+
+// ---- search, menu and toast views (measure.md 7 and 8) -----------------------------------------------------------
+const atr = (tokens, roles) => ' data-t="' + tokens + '" data-r="' + roles + '"';
+const GL2 = { cut: "", copy: "", paste: "", del: "", undo: "", redo: "", all: "", add: "", grid: "", close: "" };
+const glyphBox = (c, size, extra) => '<i class="gl" style="font-size:' + px(size) + ';line-height:' + px(size) + ';height:' + px(size) + ';' + (extra || "") + '">' + c + '</i>';
+
+/** Search overlay: field, three tool buttons, result cards, footer (measure.md 8.2). */
+function searchHtml(c) {
+  const rCard = T("Corner.Md", 10), rField = T("Corner.Md", 10), rBtn = T("Corner.Md", 8);
+  const sRest = T("Stroke.Thin", 1), sRing = T("Stroke.Thick", 2, "focus ring (1.5, search current 1.5)");
+  const aField = T("Strength.Mid", 0.5), aBorder = T("Strength.Faint", 0.25), aSurf = T("Strength.Mid", 0.55), aCur = T("Strength.Full", 0.9);
+  const fsIn = T("Text.L", 15), fsTitle = T("Text.M", 14), fsBody = T("Text.S", 12), fsMeta = T("Text.S", 12), wS = T("Weight.Strong", 600);
+  const gi = T("Icon.M", 16), aHover = T("Wash.Hover." + TH, light ? 0.06 : 0.09);
+  let h = '<div class="abs" style="left:0;top:0;width:' + c.W + 'px;height:' + c.H + 'px;--hover:rgba(var(--inkc),' + aHover + ')">';
+  const fieldBorder = 'rgba(var(--goldc),' + aCur + ')';
+  h += '<div class="abs"' + atr("Corner.Md Stroke.Thick Text.L Strength.Full" + (base === "alternative" ? " Stroke.Mid" : ""), "Shape.Card Typography.Input Paint.FocusBorder") +
+    ' style="left:14px;top:54px;width:372px;height:38px;box-sizing:border-box;border-radius:' + px(rField) + ';border:' + px(sRing) + ' solid ' + fieldBorder + ';background:var(--field)">' +
+    '<span style="position:absolute;left:10px;top:0;line-height:' + (38 - 2 * sRing) + 'px;font-size:' + px(fsIn) + ';font-weight:400;color:var(--ink)">the<span style="display:inline-block;width:1.5px;height:' + px(fsIn + 2) + ';background:var(--gold);vertical-align:-3px;margin-left:1px"></span></span></div>';
+  const tools = [GL2.grid, GL2.del, GL2.close];
+  tools.forEach((g, i) => {
+    const hv = c.showHover && i === 1, fo = c.showFocus && i === 0;
+    h += '<div class="ib' + (hv ? " hv" : "") + '"' + atr("Icon.M Corner.Md Stroke.Thick Wash.Hover." + TH + "", "Typography.IconMedium Shape.Popup") +
+      ' style="left:' + (392 + 34 * i) + 'px;top:57px;width:32px;height:32px;border-radius:' + px(fo ? 0 : rBtn) + (fo ? ';background:var(--focusbg);box-shadow:inset 0 0 0 ' + px(sRing) + ' var(--ring)' : "") + '">' + glyphBox(g, gi) + '</div>';
+  });
+  const cards = [
+    { t: "12 * 7", b: ["3 km in m  ·  2 + 2 * 3"], m: [["math", 1], ["10m ago"]], cur: 1, hgt: 75 },
+    { t: "AntiNotepad showcase", b: ["Every editor feature on one page. Scroll it, fold it, resize the", "window.  ·  ## Text  ·  Plain text, **bold**, *italic*, ~~struck"], m: [["1:37 PM"]] },
+    { t: "h1", b: ["## h2  ·  ### h3  ·  #### h4  ·  ##### h5  ·  ###### h6  ·", "**bold**"], m: [["slot 1", 1], ["1:37 PM"]] },
+    { t: "rent = 1450", b: ["utilities = 180  ·  internet = 65  ·  total  ·  total / 3  ·  //", "units and percentages  ·  5 km in mi"], m: [["slot 2", 1], ["math", 1], ["1:37 PM"]] },
+    { t: "open AntiNotepad with the hotkey", b: ["☐ flip to the next note  ·  ☐ try a timer note: line 1 \"timer\",", "then \"10m tea\"  ·  ☐ pick a palette in Settings (Ctrl+,)"], m: [["slot 3", 1], ["list", 1], ["1:37 PM"]] },
+    { t: "1m tea", b: ["30s  ·  1m30s  ·  5:00  ·  3 minutes"], m: [["slot 4", 1]] }
+  ];
+  h += '<div class="abs" style="left:0;top:100px;width:' + c.W + 'px;height:473px;overflow:hidden">';
+  let y = 0;
+  cards.forEach((cd) => {
+    const hgt = cd.hgt || (72 + 14.5 * (cd.b.length - 1));
+    const b = cd.cur ? sRing : sRest;
+    const bc = cd.cur ? 'rgba(var(--goldc),' + aCur + ')' : 'rgba(var(--mutec),' + aBorder + ')';
+    h += '<div class="rc"' + atr("Corner.Md Stroke.Thin Stroke.Thick Strength.Faint Strength.Mid" + (cd.cur ? " Strength.Full" : "") + " Text.M Text.S Weight.Strong", "Shape.Card Paint.ResultBorder Paint.ResultSurface Paint.ResultCurrent Typography.Large Typography.Small") +
+      ' style="left:14px;top:' + px(y) + ';width:477px;height:' + px(hgt) + ';border-radius:' + px(rCard) + ';border:' + px(b) + ' solid ' + bc + ';background:rgba(var(--card),' + (cd.cur ? 1 : aSurf) + ')">';
+    h += '<div class="rt" style="top:' + (9 - b + 1) + 'px;line-height:20px;font-size:' + px(fsTitle) + ';font-weight:' + wS + '">' + cd.t + '</div>';
+    cd.b.forEach((ln, i) => { h += '<div class="rb" style="top:' + px(30.5 - b + 14.5 * i) + ';line-height:14.5px;font-size:' + px(fsBody) + '">' + ln + '</div>'; });
+    let mx = 12;
+    const my = 30.5 - b + 14.5 * cd.b.length + 3.5;
+    h += '<div class="rm" style="top:' + px(my) + ';line-height:18px;font-size:' + px(fsMeta) + '">' +
+      cd.m.map((p) => '<span' + (p[1] ? ' style="color:var(--gold);font-weight:' + wS + '"' : '') + '>' + p[0] + '</span>').join('<span style="display:inline-block;width:8px"></span>') + '</div>';
+    h += '</div>';
+    y += hgt + 2;
+  });
+  h += '</div>';
+  h += '<div class="abs" style="left:489px;top:116px;width:2px;height:274px;border-radius:1px;background:rgba(var(--mutec),.35)"></div>';
+  h += '<div class="abs"' + atr("Text.S", "Typography.Small") + ' style="left:18px;top:573px;line-height:18px;font-size:' + px(fsMeta) + ';color:var(--boxdone)">Searching…</div>';
+  return h + '</div>';
+}
+
+/** Right-click menu popup, placed as in the Solid grab (measure.md 8.1). */
+function menuHtml(c) {
+  const rPop = T("Corner.Md", 8), rRow = 4;
+  const sBorder = T("Stroke.Thin", 1), aBorder = T("Strength.Mid", 0.45), aSep = T("Strength.Faint", 0.4), aCap = T("Strength.Strong", 0.8, "Paint.MenuCaption");
+  const blur = T("Shadow.High.Blur", 18), sy = T("Shadow.High.OffsetY", 4), sa = T("Shadow.High." + TH + "Alpha", light ? 40 : 110) / 255;
+  const fsL = T("Text.M", 14), fsSc = T("Text.M", 13), fsA = T("Text.M", 14), gi = T("Icon.M", 16), aHover = T("Wash.Hover." + TH, light ? 0.06 : 0.09);
+  const tk = "Corner.Md Stroke.Thin Strength.Mid Strength.Faint Strength.Strong Shadow.High.Blur Shadow.High.OffsetY Shadow.High." + TH + "Alpha Text.M Icon.M Wash.Hover." + TH + "";
+  const rl = "Shape.Popup Paint.PopupBorder Paint.MenuSeparator Paint.MenuCaption Shape.MenuShadowBlur Shape.PopupShadowOffsetY Shape.PopupShadowDarkAlpha Typography.Large Typography.Body Typography.IconMedium Paint.Hover";
+  const sep = '<div class="msep" style="background:rgba(var(--mutec),' + aSep + ')"></div>';
+  const row = (g, label, sc, o) => '<div class="mrow' + (o && o.hv ? " hv" : "") + (o && o.dis ? " dis" : "") + '" style="height:32px;border-radius:' + px(rRow) + '">' +
+    (g ? glyphBox(g, gi) : '<span style="width:28px;flex:none"></span>') + '<span style="font-size:' + px(fsL) + '">' + label + '</span><span class="sc" style="font-size:' + px(fsSc) + ';color:rgba(var(--mutec),' + aCap + ')">' + sc + '</span></div>';
+  const act = (g, label, dis) => '<div class="' + (dis ? "dis" : "") + '" style="border-radius:' + px(rRow) + '">' + glyphBox(g, gi) + '<span style="font-size:' + px(fsA) + ';line-height:16px;margin-top:4px">' + label + '</span></div>';
+  let h = '<div class="menu"' + atr(tk, rl) + ' style="--hover:rgba(var(--inkc),' + aHover + ');left:222px;top:305px;width:234px;border-radius:' + px(rPop) +
+    ';border:' + px(sBorder) + ' solid rgba(var(--mutec),' + aBorder + ');box-shadow:0 ' + px(sy) + ' ' + px(blur) + ' rgba(0,0,0,' + sa + ')">';
+  h += '<div class="mact" style="height:52px">' + act(GL2.cut, "Cut", 1) + act(GL2.copy, "Copy", 1) + act(GL2.paste, "Paste") + act(GL2.del, "Delete", 1) + '</div>' + sep;
+  h += row(GL2.undo, "Undo", "Ctrl+Z", { dis: 1 }) + row(GL2.redo, "Redo", "Ctrl+Y", { hv: c.showHover }) + row(GL2.all, "Select all", "Ctrl+A") + sep;
+  h += row(GL2.add, "New note", "Ctrl+N") + row(GLYPH.search, "Search notes", "Ctrl+F") + row(GLYPH.dock, "Split view", "Ctrl+\\") + row(GLYPH.pin, "Keep on top", "Ctrl+T") + sep;
+  h += row(GLYPH.settings, "Settings", "Ctrl+,") + row("", "Hide AntiNotepad", "Esc");
+  return h + '</div>';
+}
+
+/** Toast: centred above the pager strip (measure.md 7). */
+function toastHtml(c) {
+  const r = T("Corner.Md", 10), fs = T("Text.S", 12.5), a = T("Strength.Full", 0.92), nudge = T("Space.Nudge", 2);
+  const blur = T("Shadow.Low.Blur", 14), sy = T("Shadow.Low.OffsetY", 3), sa = T("Shadow.Low." + TH + "Alpha", light ? 28 : 90) / 255;
+  const bottom = c.stripH + nudge;
+  return '<div class="toast" style="bottom:' + px(bottom) + '"><div' + atr("Corner.Md Text.S Strength.Full Space.Nudge Shadow.Low.Blur Shadow.Low.OffsetY Shadow.Low." + TH + "Alpha Motion.Fast Motion.Base",
+    "Shape.Card Typography.Label Paint.Toast ChromeTokens.ToastPagerClearance ChromeTokens.PillShadowBlur MotionTokens.ToastIn MotionTokens.ToastOut") +
+    ' id="toastBox" style="border-radius:' + px(r) + ';font-size:' + px(fs) + ';line-height:' + px(Math.round(fs * 1.36)) + ';background:rgba(var(--toastc),' + a + ');box-shadow:0 ' + px(sy) + ' ' + px(blur) + ' rgba(0,0,0,' + sa + ')">Copied the whole note</div></div>';
+}
+
+// ---- compare overlay -------------------------------------------------------------------------------------------
+// Where each capture's client origin sits and how big a DIP is in it: the 2x render is client content at 2 px per DIP;
+// the grab is the window at 1:1 with the card 8 px in and 1 px down (pill rows 598..639 against client 597..638).
+const CAPTURES = {
+  "pad-stack-docked-solid-dark-default-2x.png": { scale: 0.5, dx: 0, dy: 0, bar: -3.5 },
+  "pad-stack1-current-dark-default.png": { scale: 1, dx: -8, dy: -1, bar: 0.5 },
+  "search-results-solid-dark-default-2x.png": { scale: 0.5, dx: 0, dy: 0, bar: -3.5, view: "search" },
+  "menu-contextmenu-hover-row-solid-dark-default.png": { scale: 1, dx: -158, dy: -151, bar: -3.5, view: "menu" },
+  "toast-copied-solid-dark-default-2x.png": { scale: 0.5, dx: 0, dy: 0, bar: -3.5, view: "toast" },
+  // Acrylic grabs: the window at 1:1, card 8 px in and 1 px down, bar centred at 20.5
+  "pad-stack1-docked-light-default.png": { scale: 1, dx: -8, dy: -1, bar: 0.5, theme: "light" },
+  "pad-stack1-overlay-dark-default.png": { scale: 1, dx: -8, dy: -1, bar: 0.5, mode: "overlay" },
+  "pad-stack1-overlay-bar-dark-default.png": { scale: 1, dx: -8, dy: -1, bar: 0.5, mode: "overlay", reveal: true },
+  "pad-stack1-overlay-light-default.png": { scale: 1, dx: -8, dy: -1, bar: 0.5, mode: "overlay", theme: "light" },
+  "pad-stack1-overlay-bar-light-default.png": { scale: 1, dx: -8, dy: -1, bar: 0.5, mode: "overlay", theme: "light", reveal: true },
+  "pad-stack1-float-light-default.png": { scale: 1, dx: -8, dy: -1, bar: 0.5, mode: "float", theme: "light" },
+  "pad-stack1-float-bar-dark-default.png": { scale: 1, dx: -8, dy: -1, bar: 0.5, mode: "float", reveal: true },
+  "pad-stack1-float-bar-light-default.png": { scale: 1, dx: -8, dy: -1, bar: 0.5, mode: "float", theme: "light", reveal: true }
+};
+const CAPTURE_LABEL = {
+  "pad-stack1-docked-light-default.png": "Docked, light, Acrylic grab",
+  "pad-stack1-overlay-dark-default.png": "Overlay, dark, bar hidden",
+  "pad-stack1-overlay-bar-dark-default.png": "Overlay, dark, bar shown",
+  "pad-stack1-overlay-light-default.png": "Overlay, light, bar hidden",
+  "pad-stack1-overlay-bar-light-default.png": "Overlay, light, bar shown",
+  "pad-stack1-float-light-default.png": "Float, light, bar hidden",
+  "pad-stack1-float-bar-dark-default.png": "Float, dark, bar shown",
+  "pad-stack1-float-bar-light-default.png": "Float, light, bar shown"
+};
+for (const f in CAPTURE_LABEL) ["refSel", "ovlSel"].forEach((id) => {
+  const o = document.createElement("option"); o.value = f; o.textContent = CAPTURE_LABEL[f];
+  document.getElementById(id).appendChild(o);
+});
+const overlayOn = () => document.getElementById("ovlOn").checked;
+
+/** Lays the chosen capture over the redraw at the same scale and position; it lives inside the pad so zoom and pan carry it. */
+function syncOverlay() {
+  const img = document.getElementById("ovl");
+  if (!overlayOn()) { img.hidden = true; return; }
+  const file = document.getElementById("ovlSel").value, c = CAPTURES[file];
+  const place = () => {
+    img.style.left = c.dx + "px"; img.style.top = c.dy + "px";
+    img.style.width = img.naturalWidth * c.scale + "px";
+    img.hidden = false;
+  };
+  const src = "/docs/playground/shots/" + file;
+  if (!img.src.endsWith(src)) { img.hidden = true; img.onload = place; img.src = src; } else place();
+  img.style.opacity = document.getElementById("ovlOp").value / 100;
+  img.style.mixBlendMode = document.getElementById("ovlDiff").checked ? "difference" : "normal";
+}
+
+// ---- picks: save, load, copy -----------------------------------------------------------------------------------
+let base = "today";            // the preset the user started from
+let ROLE_TODAY = {};           // role name -> its today value as written in tokens.json
+
+const originOf = (t) => {
+  const v = val[t.name];
+  if (v == null) return "today";
+  if (t.recommended === v) return "recommended";
+  if (t.alternative === v) return "alternative";
+  return "custom";
+};
+
+function picksObject() {
+  return {
+    app: "antinotepad-playground",
+    version: 1,
+    savedAt: new Date().toISOString(),
+    base,
+    tokens: ALL.map((t) => ({
+      name: t.name,
+      unit: t.unit,
+      value: val[t.name],
+      origin: originOf(t),
+      roles: (t.replaces || []).map((r) => val[t.name] != null || (base === "alternative" && ROLES[r] && ROLES[r].stepsAlt)
+        ? { role: r, value: T(t.name, Number(ROLE_TODAY[r]), r), source: "token" }
+        : { role: r, value: ROLE_TODAY[r] != null ? ROLE_TODAY[r] : null, source: "today" })
+    }))
+  };
+}
+
+const say = (s) => { document.getElementById("saveMsg").textContent = s; };
+const clock = () => new Date().toLocaleTimeString();
+
+function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext !== false) return navigator.clipboard.writeText(text);
+  const ta = document.createElement("textarea");
+  ta.value = text; document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); } finally { ta.remove(); }
+  return Promise.resolve();
+}
+
+async function savePicks() {
+  const picks = picksObject();
+  const text = JSON.stringify(picks, null, 2);
+  const changed = picks.tokens.filter((t) => t.origin !== "today").length;
+  try {
+    const r = await fetch("/picks", { method: "POST", headers: { "Content-Type": "application/json" }, body: text });
+    if (!r.ok) throw new Error(r.status + " " + (await r.text()));
+    say("Saved " + clock() + " · " + changed + " of " + picks.tokens.length + " tokens set, base " + base);
+  } catch (err) {
+    try { await copyText(text); say("Could not save (" + err.message + "); copied the picks to the clipboard instead."); }
+    catch (e2) { say("Could not save (" + err.message + ") or copy."); }
+  }
+}
+
+async function loadPicks() {
+  try {
+    const r = await fetch("/docs/playground/picks.json?t=" + Date.now());
+    if (!r.ok) throw new Error(r.status === 404 ? "no picks saved yet" : String(r.status));
+    const p = await r.json();
+    let n = 0;
+    for (const e of p.tokens || []) {
+      if (e.name in val) { val[e.name] = typeof e.value === "number" ? e.value : null; n++; }
+    }
+    base = p.base || "today";
+    drawPad();
+    say("Loaded " + n + " tokens saved " + (p.savedAt ? new Date(p.savedAt).toLocaleString() : "earlier") + ", base " + base);
+  } catch (err) { say("Could not load: " + err.message); }
+}
+
+// ---- sample graphics (one small drawing per token, shown in its card) ---------------------------------------
+function sampleHtml(t) {
+  const v = cur(t), n = t.name, g = t.group;
+  const box = (w, h, extra) => '<div style="width:' + w + 'px;height:' + h + 'px;' + extra + '"></div>';
+  const lbl = (s) => '<span class="lbl">' + s + '</span>';
+  const fmt = (s) => (typeof s === "number" ? s : s);
+  if (g === "corners") {
+    if (n === "Corner.Round") return '<div class="smp">' + box(28, 28, 'border-radius:50%;background:#8f897d') + lbl("size / 2") + '</div>';
+    const caret = n === "Corner.Xs" ? '<div style="flex:none;width:2px;height:18px;background:#f2b84b;border-radius:' + v + 'px"></div>' : "";
+    return '<div class="smp">' + '<div style="flex:none;width:' + (n === "Corner.Xs" ? 36 : 64) + 'px;height:30px;border:1px solid #8f897d;background:#262522;border-radius:' + v + 'px;display:flex;align-items:center;justify-content:center">' + caret + '</div>' + lbl(fmt(v) + ' px') + '</div>';
+  }
+  if (g === "text") return '<div class="smp"><span style="font-size:' + v + 'px;line-height:1.2;white-space:nowrap">Aa Sample text</span>' + lbl(fmt(v) + ' px') + '</div>';
+  if (g === "weight") return '<div class="smp"><span style="font-size:18px;font-weight:' + v + '">Aa Weight</span>' + lbl(String(v)) + '</div>';
+  if (g === "icon") return '<div class="smp">' + [GLYPH.search, GLYPH.settings, GLYPH.pin].map((c) => '<i class="gl" style="font-style:normal;font-size:' + v + 'px">' + c + '</i>').join("") + lbl(v + ' px') + '</div>';
+  if (g === "stroke") return '<div class="smp">' + box(64, 28, 'border:' + v + 'px solid #e8e4da;border-radius:4px') + box(40, 0, 'border-top:' + v + 'px solid #e8e4da') + lbl(v + ' px') + '</div>';
+  if (g === "shadow") {
+    const fam = n.split(".").slice(0, 2).join(".");
+    const light = /Light/.test(n);
+    const blur = curOf(fam + ".Blur"), y = curOf(fam + ".OffsetY"), a = curOf(fam + (light ? ".LightAlpha" : ".DarkAlpha")) / 255;
+    return '<div class="smp ' + (light ? "lite" : "grey") + '">' + box(76, 28, 'border-radius:8px;background:' + (light ? '#fff' : '#262522') + ';box-shadow:0 ' + y + 'px ' + blur + 'px rgba(0,0,0,' + a + ')') + lbl(fam.replace("Shadow.", "") + (light ? " · light" : " · dark")) + '</div>';
+  }
+  if (g === "motion") return '<div class="smp"><div class="mvtrack"><div class="mvdot" style="transition-duration:' + v + 'ms"></div></div>' + lbl(v + ' ms') + '</div>';
+  if (g === "wash") {
+    const light = /Light/.test(n);
+    return '<div class="smp ' + (light ? "lite" : "") + '">' + box(76, 28, 'border-radius:6px;background:' + (light ? 'rgba(40,30,20,' : 'rgba(232,228,218,') + v + ')') + lbl(v) + '</div>';
+  }
+  if (g === "strength") return '<div class="smp">' + box(76, 0, 'border-top:2px solid rgba(232,228,218,' + v + ')') + '<span style="font-size:13px;color:rgba(232,228,218,' + v + ')">Aa text</span>' + lbl(v) + '</div>';
+  if (g === "space") return '<div class="smp"><div style="display:flex;gap:' + v + 'px;align-items:center">' + box(18, 18, 'background:#8f897d;border-radius:3px') + box(18, 18, 'background:#8f897d;border-radius:3px') + '</div>' + lbl(v + ' px') + '</div>';
+  return "";
+}
+
+// ---- adjuster cards -------------------------------------------------------------------------------------------
+const EYE = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s2.6-4.6 7-4.6S15 8 15 8s-2.6 4.6-7 4.6S1 8 1 8z"/><circle cx="8" cy="8" r="2"/></svg>';
+const todayText = (t) => t.today.length ? t.today.join(" · ") : "none";
+const unit = (t) => t.unit === "px" || t.unit === "ms" ? " " + t.unit : "";
+const stateOf = (t) => {
+  const v = val[t.name];
+  if (v == null) return ["Today", ""];
+  if (t.recommended != null && v === t.recommended) return ["Recommended", "on"];
+  if (t.alternative != null && v === t.alternative) return ["Alternative", "on"];
+  return ["Custom", "cust"];
+};
+
+function buildCards() {
+  const host = document.getElementById("cards");
+  for (const [title, groups] of CARDS) {
+    const toks = TOK.filter((t) => groups.includes(t.group));
+    const card = document.createElement("div");
+    card.className = "card";
+    let h = '<h2>' + title + '<span>' + toks.length + ' tokens</span></h2>';
+    let lastGroup = null;
+    toks.forEach((t, idx) => {
+      if (groups.length > 1 && t.group !== lastGroup) h += '<h3>' + SUB[t.group] + '</h3>';
+      lastGroup = t.group;
+      const rec = t.recommended;
+      const replaces = (t.replaces || []).map((r) => '<li><button class="eye" type="button" data-eye="role" data-role="' + r + '" aria-label="Show ' + r + '">' + EYE + '</button><span>' + r + '</span></li>').join("");
+      h += '<div class="tok' + (idx === 0 || (groups.length > 1 && toks[idx - 1].group !== t.group) ? ' first' : '') + '" data-name="' + t.name + '"><div class="hd">' +
+        '<button class="eye" type="button" data-eye="token" aria-label="Show what ' + t.name + ' drives">' + EYE + '</button><b>' + t.name + '</b>' +
+        '<span class="tag" data-tag="state"></span><span class="tag" data-tag="canvas"></span></div>';
+      h += '<div class="what">' + (TARGETS[t.name] || t.note || "") + '</div>';
+      if (t.control === "dropdown" && t.name === "Corner.Round") {
+        h += '<div class="ctl"><select disabled><option>size / 2</option></select><span class="note">unchanged, not adjustable</span><span></span></div>';
+      } else if (t.control === "dropdown") {
+        h += '<div class="ctl" style="grid-template-columns:minmax(0,1fr) auto"><select data-in="sel" aria-label="' + t.name + ' value"><option value="">Today (' + todayText(t) + ')</option>' +
+          t.options.map((o) => '<option value="' + o + '">' + o + '</option>').join("") + '</select>' +
+          '<button class="btn" type="button" data-act="today" title="Back to today\'s values">Today</button></div>';
+      } else {
+        h += '<div class="ctl"><input type="number" data-in="num" min="' + t.min + '" max="' + t.max + '" step="' + t.step + '" placeholder="' + todayText(t) + '" aria-label="' + t.name + ' value">' +
+          '<div class="rng"><input type="range" data-in="range" min="' + t.min + '" max="' + t.max + '" step="' + t.step + '" aria-label="' + t.name + ' slider"><div class="ticks" data-ticks></div></div>' +
+          '<button class="btn" type="button" data-act="today" title="Back to today\'s values">Today</button></div>' +
+          '<div class="near"><button class="btn" type="button" data-act="prev" title="Previous step (PageDown)" aria-label="Previous step">&lsaquo;</button><span data-near></span>' +
+          '<button class="btn" type="button" data-act="next" title="Next step (PageUp)" aria-label="Next step">&rsaquo;</button></div>';
+      }
+      h += '<div data-smp></div>';
+      h += '<div class="meta"><span>Today: <code>' + todayText(t) + '</code>' + unit(t) + '</span>' +
+        (rec != null ? '<span>Recommended: <code>' + rec + '</code> <button class="linkish" type="button" data-act="rec">use</button></span>' : '<span>No Recommended step</span>') +
+        (t.alternative != null && t.alternative !== rec ? '<span>Alternative: <code>' + t.alternative + '</code> <button class="linkish" type="button" data-act="alt">use</button></span>' : '') + '</div>';
+      h += '<details><summary>Replaces ' + (t.replaces || []).length + ' tokens</summary><ul>' + replaces + '</ul><div class="rolemsg" hidden></div></details></div>';
+    });
+    card.innerHTML = h;
+    host.appendChild(card);
+  }
+}
+
+// ---- design-system steps: markers, nearest step, snap ---------------------------------------------------------
+// A token's family is the set of tokens that share one scale (all corners, all text sizes, shadow blurs, ...).
+const famKey = (t) => (t.group === "shadow" || t.group === "wash") ? t.group + ":" + t.name.split(".").pop() : t.group;
+const family = (t) => TOK.filter((x) => x.unit !== "formula" && famKey(x) === famKey(t));
+const shortName = (t) => { const p = t.name.split("."); return p.length > 2 ? p[1] : p[p.length - 1]; };
+const fmtN = (v) => String(parseFloat(Number(v).toFixed(3)));
+const activeKey = () => base === "alternative" ? "alternative" : "recommended";
+
+/** Sorted steps of the token's family for one preset key ("recommended" or "alternative"): [{v, name}]. */
+function stepsOf(t, key) {
+  const seen = new Map();
+  family(t).forEach((x) => { if (num(x[key]) && !seen.has(x[key])) seen.set(x[key], x); });
+  return [...seen.entries()].sort((a, b) => a[0] - b[0]).map(([v, x]) => ({ v, t: x }));
+}
+const activeSteps = (t) => stepsOf(t, activeKey());
+
+function nearestStep(t, v) {
+  let best = null;
+  for (const s of activeSteps(t)) {
+    const d = Math.abs(s.v - v), bd = best === null ? Infinity : Math.abs(best.v - v);
+    if (d < bd - 1e-9 || (Math.abs(d - bd) < 1e-9 && s.t.name === t.name)) best = s;   // on a tie the token's own step wins
+  }
+  return best;
+}
+
+function jumpStep(t, dir) {
+  const c = cur(t), steps = activeSteps(t);
+  const eps = 1e-9;
+  const pick = dir > 0 ? steps.find((s) => s.v > c + eps) : [...steps].reverse().find((s) => s.v < c - eps);
+  if (pick) { val[t.name] = pick.v; drawPad(); }
+}
+
+const snapOn = () => document.getElementById("snapOn").checked;
+const snapValue = (t, v) => { const s = nearestStep(t, v); return s ? s.v : v; };
+
+function ticksHtml(t, w) {
+  const lo = t.min, hi = t.max, span = hi - lo;
+  const x = (v) => (8 + (w - 16) * (v - lo) / span);          // the thumb's centre travels 8 px in from each end
+  const inRange = (v) => v >= lo && v <= hi;
+  let html = "";
+  const rec = stepsOf(t, "recommended"), alt = stepsOf(t, "alternative");
+  const recVals = new Set(rec.map((s) => s.v));
+  new Set(t.today.filter(num)).forEach((v) => { if (inRange(v)) html += '<span class="td" style="left:' + px(x(v)) + '" title="Today: ' + fmtN(v) + '"></span>'; });
+  alt.forEach((s) => { if (inRange(s.v) && !recVals.has(s.v)) html += '<span class="ta" style="left:' + px(x(s.v)) + '" title="Alternative ' + s.t.name + ' ' + fmtN(s.v) + '"></span>'; });
+  let lastRight = -1e9;
+  rec.forEach((s) => {
+    if (!inRange(s.v)) return;
+    const own = s.t.name === t.name, cx = x(s.v), label = fmtN(s.v), half = label.length * 3 + 1;
+    html += '<span class="tk' + (own ? " own" : "") + '" style="left:' + px(cx) + '" title="Recommended ' + s.t.name + ' ' + label + '"></span>';
+    if (own || cx - half > lastRight + 2) {                    // skip a label that would overlap the one before it
+      html += '<span class="tl' + (own ? " own" : "") + '" style="left:' + px(cx) + '">' + label + '</span>';
+      lastRight = cx + half;
+    }
+  });
+  return html;
+}
+
+function nearHtml(t) {
+  const c = cur(t), s = nearestStep(t, c);
+  if (!s) return "no steps";
+  const d = s.v - c, u = t.unit === "px" || t.unit === "ms" ? " " + t.unit : "";
+  const label = shortName(s.t) + " " + fmtN(s.v) + u;
+  if (Math.abs(d) < 1e-9) return "on step: <b>" + label + "</b>";
+  return "nearest step: <b>" + label + "</b> (" + (d > 0 ? "+" : "−") + fmtN(Math.abs(d)) + ")";
+}
+
+function refreshCards() {
+  document.querySelectorAll(".tok").forEach((el) => {
+    const t = byName(el.dataset.name);
+    const v = val[t.name];
+    const tk = el.querySelector("[data-ticks]");
+    if (tk) {
+      tk.innerHTML = ticksHtml(t, el.querySelector("input[type=range]").offsetWidth);
+      el.querySelector("[data-near]").innerHTML = nearHtml(t);
+    }
+    const num_ = el.querySelector('[data-in="num"]');
+    if (num_) {
+      if (document.activeElement !== num_) num_.value = v == null ? "" : v;
+      const r = el.querySelector('[data-in="range"]');
+      r.value = v == null ? cur(t) : v;
+      r.classList.toggle("un", v == null);
+    }
+    const sel = el.querySelector('[data-in="sel"]');
+    if (sel) sel.value = v == null ? "" : String(v);
+    const s = stateOf(t);
+    const st = el.querySelector('[data-tag="state"]');
+    st.textContent = s[0]; st.className = "tag " + s[1];
+    const cv = el.querySelector('[data-tag="canvas"]');
+    const on = used.has(t.name);
+    cv.textContent = on ? "on canvas" : "not drawn in this view";
+    cv.className = "tag" + (on ? " on" : "");
+    el.querySelector("[data-smp]").innerHTML = sampleHtml(t);
+  });
+  const matches = (key) => ALL.every((t) => val[t.name] === (num(t[key]) ? t[key] : null));
+  const allToday = ALL.every((t) => val[t.name] == null);
+  document.querySelectorAll("#presets button").forEach((b) => {
+    const k = b.dataset.preset;
+    b.setAttribute("aria-pressed", String(k === "today" ? allToday : matches(k)));
+  });
+  document.getElementById("presetState").textContent = allToday ? "· Today" : matches("recommended") ? "· Recommended" : matches("alternative") ? "· Alternative" : "· Custom";
+}
+
+function setPreset(name) {
+  base = name;
+  for (const t of ALL) val[t.name] = (name !== "today" && num(t[name])) ? t[name] : null;
+  drawPad();
+}
+
+// ---- eye buttons: outline exactly what a token or role drives ---------------------------------------------
+function clearFlash() {
+  clearTimeout(flashTimer);
+  document.getElementById("flashLayer").innerHTML = "";
+  document.querySelectorAll(".sflash").forEach((e) => e.classList.remove("sflash"));
+}
+
+/** Outlines every canvas element matching the selector (about 1 s, scaled so it stays visible at any zoom). */
+function flashCanvas(selector) {
+  const els = [...document.querySelectorAll("#art " + selector)].filter((e) => e.getBoundingClientRect().width > 0);
+  if (!els.length) return false;
+  const pad = document.getElementById("pad"), pr = pad.getBoundingClientRect(), sc = zoom / 100;
+  const layer = document.getElementById("flashLayer");
+  els.forEach((e) => {
+    const b = e.getBoundingClientRect(), o = document.createElement("div");
+    const m = 3;
+    o.className = "flash";
+    o.style.cssText = "left:" + px((b.left - pr.left) / sc - m) + ";top:" + px((b.top - pr.top) / sc - m) + ";width:" + px(b.width / sc + 2 * m) + ";height:" + px(b.height / sc + 2 * m) + ";border-width:" + px(2 / sc);
+    layer.appendChild(o);
+  });
+  const stage = document.getElementById("stage"), sr = stage.getBoundingClientRect(), fb = els[0].getBoundingClientRect();
+  if (fb.left < sr.left || fb.right > sr.right) stage.scrollLeft += fb.left - sr.left - 40;
+  if (fb.top < sr.top || fb.bottom > sr.bottom) stage.scrollTop += fb.top - sr.top - 40;
+  return true;
+}
+
+function eye(btn) {
+  clearFlash();
+  const row = btn.closest(".tok"), t = byName(row.dataset.name);
+  const msg = row.querySelector(".rolemsg");
+  msg.hidden = true;
+  let hit;
+  if (btn.dataset.eye === "role") {
+    const role = btn.dataset.role;
+    hit = flashCanvas('[data-r~="' + role + '"]');
+    if (!hit) { msg.hidden = false; msg.textContent = role + " is not in this view; the sample above flashes instead."; }
+  } else {
+    hit = flashCanvas('[data-t~="' + t.name + '"]');
+  }
+  if (!hit) {
+    const smp = row.querySelector(".smp");
+    void smp.offsetWidth;
+    smp.classList.add("sflash");
+  }
+  flashTimer = setTimeout(clearFlash, 1100);
+}
+
+/** Replays the toast: fade in over Motion.Fast, hold, fade out over Motion.Base. */
+function playToast() {
+  const pad = document.getElementById("pad");
+  pad.classList.remove("tin", "tout");
+  void pad.offsetWidth;
+  pad.classList.add("tin");
+  setTimeout(() => pad.classList.add("tout"), 1200);
+  setTimeout(() => pad.classList.remove("tin", "tout"), 1800);
+}
+
+// ---- zoom -----------------------------------------------------------------------------------------------------
+function setZoom(z) {
+  zoom = Math.max(50, Math.min(400, Math.round(z)));
+  const sc = zoom / 100;
+  const scaler = document.getElementById("scaler");
+  scaler.style.transform = "scale(" + sc + ")";
+  const sizer = document.getElementById("sizer");
+  sizer.style.width = scaler.scrollWidth * sc + "px"; sizer.style.height = scaler.scrollHeight * sc + "px";
+  document.getElementById("zRange").value = zoom;
+  document.getElementById("zOut2").textContent = zoom + "%";
+}
+
+function setRef(file) {
+  document.getElementById("refSel").value = file;
+  const old = document.getElementById("refimg");
+  if (old) old.remove();
+  if (file) {
+    const img = document.createElement("img");
+    img.id = "refimg"; img.className = "refimg";
+    img.src = "/docs/playground/shots/" + file;
+    img.alt = "Reference capture";
+    // 2x renders are shown at half size (client DIPs); window grabs are 1:1
+    img.addEventListener("load", () => { img.style.width = (/2x/.test(file) ? img.naturalWidth / 2 : img.naturalWidth) + "px"; setZoom(zoom); });
+    document.getElementById("scaler").appendChild(img);
+  }
+  setZoom(zoom);
+}
+
+// ---- wiring ---------------------------------------------------------------------------------------------------
+function wire() {
+  document.getElementById("presets").addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (b) setPreset(b.dataset.preset);
+  });
+  const cards = document.getElementById("cards");
+  const onInput = (e) => {
+    const row = e.target.closest(".tok"); if (!row) return;
+    const t = byName(row.dataset.name);
+    if (e.target.dataset.in === "num") {
+      if (e.target.value === "") val[t.name] = null;
+      else if (!isNaN(parseFloat(e.target.value))) val[t.name] = parseFloat(e.target.value);
+    } else if (e.target.dataset.in === "range") val[t.name] = snapOn() ? snapValue(t, parseFloat(e.target.value)) : parseFloat(e.target.value);
+    else if (e.target.dataset.in === "sel") val[t.name] = e.target.value === "" ? null : parseFloat(e.target.value);
+    else return;
+    drawPad();
+  };
+  cards.addEventListener("input", onInput);
+  cards.addEventListener("change", (e) => {
+    if (e.target.dataset.in === "sel") onInput(e);
+    else if (e.target.dataset.in === "num" && snapOn() && val[byName(e.target.closest(".tok").dataset.name).name] != null) {
+      const t = byName(e.target.closest(".tok").dataset.name);
+      val[t.name] = snapValue(t, val[t.name]);       // typing is free; the box lands on a step when committed
+      drawPad();
+    }
+  });
+  cards.addEventListener("click", (e) => {
+    const ey = e.target.closest(".eye");
+    if (ey) { eye(ey); return; }
+    const b = e.target.closest("[data-act]"); if (!b) return;
+    const t = byName(b.closest(".tok").dataset.name);
+    if (b.dataset.act === "prev" || b.dataset.act === "next") { jumpStep(t, b.dataset.act === "next" ? 1 : -1); return; }
+    val[t.name] = b.dataset.act === "today" ? null : b.dataset.act === "rec" ? t.recommended : t.alternative;
+    drawPad();
+  });
+  // PageUp / PageDown on a slider or number box jump to the next / previous step
+  cards.addEventListener("keydown", (e) => {
+    if ((e.key !== "PageUp" && e.key !== "PageDown") || !e.target.dataset.in) return;
+    e.preventDefault();
+    jumpStep(byName(e.target.closest(".tok").dataset.name), e.key === "PageUp" ? 1 : -1);
+  });
+  document.getElementById("snapOn").addEventListener("change", () => refreshCards());
+  window.addEventListener("resize", () => refreshCards());
+  cards.addEventListener("mouseover", (e) => {
+    const ey = e.target.closest(".eye");
+    if (ey && !ey.contains(e.relatedTarget)) eye(ey);
+  });
+  const rerender = () => { drawPad(); setZoom(zoom); };
+  document.getElementById("viewSel").value = view;
+  document.getElementById("themeSel").value = theme;
+  document.getElementById("modeSel").value = mode;
+  // keep the compare overlay on the capture that best matches the view, theme, mode and reveal state
+  const matchCapture = () => {
+    const reveal = document.getElementById("revealOn").checked, files = Object.keys(CAPTURES);
+    const score = (f) => { const c = CAPTURES[f]; return ((c.view || "docked") === view ? 8 : 0) + ((c.theme || "dark") === theme ? 4 : 0) + ((c.mode || "docked") === mode ? 2 : 0) + (!!c.reveal === reveal ? 1 : 0); };
+    const best = files.sort((a, b) => score(b) - score(a))[0];
+    if (score(best) >= 8) document.getElementById("ovlSel").value = best;
+  };
+  document.getElementById("viewSel").addEventListener("change", (e) => { view = e.target.value; matchCapture(); rerender(); });
+  document.getElementById("themeSel").addEventListener("change", (e) => { theme = e.target.value; matchCapture(); rerender(); });
+  document.getElementById("modeSel").addEventListener("change", (e) => { mode = e.target.value; matchCapture(); rerender(); });
+  document.getElementById("revealOn").addEventListener("change", () => { matchCapture(); rerender(); });
+  document.getElementById("toastPlay").addEventListener("click", playToast);
+  document.getElementById("showHover").addEventListener("change", rerender);
+  document.getElementById("showFocus").addEventListener("change", rerender);
+  document.getElementById("refSel").addEventListener("change", (e) => setRef(e.target.value));
+  ["ovlOn", "ovlSel", "ovlDiff"].forEach((id) => document.getElementById(id).addEventListener("change", rerender));
+  document.getElementById("ovlOp").addEventListener("input", (e) => {
+    document.getElementById("ovlOpOut").textContent = e.target.value + "%";
+    syncOverlay();
+  });
+  document.getElementById("saveBtn").addEventListener("click", savePicks);
+  document.getElementById("loadBtn").addEventListener("click", loadPicks);
+  document.getElementById("copyBtn").addEventListener("click", () => {
+    copyText(JSON.stringify(picksObject(), null, 2)).then(() => say("Copied the picks " + clock()), () => say("Could not copy."));
+  });
+  document.getElementById("zRange").addEventListener("input", (e) => setZoom(+e.target.value));
+  document.getElementById("zIn").addEventListener("click", () => setZoom(zoom + (zoom >= 200 ? 50 : 25)));
+  document.getElementById("zOut").addEventListener("click", () => setZoom(zoom - (zoom > 200 ? 50 : 25)));
+  document.getElementById("zReset").addEventListener("click", () => setZoom(100));
+  document.getElementById("stage").addEventListener("wheel", (e) => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    setZoom(zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1));
+  }, { passive: false });
+  // motion samples: slide their dot with the token's own duration, back and forth
+  let on = false;
+  setInterval(() => { on = !on; document.querySelectorAll(".mvdot").forEach((d) => d.classList.toggle("on", on)); }, 1400);
+}
+
+fetch("/docs/playground/tokens.json").then((r) => r.json()).then((data) => {
+  TOK = data.scale;
+  (data.roles || []).forEach((r) => { ROLE_TODAY[r.name] = r.today; ROLES[r.name] = r; });
+  const exceptions = document.createElement("div");
+  exceptions.className = "card";
+  const title = document.createElement("h2"); title.textContent = "Exceptions (read-only)"; exceptions.appendChild(title);
+  data.exceptions.forEach((entry) => {
+    const row = document.createElement("p"); row.className = "hint";
+    row.textContent = entry.name + ": " + entry.reason; exceptions.appendChild(row);
+  });
+  document.getElementById("cards").appendChild(exceptions);
+  ALL = data.scale.filter((t) => t.unit !== "formula");
+  ALL.forEach((t) => { val[t.name] = null; });
+  drawPad();
+  buildCards();
+  refreshCards();
+  wire();
+  setZoom(100);
+  if (q.get("ref")) setRef("pad-stack-docked-solid-dark-default-2x.png");
+}).catch((err) => {
+  document.getElementById("cards").insertAdjacentHTML("beforeend", '<p class="hint">Could not load tokens.json: ' + err + '. Open this page through tools/playground-serve.ps1.</p>');
+});
+</script>
+</body>
+</html>

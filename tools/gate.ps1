@@ -339,6 +339,16 @@ try {
         Add-Step -Name 'Seam' -Status 'FAIL' -Summary $_.Exception.Message
     }
 
+    try {
+        $tokens = Invoke-CapturedProcess -FileName 'pwsh' -Arguments @('-NoProfile', '-File', (Join-Path $script:repoRoot 'tools/check-design-tokens.ps1')) -WorkingDirectory $script:repoRoot
+        $tokensOutput = Get-CombinedOutput $tokens
+        $tokensStatus = if ($tokens.ExitCode -eq 0) { 'PASS' } else { 'FAIL' }
+        Add-Step -Name 'Tokens' -Status $tokensStatus -Summary "check-design-tokens.ps1 exit $($tokens.ExitCode)" -Lines @(Get-KeyLines -Text $tokensOutput -Pattern '(?i)(TOKENS|token from|error)')
+    }
+    catch {
+        Add-Step -Name 'Tokens' -Status 'FAIL' -Summary $_.Exception.Message
+    }
+
     # Format: `dotnet format` on the changed product C# files only. A problem on a line this change touched fails;
     # problems on untouched lines are older code and only counted, so existing files never block a gate. In a new file, lines
     # that the same change removed verbatim from product files (a split) count as untouched.

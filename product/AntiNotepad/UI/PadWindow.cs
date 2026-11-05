@@ -78,7 +78,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         ShowInTaskbar = false;
         Topmost = Settings.Pinned;
         Background = Brushes.Transparent;
-        FontFamily = new FontFamily("Segoe UI Variable Text, Segoe UI");
+        FontFamily = new FontFamily(Typography.UiFamily);
         // Grayscale antialiasing: ClearType fringes and smears small text over a translucent, blurred backdrop.
         TextOptions.SetTextRenderingMode(this, TextRenderingMode.Antialias);
         BuildLayout();
@@ -174,7 +174,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         {
             // Drop-down presentation: the pad slides down from the top edge, Quake-console style.
             var from = Position.Y;
-            Anim.Run(this, 150, t => Position = new PixelPoint(target.X, (int)(from + (target.Y - from) * t)), () => Position = target);
+            Anim.Run(this, MotionTokens.WindowSlide, t => Position = new PixelPoint(target.X, (int)(from + (target.Y - from) * t)), () => Position = target);
         }
         else if (!wasVisible) PlayShow();
         WakeChrome();
@@ -312,7 +312,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         // The window is focusable the moment it is shown; only the content fades in.
         var shift = new TranslateTransform();
         _content.RenderTransform = shift;
-        Anim.Run(this, 140, t => { _content.Opacity = 0.35 + 0.65 * t; shift.Y = 6 * (1 - t); },
+        Anim.Run(this, MotionTokens.ContentReveal, t => { _content.Opacity = 0.35 + 0.65 * t; shift.Y = 6 * (1 - t); },
             () => { _content.Opacity = 1; _content.RenderTransform = null; });
     }
 
@@ -324,7 +324,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         _fade?.Cancel();
         var from = Opacity;
         if (Math.Abs(from - to) < 0.01) return;
-        _fade = Anim.Run(this, 160, t => Opacity = from + (to - from) * t, decorative: false);
+        _fade = Anim.Run(this, MotionTokens.WindowFade, t => Opacity = from + (to - from) * t, decorative: false);
     }
 
     private void FocusActive() { if (IsVisible && !_overlayOpen) _active.FocusText(); }

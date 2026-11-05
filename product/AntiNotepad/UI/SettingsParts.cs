@@ -16,19 +16,27 @@ namespace AntiNotepad.UI;
 /// </summary>
 internal sealed partial class SettingsWindow
 {
-    private SolidColorBrush Line => new(_p.Ink, _p.Dark ? .09 : .10);
-    private Color IconInk => Color.FromArgb(220, _p.Ink.R, _p.Ink.G, _p.Ink.B);
+    private SolidColorBrush Line => new(_p.Ink, _p.Dark ? .09 : .06);
+    private Color IconInk => Color.FromArgb(Paint.IconInkAlpha, _p.Ink.R, _p.Ink.G, _p.Ink.B);
 
     // ---------- page structure ----------
 
     private Control Heading(string text) => new TextBlock
     {
-        Text = text, FontSize = 26, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(_p.Heading), Margin = new Thickness(2, 0, 0, 10)
+        Text = text,
+        FontSize = Typography.Display,
+        FontWeight = Typography.Strong,
+        Foreground = new SolidColorBrush(_p.Heading),
+        Margin = new Thickness(2, 0, 0, 12)
     };
 
     private Control Group(string text) => new TextBlock
     {
-        Text = text, FontSize = 13, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(_p.Ink), Margin = new Thickness(2, 20, 0, 8)
+        Text = text,
+        FontSize = Typography.Body,
+        FontWeight = Typography.Strong,
+        Foreground = new SolidColorBrush(_p.Ink),
+        Margin = new Thickness(2, 24, 0, 8)
     };
 
     /// <summary>A rounded card; rows inside are divided by hairlines.</summary>
@@ -46,8 +54,13 @@ internal sealed partial class SettingsWindow
         }
         return new Border
         {
-            Background = new SolidColorBrush(_p.Surface, _p.Dark ? .92 : .9), BorderBrush = Line, BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(10), ClipToBounds = true, Child = stack, Tag = "card",
+            Background = new SolidColorBrush(_p.Surface, Paint.CardSurface(_p.Dark)),
+            BorderBrush = Line,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(Shape.Card),
+            ClipToBounds = true,
+            Child = stack,
+            Tag = "card",
         };
     }
 
@@ -87,15 +100,15 @@ internal sealed partial class SettingsWindow
             right.VerticalAlignment = VerticalAlignment.Center;
             Grid.SetColumn(right, 2); grid.Children.Add(right);
         }
-        return new Border { MinHeight = 62, Padding = new Thickness(16, 10), Child = grid, Tag = title + " " + shownDescription };
+        return new Border { MinHeight = 64, Padding = new Thickness(16, 12), Child = grid, Tag = title + " " + shownDescription };
     }
 
     private StackPanel Texts(string title, string? description)
     {
         var text = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
-        text.Children.Add(new TextBlock { Text = title, FontSize = 14, Foreground = new SolidColorBrush(_p.Ink), TextWrapping = TextWrapping.Wrap });
+        text.Children.Add(new TextBlock { Text = title, FontSize = Typography.Large, FontWeight = Typography.Strong, Foreground = new SolidColorBrush(_p.Ink), TextWrapping = TextWrapping.Wrap });
         if (!string.IsNullOrEmpty(description))
-            text.Children.Add(new TextBlock { Text = description, FontSize = 12, Foreground = new SolidColorBrush(_p.Muted), TextWrapping = TextWrapping.Wrap });
+            text.Children.Add(new TextBlock { Text = description, FontSize = Typography.Small, Foreground = new SolidColorBrush(_p.Muted), TextWrapping = TextWrapping.Wrap });
         return text;
     }
 
@@ -116,7 +129,9 @@ internal sealed partial class SettingsWindow
         }
         return new Border
         {
-            MinHeight = 54, Padding = new Thickness(52, 10, 16, 10), Background = new SolidColorBrush(_p.Ink, _p.Dark ? .03 : .025),
+            MinHeight = 56,
+            Padding = new Thickness(48, 12, 16, 12),
+            Background = new SolidColorBrush(_p.Ink, Paint.RowWash(_p.Dark)),
             Child = grid, Tag = tag,
         };
     }
@@ -129,9 +144,9 @@ internal sealed partial class SettingsWindow
         var kids = subs.Where(s => s is not null).Select(s => s!()).Where(s => s is not null).Cast<Border>().ToArray();
         var row = Row(icon, title, description, () =>
         {
-            chevron = new GlyphIcon(char.ConvertFromUtf32(0xf2a3), _p.Muted, 16, 0, Glyph.Fluent) { RenderTransform = new RotateTransform(open ? 180 : 0), VerticalAlignment = VerticalAlignment.Center };
+            chevron = new GlyphIcon(char.ConvertFromUtf32(0xf2a3), _p.Muted, Typography.IconMedium, 0, Glyph.Fluent) { RenderTransform = new RotateTransform(open ? 180 : 0), VerticalAlignment = VerticalAlignment.Center };
             var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
-            right.Children.Add(Kit.Text(value, _p.Muted, 13));
+            right.Children.Add(Kit.Text(value, _p.Muted, Typography.Body));
             right.Children.Add(chevron);
             return right;
         });
@@ -142,8 +157,8 @@ internal sealed partial class SettingsWindow
         row.Child = null;
         var button = Kit.Plain(face, _p, radius: 0);
         button.HorizontalAlignment = HorizontalAlignment.Stretch;
-        button.Margin = new Thickness(-16, -10);
-        if (button.Content is Border inner) inner.Padding = new Thickness(16, 10);
+        button.Margin = new Thickness(-16, -12);
+        if (button.Content is Border inner) inner.Padding = new Thickness(16, 12);
         button.Click += (_, _) =>
         {
             open = !open;
@@ -171,17 +186,17 @@ internal sealed partial class SettingsWindow
             foreach (var (value, face, text) in items)
             {
                 var on = value == selected;
-                face.Background = on ? new SolidColorBrush(_p.Accent, _p.Dark ? .22 : .18) : Brushes.Transparent;
+                face.Background = on ? new SolidColorBrush(_p.Accent, AntiNotepad.Theme.Paint.Selected(_p.Dark)) : Brushes.Transparent;
                 text.Foreground = new SolidColorBrush(on ? _p.Ink : _p.Muted);
-                text.FontWeight = on ? FontWeight.SemiBold : FontWeight.Normal;
+                text.FontWeight = on ? Typography.Strong : Typography.Regular;
             }
         }
         var chosen = current;
         foreach (var (value, label) in options)
         {
-            var text = Kit.Text(label, _p.Muted, 13);
-            text.Margin = new Thickness(12, 5);
-            var button = Kit.Plain(text, _p, radius: 7);
+            var text = Kit.Text(label, _p.Muted, Typography.Body);
+            text.Margin = new Thickness(12, 4);
+            var button = Kit.Plain(text, _p, radius: Shape.Control);
             button.Margin = new Thickness(0, 0, 2, 0);
             var face = (Border)button.Content!;
             items.Add((value, face, text));
@@ -198,9 +213,9 @@ internal sealed partial class SettingsWindow
     /// <summary>A Windows-style toggle with its On/Off word, flipping itself before the setting applies.</summary>
     private Control Toggle(bool on, Action<bool> set, string name)
     {
-        var word = Kit.Text(on ? "On" : "Off", _p.Muted, 13);
-        var knob = new Border { Width = 14, Height = 14, CornerRadius = new CornerRadius(7), Margin = new Thickness(3, 0) };
-        var track = new Border { Width = 40, Height = 20, CornerRadius = new CornerRadius(10), Child = knob, VerticalAlignment = VerticalAlignment.Center };
+        var word = Kit.Text(on ? "On" : "Off", _p.Muted, Typography.Body);
+        var knob = new Border { Width = 12, Height = 12, CornerRadius = new CornerRadius(Shape.Round(12)), Margin = new Thickness(4, 0) };
+        var track = new Border { Width = 40, Height = 20, CornerRadius = new CornerRadius(Shape.Round(20)), Child = knob, VerticalAlignment = VerticalAlignment.Center };
         void Paint()
         {
             word.Text = on ? "On" : "Off";
@@ -208,13 +223,13 @@ internal sealed partial class SettingsWindow
             knob.Background = new SolidColorBrush(on ? _p.Surface : _p.Muted);
             track.Background = on ? new SolidColorBrush(_p.Accent) : Brushes.Transparent;
             track.BorderBrush = new SolidColorBrush(_p.Faint);
-            track.BorderThickness = new Thickness(on ? 0 : 1.5);
+            track.BorderThickness = new Thickness(on ? 0 : 1);
         }
         Paint();
         var face = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(8, 4) };
         face.Children.Add(word);
         face.Children.Add(track);
-        var button = Kit.Plain(face, _p, radius: 8);
+        var button = Kit.Plain(face, _p, radius: Shape.Popup);
         button.Click += (_, _) => { on = !on; Paint(); set(on); };
         Avalonia.Automation.AutomationProperties.SetName(button, name);
         return button;
@@ -223,31 +238,36 @@ internal sealed partial class SettingsWindow
     /// <summary>A dropdown in the pad's own colours: the current choice and a chevron, opening a short list.</summary>
     private Control Dropdown(IReadOnlyList<(string Value, string Label)> options, string current, Action<string> pick, double minWidth = 160)
     {
-        var label = Kit.Text(options.FirstOrDefault(o => o.Value == current).Label ?? current, _p.Ink, 13);
-        var face = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(12, 0, 10, 0) };
+        var label = Kit.Text(options.FirstOrDefault(o => o.Value == current).Label ?? current, _p.Ink, Typography.Body);
+        var face = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(12, 12) };
         face.Children.Add(label);
-        var chevron = new GlyphIcon(char.ConvertFromUtf32(0xf2a3), _p.Muted, 14, 0, Glyph.Fluent) { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0) };
+        var chevron = new GlyphIcon(char.ConvertFromUtf32(0xf2a3), _p.Muted, Typography.IconSmall, 0, Glyph.Fluent) { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0) };
         Grid.SetColumn(chevron, 1); face.Children.Add(chevron);
-        var box = new Border { Height = 32, MinWidth = minWidth, CornerRadius = new CornerRadius(7), BorderBrush = Line, BorderThickness = new Thickness(1), Background = new SolidColorBrush(_p.Surface), Child = face };
-        var button = Kit.Plain(box, _p, radius: 7);
+        var box = new Border { Height = 48, MinWidth = minWidth, CornerRadius = new CornerRadius(Shape.Control), BorderBrush = Line, BorderThickness = new Thickness(1), Background = new SolidColorBrush(_p.Surface), Child = face };
+        var button = Kit.Plain(box, _p, radius: Shape.Control);
         var list = new StackPanel { Spacing = 1 };
         var popup = new Popup
         {
             PlacementTarget = button, Placement = PlacementMode.BottomEdgeAlignedLeft, IsLightDismissEnabled = true, VerticalOffset = 4,
             Child = new Border
             {
-                Background = new SolidColorBrush(_p.Surface), BorderBrush = Line, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(4), MinWidth = minWidth, Child = list,
-                BoxShadow = new BoxShadows(new BoxShadow { Blur = 16, OffsetY = 4, Color = Color.FromArgb(_p.Dark ? (byte)110 : (byte)40, 0, 0, 0) }),
+                Background = new SolidColorBrush(_p.Surface),
+                BorderBrush = new SolidColorBrush(_p.Faint, Paint.PopupBorder),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(Shape.Popup),
+                Padding = new Thickness(4),
+                MinWidth = minWidth,
+                Child = list,
+                BoxShadow = new BoxShadows(new BoxShadow { Blur = Shape.DropdownShadowBlur, OffsetY = Shape.PopupShadowOffsetY, Color = Color.FromArgb(_p.Dark ? Shape.PopupShadowDarkAlpha : Shape.PopupShadowLightAlpha, 0, 0, 0) }),
             },
         };
         foreach (var (value, text) in options)
         {
-            var item = Kit.Text(text, value == current ? _p.Ink : _p.Muted, 13, value == current ? FontWeight.SemiBold : FontWeight.Normal);
-            item.Margin = new Thickness(10, 6);
-            var row = Kit.Plain(item, _p, radius: 6);
+            var item = Kit.Text(text, value == current ? _p.Ink : _p.Muted, Typography.Body, value == current ? Typography.Strong : Typography.Regular);
+            item.Margin = new Thickness(12, 8);
+            var row = Kit.Plain(item, _p, radius: 4);
             row.HorizontalAlignment = HorizontalAlignment.Stretch;
-            if (value == current && row.Content is Border b) b.Background = new SolidColorBrush(_p.Accent, _p.Dark ? .22 : .18);
+            if (value == current && row.Content is Border b) b.Background = new SolidColorBrush(_p.Accent, Paint.Selected(_p.Dark));
             var v = value;
             row.Click += (_, _) => { popup.IsOpen = false; label.Text = text; pick(v); };
             list.Children.Add(row);
@@ -263,16 +283,16 @@ internal sealed partial class SettingsWindow
         // Dark text on a light accent, white on a dark one.
         var a = _p.Accent;
         var onAccent = 0.2126 * a.R + 0.7152 * a.G + 0.0722 * a.B > 150 ? Color.FromRgb(0x1A, 0x1A, 0x1A) : Colors.White;
-        var label = Kit.Text(text, primary ? onAccent : _p.Ink, 13, primary ? FontWeight.SemiBold : FontWeight.Normal);
-        label.Margin = new Thickness(12, 5);
+        var label = Kit.Text(text, primary ? onAccent : _p.Ink, Typography.Body, primary ? Typography.Strong : Typography.Regular);
+        label.Margin = new Thickness(12, 4);
         var face = primary
-            ? new Border { Background = new SolidColorBrush(a), CornerRadius = new CornerRadius(7), Child = label }
-            : new Border { BorderBrush = Line, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(7), Child = label };
-        var button = Kit.Plain(face, _p, radius: 7);
+            ? new Border { Background = new SolidColorBrush(a), CornerRadius = new CornerRadius(Shape.Control), Child = label }
+            : new Border { BorderBrush = Line, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(Shape.Control), Child = label };
+        var button = Kit.Plain(face, _p, radius: Shape.Control);
         if (primary)
         {
             // The filled face hides Plain's hover tint, so it lightens a little instead.
-            button.PointerEntered += (_, _) => face.Opacity = 0.86;
+            button.PointerEntered += (_, _) => face.Opacity = Paint.HoverFace;
             button.PointerExited += (_, _) => face.Opacity = 1;
         }
         button.Click += (_, _) => click();
@@ -286,13 +306,13 @@ internal sealed partial class SettingsWindow
         IsReadOnly = true,
         AcceptsReturn = true,
         TextWrapping = TextWrapping.Wrap,
-        MinHeight = 38,
+        MinHeight = 40,
         MaxHeight = 68,
-        FontSize = 13,
-        Padding = new Thickness(10, 7),
+        FontSize = Typography.Body,
+        Padding = new Thickness(12, 8),
         Foreground = new SolidColorBrush(_p.Ink),
         CaretBrush = new SolidColorBrush(_p.Caret),
-        CornerRadius = new CornerRadius(7),
+        CornerRadius = new CornerRadius(Shape.Control),
     };
 
     // ---------- pictures ----------
@@ -300,21 +320,23 @@ internal sealed partial class SettingsWindow
     /// <summary>A picture with its label under it; the chosen one wears an accent ring.</summary>
     private Control Tile(Control picture, string label, bool selected, System.Action click, double width)
     {
-        var ring = selected ? 2 : 1.5;
+        var ring = selected ? 2 : 1;
         var frame = new Border
         {
-            Width = width, CornerRadius = new CornerRadius(8), Padding = new Thickness(ring),
+            Width = width,
+            CornerRadius = new CornerRadius(Shape.Popup),
+            Padding = new Thickness(ring),
             BorderBrush = selected ? new SolidColorBrush(_p.Accent) : Line, BorderThickness = new Thickness(ring),
             // The picture is clipped to the ring's inner curve, so its corners never show outside the frame.
-            Child = new Border { CornerRadius = new CornerRadius(8 - ring), ClipToBounds = true, Child = picture },
+            Child = new Border { CornerRadius = new CornerRadius(Shape.Popup - ring), ClipToBounds = true, Child = picture },
         };
         var stack = new StackPanel { Spacing = 5, HorizontalAlignment = HorizontalAlignment.Center };
         stack.Children.Add(frame);
-        var text = Kit.Text(label, selected ? _p.Ink : _p.Muted, 12, selected ? FontWeight.SemiBold : FontWeight.Normal);
+        var text = Kit.Text(label, selected ? _p.Ink : _p.Muted, Typography.Small, selected ? Typography.Strong : Typography.Regular);
         text.HorizontalAlignment = HorizontalAlignment.Center;
         text.TextAlignment = TextAlignment.Center;
         stack.Children.Add(text);
-        var button = Kit.Plain(stack, _p, radius: 8);
+        var button = Kit.Plain(stack, _p, radius: Shape.Popup);
         if (button.Content is Border b) b.Padding = new Thickness(4);
         button.Click += (_, _) => click();
         Avalonia.Automation.AutomationProperties.SetName(button, label);
@@ -326,18 +348,23 @@ internal sealed partial class SettingsWindow
         var grid = new UniformGrid { Columns = 4 };
         foreach (var palette in Palette.For(dark))
         {
-            var dots = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 3, HorizontalAlignment = HorizontalAlignment.Center };
+            var dots = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, HorizontalAlignment = HorizontalAlignment.Center };
             foreach (var c in new[] { palette.Keyword, palette.Identifier, palette.Result })
-                dots.Children.Add(new Border { Width = 7, Height = 7, CornerRadius = new CornerRadius(3.5), Background = new SolidColorBrush(c) });
-            var face = new StackPanel { Spacing = 5, Margin = new Thickness(6, 8) };
-            face.Children.Add(new TextBlock { Text = palette.Name, FontSize = 12, Foreground = new SolidColorBrush(palette.Ink), HorizontalAlignment = HorizontalAlignment.Center });
+                dots.Children.Add(new Border { Width = 8, Height = 8, CornerRadius = new CornerRadius(Shape.Round(8)), Background = new SolidColorBrush(c) });
+            var face = new StackPanel { Spacing = 8, Margin = new Thickness(8, 8) };
+            face.Children.Add(new TextBlock { Text = palette.Name, FontSize = Typography.Small, Foreground = new SolidColorBrush(palette.Ink), HorizontalAlignment = HorizontalAlignment.Center });
             face.Children.Add(dots);
             var selected = palette.Id == current;
             var chip = new Border
             {
-                Background = new SolidColorBrush(palette.Canvas), CornerRadius = new CornerRadius(9), Margin = new Thickness(0, 0, 8, 0), Child = face,
+                Background = new SolidColorBrush(palette.Canvas),
+                CornerRadius = new CornerRadius(Shape.Round(18)),
+                Margin = new Thickness(0, 0, 8, 0),
+                Child = face,
                 BackgroundSizing = BackgroundSizing.InnerBorderEdge,
-                BorderBrush = selected ? new SolidColorBrush(_p.Accent) : Line, BorderThickness = new Thickness(selected ? 2 : 1), Cursor = new Cursor(StandardCursorType.Hand),
+                BorderBrush = selected ? new SolidColorBrush(_p.Accent) : new SolidColorBrush(_p.Faint, Paint.CardBorderOff),
+                BorderThickness = new Thickness(selected ? 2 : 1),
+                Cursor = new Cursor(StandardCursorType.Hand),
             };
             var id = palette.Id;
             chip.PointerPressed += (_, e) => { e.Handled = true; pick(id); };
@@ -349,14 +376,19 @@ internal sealed partial class SettingsWindow
 
     private Control AccentDots()
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 7 };
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         void Add(string? hex, Color color, string name)
         {
             var selected = S.Accent == hex;
             var dot = new Border
             {
-                Width = 18, Height = 18, CornerRadius = new CornerRadius(9), Background = new SolidColorBrush(color), Cursor = new Cursor(StandardCursorType.Hand),
-                BorderBrush = new SolidColorBrush(selected ? _p.Ink : _p.Faint, selected ? .9 : .3), BorderThickness = new Thickness(selected ? 2.5 : 1),
+                Width = 20,
+                Height = 20,
+                CornerRadius = new CornerRadius(Shape.Round(20)),
+                Background = new SolidColorBrush(color),
+                Cursor = new Cursor(StandardCursorType.Hand),
+                BorderBrush = new SolidColorBrush(selected ? _p.Ink : _p.Faint, selected ? Paint.CardBorderOn : Paint.CardBorderOff),
+                BorderThickness = new Thickness(selected ? 2 : 1),
             };
             ToolTip.SetTip(dot, name);
             Avalonia.Automation.AutomationProperties.SetName(dot, "Accent " + name);
@@ -373,13 +405,17 @@ internal sealed partial class SettingsWindow
     private Control CaretPicture(bool block)
     {
         var row = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
-        row.Children.Add(new TextBlock { Text = "a", FontFamily = new FontFamily("Cascadia Mono, Consolas"), FontSize = 14, Foreground = new SolidColorBrush(_p.Ink), VerticalAlignment = VerticalAlignment.Center });
+        row.Children.Add(new TextBlock { Text = "a", FontFamily = new FontFamily(Typography.MonoFamily), FontSize = Typography.Large, Foreground = new SolidColorBrush(_p.Ink), VerticalAlignment = VerticalAlignment.Center });
         row.Children.Add(new Border
         {
-            Width = block ? 8 : 2, Height = 16, Margin = new Thickness(1, 0, 0, 0), CornerRadius = new CornerRadius(1),
-            Background = new SolidColorBrush(_p.Caret, block ? .45 : 1), VerticalAlignment = VerticalAlignment.Center,
+            Width = block ? 8 : 2,
+            Height = 16,
+            Margin = new Thickness(1, 0, 0, 0),
+            CornerRadius = new CornerRadius(Shape.Hairline),
+            Background = new SolidColorBrush(_p.Caret, block ? Paint.CaretBlock : 1),
+            VerticalAlignment = VerticalAlignment.Center,
         });
-        return new Border { Height = 34, Background = new SolidColorBrush(_p.Canvas), Child = row };
+        return new Border { Height = 32, Background = new SolidColorBrush(_p.Canvas), Child = row };
     }
 
     private Control MaterialPicture(string material)
@@ -388,23 +424,25 @@ internal sealed partial class SettingsWindow
         {
             "acrylic" => new LinearGradientBrush
             {
-                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative), EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
-                GradientStops = { new GradientStop(Color.FromArgb(90, _p.Keyword.R, _p.Keyword.G, _p.Keyword.B), 0), new GradientStop(Color.FromArgb(90, _p.Identifier.R, _p.Identifier.G, _p.Identifier.B), 1) },
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
+                GradientStops = { new GradientStop(Color.FromArgb(Paint.SampleGradientAlpha, _p.Keyword.R, _p.Keyword.G, _p.Keyword.B), 0), new GradientStop(Color.FromArgb(Paint.SampleGradientAlpha, _p.Identifier.R, _p.Identifier.G, _p.Identifier.B), 1) },
             },
             "mica" => new LinearGradientBrush
             {
-                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative), EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
-                GradientStops = { new GradientStop(Color.FromArgb(40, _p.Ink.R, _p.Ink.G, _p.Ink.B), 0), new GradientStop(Colors.Transparent, 1) },
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+                GradientStops = { new GradientStop(Color.FromArgb(Paint.SampleFadeAlpha, _p.Ink.R, _p.Ink.G, _p.Ink.B), 0), new GradientStop(Colors.Transparent, 1) },
             },
             _ => new SolidColorBrush(_p.Canvas),
         };
-        return new Border { Height = 46, Background = new SolidColorBrush(_p.Canvas), Child = new Border { Background = fill } };
+        return new Border { Height = 48, Background = new SolidColorBrush(_p.Canvas), Child = new Border { Background = fill } };
     }
 
     // ---------- icons ----------
 
     /// <summary>A Fluent UI System Icons glyph by codepoint (the bundled font, regular weight at its 20 px design size).</summary>
-    private Control Fl(int codepoint) => new GlyphIcon(char.ConvertFromUtf32(codepoint), IconInk, 20, 0, Glyph.Fluent)
+    private Control Fl(int codepoint) => new GlyphIcon(char.ConvertFromUtf32(codepoint), IconInk, Typography.IconXLarge, 0, Glyph.Fluent)
     {
         HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
     };
@@ -452,7 +490,7 @@ internal sealed partial class SettingsWindow
     {
         dc.DrawRectangle(ink, null, new Rect(1.5, 3, 1.8, 14), 0.9, 0.9);
         var text = new FormattedText(letters, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
-            new Typeface("Segoe UI Variable Text, Segoe UI", FontStyle.Normal, FontWeight.SemiBold), 12.5, ink);
+            new Typeface(Typography.UiFamily, FontStyle.Normal, Typography.Strong), Typography.Label, ink);
         dc.DrawText(text, new Point(4.5, 10 - text.Height / 2));
         if (!clock) return;
         var thin = new Pen(ink, 1.1);
@@ -468,7 +506,7 @@ internal sealed partial class SettingsWindow
         {
             var w = Bounds.Width; var h = Bounds.Height;
             dc.DrawRectangle(new SolidColorBrush(p.Canvas), null, new Rect(0, 0, w, h));
-            var pen = new Pen(new SolidColorBrush(p.Paper, kind == "biggrid" ? 1 : .9), 1);
+            var pen = new Pen(new SolidColorBrush(p.Paper, kind == "biggrid" ? 1 : Paint.GridPen), 1);
             switch (kind)
             {
                 case "lined": for (var y = 8.5; y < h; y += 8) dc.DrawLine(pen, new Point(0, y), new Point(w, y)); break;
@@ -493,8 +531,8 @@ internal sealed partial class SettingsWindow
         {
             var w = Bounds.Width; var h = Bounds.Height;
             dc.DrawRectangle(new SolidColorBrush(p.Surface), null, new Rect(0, 0, w, h));
-            dc.DrawRectangle(new SolidColorBrush(p.Ink, .10), null, new Rect(0, h - 7, w, 7));
-            var pad = new SolidColorBrush(p.Accent, .8);
+            dc.DrawRectangle(new SolidColorBrush(p.Ink, p.Dark ? Paint.PreviewBar : Paint.Hover(false)), null, new Rect(0, h - 7, w, 7));
+            var pad = new SolidColorBrush(p.Accent, Paint.PreviewPad);
             Rect r = where switch
             {
                 "center" => new Rect(w / 2 - 13, h / 2 - 13, 26, 20),

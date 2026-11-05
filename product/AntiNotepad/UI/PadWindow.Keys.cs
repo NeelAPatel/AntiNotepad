@@ -125,7 +125,7 @@ internal sealed partial class PadWindow
         _panes.Opacity = 0.0;
         _pill.IsVisible = false;
         WakeChrome(hold: true);
-        Anim.Run(_overlayHost, 130, t => _overlayHost.Opacity = t);
+        Anim.Run(_overlayHost, MotionTokens.OverlayIn, t => _overlayHost.Opacity = t);
     }
 
     internal bool IsOverlay(Control control) => ReferenceEquals(_overlay, control);

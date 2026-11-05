@@ -1,0 +1,3 @@
+**A4g-control-groups-r3 is incomplete.** I added instance tables for twelve groups to the [control map](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/.claude/worktrees/refactor/A4g-control-groups/.coord/reports/A4g-control-groups-map.md>), including the editor checkbox and motion-preview frame. The map remains labelled a draft: preview rows still need to be folded into their groups, callers and state values need cross-checking, and each group needs explicit disagreement comparisons.
+
+The [r3 report](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/.claude/worktrees/refactor/A4g-control-groups/.coord/reports/A4g-control-groups-r3.md>) lists the files requiring further review. No product files changed. The requested offline gate passed, including build and selftest.

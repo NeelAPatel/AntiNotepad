@@ -44,6 +44,9 @@ private static string Evaluate(string line)
   problems in changed lines. Style preferences are suggestions, shown in the editor, not gate failures.
 - No reformat-only commits: formatting is fixed on touch.
 
+## Design values
+New radius, font, color, shadow, opacity, motion and timer values go in `Theme/` or `Motion/` tokens; the gate's Tokens step counts literals.
+
 ## Files: one job each
 Split by **job**, not by line count. A part of a file is a separate job when at least one of these holds:
 1. **It changes for different reasons**: unit-table edits and parser fixes are different kinds of items.

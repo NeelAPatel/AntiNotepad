@@ -31,7 +31,7 @@ internal sealed partial class PadWindow
     private readonly Border _divider = CreateSplitDivider();
     private Border _leftHost = null!, _rightHost = null!;
     private readonly Border _pill = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 0, ChromeTokens.PillBottomInset), CornerRadius = new CornerRadius(ChromeTokens.PillCornerRadius), Padding = new Thickness(ChromeTokens.PillInset) };
-    private readonly Border _toast = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(16, 0, 16, ChromeTokens.ToastBottomMargin), CornerRadius = new CornerRadius(10), Padding = new Thickness(12, 7), IsVisible = false, MaxWidth = 380 };
+    private readonly Border _toast = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(16, 0, 16, ChromeTokens.ToastBottomMargin), CornerRadius = new CornerRadius(Shape.Card), Padding = new Thickness(12, 8), IsVisible = false, MaxWidth = 380 };
     private readonly Panel _overlayHost = new() { IsVisible = false };
     // The top bar sits on the sampled Canvas blur when the pointer reaches the edge.
     private readonly Panel _topLayer = new() { VerticalAlignment = VerticalAlignment.Top, Height = ChromeTokens.TopBackdrop.ClearStop, IsVisible = false };
@@ -180,9 +180,9 @@ internal sealed partial class PadWindow
         _pill.Background = new SolidColorBrush(p.Surface);
         _pill.BorderBrush = new SolidColorBrush(p.Faint, ChromeTokens.PillBorderAlpha); _pill.BorderThickness = new Thickness(ChromeTokens.PillBorderThickness);
         _pill.BoxShadow = new BoxShadows(new BoxShadow { Blur = ChromeTokens.PillShadowBlur, OffsetY = ChromeTokens.PillShadowOffsetY, Color = Color.FromArgb(p.Dark ? ChromeTokens.PillShadowDarkAlpha : ChromeTokens.PillShadowLightAlpha, 0, 0, 0) });
-        _toast.Background = new SolidColorBrush(p.Ink, .92);
+        _toast.Background = new SolidColorBrush(p.Ink, Paint.Toast);
         _toast.BoxShadow = _pill.BoxShadow;
-        _overlayHost.Background = new SolidColorBrush(p.Canvas, Settings.Material == "solid" ? 1 : .55);
+        _overlayHost.Background = new SolidColorBrush(p.Canvas, Settings.Material == "solid" ? 1 : Paint.GlassScrim);
         UpdateChrome();
     }
 
@@ -214,7 +214,8 @@ internal sealed partial class PadWindow
         CornerRadius = new CornerRadius(ChromeTokens.BadgeCornerRadius),
         Padding = new Thickness(ChromeTokens.BadgeHorizontalPadding, ChromeTokens.BadgeTopPadding, ChromeTokens.BadgeHorizontalPadding, ChromeTokens.BadgeBottomPadding),
         Height = ChromeTokens.BadgeHeight,
-        Child = Kit.Text(text, color, ChromeTokens.BadgeFontSize, FontWeight.SemiBold), VerticalAlignment = VerticalAlignment.Center
+        Child = Kit.Text(text, color, ChromeTokens.BadgeFontSize, Typography.Strong),
+        VerticalAlignment = VerticalAlignment.Center
     };
 
     private Border DevBadge(Color color)
@@ -239,7 +240,10 @@ internal sealed partial class PadWindow
             text.Text = null;
             text.Inlines!.Clear();
             text.Inlines.Add(new Avalonia.Controls.Documents.Run(glyphFont is null ? "\u2387" : "\uE0A0")
-                { FontFamily = glyphFont ?? text.FontFamily, FontWeight = FontWeight.Normal });
+            {
+                FontFamily = glyphFont ?? text.FontFamily,
+                FontWeight = Typography.Regular
+            });
             text.Inlines.Add(new Avalonia.Controls.Documents.Run(value[1..]));
         }
         SetText(shortText);
@@ -262,7 +266,7 @@ internal sealed partial class PadWindow
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.PagerRowSpacing, VerticalAlignment = VerticalAlignment.Center };
         var onStack = Data.ViewSlot == 0;
         row.Children.Add(Kit.IconButton(Glyph.Back, "Previous note (Ctrl+[)", p, () => Navigate(-1), radius: ChromeTokens.PagerArrowHoverRadius));
-        var count = Kit.Text(onStack ? $"{Data.Current + 1} / {Data.Stack.Count}" : "stack", onStack ? p.Muted : p.Faint, ChromeTokens.PagerCountFontSize, FontWeight.SemiBold);
+        var count = Kit.Text(onStack ? $"{Data.Current + 1} / {Data.Stack.Count}" : "stack", onStack ? p.Muted : p.Faint, ChromeTokens.PagerCountFontSize, Typography.Strong);
         // Fixed box, centred both ways, tabular digits: "5 / 5" sits in the middle and doesn't shift as numbers change.
         count.TextAlignment = TextAlignment.Center; count.HorizontalAlignment = HorizontalAlignment.Center; count.VerticalAlignment = VerticalAlignment.Center;
         count.FontFeatures = new FontFeatureCollection { new FontFeature { Tag = "tnum", Value = 1 } };
@@ -392,7 +396,7 @@ internal sealed partial class PadWindow
         var fromO = layer.Opacity; var toO = show ? 1.0 : 0;
         layer.IsHitTestVisible = show;
         if (instant || Anim.Reduced) { shift.Y = toY; layer.Opacity = toO; return; }
-        Anim.Run(layer, 170, t => { var k = Anim.EaseOut(t); shift.Y = fromY + (toY - fromY) * k; layer.Opacity = fromO + (toO - fromO) * k; }, decorative: false);
+        Anim.Run(layer, MotionTokens.BarsReveal, t => { var k = Anim.EaseOut(t); shift.Y = fromY + (toY - fromY) * k; layer.Opacity = fromO + (toO - fromO) * k; }, decorative: false);
     }
 
     /// <summary>The floating pager: its own small popup just below the window, faded in and out.</summary>
@@ -401,7 +405,7 @@ internal sealed partial class PadWindow
         if (show) { _pill.Opacity = 0; _floatPager.IsOpen = true; }
         if (instant || Anim.Reduced) { _pill.Opacity = show ? 1 : 0; if (!show) _floatPager.IsOpen = false; return; }
         var from = _pill.Opacity; var to = show ? 1.0 : 0;
-        Anim.Run(_pill, 150, t => _pill.Opacity = from + (to - from) * Anim.EaseOut(t), () => { if (!show && !_bottomShown) _floatPager.IsOpen = false; }, decorative: false);
+        Anim.Run(_pill, MotionTokens.PillFade, t => _pill.Opacity = from + (to - from) * Anim.EaseOut(t), () => { if (!show && !_bottomShown) _floatPager.IsOpen = false; }, decorative: false);
     }
 
     private void WakeChrome(bool hold = false)
@@ -430,7 +434,7 @@ internal sealed partial class PadWindow
         var from = _icons.Opacity;
         _pill.IsHitTestVisible = to > 0; _icons.IsHitTestVisible = to > 0;
         // Same duration both ways, so appearing and disappearing feel like one motion.
-        _chromeAnim = Anim.Run(this, 180, t =>
+        _chromeAnim = Anim.Run(this, MotionTokens.ChromeShift, t =>
         {
             var v = from + (to - from) * t;
             _icons.Opacity = v; _pill.Opacity = v; _badges.Opacity = v;
@@ -443,20 +447,20 @@ internal sealed partial class PadWindow
     {
         var p = _palette;
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
-        row.Children.Add(new TextBlock { Text = text, Foreground = new SolidColorBrush(p.Canvas), FontSize = 12.5, TextWrapping = TextWrapping.Wrap, MaxWidth = 300, VerticalAlignment = VerticalAlignment.Center });
+        row.Children.Add(new TextBlock { Text = text, Foreground = new SolidColorBrush(p.Canvas), FontSize = Typography.Caption, TextWrapping = TextWrapping.Wrap, MaxWidth = 300, VerticalAlignment = VerticalAlignment.Center });
         _toastAction = onAction;
         _undoArmed = onAction is not null;
         if (action is not null && onAction is not null)
         {
-            var label = Kit.Text(action, p.Accent, 12.5, FontWeight.SemiBold);
-            label.Margin = new Thickness(6, 1);
-            var button = Kit.Plain(label, p with { Ink = p.Canvas });
+            var label = Kit.Text(action, p.Accent, Typography.Body, Typography.Strong);
+            label.Margin = new Thickness(8, 2);
+            var button = Kit.Plain(label, p with { Ink = p.Canvas }, height: 32);
             button.Click += (_, _) => { onAction(); HideToast(); };
             row.Children.Add(button);
         }
         _toast.Child = row;
         _toast.IsVisible = true;
-        Anim.Run(_toast, 120, t => _toast.Opacity = t);
+        Anim.Run(_toast, MotionTokens.ToastIn, t => _toast.Opacity = t);
         _toastTimer.Stop();
         _toastTimer.Interval = TimeSpan.FromMilliseconds(action is not null ? 7000 : brief ? 1300 : 2400);
         _toastTimer.Start();
@@ -465,7 +469,7 @@ internal sealed partial class PadWindow
     private void HideToast()
     {
         _toastAction = null; _undoArmed = false;
-        Anim.Run(_toast, 160, t => _toast.Opacity = 1 - t, () => _toast.IsVisible = false);
+        Anim.Run(_toast, MotionTokens.ToastOut, t => _toast.Opacity = 1 - t, () => _toast.IsVisible = false);
     }
 
     private void ShowSaveFailurePrompt(string? reason, Action retry, Action quitAnyway)
@@ -479,19 +483,23 @@ internal sealed partial class PadWindow
         }
 
         var p = _palette;
-        var title = Kit.Text("Couldn't save your notes", p.Ink, 17, FontWeight.SemiBold);
+        var title = Kit.Text("Couldn't save your notes", p.Ink, Typography.DialogTitle, Typography.Strong);
         Avalonia.Automation.AutomationProperties.SetName(title, "Couldn't save your notes");
         var detail = new TextBlock
         {
-            Text = message, Foreground = new SolidColorBrush(p.Muted), FontSize = 12.5,
+            Text = message,
+            Foreground = new SolidColorBrush(p.Muted),
+            FontSize = Typography.Body,
             TextWrapping = TextWrapping.Wrap, MaxWidth = 380,
         };
         Avalonia.Automation.AutomationProperties.SetName(detail, "Save error reason");
 
-        var retryButton = Kit.Plain(Kit.Text("Retry", p.Accent, 12.5, FontWeight.SemiBold), p, 88, 34);
+        var retryButton = Kit.Plain(Kit.Text("Retry", p.Accent, Typography.Body, Typography.Strong), p, 88, 32);
+        if (retryButton.Content is Border retryFace) retryFace.Padding = new Thickness(8, 2);
         Avalonia.Automation.AutomationProperties.SetName(retryButton, "Retry");
         retryButton.Click += (_, _) => retry();
-        var quitButton = Kit.Plain(Kit.Text("Quit anyway", p.Muted, 12.5), p, 104, 34);
+        var quitButton = Kit.Plain(Kit.Text("Quit anyway", p.Muted, Typography.Body), p, 104, 32);
+        if (quitButton.Content is Border quitFace) quitFace.Padding = new Thickness(8, 2);
         Avalonia.Automation.AutomationProperties.SetName(quitButton, "Quit anyway");
         quitButton.Click += (_, _) => quitAnyway();
         var buttons = new StackPanel
@@ -502,9 +510,16 @@ internal sealed partial class PadWindow
         var content = new StackPanel { Spacing = 9, Children = { title, detail, buttons } };
         var card = new Border
         {
-            Child = content, MaxWidth = 420, MinWidth = 240, Margin = new Thickness(12), Padding = new Thickness(18),
-            CornerRadius = new CornerRadius(12), Background = new SolidColorBrush(p.Surface),
-            BorderBrush = new SolidColorBrush(p.Faint, .45), BorderThickness = new Thickness(1), BoxShadow = _pill.BoxShadow,
+            Child = content,
+            MaxWidth = 420,
+            MinWidth = 240,
+            Margin = new Thickness(12),
+            Padding = new Thickness(16),
+            CornerRadius = new CornerRadius(Shape.Dialog),
+            Background = new SolidColorBrush(p.Surface),
+            BorderBrush = new SolidColorBrush(p.Faint, Paint.PopupBorder),
+            BorderThickness = new Thickness(1),
+            BoxShadow = _pill.BoxShadow,
             HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
         };
         Avalonia.Automation.AutomationProperties.SetName(card, "Save failure prompt");
@@ -555,6 +570,6 @@ internal sealed partial class PadWindow
     {
         var shift = new TranslateTransform();
         _active.RenderTransform = shift;
-        Anim.Run(_active, 180, t => shift.X = direction * 7 * Math.Sin(t * Math.PI), () => _active.RenderTransform = null);
+        Anim.Run(_active, MotionTokens.Nudge, t => shift.X = direction * 7 * Math.Sin(t * Math.PI), () => _active.RenderTransform = null);
     }
 }

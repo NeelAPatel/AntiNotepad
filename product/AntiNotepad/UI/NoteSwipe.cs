@@ -193,7 +193,7 @@ internal sealed class NoteSwipe(Control host, Func<Settings> settings, Func<Cont
         var weakTarget = new WeakReference<Control>(target);
         var weak = new WeakReference<NoteSwipe>(this);
         var finished = false;
-        var springBack = Anim.Run(target, 200, t =>
+        var springBack = Anim.Run(target, MotionTokens.SwipeSpringBack, t =>
         {
             if (!weakTarget.TryGetTarget(out var pane)) return;
             if (pane.RenderTransform is TranslateTransform tt) tt.X = from * (1 - t);

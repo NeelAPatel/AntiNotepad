@@ -8,6 +8,7 @@ using Avalonia.VisualTree;
 using AvaloniaEdit;
 using AvaloniaEdit.Rendering;
 using AntiNotepad.Motion;
+using AntiNotepad.Theme;
 
 namespace AntiNotepad.Editor;
 
@@ -277,7 +278,7 @@ internal sealed class SmoothCaret : IBackgroundRenderer
 
     private Rect Current()
     {
-        var t = Math.Clamp((DateTime.Now - _movedAt).TotalMilliseconds / 80, 0, 1);
+        var t = Math.Clamp((DateTime.Now - _movedAt).TotalMilliseconds / MotionTokens.CaretGlide, 0, 1);
         var e = Anim.EaseOut(t);
         return new Rect(_from.X + (_to.X - _from.X) * e, _from.Y + (_to.Y - _from.Y) * e, _to.Width, _from.Height + (_to.Height - _from.Height) * e);
     }
@@ -311,6 +312,6 @@ internal sealed class SmoothCaret : IBackgroundRenderer
         var rect = new Rect(r.X - view.HorizontalOffset, r.Y - view.VerticalOffset, r.Width, r.Height);
         // The block is translucent so the character under it stays readable.
         var block = _pad.Settings.CaretStyle == "block";
-        dc.DrawRectangle(new SolidColorBrush(_pad.Palette.Caret, block ? 0.45 : 1), null, rect, block ? 2 : 1, block ? 2 : 1);
+        dc.DrawRectangle(new SolidColorBrush(_pad.Palette.Caret, block ? Paint.CaretBlock : 1), null, rect, block ? 2 : 1, block ? 2 : 1);
     }
 }
