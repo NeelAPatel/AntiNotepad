@@ -1,6 +1,6 @@
 # STATUS
 
-Updated: 2026-10-30
+Updated: 2026-11-06
 Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 
 ## Working rules right now
@@ -34,7 +34,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Locked choices: `docs/decisions.md`.
 
 ## Now
-- Master 3 (design-tokens): A4-design-tokens merged to dev 2026-11-05 (A4a-A4n: token files, scale proposal, playground on localhost:47812, every Recommended value in the app). Branch feat/A4-design-tokens kept with its worktree for return work. Left: scale-apply, design-plugins-review, timer-names (deferred), idea: search-bar-overlap (fix/, pre-existing).
+- Master 4 (design-tokens; took over from Master 3 on 2026-11-06, notes `.coord/directors/master-4.md`): A4-design-tokens merged to dev 2026-11-05 (A4a-A4n: token files, scale proposal, playground on localhost:47812, every Recommended value in the app). Branch feat/A4-design-tokens kept with its worktree for return work. Left: scale-apply, design-plugins-review, timer-names (deferred), idea: search-bar-overlap (fix/, pre-existing).
 - Release `v0.7.0-rc1` (user, 2026-11-01): main fast-forwarded to dev after Era 1, tagged, pushed. Release build 0 warnings, SELFTEST PASS. User installed it on the production copy; dev builds removed.
 - Loop Hub 2: Loop6-loop-v5-wiki (Low, docs-tools) **done** (2026-11-04; user hand test "Looks good"): loop is **v5.0.0** (chat-output changes are x.y.1); wiki refreshed and new `docs/wiki/images/loop-v5-flow.svg`; gate on dev PASS. GitHub wiki republish waits for the user's go.
 - Loop Hub 2: T6-gate-format-split-baseline (Low, docs-tools) **done** (2026-11-01): gate Format counts lines moved verbatim into a new file as older code (limit: common lines like `}` always match); gate on dev PASS. All Loop Hub 2 items from the Era 1 go are done.
@@ -329,20 +329,20 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | step: apply-shadows | Apply the shadow tiers you picked | Medium | Small | covered by A4-design-tokens (A4j-A4n) |
 | step: apply-motion | Apply the animation timings you picked | Medium | Small | covered by A4-design-tokens (A4j-A4n) |
 | idea: code-ownership | Every responsibility has one owner and no copies; behavior unchanged | - | - | needs you |
-| step: store-split | Move `Note`, `Settings`, `StoreData` and the search types out of `Model/Store.cs`, verbatim **Proposed (Master 2, 2026-10-30):** becomes its own item, see `idea: store-split` in the era-two block; this step row goes. | Low | Small | needs you |
+| step: store-split | Move `Note`, `Settings`, `StoreData` and the search types out of `Model/Store.cs`. Done by A2-store-split (user, 2026-11-06: tidy) | Low | Small | done |
 | step: notes-path-dedupe | One same-or-nested path rule in `Platform/` replacing the copies in `NotesSession`, `NotesLocation`, `SettingsWindow` and `KeepOldCopy`; CONTRACTS row | High | Small | needs you |
 | step: ui-kit-merge | One control kit: Settings' private controls merge into `Kit`; `Material()` and `Ago()` move to their owners | Medium | Medium | needs you |
 | step: ownership-map | `docs/architecture.md` owner per responsibility; `NotesSession`, `RuntimeLog` into `App/`; LAYERS rows for `App/` and `Motion/` | Low | Small | needs you |
 | step: behavior-timer-names | Optional: name save, debounce, toast and taskbar timers beside their owners, values unchanged | High | Small | needs you |
 | **Cleanup** | | | | |
-| C14-a38-audit-branch | Merge the A38 MVVM audit doc into dev or delete `feat/A38-mvvm-audit` **Proposed (Master 2, 2026-10-30):** drop as obsolete: the history rewrite left only `main` and `dev` (checked 2026-10-30). | Low | Small | proposed |
-| C15-worktree-branch-cleanup | Remove leftover worktrees and finished `reorg/*` branches (local and origin) **Proposed (Master 2, 2026-10-30):** drop as obsolete: no extra branches or worktrees, `.claude/worktrees/` empty (checked 2026-10-30). | Low | Small | proposed |
-| C16-archive-finished-sessions | Archive the finished A39-A44 Claude sessions **Proposed (Master 2, 2026-10-30):** back to `idea: archive-finished-sessions` (era-0 ID retired); no code. | Low | Small | proposed |
-| C18-tag-scheme | One tag naming scheme and a dev -> main release checklist that re-checks gate rules; doc only **Proposed (Master 2, 2026-10-30):** back to `idea: release-checklist`: loop v3 settled tag names, only the dev -> main checklist is left. | Low | Small | proposed |
+| C14-a38-audit-branch | Merge the A38 MVVM audit doc into dev or delete `feat/A38-mvvm-audit`. Obsolete: the history rewrite left only `main` and `dev` (user, 2026-11-06: tidy) | Low | Small | dropped |
+| C15-worktree-branch-cleanup | Remove leftover worktrees and finished `reorg/*` branches. Obsolete: none left after the history rewrite (user, 2026-11-06: tidy) | Low | Small | dropped |
+| idea: archive-finished-sessions | Archive finished Claude sessions (era-0 C16 retired); no code (user, 2026-11-06: tidy) | Low | Small | needs you |
+| idea: release-checklist | A dev -> main release checklist that re-checks gate rules; doc only. Tag names were settled by loop v3 (era-0 C18 retired) (user, 2026-11-06: tidy) | Low | Small | needs you |
 | Release marker | dev -> main with a tag, on your go | - | - | planned |
 | **Performance** | | | | |
 | idea: settings-thread-count | Find why the Settings window runs about 90 threads; report, fix only if cheap (was A74) | Low | Small | needs you |
-| A49-large-note-perf | Measure then reduce typing lag in a 6,000-line note; one change at a time (ideas in Backlog) **Proposed (Master 2, 2026-10-30):** back to `idea: large-note-perf` (era-0 ID retired); scout with `/scan-backlog` after the splits. | Medium | Large | proposed |
+| idea: large-note-perf | Measure then reduce typing lag in a 6,000-line note; one change at a time (ideas in Backlog; era-0 A49 retired) (user, 2026-11-06: tidy) | Medium | Large | needs you |
 | **Features and polish (lab-first where visible)** | | | | |
 | idea: notes-folder-move-flow | Choosing and moving the notes folder is clear and safe; first step follows code-ownership's notes-path-dedupe | - | - | needs you |
 | step: path-validator | One shared Platform check for a chosen folder: blocks invalid, same, nested, not writable, has notes; warns new, non-empty, network, low space, cloud-synced | High | Medium | needs you |
@@ -351,17 +351,17 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | step: move-undo | "Move back" after a move, using the kept old copy | High | Medium | needs you |
 | step: picker-last-location | The folder picker opens at the last picked folder | Low | Small | needs you |
 | step: single-result-message | Settings shows the move's own result message instead of rebuilding it | Low | Small | needs you |
-| A51-recovered-folder-always-open | Recovered-notes folder always exists and its Open button always works **Proposed (Master 2, 2026-10-30):** back to `idea: recovered-folder-always-open` (era-0 ID retired), or number now. | Low | Small | proposed |
-| A48-answers-toggle-clarity | Rename the "Answers" toggle to say what it does, and apply it live **Proposed (Master 2, 2026-10-30):** back to `idea: answers-toggle-clarity` (era-0 ID retired), or number now; lab-first. | Low | Small | proposed |
+| idea: recovered-folder-always-open | Recovered-notes folder always exists and its Open button always works (era-0 A51 retired) (user, 2026-11-06: tidy) | Low | Small | needs you |
+| idea: answers-toggle-clarity | Rename the "Answers" toggle to say what it does, and apply it live; lab-first (era-0 A48 retired) (user, 2026-11-06: tidy) | Low | Small | needs you |
 | idea: native-timer-notification | Windows notification when a timer ends (was A55) | Medium | Medium | needs you |
-| A47-hotkey-recorder | Set a hotkey in Settings by pressing the keys **Proposed (Master 2, 2026-10-30):** back to `idea: hotkey-recorder` (era-0 ID retired), or number now; lab-first. | Medium | Medium | proposed |
+| idea: hotkey-recorder | Set a hotkey in Settings by pressing the keys; lab-first (era-0 A47 retired) (user, 2026-11-06: tidy) | Medium | Medium | needs you |
 | idea: chime-picker | Choose the timer chime: native sound plus two more, stretch (was A56) | Low | Medium | needs you |
 | idea: floating-scrollbar | Modern floating scrollbar at the side, shown only while scrolling (user, 2026-10-29, A55 hand test: "a scroll bar shows, i didn't expect that"); open: hide vs fade, both split panes, existing bar styles | - | - | needs you |
 | idea: timer-enter-no-autostart | In a timer note, Enter after a timer line (e.g. `10s test`) starts that timer at once (`Editor/PadView.cs:698`, existing by design); user wants to write several timers first (user, 2026-10-29, A42c hand test: "that shouldnt be the case because i might be writing multiple timers"); open: what starts a timer then (Ctrl+Enter, chip click only?) | - | - | needs you |
 | idea: wrap-hanging-indent | When an indented bullet line soft-wraps, the wrapped part should start under the bullet's text, not under the bullet itself: in "• We're at a point w… they're easier to", "they're" sits about 4 columns left of "We're" (user, 2026-10-29, screenshots). Wanted: the same alignment as a typed new line, just without the bullet. Open: plain indented lines with no bullet, numbered lists and checkboxes | - | - | needs you |
 | idea: selection-convert-menu | Select several lines, right-click, and turn them into a list, checkboxes, timers etc.: each selected line gets the matching prefix (user, 2026-10-29, screenshot of the current right-click menu: Cut/Copy/Paste/Delete, Undo/Redo, Select all, New note, Search, split, pin, Settings, Hide). Open: which kinds (bullet, numbered, checkbox, timer, others?), a submenu or flat entries, toggling off or swapping lines that already have a prefix, blank lines in the selection | - | - | needs you |
 | idea: pinned-accent-ring | When the window is pinned (Ctrl+T), draw an accent-colored ring 2-4 px thick around the window's edge, so pinned is visible at a glance (user, 2026-10-29). Open: exact thickness, whether it follows the rounded corners, theme accent or a fixed color, a fade on pin/unpin, how it works with the frameless window and its shadow | - | - | needs you |
-| idea: wiki-loop-v3 | D item: bring `docs/wiki/` (GitHub wiki source) up to loop v3: Approve, A/Loop/D/T IDs and eras, branch prefixes, squash merges, roles, coding standard; then republish (user, 2026-10-29: kept out of Loop1-process-v3) **Proposed (Master 2, 2026-10-30):** drop as done: Loop2-loop-v3-1-wiki rewrote and published the wiki for v3.1. | - | - | proposed |
+| idea: wiki-loop-v3 | Bring `docs/wiki/` up to loop v3. Done by Loop2-loop-v3-1-wiki and Loop6-loop-v5-wiki (user, 2026-11-06: tidy) | - | - | dropped |
 
 ## Open (needs the user)
 - Live check not yet done: A30 Windows restart/sign-out saving an edit typed just before.
