@@ -36,6 +36,11 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 | 2026-11-01 | A4a-token-scan | Merge | judgment | - | - | override: steps squash onto umbrella branch `feat/A4-design-tokens`, which lands on dev once at the end, on the user's go ("branch off dev for feat/design-tokens, and then sub branches"; rule: one squashed commit per item onto dev, `docs/loop.md`); `tools/approve.ps1` always bases on dev, so step branches are cut by hand | idea: approve-base-branch |
 | 2026-11-02 | A4b-design-dump | Build r1 | plan | reviewer | report | r1 wrote no code: brief left hidden-window cleanup and reaching the private `PadMenu.BuildMenu` undecided; r2 brief decided both | - |
 
+| 2026-11-06 | A5-search-bar-overlap | Check (gate r1) | plan | gate | plan | Files listed the `SelfTest/` directory; name the exact area file | - |
+| 2026-11-06 | A5-search-bar-overlap | Check (gate r1) | code | format | codex-review | two properties per line in an initializer; brief "one property per line" | - |
+| 2026-11-06 | A5-search-bar-overlap | Check (gate r2) | plan | gate | plan | round brief said "none" under Files; always list a file under round Files | - |
+| 2026-11-06 | A5-search-bar-overlap | Merge | plan | master | review | merge preflight "stale Head": catch-up for a STATUS-only dev commit forced a full gate re-run | - |
+
 ## Scores
 One row per merged item: what each check found. A reviewer with many empty rows on items that later had misses is not
 earning its run.
@@ -64,3 +69,4 @@ earning its run.
 | 2026-11-06 | T9-roadmap-step-rows | Low | 0 | 1 | - | - | - | - |
 | 2026-11-06 | Loop7-top-level-rules | Low | 1 | 0 | - | - | - | - |
 | 2026-11-06 | T10-roadmap-live-reload | Low | 0 | 0 | - | - | - (user said "merge it" before reporting checks) | - |
+| 2026-11-06 | A5-search-bar-overlap | Medium | 1 (-r2 whitespace) | 2 | 0 | - | 0 | - |

@@ -9,6 +9,8 @@ using AntiNotepad.Theme;
 using AntiNotepad.UI;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Chrome;
+using Avalonia.Input;
 using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media;
@@ -17,7 +19,7 @@ namespace AntiNotepad;
 
 internal static partial class SelfTest
 {
-    private const string DesignHash = "1032fadd9067c61f4ce6299ad46b414464a0fb383a95827eaa79960cdb5c716c";
+    private const string DesignHash = "28116406c8fd8cde688bd06e97afbe978e87153c152d4cf7806a706fd66bb077";
     private static readonly string[] DesignProperties = ["FontSize", "FontWeight", "FontFamily", "FontStyle", "CornerRadius", "Opacity", "Background", "Foreground", "BorderBrush", "BorderThickness", "BoxShadow", "Margin", "Padding"];
 
     /// <summary>Writes the same design snapshot used by the selftest.</summary>
@@ -115,5 +117,55 @@ internal static partial class SelfTest
         }
         var index = 0;
         foreach (var child in node.GetLogicalChildren()) Capture(child, path + "[" + index++ + "]", lines);
+    }
+
+    /// <summary>Exercises the production layout helpers across bar modes and overlay lifetimes.</summary>
+    private static bool SlidingOverlayTopBandChecks(out string report)
+    {
+        var failures = new List<string>();
+        var root = new Grid();
+        var content = new Grid { RowDefinitions = new RowDefinitions($"{ChromeTokens.DockedRowHeight},*") };
+        var host = new Panel { IsVisible = true };
+        Grid.SetRow(host, 1);
+        content.Children.Add(host);
+        root.Children.Add(content);
+        var band = PadWindow.AddOverlayDragBand(root);
+        var top = new Panel { IsHitTestVisible = false };
+        var bottom = new Panel();
+        PadWindow.AddChromeLayers(root, top, bottom, new Border(), new Border(), new Border());
+
+        foreach (var mode in new[] { "docked", "overlay", "float", "docked" })
+        {
+            var sliding = mode is "overlay" or "float";
+            content.RowDefinitions[0].Height = new GridLength(sliding ? 0 : ChromeTokens.DockedRowHeight);
+            PadWindow.ApplyOverlayLayout(host, band, sliding, draggable: true);
+            root.Measure(new Size(640, 400));
+            root.Arrange(new Rect(0, 0, 640, 400));
+            var hostTop = host.TranslatePoint(default, root)?.Y;
+            if (hostTop != ChromeTokens.DockedRowHeight || host.Margin.Top != (sliding ? ChromeTokens.DockedRowHeight : 0))
+                failures.Add(mode + " clearance");
+            if (band.IsVisible != sliding || (sliding && band.Bounds.Height != ChromeTokens.DockedRowHeight))
+                failures.Add(mode + " drag visibility/height");
+            if (sliding && (!band.IsHitTestVisible || band.Background is null || band.Bounds.Y != 0
+                || WindowDecorationProperties.GetElementRole(band) != WindowDecorationsElementRole.TitleBar))
+                failures.Add(mode + " drag role/geometry");
+        }
+
+        var layering = root.Children.IndexOf(band) > root.Children.IndexOf(content)
+            && root.Children.IndexOf(band) < root.Children.IndexOf(top)
+            && root.Children.IndexOf(band) < root.Children.IndexOf(bottom);
+        if (!layering) failures.Add("drag band layer order");
+        PadWindow.ApplyOverlayLayout(host, band, sliding: true, draggable: false);
+        if (band.IsVisible) failures.Add("save prompt owns outside clicks");
+        PadWindow.ApplyOverlayLayout(host, band, sliding: true, draggable: true);
+        if (!band.IsVisible) failures.Add("Help/Search drag restored");
+        host.IsVisible = false;
+        PadWindow.ApplyOverlayLayout(host, band, sliding: true, draggable: true);
+        if (band.IsVisible) failures.Add("closed overlay releases band");
+        host.IsVisible = true;
+        PadWindow.ApplyOverlayLayout(host, band, sliding: true, draggable: true);
+        if (!band.IsVisible) failures.Add("reopened overlay restores band");
+        report = failures.Count == 0 ? "mode round trip, clearance, title-bar band, layering and input ownership pass" : string.Join("; ", failures);
+        return failures.Count == 0;
     }
 }

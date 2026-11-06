@@ -1,3 +1,4 @@
+// Routes pad commands, overlays, and settings changes from keyboard and chrome actions.
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
@@ -122,6 +123,7 @@ internal sealed partial class PadWindow
         _overlayHost.Children.Clear();
         _overlayHost.Children.Add(overlay);
         _overlayHost.IsVisible = true;
+        UpdateOverlayLayout();
         _panes.Opacity = 0.0;
         _pill.IsVisible = false;
         WakeChrome(hold: true);
@@ -136,6 +138,7 @@ internal sealed partial class PadWindow
         _overlay = null;
         _overlayHost.Children.Clear();
         _overlayHost.IsVisible = false;
+        UpdateOverlayLayout();
         _panes.Opacity = 1;
         _pill.IsVisible = true;
         UpdateChrome();

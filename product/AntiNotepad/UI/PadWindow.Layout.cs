@@ -1,3 +1,4 @@
+// Builds the pad's content and chrome layers and coordinates their visibility and input surfaces.
 using Avalonia.Controls.Chrome;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia;
@@ -33,6 +34,7 @@ internal sealed partial class PadWindow
     private readonly Border _pill = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 0, ChromeTokens.PillBottomInset), CornerRadius = new CornerRadius(ChromeTokens.PillCornerRadius), Padding = new Thickness(ChromeTokens.PillInset) };
     private readonly Border _toast = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(16, 0, 16, ChromeTokens.ToastBottomMargin), CornerRadius = new CornerRadius(Shape.Card), Padding = new Thickness(12, 8), IsVisible = false, MaxWidth = 380 };
     private readonly Panel _overlayHost = new() { IsVisible = false };
+    private Border _overlayDragBand = null!;
     // The top bar sits on the sampled Canvas blur when the pointer reaches the edge.
     private readonly Panel _topLayer = new() { VerticalAlignment = VerticalAlignment.Top, Height = ChromeTokens.TopBackdrop.ClearStop, IsVisible = false };
     private readonly Panel _bottomLayer = new() { VerticalAlignment = VerticalAlignment.Bottom, Height = ChromeTokens.PagerStripHeight, IsVisible = false };
@@ -91,6 +93,33 @@ internal sealed partial class PadWindow
         root.Children.Add(floatPager);
     }
 
+    /// <summary>Adds an overlay drag surface below the chrome so visible buttons keep input ownership.</summary>
+    internal static Border AddOverlayDragBand(Panel root)
+    {
+        var band = new Border
+        {
+            Background = Brushes.Transparent,
+            Height = ChromeTokens.DockedRowHeight,
+            VerticalAlignment = VerticalAlignment.Top,
+            IsVisible = false,
+        };
+        WindowDecorationProperties.SetElementRole(band, WindowDecorationsElementRole.TitleBar);
+        root.Children.Add(band);
+        return band;
+    }
+
+    /// <summary>Reserves sliding-bar clearance without adding a second header row in Docked mode.</summary>
+    internal static void ApplyOverlayLayout(Panel host, Border band, bool sliding, bool draggable)
+    {
+        host.Margin = new Thickness(default, sliding ? ChromeTokens.DockedRowHeight : default, default, default);
+        // A save prompt keeps ordinary client input here so outside clicks can dismiss it.
+        band.IsVisible = sliding && host.IsVisible && draggable;
+    }
+
+    /// <summary>Keeps overlay clearance and drag access current after mode or overlay changes.</summary>
+    private void UpdateOverlayLayout() => ApplyOverlayLayout(_overlayHost, _overlayDragBand, Sliding,
+        _overlay is SearchOverlay or HelpOverlay);
+
     private void BuildLayout()
     {
         AddHandler(KeyDownEvent, OnSaveFailureKeyDown, RoutingStrategies.Tunnel);
@@ -120,6 +149,7 @@ internal sealed partial class PadWindow
         var root = new Grid();
         root.Children.Add(_tint);
         root.Children.Add(_content);
+        _overlayDragBand = AddOverlayDragBand(root);
         InitializeTopBlurVisuals();
         AddChromeLayers(root, _topLayer, _bottomLayer, _toast, _pill, _floatPager);
         _topLayer.RenderTransform = new TranslateTransform();
@@ -350,6 +380,7 @@ internal sealed partial class PadWindow
             Grid.SetRow(_top, 0);
             _content.Children.Insert(0, _top);
         }
+        UpdateOverlayLayout();
         ApplyTopBlur();
     }
 

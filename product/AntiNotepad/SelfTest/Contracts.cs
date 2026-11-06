@@ -19,6 +19,12 @@ internal static partial class SelfTest
         ContractRow[] rows =
         [
             new(
+                "sliding-overlay-top-band",
+                "Sliding bar modes reserve the top band above overlays and keep it a window-drag surface.",
+                "A5-search-bar-overlap",
+                () => RunExistingCheck(SlidingOverlayTopBandChecks, "sliding overlay top band: "),
+                "Dev copy: Search and Help clear the bar in all modes and scales; drag the band with the bar hidden; save-prompt outside clicks still dismiss."),
+            new(
                 "dev-badge-build-stamp",
                 "A dev build stamped with a branch and build time shows them in the badge (short form, full form on hover and in the tooltip); without the stamp it shows plain dev; release builds carry no stamp.",
                 "A45-dev-build-badge",
