@@ -61,7 +61,7 @@ pwsh -NoProfile -File tools/merge-preflight.ps1 -Task <ID-slug>
 
 A dirty gate records a `-dirty` suffix and cannot satisfy preflight; an earlier clean gate remains valid only when later commits touch only this item's card/report files (`tools/gate.ps1`, initial HEAD/status block; `tools/merge-preflight.ps1`, report checks).
 
-Active masters tell each other in one line before a merge (`docs/loop.md`, "Sessions"). The normal merge is one squash commit on dev carrying the item, its STATUS edits and lessons. The master re-gates on dev, pushes, removes the worktree without `--force`, and deletes the branch. Unexpected files, failed gates and leftover worktree files stop that route (`.claude/skills/merge-task/SKILL.md`, steps 2–7).
+Directors do not send each other updates while work is running. A director finishes its task first, then decides whether others need an update, or asks you (`docs/loop.md`, "Sessions"). The normal merge is one squash commit on dev carrying the item, its STATUS edits and lessons. The master re-gates on dev, pushes, removes the worktree without `--force`, and deletes the branch. Unexpected files, failed gates and leftover worktree files stop that route (`.claude/skills/merge-task/SKILL.md`, steps 2–7).
 
 ## One branch, no extra worktree
 

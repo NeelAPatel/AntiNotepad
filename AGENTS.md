@@ -23,7 +23,7 @@ The earlier AntiQuickPad project (spikes A/B, `src/AntiQuickPad`) is retired and
 ## Roles
 - Implementation: Codex, with the role picked by the job (Luna medium for surgical changes, Terra medium or Luna xhigh for
   harder work). Codex checks run offline only. Launch and routing: `docs/agents.md`.
-- Masters (directors): top-level Claude chats, one per area (app, loop). They plan, dispatch, and alone merge to dev and main.
+- Masters (directors): top-level Claude chats, three live areas (app and design, loop, roadmap). They plan, route item work to sub-chats and do not do it themselves, and alone merge to dev and main.
 - Sub-sessions: one per item or phase. They brief and check Codex, commit on their branch (Codex cannot write to .git),
   and talk with the user directly about their item. Details: `docs/loop.md`, "Sessions".
 

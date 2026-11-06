@@ -4,7 +4,7 @@ An item is one agreed change; a phase is one stage of doing it. A chat, an AI ru
 
 # Glossary
 
-Loop version is **v5.0.0**: major changes cover phases or roles, minor changes add checks or routes, and patch changes affect chat output only (`docs/loop.md`, "Sessions"; `docs/glossary.md`).
+Loop version is **v5.1.0**: major changes cover phases or roles, minor changes add checks or routes, and patch changes affect chat output only (`docs/loop.md`, "Sessions"; `docs/glossary.md`).
 
 ## Work and checks
 
@@ -35,7 +35,7 @@ Definitions in this table come from `docs/glossary.md`, “Work and the loop,”
 | Scan delta | Compare earlier research with current dev before using it |
 | Loop-lint | Check live loop instructions and references for inconsistency |
 | Loop freeze | Lifted; loop rules change after a repeated miss or at the user's request |
-| Loop version | v5.0.0 is the process version, separate from a Loop item ID; major changes alter phases/roles, minor changes add checks/routes, patch changes affect chat output only |
+| Loop version | v5.1.0 is the process version, separate from a Loop item ID; major changes alter phases/roles, minor changes add checks/routes, patch changes affect chat output only |
 
 RETEST detail comes from `tools/catch-up.ps1` and `.claude/skills/review-task/SKILL.md`, step 5. See [Parallel and Branches](Parallel-and-Branches) and [Backlog Scans](Backlog-Scans).
 

@@ -5,9 +5,9 @@ You decide what gets built at Approve and try visible changes in a separate dev 
 An item card keeps the request, evidence, plan, and results together so another chat can pick up the work.
 These are the eight phases in `docs/loop.md`, "Phases."
 
-# AntiNotepad dev loop v5.0.0
+# AntiNotepad dev loop v5.1.0
 
-Guide dated **2026-11-04**, for loop **v5.0.0** (`docs/loop.md`, "Sessions").
+Guide dated **2026-11-06**, for loop **v5.1.0** (`docs/loop.md`, "Sessions").
 
 ## Why use this instead of one long chat?
 

@@ -6,7 +6,7 @@ You approve the plan and test visible results before the master merges them (`do
 
 # Dev loop overview
 
-![Loop v5.0.0: phases across; you, masters, Claude sub-chats, Codex runs, and scripts down](images/loop-v5-flow.svg)
+![Loop v5.1.0: phases across; you, masters, Claude sub-chats, Codex runs, and scripts down](images/loop-v5-flow.svg)
 
 Read left to right. The optional backlog scan comes before an item exists. Medium/High items add an audit and fresh
 Codex review; High adds design review. See [Who Does What](Who-Does-What) for exact brief headers and permissions

@@ -27,7 +27,13 @@ Source: `docs/loop.md`, "Phases", "Triggers in practice"; `.claude/skills/next-t
 
 Source: `docs/loop.md`, "Sessions"; `.claude/skills/next-task/SKILL.md`, steps 1–5; `.claude/skills/merge-task/SKILL.md`, steps 1–8.
 
-The loop chat is the master for `Loop` and `T` items, beside the app master (`docs/loop.md`, "Sessions", "The picture"). Sub-chats talk with the user directly about their item and suggest merges to their master.
+Three top-level directors are live (`docs/loop.md`, "Sessions", "The picture"):
+
+- **Master 4**: app and design; owns STATUS.
+- **Loop Hub 2**: `Loop` and `T` items.
+- **Roadmap Hub 1**: the roadmap.
+
+Earlier masters are closed. Directors do not do item work themselves. They ask you how to route it, and the default is a Sonnet-or-lower sub-chat per change that runs Codex workers. After dispatch, a director steps back. Sub-chats talk with you directly about their item and suggest merges to their master.
 
 ## Claude sub-chats
 

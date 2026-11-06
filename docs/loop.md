@@ -207,7 +207,7 @@ usage is back-and-forth to get things right, so use whatever cuts that:
 - Always write `<ID>-<slug>` plus its scope, never a bare ID or a range.
 
 ## Sessions: master, sub-sessions, names (user, 2026-10-29)
-**Loop version: v5.0.0** (user, 2026-11-04; v4 skipped by the user; based on v3.2 plus `Loop5-reply-style`).
+**Loop version: v5.1.0** (user, 2026-11-06). v5.0.0 was set on 2026-11-04 by `Loop6-loop-v5-wiki` (v4 skipped by the user; based on v3.2 plus `Loop5-reply-style`).
 History: v3.2 (2026-10-31, `Loop4-retro-fixes`: Codex roles by job and no run caps, offline-only Codex checks,
 expected time in the plan, a side-task fast lane, masters per area with sub-sessions per phase, master notes after
 compaction. v3.1 was 2026-10-30, `Loop2-loop-v3-1`: approve and merge preflights, catch-up with dev, strict scope,
@@ -218,22 +218,32 @@ C28-loop-cheap-checks; v1 was C13-dev-loop-kit through C25. v2.2 was never activ
 A merged item that changes the phases, the roles or who runs which phase bumps the major version (new master at the next
 handover); new checks, scripts, routes or research steps bump the minor version and need no new master. Changes to chat output only (reply style, status card or hook wording) bump the patch version (`x.y.1`).
 
-- **The picture** (user, 2026-10-30): the user is the CEO; masters are directors, one per area (today the app master and
-  the loop chat for `Loop` and `T`); sub-sessions are managers who hire Codex for one item or phase and let it go when
-  done. It is a guide, not a wall: the user talks to either level directly. Testing an item or changing its scope goes
-  to its sub-session; backlog and cross-item matters go to the master. Assume the master always finds out; it may give
+- **The picture** (user, 2026-10-30): the user is the CEO; masters are directors, one per area (today three live
+  directors: Master 4 for app and design, Loop Hub 2 for `Loop` and `T`, Roadmap Hub 1 for the roadmap; earlier masters
+  are closed); sub-sessions are managers who hire Codex for one item or phase and let it go when done. It is a guide,
+  not a wall: the user talks to either level directly. Testing an item or changing its scope goes to its sub-session;
+  backlog and cross-item matters go to the master. Assume the master always finds out; it may give
   its view through the sub-session but does not override what the user asked there.
 - **A master** owns its area's STATUS rows and the roadmap, runs Request to Approve and Merge, checks Files overlap
   before dispatching (`tools/files-overlap.ps1`), and starts sub-sessions. It never runs Codex, builds or hand-test
-  launches itself; its own reading is the Low-tier scout. Masters of different areas tell each other in one line before
-  a merge when both are active.
+  launches itself; its own reading is the Low-tier scout.
+- **Routing:** directors do not do item work themselves. They ask the user how to route it; the default is a
+  Sonnet-or-lower sub-chat per change that runs Codex workers.
+- **Step back after dispatch.** Once a director dispatches, it steps back. User: "Assume that when top level delegates,
+  i am traveling WITH that delegation to work together with Sonnet etc. Otherwise expect that it finishes what its
+  working on and updates you periodically."
+- **Need-to-know updates, after the task, or ask the user.** No in-process updates. A director finishes its task first,
+  then decides whether others need an update, or asks the user. User: "Not everything needs to be told to them as ill
+  ask them to self update and catch up, unless something im working on really impacts heavily on their domain."
+- **Live directors:** Master 4 (app and design, owns STATUS), Loop Hub 2 (`Loop` and `T`), Roadmap Hub 1 (roadmap).
+  Earlier masters are closed.
 - **Master notes:** each master keeps `.coord/directors/<slug>.md` (gitignored; slug from its name): its role, open
   threads, decisions waiting on the user, linked sub-sessions, and where it left off. It updates the file when a
   decision is made, not later. After a context compaction a `SessionStart` hook (`tools/director-notes.ps1`) prints the
   notes back into the chat, so the master resumes from its own notes rather than the summary alone.
-- **Master name:** `Master <N> · Loop v<V> · <slug>`, N one higher than the last master (STATUS "Working rules" names the
-  current one), V the loop version above (written with "v" so it never reads as a `Loop` item ID), the slug the
-  remaining work it was opened for. Example: `Master 2 · Loop v5 · era-two-start`.
+- **Master name:** `<Role> <N> · LP<vX.Y.Z> · <slug>`, Role the chat's role (Master, Loop Hub, Roadmap Hub), N one
+  higher than the last of its role (STATUS "Working rules" names the current one), vX.Y.Z the loop version above
+  (written `LPv5.1.0` so it never reads as a `Loop` item ID), the slug the remaining work it was opened for. Example: `Master 4 · LPv5.1.0 · design-tokens`.
 - **Sub-session per step, well scoped:** each has one item, one step, one worktree, and a brief that names its done
   condition. Several sub-sessions per item, one per phase, is normal and often better (`A55` ran an audit chat, then a
   test chat); the item card is what they share. A sub-session records the user's scope changes on its card in the
