@@ -4,16 +4,16 @@ Updated: 2026-11-06
 Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 
 ## Working rules right now
-- Two points of contact (user, 2026-10-30: "This chat is Master point of contact for the actual app development. Loop Hub 1 is the master for the meta level items such as Dev Loop"):
-  - `Master 2 · Loop v5 · era-1-start`: app development (`A`, `D` items).
-  - `Loop Hub 2 · Loop v5 · loop-tools`: meta items (`Loop`, `T`: the dev loop, the roadmap portal, tooling). Took over
-    from `Loop Hub 1 · Loop v3 · dev-loop (closed)` on 2026-11-01 (user, relayed by Master 2); its notes are
-    `.coord/directors/loop-hub-2.md`. It edits only its own `Loop`/`T` rows plus one "Now" line of its own; Master 2
-    owns STATUS overall and every `A`/`D` row.
-  - Both squash-merge onto dev from the main checkout: before a merge, `git status`, check the other has no merge in
-    progress, and tell the other chat in one line.
-  - The previous master, `Master 1 - loop v2 - bugs-design-system-ownership` ("Era0 - ..."), is closed (2026-10-29).
-- **Loop v3.2 is live** (Loop4-retro-fixes, 2026-10-31; v3.1 was Loop2-loop-v3-1). **Loop freeze:** lifted (Loop4-retro-fixes settled the retro's questions); rules change only on a miss repeated in `.coord/lessons.md` or on the user's ask.
+- Live top-level chats (user, 2026-11-06):
+  - `Master 4 · Loop v5 · design-tokens`: app and design work; owns STATUS (notes `.coord/directors/master-4.md`).
+  - `Loop Hub 2 · Loop v5 · loop-tools`: `Loop` and `T` items (notes `.coord/directors/loop-hub-2.md`).
+  - `Roadmap Hub 1 · Loop v5 · roadmap`: the roadmap page and Plan shape (notes `.coord/directors/roadmap-hub-1.md`).
+  - Masters 1-3 and Loop Hub 1 are closed.
+- Top-level chats route work, they do not do it: they ask the user, and default to a Sonnet-or-lower sub-chat per
+  change that runs Codex. After dispatch they step back; the user works with the sub-chat, which finishes and reports.
+- Updates between top-level chats are need-to-know: tell another chat only when a change heavily affects its domain,
+  after the task is finished, or when asked by the user.
+- **Loop v5.0.0 is live** (Loop6-loop-v5-wiki). **Loop freeze:** lifted (Loop4-retro-fixes settled the retro's questions); rules change only on a miss repeated in `.coord/lessons.md` or on the user's ask.
 - **Codex is allowed** (paused 2026-10-31; lifted by the user 2026-11-01: "Codex allowed"). Codex roles are picked by the job
   (`docs/agents.md`): quick = Luna medium, terra = Terra medium, worker = Luna xhigh, director = Sol medium; no run caps;
   Codex checks run offline only. Claude briefs, reviews, commits.
