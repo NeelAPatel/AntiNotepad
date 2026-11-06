@@ -1,8 +1,8 @@
-// Durations for the app's animations, in milliseconds.
+// Durations (milliseconds) and geometry for the app's animations.
 
 namespace AntiNotepad.Motion;
 
-/// <summary>Named durations for each animation role.</summary>
+/// <summary>Named durations and geometry for each animation role.</summary>
 internal static class MotionTokens
 {
     /// <summary>Pad window and overlay transitions.</summary>
@@ -16,6 +16,9 @@ internal static class MotionTokens
 
     /// <summary>Editor and note transitions.</summary>
     public const double NoteArrive = 200, SwipeSpringBack = 200, CaretGlide = 80;
+
+    /// <summary>Note-switch departure and arrival geometry.</summary>
+    public const double NoteExit = 160, NoteArrivalShift = 34, NoteArrivalOpacity = 0.25;
 
     /// <summary>Settings page transitions.</summary>
     public const double SettingsPage = 160;

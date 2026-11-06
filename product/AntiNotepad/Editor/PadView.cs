@@ -1,3 +1,4 @@
+// One note editor, its cached document, decorations, and interruptible note transitions.
 using Avalonia.Input.Platform;
 using System.Text.RegularExpressions;
 using Avalonia;
@@ -8,6 +9,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using AvaloniaEdit;
@@ -48,6 +50,12 @@ internal sealed class PadView : Grid
     private string? _loadHint;
     private bool _loadHintError;
     private Anim.Handle? _arrive;
+    private Grid? _motionContent;
+    private Grid MotionContent => _motionContent ?? this;
+    private Anim.Handle? _departure;
+    private Image? _departureImage;
+    private RenderTargetBitmap? _departureBitmap;
+    private (double X, double Opacity)? _swipeStart;
     private int _bindToken;
     private int _lastCaretLine;
     private int _observedLineCount;
@@ -126,6 +134,7 @@ internal sealed class PadView : Grid
         ((ScrollableTopInsetTextEditor)Editor).InsetTextArea.ScrollOffsetChanged += (_, _) => _paper.InvalidateVisual();
         view.VisualLinesChanged += (_, _) => _paper.InvalidateVisual();
         Children.Add(_hint);
+        DetachedFromVisualTree += (_, _) => StopNoteMotion();
         ((ScrollableTopInsetTextEditor)Editor).InsetTextArea.ScrollOffsetChanged += (_, _) => UpdateEdgeFade();
         view.DocumentChanged += (_, _) => UpdateEdgeFade();
         // After a note loads or text reflows, the amount left to scroll changes without a scroll.
@@ -261,8 +270,10 @@ internal sealed class PadView : Grid
     }
     private readonly Dictionary<Note, TextDocument> _private = [];
 
+    /// <summary>Stops obsolete motion and binds a note while preserving its cached undo history.</summary>
     public void Bind(Note note)
     {
+        StopNoteMotion();
         if (ReferenceEquals(Note, note)) return;
         Flush();
         _binding = true;
@@ -418,6 +429,7 @@ internal sealed class PadView : Grid
     /// <summary>Lets go of the document (a preview being closed), so nothing it was listening to keeps it alive.</summary>
     public void Release()
     {
+        StopNoteMotion();
         if (Editor.Document is { } doc) doc.Changed -= OnDocumentChanged;
         if (_timerTick is { } tick) { _timers.Tick -= tick; _timerTick = null; }
         ClearEdgeFade();
@@ -436,17 +448,122 @@ internal sealed class PadView : Grid
         Note.Scroll = Editor.VerticalOffset;
     }
 
-    /// <summary>Note-to-note arrival: slide in from the travel direction while the new text is already editable.</summary>
+    /// <summary>Remembers the committed pull for the next bind, without delaying model navigation.</summary>
+    internal void PrepareSwipe(double x, double opacity)
+    {
+        StopNoteMotion();
+        _swipeStart = (x, opacity);
+    }
+
+    /// <summary>A boundary bump may not bind a note, so never retain its pull for a later command.</summary>
+    internal void DiscardSwipe() => _swipeStart = null;
+
+    /// <summary>Binds immediately while the frozen old page departs and the new content arrives.</summary>
+    public void SwitchTo(Note note, int direction)
+    {
+        // capture -> bind -> transition
+        var start = _swipeStart;
+        _swipeStart = null;
+        StopNoteMotion();
+        if (start is not null) EnsureMotionContent();
+        RenderTargetBitmap? bitmap = null;
+        if (direction != 0 && start is not null && !Anim.Reduced
+            && Bounds.Width > 0 && Bounds.Height > 0 && TopLevel.GetTopLevel(this) is { } top)
+        {
+            var scale = top.RenderScaling;
+            try
+            {
+                bitmap = new RenderTargetBitmap(PixelSize.FromSize(Bounds.Size, scale), new Vector(96 * scale, 96 * scale));
+                bitmap.Render(MotionContent);
+            }
+            catch (Exception ex) when (ex is NotSupportedException or InvalidOperationException)
+            {
+                bitmap?.Dispose();
+                bitmap = null;
+            }
+        }
+
+        // bind
+        try { Bind(note); }
+        catch { bitmap?.Dispose(); throw; }
+        if (direction == 0) { bitmap?.Dispose(); return; }
+
+        // transition
+        if (bitmap is null) { Arrive(direction); return; }
+        var pull = start!.Value;
+        _departureBitmap = bitmap;
+        var shift = new TranslateTransform(pull.X, 0);
+        var image = new Image
+        {
+            Source = bitmap,
+            Stretch = Stretch.Fill,
+            IsHitTestVisible = false,
+            RenderTransform = shift,
+            Opacity = pull.Opacity
+        };
+        _departureImage = image;
+        Children.Add(image);
+        var end = -direction * Math.Max(Bounds.Width, Math.Abs(pull.X));
+        Arrive(direction);
+        _departure = Anim.Run(this, MotionTokens.NoteExit, t =>
+        {
+            shift.X = pull.X + (end - pull.X) * t;
+            image.Opacity = pull.Opacity * (1 - t);
+        }, ClearDeparture);
+    }
+
+    /// <summary>Adds a stationary overlay surface for the departing page.</summary>
+    private void EnsureMotionContent()
+    {
+        if (_motionContent is not null) return;
+        _motionContent = new Grid();
+        foreach (var child in Children.ToArray())
+        {
+            Children.Remove(child);
+            _motionContent.Children.Add(child);
+        }
+        Children.Add(_motionContent);
+        _motionContent.Measure(Bounds.Size);
+        _motionContent.Arrange(new Rect(Bounds.Size));
+    }
+
+    /// <summary>Stops visual work before another gesture or bind; the selected note is already bound.</summary>
+    internal void StopNoteMotion()
+    {
+        _swipeStart = null;
+        _arrive?.Cancel();
+        _arrive = null;
+        _departure?.Cancel();
+        _departure = null;
+        ClearDeparture();
+        RenderTransform = null;
+        Opacity = 1;
+        MotionContent.RenderTransform = null;
+        MotionContent.Opacity = 1;
+    }
+
+    /// <summary>Releases the frozen page as soon as it leaves or is interrupted.</summary>
+    private void ClearDeparture()
+    {
+        if (_departureImage is { } image) { Children.Remove(image); image.Source = null; }
+        _departureImage = null;
+        _departureBitmap?.Dispose();
+        _departureBitmap = null;
+    }
+
+    /// <summary>Slides the new content into place while keeping a departure image stationary in the pane.</summary>
     public void Arrive(int direction)
     {
         _arrive?.Cancel();
         var shift = new TranslateTransform();
-        RenderTransform = shift;
+        MotionContent.RenderTransform = shift;
+        var x = direction * MotionTokens.NoteArrivalShift;
+        var alpha = MotionTokens.NoteArrivalOpacity;
         _arrive = Anim.Run(this, MotionTokens.NoteArrive, t =>
         {
-            shift.X = direction * 34 * (1 - t);
-            Opacity = 0.25 + 0.75 * t;
-        }, () => { RenderTransform = null; Opacity = 1; });
+            shift.X = x * (1 - t);
+            MotionContent.Opacity = alpha + (1 - alpha) * t;
+        }, () => { MotionContent.RenderTransform = null; MotionContent.Opacity = 1; });
     }
 
     public void FocusText() => Editor.TextArea.Focus();

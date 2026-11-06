@@ -1,3 +1,4 @@
+// Note selection, split-slot navigation, and input routing for the pad window.
 using Avalonia.Input.Platform;
 using Avalonia;
 using Avalonia.Controls;
@@ -18,19 +19,18 @@ internal sealed partial class PadWindow
     private Note RightNote => Data.Slots[Settings.SplitSlot - 1];
 
     /// <summary>Binds both panes to the current model selection.</summary>
-    private void BindPanes(int arrive, bool focus = true)
+    private void BindPanes(int arrive, bool focus = true, int rightArrive = 0)
     {
-        _left.Bind(LeftNote);
+        _left.SwitchTo(LeftNote, _active == _left ? arrive : 0);
         if (Settings.Split)
         {
             // Never show the same slot twice side by side.
             if (Data.ViewSlot == Settings.SplitSlot)
                 _settingsService.Update(settings => settings.SplitSlot = settings.SplitSlot % 9 + 1);
-            _right.Bind(RightNote);
+            _right.SwitchTo(RightNote, rightArrive);
         }
         ApplyPaneSplit(_panes, _leftHost, _divider, _rightHost, _right, Settings.Split);
         if (!Settings.Split && _active == _right) _active = _left;
-        if (arrive != 0 && _active == _left) _left.Arrive(arrive);
         UpdateChrome();
         if (focus) FocusActive();
     }
@@ -177,8 +177,7 @@ internal sealed partial class PadWindow
         var next = Settings.SplitSlot;
         do { next = (next - 1 + direction + 9) % 9 + 1; } while (next == Data.ViewSlot);
         _settingsService.Update(settings => settings.SplitSlot = next);
-        BindPanes(0);
-        _right.Arrive(direction);
+        BindPanes(0, rightArrive: direction);
     }
 
     internal void TogglePin()

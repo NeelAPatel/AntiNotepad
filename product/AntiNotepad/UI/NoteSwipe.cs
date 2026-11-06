@@ -1,5 +1,7 @@
+// Horizontal gesture recognition and pull feedback shared by the pad and Settings preview.
 using Avalonia.Controls;
 using Avalonia.Media;
+using AntiNotepad.Editor;
 using AntiNotepad.Model;
 using AntiNotepad.Motion;
 
@@ -8,7 +10,7 @@ namespace AntiNotepad.UI;
 /// <summary>
 /// Swiping between notes with horizontal input (touchpad, tilt or thumb wheel, Shift+wheel). Two feels, from Settings > Feel:
 /// detent: the note follows with rubber-band resistance and, when input stops, commits past a distance or speed, else springs back.
-/// progress (picked in the Scroll Lab): the swipe is measured in its own distance, not the window's, so the same movement moves
+/// progress: the swipe is measured in its own distance, not the window's, so the same movement moves
 /// the note the same share of the way at any width. Passing the trigger point changes the note at once and the rest of that
 /// gesture (touchpad inertia, more wheel clicks) is ignored. Wheel clicks are paid out smoothly, further when spun faster.
 /// The window uses one for its panes and the Settings preview another for its sample notes, so both feel the same.
@@ -174,9 +176,13 @@ internal sealed class NoteSwipe(Control host, Func<Settings> settings, Func<Cont
         return true;
     }
 
+    /// <summary>Gives the gesture ownership of the pane instead of competing with an earlier animation.</summary>
     private void Show(double x, double opacity)
     {
         var target = pane();
+        if (target is PadView pad) pad.StopNoteMotion();
+        _springBack?.Cancel();
+        _springBack = null;
         if (target.RenderTransform is not TranslateTransform follow) target.RenderTransform = follow = new TranslateTransform();
         follow.X = x;
         target.Opacity = opacity;
@@ -208,6 +214,7 @@ internal sealed class NoteSwipe(Control host, Func<Settings> settings, Func<Cont
         _springBack = finished ? null : springBack;
     }
 
+    /// <summary>Commits once, passing the last displayed pull to the note transition.</summary>
     private void Fire()
     {
         _fired = true;
@@ -216,12 +223,20 @@ internal sealed class NoteSwipe(Control host, Func<Settings> settings, Func<Cont
         StopFrames();
         _owed = 0;
         var target = pane();
+        _springBack?.Cancel();
+        _springBack = null;
+        if (target is PadView pad)
+        {
+            var x = (target.RenderTransform as TranslateTransform)?.X ?? 0;
+            pad.PrepareSwipe(x, target.Opacity);
+        }
         target.RenderTransform = null; target.Opacity = 1;
         Moved?.Invoke(0);
-        navigate(_swipe > 0 ? -1 : 1);
+        try { navigate(_swipe > 0 ? -1 : 1); }
+        finally { if (target is PadView prepared) prepared.DiscardSwipe(); }
     }
 
-    /// <summary>Stops pending motion when its host is released and restores the pane if it is still attached.</summary>
+    /// <summary>Stops pending motion when its host is released and restores even a detached pane.</summary>
     public void Cancel()
     {
         _detentSettle?.Stop();
@@ -235,14 +250,10 @@ internal sealed class NoteSwipe(Control host, Func<Settings> settings, Func<Cont
         _gap = 0;
         _fired = false;
 
-        if (TopLevel.GetTopLevel(host) is not null)
-        {
-            var target = pane();
-            if (TopLevel.GetTopLevel(target) is not null)
-            {
-                if (target.RenderTransform is TranslateTransform follow) follow.X = 0;
-                target.Opacity = 1;
-            }
-        }
+        var target = pane();
+        if (target is PadView pad) pad.StopNoteMotion();
+        target.RenderTransform = null;
+        target.Opacity = 1;
+        Moved?.Invoke(0);
     }
 }

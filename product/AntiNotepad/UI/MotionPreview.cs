@@ -1,3 +1,4 @@
+// In-memory sample editors and motion traces used by Settings.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -114,8 +115,7 @@ internal sealed class MotionPreview : StackPanel
         _swipe = new NoteSwipe(_pad, () => _s, () => _pad, direction =>
         {
             Index = (Index + direction + Samples.Length) % Samples.Length;
-            _pad.Bind(Samples[Index]);
-            _pad.Arrive(direction);
+            _pad.SwitchTo(Samples[Index], direction);
             Wake();
         });
         _swipe.Moved += share => { _pull = share; Wake(); };

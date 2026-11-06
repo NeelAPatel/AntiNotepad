@@ -1,4 +1,12 @@
+// Capability checks for settings notifications, note gestures, and transition cleanup.
+using System.Reflection;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using AntiNotepad.Editor;
 using AntiNotepad.Model;
+using AntiNotepad.Motion;
+using AntiNotepad.Theme;
 
 namespace AntiNotepad;
 
@@ -121,6 +129,17 @@ internal static partial class SelfTest
                 && !stalled.HasRunningTimer && !stalled.HasPendingProgress && stalled.OwedMotion == 0;
             CheckCase(gaveUp, "settle drops stalled owed motion after the bound");
 
+            var directions = new List<int>();
+            var fired = new UI.NoteSwipe(pane, () => settings, () => pane, directions.Add);
+            fired.Input(-1.5);
+            fired.Input(-1.5);
+            CheckCase(directions.SequenceEqual([1]), "one navigation per committed gesture");
+            typeof(UI.NoteSwipe).GetField("_at", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .SetValue(fired, DateTime.Now.AddSeconds(-1));
+            fired.Input(1.5);
+            CheckCase(directions.SequenceEqual([1, -1]), "rearmed gesture navigates once in the opposite direction");
+            fired.Cancel();
+
             report = failures.Count == 0 ? "no-frame cancel cleanup and deterministic stalled-settle timeout" : string.Join("; ", failures);
             return failures.Count == 0;
         }
@@ -133,6 +152,73 @@ internal static partial class SelfTest
         {
             cancelled.Cancel();
             stalled.Cancel();
+        }
+    }
+
+    /// <summary>Exercises the real transition cleanup without creating or displaying a window.</summary>
+    private static bool NoteSwitchChecks(out string report)
+    {
+        var failures = new List<string>();
+        void Expect(bool ok, string name) { if (!ok) failures.Add(name); }
+        var settings = new Settings { Swipe = "progress" };
+        var folder = Path.Combine(Path.GetTempPath(), "AntiNotepad-swipe-" + Guid.NewGuid().ToString("N"));
+        var store = new Store(folder, createDirectories: false);
+        var notes = new NotesSession(store, folder, folder, null, _ => { });
+        var timers = new Timers();
+        var pad = new PadView(Palette.All[0], settings, timers, notes) { Private = true };
+        pad.PrepareSwipe(0, 1);
+        pad.SwitchTo(new Note(), 1);
+        var content = (Grid)pad.Children.Single();
+        var first = new Note { Text = "first" };
+        var second = new Note { Text = "second" };
+        var reduced = Anim.Reduced;
+        bool Restored() => pad.RenderTransform is null && pad.Opacity == 1
+            && content.RenderTransform is null && content.Opacity == 1 && pad.Children.Count == 1;
+        try
+        {
+            foreach (var reduce in new[] { false, true })
+            {
+                Anim.Reduced = reduce;
+                pad.Bind(first);
+                pad.PrepareSwipe(-80, 0.6);
+                pad.SwitchTo(second, 1);
+                Expect(ReferenceEquals(pad.Note, second) && pad.Editor.Text == "second" && Restored(),
+                    $"reduced {reduce}: no-frame switch settles");
+            }
+
+            // Seed an in-flight departure, then send the next real gesture. No test seam in product code is needed.
+            var departure = new Anim.Handle();
+            var image = new Image { RenderTransform = new TranslateTransform(-80, 0), Opacity = 0.6 };
+            pad.Children.Add(image);
+            const BindingFlags fields = BindingFlags.Instance | BindingFlags.NonPublic;
+            typeof(PadView).GetField("_departure", fields)!.SetValue(pad, departure);
+            typeof(PadView).GetField("_departureImage", fields)!.SetValue(pad, image);
+            content.Opacity = 0;
+            var calls = 0;
+            var swipe = new UI.NoteSwipe(pad, () => settings, () => pad, direction =>
+            {
+                calls++;
+                pad.SwitchTo(first, direction);
+            });
+            swipe.Input(-1.5);
+            Expect(calls == 1 && departure.Cancelled && ReferenceEquals(pad.Note, first) && Restored(),
+                "second fire during departure preserves the bound selection and navigates once");
+            swipe.Input(-1.5);
+            Expect(calls == 1, "inertia does not double navigation");
+            pad.RenderTransform = new TranslateTransform(80, 0);
+            pad.Opacity = 0.6;
+            content.RenderTransform = new TranslateTransform(20, 0);
+            content.Opacity = 0.5;
+            swipe.Cancel();
+            Expect(Restored() && !swipe.HasRunningTimer, "cancel restores pane and content even when detached");
+            report = failures.Count == 0 ? "no-frame and reduced-motion switches, repeat-fire and detached cleanup" : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+        finally
+        {
+            Anim.Reduced = reduced;
+            pad.Release();
+            timers.Stop();
         }
     }
 

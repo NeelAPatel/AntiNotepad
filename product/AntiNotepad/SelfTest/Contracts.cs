@@ -1,3 +1,4 @@
+// Regression promises and their focused selftest or manual checks.
 namespace AntiNotepad;
 
 internal static partial class SelfTest
@@ -96,6 +97,12 @@ internal static partial class SelfTest
                 "A42c-checkbox-indent",
                 () => RunExistingCheck(CheckboxIndentChecks, "checkbox indent: "),
                 "Dev copy: click and Ctrl+Enter on [ ]task, [X] task, - [ ] task and - task; confirm text, checkbox, strikethrough and one-step Undo. Click a box away from the caret and confirm caret/selection stay put. In a timer note, Ctrl+Enter still toggles the timer. Tab/Shift+Tab a bullet, checkbox and nested numbered list; confirm two-space steps, fresh nested numbering at 1, 9 -> 10, and one Undo for indent plus renumber. Tab on plain or selected text still uses the editor behavior."),
+            new(
+                "note-switch-settles",
+                "A note switch never leaves its pane or content transformed or faded once settled; interrupting a departure does not lose or repeat navigation.",
+                "A6-note-switch-instant-swap",
+                () => RunExistingCheck(NoteSwitchChecks, "note switch: "),
+                "Touchpad and Shift+wheel both ways, fast repeats, split slots, stack return and Settings preview; verify departure, arrival, clipping and final opacity. Offline checks cover no-frame completion and seeded departure interruption; displayed frames and captured pixels require hand testing."),
             new(
                 "list-commands-preserved",
                 "Enter continuation and Tab/Shift+Tab renumber preserve the same text and one Undo step; caret position and scrolling remain a dev-copy check.",
