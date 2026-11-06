@@ -17,8 +17,9 @@ From `.coord/tasks/<ID-slug>.md`: `Tier:`, `## Request`, `## Plan` (After, Must 
 `.coord/reports/<round>.md` has the "Change list", "Behavior changes" and "Plan deviations" sections; if not, that is a rework.
 
 ## 2. Gate (always)
-If `dev` is not an ancestor of HEAD, run `pwsh -NoProfile -File tools/catch-up.ps1 -Task <ID-slug>`, push the branch,
-then run the gate. CONFLICT: stop, leave the merge open, and tell the master (conflict routes: step 4a).
+If `dev` is not an ancestor of HEAD, run `pwsh -NoProfile -File tools/catch-up.ps1 -Task <ID-slug> -Push` (it rebases
+the item branch onto dev and pushes that branch only, with `--force-with-lease`), then run the gate. CONFLICT: stop,
+leave the rebase open, and tell the master (conflict routes: step 4a).
 
 `pwsh -NoProfile -File tools/gate.ps1 -Task <round>` from the worktree. It writes `.coord/reports/<round>.gate.md` (not
 committed) and exits non-zero on failure. Read only its Summary.
@@ -58,7 +59,7 @@ findings, and route by it (`docs/loop.md`, "Triage, lessons, scores"):
 | `test`: a selftest, contract or probe is wrong, not the product | round brief limited to the test files; say so under "Why this round" |
 | `plan`: Findings or Plan were wrong (wrong cause, missed caller, impossible After) | stop; write the corrected plan as the round brief, ask the user to approve it, and tell the master in one line |
 | `env`: tooling, build cache, flaky run, sandbox | re-run the gate once; still failing: one-line gate fix if it is the manager's to make, else tell the master |
-| `conflict`: a catch-up stopped on conflicts | resolve on the branch in the item's session, keeping both sides as the two plans intend; commit the merge and re-run the gate. If the other item changed something this item's Plan relies on (a semantic clash), abort the merge (`git merge --abort`) and route it as `plan` instead |
+| `conflict`: a catch-up stopped on conflicts | resolve on the branch in the item's session, keeping both sides as the two plans intend; `git add`, `git rebase --continue` and re-run the gate. If the other item changed something this item's Plan relies on (a semantic clash), abort the rebase (`git rebase --abort`) and route it as `plan` instead |
 | `judgment`: only the user can decide | ask the user that one question with the card; STATUS `ask-user` |
 Add one line per failure under "Misses" in the card's `## Check`: found at, cause, caught by, which check should have
 caught it earlier, a one-line lesson. The master copies these into `.coord/lessons.md` at Merge.
@@ -73,3 +74,10 @@ claim the build is ready. The on-screen dev badge is the user's first hand check
 the badge text they should see. Never launch during review or rework. Give the user the Plan's UI checks plus the
 report's new ones. Record their result verbatim under `## Hand test`, commit it, and tell the master. A failed hand check
 is triaged (4a) and gets a "Misses" line. Not visible: say no hand test is needed. Merging is the master's `/merge-task`.
+
+## 6. Commit review (before suggesting the merge)
+After the hand test passes (or at once for a not-visible item), tidy the branch the way `/merge-task` step 0 describes:
+list `git log --oneline dev..HEAD`, fold tiny and back-and-forth commits (a quick fix, a few lines changed after some
+back and forth) into the commit they belong to, give every commit a message that says what changed, remove lab and
+debug code, and keep each commit buildable. No fixed count. Then `tools/catch-up.ps1 -Task <ID-slug> -Push`, re-run the
+gate at the tip, and tell the master the branch is ready to merge. Record the tidy-up as one line under `## Check`.

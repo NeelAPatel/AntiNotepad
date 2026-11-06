@@ -3,14 +3,35 @@
 Newest first. History before 2026-10-23 (overnight build log and write-up) is in git history and the tags `v0.1`,
 `antipad-v*` and `baseline/m8c-v1-compact`.
 
+## 2026-11-06
+- **Merge policy: tidy commits plus a `--no-ff` merge commit, worktree by default** (Loop8-merge-policy, loop v5.2.0;
+  supersedes the squash rule of the 2026-10-29 entry below). User to Master 4: "i prefer #2's bubbles ... so that i can
+  atleast trace out which incremental change broke something", "i'm more worried about slop commits than high number of
+  comits" and "let this be the standard as well. worktree preferred for parallelization unless explicitly said not to".
+  To Loop Hub 2: "doesnt need to stay limited to 5, we can go by ear IMO. before merging, lets have a step to check the
+  list of commits made on it and see if any of them can be squashed together, such as minute tiny changes, or a quick
+  fix, etc." and "I'm okay with meaningful commits not commits for fixing 3 lines with a bit of back and forth".
+  Rule: before Merge the item's session reviews `git log dev..<branch>` and folds tiny and back-and-forth commits
+  (no fixed count, every commit builds); the branch is rebased onto dev (catch-up rebases, pushing the item branch only
+  with `--force-with-lease`); the master lands it with `git merge --no-ff --no-commit`, adds STATUS and lessons, and
+  commits once; no separate status commits; the branch is deleted with `git branch -d`. The merge preflight builds and
+  selftests each commit that touches product code and names a failing one. Every item gets a worktree unless the user
+  says otherwise. Also: the gate-Head check ignores later commits that touch only the card, reports or STATUS; the round
+  brief's Files list is required. Routing (user: "routing wise use sonnet, haiku subchat should be used when the task is
+  obvious enough that there will be no need for me to 'travel' with the delegation"): Sonnet when the user will refine the
+  ask in that chat, Haiku when the brief fully specifies the job. Rejected: keeping squash (hides which change broke
+  something), a fixed five-commit limit.
+
 ## 2026-10-29
 - **Loop v3 process** (Loop1-process-v3; the discussion record `.coord/process-redesign.md` was deleted on 2026-10-31, in git history): IDs `A` app, `Loop`
   dev loop, `D` docs, `T` non-AI tooling, counters reset per era; phase "Go" renamed **Approve**; branches
   `<prefix>/<ID-slug>` with `feat/`, `fix/`, `refactor/`, `docs/`, `chore/`, created at Approve, worktrees mirroring them;
-  one squashed commit per item on dev carrying its STATUS edits (no separate status commits); items over about 400
+  one squashed commit per item on dev carrying its STATUS edits (no separate status commits; **superseded 2026-11-06**:
+  tidy commits plus a `--no-ff` merge commit, see above); items over about 400
   product lines split into lettered steps; `main` fast-forwards at releases with semver tags; no pull requests until the
-  release pipeline; at most 3 items past Approve; Claude attribution off. Rejected: keeping `--no-ff` merges plus status
-  commits (bloated history), PRs now (too much overhead for one person).
+  release pipeline; at most 3 items past Approve; Claude attribution off. Rejected then: keeping `--no-ff` merges plus
+  status commits (bloated history; the 2026-11-06 rule keeps the merge but drops the status commits), PRs now (too much
+  overhead for one person).
 - **Coding standard** (`docs/coding.md`): guide-style comments (seven rules, incl. the pipeline line), `.editorconfig`
   checked on touch, files split by job with a 600-line review trigger (rejected: hard line caps), folders mirror
   namespaces. Applied on touch; no big reformat pass.

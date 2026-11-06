@@ -18,6 +18,11 @@ User to Loop Hub 2, 2026-11-06:
 - On routing: "routing wise use sonnet, haiku subchat should be used when the task is obvious enough that there will be
   no need for me to 'travel' with the delegation."
 
+Scope addition, user to Loop Hub 2, 2026-11-06: "just these loop change version update and propogate the versions to
+yourself, master4 and roadmap". Adds a merge-task step and a `docs/loop.md` line: when a merged item bumps the loop
+version, the merging director updates STATUS and renames the three live director chats. STATUS itself is edited by Loop
+Hub 2 at merge.
+
 Also folded in (Loop Hub 2's STATUS idea rows, same scripts): `idea: preflight-stale-head`, `idea: round-brief-files`.
 
 ## Findings
