@@ -22,7 +22,7 @@ UI region names (the parts of the window) come with `D1-ui-region-names`.
 - **Triage**: naming one cause for a failure (`code`, `test`, `plan`, `env`, `conflict`, `judgment`) and routing it.
 - **Status card**: the line every reply about an item opens with: one line by default, the full block (tier, phase
   strip, goal, now, decision block or "nothing") on a phase change, a session's first reply, or a decision.
-- **Loop version**: the version of these rules, written `v5.1.0` (in chat names `LPv5.1.0`); patch increments cover chat output only, not a `Loop` item ID.
+- **Loop version**: the version of these rules, written `v5.2.0` (in chat names `LPv5.2.0`); patch increments cover chat output only, not a `Loop` item ID.
 - **Catch-up**: merging `dev` into an item branch with `tools/catch-up.ps1`.
 - **Overlap check**: compares an item's Files with other in-flight items (`tools/files-overlap.ps1`).
 - **Hot file**: a shared file that only warns in the overlap check.
@@ -50,7 +50,7 @@ UI region names (the parts of the window) come with `D1-ui-region-names`.
 - **main**: releases only; fast-forwarded to dev at a release and tagged.
 - **Item branch**: `<prefix>/<ID-slug>` with `feat/`, `fix/`, `refactor/`, `docs/` or `chore/`.
 - **Worktree**: a second checkout of the repo for one item, `.claude/worktrees/<prefix>/<ID-slug>`.
-- **Squash merge**: all of a branch's commits become one commit on dev.
+- **Merge commit**: the one `--no-ff` commit that lands an item's tidy commits on dev, carrying its STATUS and lessons edits.
 - **Release tag**: semver, `v0.7.0`; `-rc1` for a build not yet hand-tested.
 
 ## The app on this machine

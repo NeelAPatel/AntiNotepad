@@ -4,7 +4,7 @@ An item is one agreed change; a phase is one stage of doing it. A chat, an AI ru
 
 # Glossary
 
-Loop version is **v5.1.0**: major changes cover phases or roles, minor changes add checks or routes, and patch changes affect chat output only (`docs/loop.md`, "Sessions"; `docs/glossary.md`).
+Loop version is **v5.2.0**: major changes cover phases or roles, minor changes add checks or routes, and patch changes affect chat output only (`docs/loop.md`, "Sessions"; `docs/glossary.md`).
 
 ## Work and checks
 
@@ -12,7 +12,7 @@ Definitions in this table come from `docs/glossary.md`, “Work and the loop,”
 
 | Term | Plain meaning |
 |---|---|
-| Item | One confirmed change named ID-slug, with a card and one commit on dev |
+| Item | One confirmed change named ID-slug, with a card and its commits on dev |
 | Prefix | A for app, Loop for the dev loop, D for docs, T for non-AI tooling |
 | Idea | Unnumbered proposal; the user's scope confirmation assigns its number |
 | Step | Lettered part of an idea; each confirmed step is a loop run with its own card and commit |
@@ -27,7 +27,7 @@ Definitions in this table come from `docs/glossary.md`, “Work and the loop,”
 | Triage | Choose code, test, plan, env, conflict, or judgment and route the failure |
 | Misses / Scores | Failure lessons and per-item check results in `.coord/lessons.md` |
 | Preflight | Scripted checks before branch creation or Merge |
-| Catch-up | Merge local dev into an item branch, never rebase |
+| Catch-up | Rebase an item branch onto local dev, never merge it in |
 | RETEST | Catch-up output saying whether prior hand checks need repeating |
 | Overlap check | Compare planned Files across item checkouts |
 | Hot file | Shared file whose overlap warns instead of failing |
@@ -35,7 +35,7 @@ Definitions in this table come from `docs/glossary.md`, “Work and the loop,”
 | Scan delta | Compare earlier research with current dev before using it |
 | Loop-lint | Check live loop instructions and references for inconsistency |
 | Loop freeze | Lifted; loop rules change after a repeated miss or at the user's request |
-| Loop version | v5.1.0 is the process version, separate from a Loop item ID; major changes alter phases/roles, minor changes add checks/routes, patch changes affect chat output only |
+| Loop version | v5.2.0 is the process version, separate from a Loop item ID; major changes alter phases/roles, minor changes add checks/routes, patch changes affect chat output only |
 
 RETEST detail comes from `tools/catch-up.ps1` and `.claude/skills/review-task/SKILL.md`, step 5. See [Parallel and Branches](Parallel-and-Branches) and [Backlog Scans](Backlog-Scans).
 
@@ -65,11 +65,11 @@ Definitions follow `docs/glossary.md`, “Git” and “The app on this machine�
 
 | Term | Plain meaning |
 |---|---|
-| dev | Integration branch receiving one squashed commit per item |
+| dev | Integration branch receiving each item's tidy commits and one merge commit |
 | main | Releases only; fast-forwarded and tagged on the user's go |
 | Item branch | Separate line of work, with a type prefix and ID-slug |
 | Worktree | Separate checkout folder for an item branch |
-| Squash merge | Combine the branch's changes into one integration commit |
+| Merge commit | The one `--no-ff` commit that lands an item on dev together with its STATUS edits |
 | Release tag | Semver name such as v0.7.0; -rcN marks a build not yet hand-tested |
 | Dev copy | Disposable app build with separate identity and app home; only one runs at a time |
 | Installed copy | User's real app and notes; never used for development |

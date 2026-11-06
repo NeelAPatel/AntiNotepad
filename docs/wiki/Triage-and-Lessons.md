@@ -17,7 +17,7 @@ Every gate failure, rework verdict, and failed hand check is triaged in the Chec
 | conflict | Catch-up stopped on conflicts | Item session resolves on its branch, preserves both plans, commits merge, repeats gate |
 | judgment | Only the user can decide | Ask that one question with the status card |
 
-A conflict that changes an assumption of the approved Plan is a semantic clash: abort the catch-up merge and route as plan (`.claude/skills/review-task/SKILL.md`, step 4a). See [Parallel and Branches](Parallel-and-Branches).
+A conflict that changes an assumption of the approved Plan is a semantic clash: abort the catch-up rebase and route as plan (`.claude/skills/review-task/SKILL.md`, step 4a). See [Parallel and Branches](Parallel-and-Branches).
 
 ## Keep rework bounded
 

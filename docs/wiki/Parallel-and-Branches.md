@@ -30,18 +30,18 @@ The exact hot paths/globs are in the script; the existing anchor files include `
 When dev is not an ancestor of the item tip, the **item's own session** runs:
 
 ```powershell
-pwsh -NoProfile -File tools/catch-up.ps1 -Task <ID-slug>
+pwsh -NoProfile -File tools/catch-up.ps1 -Task <ID-slug> -Push
 ```
 
-It then pushes the branch and re-runs the gate. The master does not merge dev into another session's branch. These checkpoints are before Check and before Merge (`.claude/skills/review-task/SKILL.md`, step 2; `.claude/skills/merge-task/SKILL.md`, step 1; `docs/loop.md`, "Catching up with dev").
+It rebases the item branch onto dev, pushes that branch (and only that branch) with `--force-with-lease`, and re-runs the gate. The master does not rebase another session's branch. These checkpoints are before Check and before Merge (`.claude/skills/review-task/SKILL.md`, step 2; `.claude/skills/merge-task/SKILL.md`, step 1; `docs/loop.md`, "Catching up with dev").
 
-`tools/catch-up.ps1` fetches origin but merges **local dev**, using a merge rather than a rebase. If origin/dev differs it prints a note; it does not silently substitute that remote ref or push. It refuses a wrong branch, tracked edits outside STATUS or Git failures. Successful merge output is CLEAN; an already current branch prints UP TO DATE (script's branch, status, fetch and merge blocks).
+`tools/catch-up.ps1` fetches origin but rebases onto **local dev**, using a rebase rather than a merge. If origin/dev differs it prints a note; it does not silently substitute that remote ref, and it pushes only with `-Push`. It refuses a wrong branch, tracked edits outside STATUS or Git failures. Successful rebase output is CLEAN; an already current branch prints UP TO DATE (script's branch, status, fetch and rebase blocks).
 
 The script compares incoming changed paths with the item's Files and prints `RETEST: yes` if any match, otherwise `RETEST: no`. After acceptance, yes repeats the hand test before Merge; no preserves its prior result. The comparison uses NUL-separated Git path output so paths with spaces remain whole. This is a file-touch trigger, not proof that unrelated files cannot affect behavior (`tools/catch-up.ps1`, `Write-Retest` and incoming diff; `.claude/skills/review-task/SKILL.md`, step 5).
 
 ### Resolve conflicts where the item context lives
 
-A textual conflict leaves the merge open in the item checkout and prints conflicting paths, marking hot paths. The item's session resolves it while preserving both approved plans, commits the merge and re-runs the gate. If the incoming change invalidates an assumption of this item's Plan, that is a **semantic clash**: abort the merge and route to `plan`, so the master re-plans and asks for approval. It is not a routine code rework (`tools/catch-up.ps1`, conflict block; `.claude/skills/review-task/SKILL.md`, step 4a, `conflict` and `plan` rows).
+A textual conflict leaves the rebase open in the item checkout and prints conflicting paths, marking hot paths. The item's session resolves it while preserving both approved plans, runs `git rebase --continue` and re-runs the gate. If the incoming change invalidates an assumption of this item's Plan, that is a **semantic clash**: abort the rebase and route to `plan`, so the master re-plans and asks for approval. It is not a routine code rework (`tools/catch-up.ps1`, conflict block; `.claude/skills/review-task/SKILL.md`, step 4a, `conflict` and `plan` rows).
 
 ### Hand tests take turns
 
@@ -51,7 +51,7 @@ There is one dev copy at a time. Accepted items hand test oldest first; there is
 
 ### Refuse a stale handoff to dev
 
-Before squashing, the master runs:
+Before merging, the master runs:
 
 ```powershell
 pwsh -NoProfile -File tools/merge-preflight.ps1 -Task <ID-slug>
@@ -61,21 +61,21 @@ pwsh -NoProfile -File tools/merge-preflight.ps1 -Task <ID-slug>
 
 A dirty gate records a `-dirty` suffix and cannot satisfy preflight; an earlier clean gate remains valid only when later commits touch only this item's card/report files (`tools/gate.ps1`, initial HEAD/status block; `tools/merge-preflight.ps1`, report checks).
 
-Directors do not send each other updates while work is running. A director finishes its task first, then decides whether others need an update, or asks you (`docs/loop.md`, "Sessions"). The normal merge is one squash commit on dev carrying the item, its STATUS edits and lessons. The master re-gates on dev, pushes, removes the worktree without `--force`, and deletes the branch. Unexpected files, failed gates and leftover worktree files stop that route (`.claude/skills/merge-task/SKILL.md`, steps 2–7).
+Directors do not send each other updates while work is running. A director finishes its task first, then decides whether others need an update, or asks you (`docs/loop.md`, "Sessions"). The normal merge is the item's tidy commits plus one `--no-ff` merge commit on dev carrying its STATUS edits and lessons. The master re-gates on dev, pushes, removes the worktree without `--force`, and deletes the branch. Unexpected files, failed gates and leftover worktree files stop that route (`.claude/skills/merge-task/SKILL.md`, steps 2–7).
 
 ## One branch, no extra worktree
 
 ![A single docs or tooling branch runs in the main checkout](images/loop-v3-1-one-branch.svg)
 
-This is allowed **only when the user says so, for docs or tooling items**. At Approve the master adds `-NoWorktree` to the same approval command. The script switches the main checkout to the item branch instead of creating an extra folder. Nothing else runs until the item merges: the cost is lost parallelism and the main checkout being occupied (`docs/loop.md`, "Branches, worktrees and commits", No worktree; `tools/approve.ps1`, `$NoWorktree` branches).
+This is allowed **only when the user says so**; every item gets a worktree by default. At Approve the master adds `-NoWorktree` to the same approval command. The script switches the main checkout to the item branch instead of creating an extra folder. Nothing else runs until the item merges: the cost is lost parallelism and the main checkout being occupied (`docs/loop.md`, "Branches, worktrees and commits", No worktree; `tools/approve.ps1`, `$NoWorktree` branches).
 
-The card, scope gate, Check and merge preflight still apply. `tools/merge-preflight.ps1` recognizes the item branch in the main checkout and tells the master to switch to dev before the squash step; it does not switch or merge itself (`.claude/skills/merge-task/SKILL.md`, steps 1–3; `tools/merge-preflight.ps1`, final branch check).
+The card, scope gate, Check and merge preflight still apply. `tools/merge-preflight.ps1` recognizes the item branch in the main checkout and tells the master to switch to dev before the merge step; it does not switch or merge itself (`.claude/skills/merge-task/SKILL.md`, steps 1–3; `tools/merge-preflight.ps1`, final branch check).
 
 ### What Loop2-loop-v3-1 actually did
 
 Loop2-loop-v3-1 used `chore/Loop2-loop-v3-1` in the main checkout, on the user's explicit 2026-10-30 instruction: "confirm. but theres no need for worktrees here." The user also said: "no parallel chats will be happening. you have full ownership of repo for this task. no need to message any other chat" (`.coord/tasks/Loop2-loop-v3-1.md`, Request and Approve).
 
-That item also had an explicit history exception: small step commits were kept and dev fast-forwarded, rather than the normal one-item squash. Do not treat its commit sequence as the default merge recipe. The card's Check records steps 3.1a–3.1i and the rehearsal; the [worked example](Worked-Example-Loop2) gives the hashes and review results (`.coord/tasks/Loop2-loop-v3-1.md`, Branch, Decisions and Check).
+That item also had an explicit history exception: small step commits were kept and dev fast-forwarded, rather than the then-normal one-item squash. Since loop v5.2.0 the normal route keeps tidy commits and adds a merge commit; do not treat this item's fast-forward as the recipe. The card's Check records steps 3.1a–3.1i and the rehearsal; the [worked example](Worked-Example-Loop2) gives the hashes and review results (`.coord/tasks/Loop2-loop-v3-1.md`, Branch, Decisions and Check).
 
 ## What the rehearsal proved
 
@@ -85,7 +85,7 @@ These are results from a throwaway clone at the then-current branch, with local 
 |---|---|---|
 | `tools/approve.ps1` and `tools/files-overlap.ps1` | Starting without the approval/card checks or with conflicting planned files | Check 1 passed overlap, created the nested checkout and committed its card. This rehearsal did not test cap refusal or a hard/hot overlap collision |
 | `tools/gate.ps1`, Scope | A non-coordination file outside the approved Files list slips through | Check 2a failed for stray `docs/agents.md`; 2b passed after removal. Build, selftest, seam, format and lint also passed. `.coord/` is excluded by the script's `Get-ChangedFiles` helper |
-| `tools/merge-preflight.ps1`, card and ancestry | An incomplete or behind-dev item is squashed | Check 3 first refused an unfilled Check, then refused behind dev once the card was filled |
+| `tools/merge-preflight.ps1`, card and ancestry | An incomplete or behind-dev item is merged | Check 3 first refused an unfilled Check, then refused behind dev once the card was filled |
 | `tools/catch-up.ps1` | The item misses newer dev changes or silently skips reconsidering its hand test | Check 4a merged unrelated `docs/coding.md`, printed CLEAN and `RETEST: no`; this rehearsal did not exercise a conflict or `RETEST: yes` |
 | `tools/gate.ps1`, `Head:` | A gate result is detached from the revision being handed off | Check 4b wrote PASS with `Head:` equal to the new tip; check 5a accepted it. No stale-report rejection was injected in this rehearsal |
 | `tools/merge-preflight.ps1` and normal merge cleanup | A merge proceeds before a clean, current, gated item exists | Check 5a passed; 5b added one dev commit, removed the worktree without force and deleted the branch |
@@ -100,10 +100,10 @@ The rehearsal reports eight checks overall (some have subchecks). A live `/scan-
 - `docs/loop.md` — Branches/worktrees/commits, catching up, Phases and Gates menu.
 - `.claude/skills/next-task/SKILL.md` — Approve and builder dispatch.
 - `.claude/skills/review-task/SKILL.md` — step 2 catch-up; step 4a conflict/plan routes; step 5 re-test and handover.
-- `.claude/skills/merge-task/SKILL.md` — preflight, squash, dev gate and cleanup.
+- `.claude/skills/merge-task/SKILL.md` — preflight, merge commit, dev gate and cleanup.
 - `.claude/skills/scan-backlog/SKILL.md` — research snapshots.
 - `tools/approve.ps1`, `tools/files-overlap.ps1`, `tools/loop-card.ps1` — cap and planned ownership.
-- `tools/catch-up.ps1` — local-dev merge, Git-failure checks, incoming paths, RETEST and conflicts.
+- `tools/catch-up.ps1` — local-dev rebase, Git-failure checks, incoming paths, RETEST and conflicts.
 - `tools/merge-preflight.ps1`, `tools/gate.ps1` — card/ancestry checks, scope and exact revision evidence.
 - `tools/scan-delta.ps1`, `tools/loop-lint.ps1` — research freshness and rule consistency.
 - `tools/dev.ps1`, `docs/dev-loop.md` — one dev copy, handoff and installed-copy boundary.
