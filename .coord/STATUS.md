@@ -12,7 +12,7 @@ Product: AntiNotepad (`product/AntiNotepad`), version label 0.6.0 (untested).
 - Top-level chats route work, they do not do it: they ask the user, and default to a Sonnet-or-lower sub-chat per
   change that runs Codex. After dispatch they step back; the user works with the sub-chat, which finishes and reports.
 - Updates between top-level chats are need-to-know: tell another chat only when a change heavily affects its domain,
-  after the task is finished, or when asked by the user.
+  and only after the task is finished; if unsure, ask the user.
 - **Loop v5.0.0 is live** (Loop6-loop-v5-wiki). **Loop freeze:** lifted (Loop4-retro-fixes settled the retro's questions); rules change only on a miss repeated in `.coord/lessons.md` or on the user's ask.
 - **Codex is allowed** (paused 2026-10-31; lifted by the user 2026-11-01: "Codex allowed"). Codex roles are picked by the job
   (`docs/agents.md`): quick = Luna medium, terra = Terra medium, worker = Luna xhigh, director = Sol medium; no run caps;
