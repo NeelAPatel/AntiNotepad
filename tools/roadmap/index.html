@@ -268,13 +268,17 @@ function rowEra(r){
   if (!/^(done|dropped)/i.test(r.state)) return newest;
   const id = itemOf(r.item);
   if (!id) return 0;
-  const found = [...eraItems.entries()].filter(([item]) => item === id || item.startsWith(id) || id.startsWith(item)).flatMap(([, eras]) => [...eras]);
+  const hit = test => [...eraItems.entries()].filter(([item]) => test(item)).flatMap(([, eras]) => [...eras]);
+  let found = hit(item => item === id || item.startsWith(id) || id.startsWith(item));
+  // Umbrella steps (A4a-token-scan) log only as the umbrella (A4-design-tokens): match on the ID without the step letter.
+  const step = id.match(/^([A-Z][a-z]*\d+)[a-z]-/);
+  if (!found.length && step) found = hit(item => item.startsWith(step[1] + '-'));
   return found.length ? Math.max(...found) : 0;
 }
 // State kinds. "needs you" in STATUS marks unconfirmed backlog ideas, not something blocked on the user right now.
 const YOUR_TURN = s => /with you|approve\b|awaiting approve|hand test|ask/i.test(s);
 function stKind(s){ s=(s||'').trim();
-  if (/^(done|dropped)/.test(s)) return 'done'; if (/defer|parked|on hold|someday/i.test(s)) return 'def'; if (YOUR_TURN(s)) return 'you';
+  if (/^(done|dropped)/.test(s)) return 'done'; if (/defer|parked|paused|on hold|someday/i.test(s)) return 'def'; if (YOUR_TURN(s)) return 'you';
   if (s==='needs you') return 'unc'; if (s==='proposed') return 'prop'; if (s==='planned') return 'plan'; return 'act'; }
 // Proposed rows are suggestions a chat made; the sparkle marks them as Claude's, not yours.
 const SPARK = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 9.4 6.6 14.5 8 9.4 9.4 8 14.5 6.6 9.4 1.5 8 6.6 6.6z" fill="currentColor"/></svg>';

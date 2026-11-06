@@ -61,3 +61,4 @@ earning its run.
 | 2026-11-01 | T6-gate-format-split-baseline | Low | 0 | 0 | - | - | - | - |
 | 2026-11-02 | Loop5-reply-style | Low | 0 | 0 | - | - | - | - |
 | 2026-11-04 | Loop6-loop-v5-wiki | Low | 0 | 0 | - | - | - | 0 |
+| 2026-11-06 | T9-roadmap-step-rows | Low | 0 | 1 | - | - | - | - |

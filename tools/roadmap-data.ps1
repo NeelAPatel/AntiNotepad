@@ -276,6 +276,11 @@ function Get-RoadmapCards {
             $titleLine = $lines | Where-Object { $_ -match '^#\s+' } | Select-Object -First 1
             $branchMatch = $lines | Where-Object { $_ -match '^Branch:\s*' } | Select-Object -First 1
             $tierMatch = $lines | Where-Object { $_ -match '^Tier:\s*' } | Select-Object -First 1
+            # Step cards keep the branch on the Tier line: "Tier: Medium · Branch: <branch> (off <umbrella>) · Step of ...".
+            if ($null -eq $branchMatch -and $tierMatch -match '·\s*Branch:\s*([^·]+)') {
+                $branchMatch = 'Branch: ' + $Matches[1].Trim()
+                $tierMatch = ($tierMatch -split '\s+·\s+')[0]
+            }
             if ([string]::IsNullOrWhiteSpace($titleLine) -or $null -eq $branchMatch -or $null -eq $tierMatch) {
                 continue
             }
