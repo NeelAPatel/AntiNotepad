@@ -40,6 +40,8 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 | 2026-11-06 | A5-search-bar-overlap | Check (gate r1) | code | format | codex-review | two properties per line in an initializer; brief "one property per line" | - |
 | 2026-11-06 | A5-search-bar-overlap | Check (gate r2) | plan | gate | plan | round brief said "none" under Files; always list a file under round Files | - |
 | 2026-11-06 | A5-search-bar-overlap | Merge | plan | master | review | merge preflight "stale Head": catch-up for a STATUS-only dev commit forced a full gate re-run | - |
+| 2026-11-06 | A6-note-switch-instant-swap | Check (gate r2) | plan | gate | plan | round brief lacked a Files list (second time after A5 r2) | idea: round-brief-files |
+| 2026-11-06 | A6-note-switch-instant-swap | Merge | judgment | - | - | override: merged before the final hand test on the user's go ("Merge A5 and A6, both into dev, then run a new build"; rule: hand test before Merge, docs/loop.md) | - |
 
 ## Scores
 One row per merged item: what each check found. A reviewer with many empty rows on items that later had misses is not
@@ -70,3 +72,4 @@ earning its run.
 | 2026-11-06 | Loop7-top-level-rules | Low | 1 | 0 | - | - | - | - |
 | 2026-11-06 | T10-roadmap-live-reload | Low | 0 | 0 | - | - | - (user said "merge it" before reporting checks) | - |
 | 2026-11-06 | A5-search-bar-overlap | Medium | 1 (-r2 whitespace) | 2 | 0 | - | 0 | - |
+| 2026-11-06 | A6-note-switch-instant-swap | Medium | 1 (-r2 lab removal) | 1 | 0 | - | - (merged before hand test) | - |
