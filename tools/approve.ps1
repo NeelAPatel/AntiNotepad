@@ -1,9 +1,10 @@
 # Checks approval in the main checkout, then creates the item branch and commits its untracked planning files.
-# DryRun runs the same checks and prints the commands without creating or moving anything.
+# A worktree is the default; use NoWorktree only when the user says so. DryRun only prints the commands.
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][string]$Task,
     [Parameter(Mandatory)][ValidateSet('feat', 'fix', 'refactor', 'docs', 'chore')][string]$Prefix,
+    # Use the main checkout only when the user says so.
     [switch]$NoWorktree,
     [ValidateRange(1, 2147483647)][int]$Cap = 3,
     [switch]$DryRun
