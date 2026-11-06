@@ -1,0 +1,3 @@
+Implemented A7-version-rc2 in [AppInfo.props](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/chore/A7-version-rc2/product/AntiNotepad/AppInfo.props:4): the app now stamps version `0.7.0-rc2`.
+
+The Release build succeeded and selftest printed `SELFTEST PASS`. The offline gate passed with 0 build warnings; the direct build had two NU1900 warnings because NuGet’s vulnerability endpoint was unreachable. The temporary build folder was removed. Report: [A7-version-rc2.md](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/chore/A7-version-rc2/.coord/reports/A7-version-rc2.md).
