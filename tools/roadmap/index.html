@@ -574,6 +574,8 @@ function redrawForData(){
   window.scrollTo(scrollX, scrollY);
 }
 let lastDataJSON = '';
+let lastPageStamp = '';
+let pageReloadStarted = false;
 async function pollData(){
   const pollStarted = Date.now();
   const controller = new AbortController();
@@ -581,6 +583,15 @@ async function pollData(){
   try {
     const headers = lastETag ? {'If-None-Match':lastETag} : {};
     const response = await fetch('/data', {cache:'no-store', headers, signal:controller.signal});
+    const pageStamp = response.headers.get('X-Roadmap-Page') || '';
+    if (pageStamp) {
+      if (lastPageStamp && pageStamp !== lastPageStamp && !pageReloadStarted) {
+        pageReloadStarted = true;
+        location.reload();
+        return;
+      }
+      lastPageStamp = pageStamp;
+    }
     if (response.status === 304) {
       setLive(true);
       return;

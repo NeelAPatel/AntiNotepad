@@ -1,5 +1,5 @@
 # Serves the live roadmap page and its read-only JSON data on localhost.
-# The data builder is loaded once so requests stay inside this PowerShell process.
+# The data builder is reloaded when its script changes.
 [CmdletBinding()]
 param(
     [ValidateRange(1, 65535)][int]$Port = 47811,
@@ -13,6 +13,9 @@ $ErrorActionPreference = 'Stop'
 $dataScript = Join-Path $PSScriptRoot 'roadmap-data.ps1'
 . $dataScript -RequestedRoot $Root
 $repository = Resolve-RoadmapRoot -RequestedRoot $Root
+$dataScriptStamp = Get-Item -LiteralPath $dataScript -ErrorAction Stop | ForEach-Object { '{0}|{1}' -f $_.Length, $_.LastWriteTimeUtc.Ticks }
+$serveScript = if (-not [string]::IsNullOrWhiteSpace($PSCommandPath)) { $PSCommandPath } else { Join-Path $PSScriptRoot 'roadmap-serve.ps1' }
+$serveStamp = Get-Item -LiteralPath $serveScript -ErrorAction Stop | ForEach-Object { '{0}|{1}' -f $_.Length, $_.LastWriteTimeUtc.Ticks }
 $baseUrl = 'http://localhost:{0}/' -f $Port
 $healthUrl = $baseUrl + 'health'
 $stopUrl = $baseUrl + 'stop'
@@ -86,10 +89,11 @@ function Get-RoadmapFingerprint {
     $statusPath = Join-Path $RepositoryRoot '.coord/STATUS.md'
     $usagePath = Join-Path $RepositoryRoot '.coord/logs/usage.tsv'
     $erasPath = Join-Path $RepositoryRoot 'tools/roadmap/eras.json'
+    $dataScriptPath = Join-Path $PSScriptRoot 'roadmap-data.ps1'
     if (-not (Test-Path -LiteralPath $erasPath -PathType Leaf)) {
         $erasPath = Join-Path $PSScriptRoot 'roadmap/eras.json'
     }
-    foreach ($path in @($statusPath, $usagePath, $erasPath)) {
+    foreach ($path in @($statusPath, $usagePath, $erasPath, $dataScriptPath)) {
         try {
             $file = Get-Item -LiteralPath $path -ErrorAction Stop
             [void]$parts.Add(('{0}|{1}|{2}' -f $file.FullName, $file.Length, $file.LastWriteTimeUtc.Ticks))
@@ -130,7 +134,8 @@ function Send-RoadmapResponse {
         [Parameter(Mandatory)][int]$StatusCode,
         [Parameter(Mandatory)][string]$ContentType,
         [AllowEmptyString()][string]$Body = '',
-        [string]$ETag
+        [string]$ETag,
+        [string]$PageStamp
     )
 
     try {
@@ -140,6 +145,9 @@ function Send-RoadmapResponse {
         }
         if (-not [string]::IsNullOrWhiteSpace($ETag)) {
             $Response.Headers['ETag'] = $ETag
+        }
+        if (-not [string]::IsNullOrWhiteSpace($PageStamp)) {
+            $Response.Headers['X-Roadmap-Page'] = $PageStamp
         }
         $Response.Headers['Cache-Control'] = 'no-cache'
 
@@ -262,12 +270,24 @@ if ($Background) {
     exit 1
 }
 
-$listener = [System.Net.HttpListener]::new()
-[void]$listener.Prefixes.Add($baseUrl)
-try {
-    $listener.Start()
+$listener = $null
+$started = $false
+for ($attempt = 0; $attempt -lt 20; $attempt++) {
+    $listener = [System.Net.HttpListener]::new()
+    [void]$listener.Prefixes.Add($baseUrl)
+    try {
+        $listener.Start()
+        $started = $true
+        break
+    }
+    catch {
+        $listener.Close()
+        if ($attempt -lt 19) {
+            Start-Sleep -Milliseconds 250
+        }
+    }
 }
-catch {
+if (-not $started) {
     $found = $false
     for ($attempt = 0; $attempt -lt 8; $attempt++) {
         if (Test-RoadmapHealth -Client $httpClient -Url $healthUrl) {
@@ -311,6 +331,24 @@ try {
         }
 
         if (-not $pending.Wait(1000)) {
+            $currentServeStamp = Get-Item -LiteralPath $serveScript -ErrorAction Stop | ForEach-Object { '{0}|{1}' -f $_.Length, $_.LastWriteTimeUtc.Ticks }
+            if ($currentServeStamp -ne $serveStamp) {
+                Write-RoadmapServerLog -RepositoryRoot $repository -Message 'serve script changed; restarting'
+                $listener.Stop()
+                $hostProcess = Get-Process -Id $PID -ErrorAction Stop
+                $arguments = '-NoProfile -File "{0}" -Port {1}' -f $serveScript, $Port
+                if (-not [string]::IsNullOrWhiteSpace($Root)) {
+                    $arguments += ' -Root "{0}"' -f $Root
+                }
+                try {
+                    [void](Start-Process -FilePath $hostProcess.Path -ArgumentList $arguments -WindowStyle Hidden -PassThru)
+                }
+                catch {
+                    Write-RoadmapServerLog -RepositoryRoot $repository -Message ('serve script restart failed: {0}' -f $_.Exception.Message)
+                }
+                $stopping = $true
+                break
+            }
             if ([DateTimeOffset]::UtcNow - $lastRequest -ge [TimeSpan]::FromHours(12)) {
                 break
             }
@@ -350,10 +388,28 @@ try {
                     break
                 }
                 '/data' {
+                    $reloadFailed = $false
+                    $currentDataStamp = Get-Item -LiteralPath $dataScript -ErrorAction Stop | ForEach-Object { '{0}|{1}' -f $_.Length, $_.LastWriteTimeUtc.Ticks }
+                    if ($currentDataStamp -ne $dataScriptStamp) {
+                        $previousFunctions = @{}
+                        Get-ChildItem Function: | ForEach-Object { $previousFunctions[$_.Name] = $_.ScriptBlock }
+                        try {
+                            . $dataScript -RequestedRoot $Root
+                        }
+                        catch {
+                            Get-ChildItem Function: | Where-Object { -not $previousFunctions.ContainsKey($_.Name) } | ForEach-Object { Remove-Item -LiteralPath (Join-Path Function: $_.Name) -ErrorAction SilentlyContinue }
+                            foreach ($name in $previousFunctions.Keys) {
+                                Set-Item -LiteralPath (Join-Path Function: $name) -Value $previousFunctions[$name]
+                            }
+                            $reloadFailed = $true
+                            Write-RoadmapServerLog -RepositoryRoot $repository -Message ('data script reload failed: {0}' -f $_.Exception.Message)
+                        }
+                        $dataScriptStamp = $currentDataStamp
+                    }
                     $fingerprint = Get-RoadmapFingerprint -RepositoryRoot $repository
                     $changed = ($null -eq $cacheFingerprint -or $fingerprint -ne $cacheFingerprint)
                     $due = ([DateTimeOffset]::UtcNow - $lastRebuild) -ge [TimeSpan]::FromSeconds(2)
-                    if ($null -eq $cacheFingerprint -or ($changed -and $due)) {
+                    if (-not $reloadFailed -and ($null -eq $cacheFingerprint -or ($changed -and $due))) {
                         $data = Get-RoadmapData -RequestedRoot $repository
                         $cacheJson = ConvertTo-Json -InputObject $data -Depth 100 -Compress
                         $bytes = [System.Text.Encoding]::UTF8.GetBytes($cacheJson)
@@ -363,12 +419,14 @@ try {
                         $lastRebuild = [DateTimeOffset]::UtcNow
                     }
 
+                    $pageFile = Get-Item -LiteralPath $pagePath -ErrorAction SilentlyContinue
+                    $pageStamp = if ($null -ne $pageFile) { '{0}-{1}' -f $pageFile.Length, $pageFile.LastWriteTimeUtc.Ticks } else { 'missing' }
                     $sentETags = @(([string]$context.Request.Headers['If-None-Match']) -split ',') | ForEach-Object { $_.Trim() }
                     if ($sentETags -contains '*' -or $sentETags -contains $cacheETag) {
-                        Send-RoadmapResponse -Response $context.Response -StatusCode 304 -ContentType 'application/json; charset=utf-8' -ETag $cacheETag
+                        Send-RoadmapResponse -Response $context.Response -StatusCode 304 -ContentType 'application/json; charset=utf-8' -ETag $cacheETag -PageStamp $pageStamp
                     }
                     else {
-                        Send-RoadmapResponse -Response $context.Response -StatusCode 200 -ContentType 'application/json; charset=utf-8' -Body $cacheJson -ETag $cacheETag
+                        Send-RoadmapResponse -Response $context.Response -StatusCode 200 -ContentType 'application/json; charset=utf-8' -Body $cacheJson -ETag $cacheETag -PageStamp $pageStamp
                     }
                     break
                 }

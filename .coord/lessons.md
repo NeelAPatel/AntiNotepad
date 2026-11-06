@@ -63,3 +63,4 @@ earning its run.
 | 2026-11-04 | Loop6-loop-v5-wiki | Low | 0 | 0 | - | - | - | 0 |
 | 2026-11-06 | T9-roadmap-step-rows | Low | 0 | 1 | - | - | - | - |
 | 2026-11-06 | Loop7-top-level-rules | Low | 1 | 0 | - | - | - | - |
+| 2026-11-06 | T10-roadmap-live-reload | Low | 0 | 0 | - | - | - (user said "merge it" before reporting checks) | - |
