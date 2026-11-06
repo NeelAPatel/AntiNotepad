@@ -14,7 +14,8 @@ own words with the date.>
 <"None" for a fix within the plan. For a scope change: the new "After" and UI checks, approved by the user at Approve.>
 
 ## Files
-Files added for this round only (the gate allows the card's Files plus these).
+Required, never "none": every file this round may change, even when all of them are already in the card's Files (the
+gate allows the card's Files plus these; a round that leaves this empty fails gate Scope).
 - `product/AntiNotepad/<path>`
 
 ## Done means

@@ -18,7 +18,7 @@ card and see why the item exists, what was agreed and where it stands.
 | 5 | **Build**: Codex implements; the director spawns `lens_reviewer` before reporting | `builder` sub-session runs Codex | code on `<prefix>/<ID-slug>`, report | `building` / `rework rN` |
 | 6 | **Check**: the planned gates, then the bounds check (request vs plan vs done) | `reviewer` (`/review-task`; usually the builder session renamed) | `## Check` | `checking` / `accepted` / `ask-user` |
 | 7 | **Hand test**: the sub-session opens its build; the user runs the plan's UI checks | user, with the `tester` | `## Hand test` with the user's words | `hand test` / `hand-tested` |
-| 8 | **Merge**: squash onto dev with the item's STATUS edits, gate on dev, push, delete the branch, remove the worktree | master (`/merge-task`) | the item's commit on dev | `done` |
+| 8 | **Merge**: commit review, rebase onto dev, `--no-ff` merge commit with the item's STATUS edits, gate on dev, push, delete the branch, remove the worktree | master (`/merge-task`) | the item's commits and its merge commit on dev | `done` |
 
 "Approve" was "Go" before loop v3; old cards keep `## Go`.
 
@@ -207,13 +207,13 @@ usage is back-and-forth to get things right, so use whatever cuts that:
 - Always write `<ID>-<slug>` plus its scope, never a bare ID or a range.
 
 ## Sessions: master, sub-sessions, names (user, 2026-10-29)
-**Loop version: v5.1.0** (user, 2026-11-06). v5.0.0 was set on 2026-11-04 by `Loop6-loop-v5-wiki` (v4 skipped by the user; based on v3.2 plus `Loop5-reply-style`).
+**Loop version: v5.2.0** (user, 2026-11-06: `Loop8-merge-policy`, minor bump). v5.1.0 was the same day. v5.0.0 was set on 2026-11-04 by `Loop6-loop-v5-wiki` (v4 skipped by the user; based on v3.2 plus `Loop5-reply-style`).
 History: v3.2 (2026-10-31, `Loop4-retro-fixes`: Codex roles by job and no run caps, offline-only Codex checks,
 expected time in the plan, a side-task fast lane, masters per area with sub-sessions per phase, master notes after
 compaction. v3.1 was 2026-10-30, `Loop2-loop-v3-1`: approve and merge preflights, catch-up with dev, strict scope,
 read-only audits, backlog scans with a delta at task time, loop-lint; the dormant v2.2 drop absorbed). v3 was
 `Loop1-process-v3`: Approve phase, A/Loop/D/T IDs and eras, type-prefixed branches and nested worktrees, squash merges
-with STATUS inside, roles, widgets, `docs/coding.md`. v2 was C26-item-card-loop, v2.1
+with STATUS inside (replaced in v5.2.0 by rebase plus a merge commit), roles, widgets, `docs/coding.md`. v2 was C26-item-card-loop, v2.1
 C28-loop-cheap-checks; v1 was C13-dev-loop-kit through C25. v2.2 was never activated; v3.1 absorbed it (its notes were deleted on 2026-10-31; git history keeps them).
 A merged item that changes the phases, the roles or who runs which phase bumps the major version (new master at the next
 handover); new checks, scripts, routes or research steps bump the minor version and need no new master. Changes to chat output only (reply style, status card or hook wording) bump the patch version (`x.y.1`).
@@ -228,7 +228,9 @@ handover); new checks, scripts, routes or research steps bump the minor version 
   before dispatching (`tools/files-overlap.ps1`), and starts sub-sessions. It never runs Codex, builds or hand-test
   launches itself; its own reading is the Low-tier scout.
 - **Routing:** directors do not do item work themselves. They ask the user how to route it; the default is a
-  Sonnet-or-lower sub-chat per change that runs Codex workers.
+  Sonnet-or-lower sub-chat per change that runs Codex workers. Sonnet when the user will refine the ask in that chat
+  (user, 2026-11-06: "use sonnet"); Haiku when the brief fully specifies the job, such as audits and tests, so the user
+  has no need to "travel" with the delegation.
 - **Step back after dispatch.** Once a director dispatches, it steps back. User: "Assume that when top level delegates,
   i am traveling WITH that delegation to work together with Sonnet etc. Otherwise expect that it finishes what its
   working on and updates you periodically."
@@ -243,7 +245,9 @@ handover); new checks, scripts, routes or research steps bump the minor version 
   notes back into the chat, so the master resumes from its own notes rather than the summary alone.
 - **Master name:** `<Role> <N> · LP<vX.Y.Z> · <slug>`, Role the chat's role (Master, Loop Hub, Roadmap Hub), N one
   higher than the last of its role (STATUS "Working rules" names the current one), vX.Y.Z the loop version above
-  (written `LPv5.1.0` so it never reads as a `Loop` item ID), the slug the remaining work it was opened for. Example: `Master 4 · LPv5.1.0 · design-tokens`.
+  (written `LPv5.2.0` so it never reads as a `Loop` item ID), the slug the remaining work it was opened for. When a
+  merged item bumps the loop version, the merging director updates STATUS and renames all three live director chats to
+  the new `LP<vX.Y.Z>` (user, 2026-11-06: "propogate the versions to yourself, master4 and roadmap"). Example: `Master 4 · LPv5.2.0 · design-tokens`.
 - **Sub-session per step, well scoped:** each has one item, one step, one worktree, and a brief that names its done
   condition. Several sub-sessions per item, one per phase, is normal and often better (`A55` ran an audit chat, then a
   test chat); the item card is what they share. A sub-session records the user's scope changes on its card in the
@@ -273,11 +277,13 @@ handover); new checks, scripts, routes or research steps bump the minor version 
 - **`main`** holds releases only. At a release, on the user's go, it fast-forwards to `dev` (no merge commits) and gets
   a plain semver tag: `v0.7.0`, with `-rc1`, `-rc2` for builds not yet hand-tested. No pull requests for now; they come
   back with the release pipeline.
-- **`dev`** is integration: one commit per item (or per lettered step), nothing else.
+- **`dev`** is integration: each item (or lettered step) lands as its own tidy commits plus one `--no-ff` merge commit
+  that carries its STATUS and lessons edits. No other commits.
 - **Every item gets a branch** `<prefix>/<ID-slug>` off the latest dev, created at **Approve** (not before), including
   docs and tooling items. The prefix follows the kind of change: `feat/`, `fix/` or `refactor/` for A, `docs/` for D,
   `chore/` for Loop and T. Rework rounds stay on the same branch.
-- **Worktree per item** in a folder that mirrors the branch: `.claude/worktrees/<prefix>/<ID-slug>`
+- **Worktree per item, by default** (user, 2026-11-06: "worktree preferred for parallelization unless explicitly said not
+  to"), in a folder that mirrors the branch: `.claude/worktrees/<prefix>/<ID-slug>`
   (`git worktree add .claude/worktrees/feat/A1-list-commands -b feat/A1-list-commands dev`; also fix/, refactor/, docs/, chore/). The master's checkout stays
   on dev. Sub-sessions share the master's folder (`use_worktree: false`) and work only inside that path, with absolute
   paths; Codex runs from the worktree's own `.coord/tools/codex-run.sh`. **At most 3 items** past Approve at once, and
@@ -285,26 +291,42 @@ handover); new checks, scripts, routes or research steps bump the minor version 
   from the worktree immediately before the hand checks; it verifies the dev badge and EXE/DATA/log paths. One dev copy
   runs at a time, so up to 3 items can build in parallel but hand tests take turns, oldest accepted item first.
   Without worktrees there is no parallel work at all (user, 2026-10-30).
-- **No worktree** (only when the user says so, docs or tooling items): the branch is checked out in the main checkout
-  (`tools/approve.ps1 -NoWorktree`) and nothing else runs until it merges.
+- **No worktree** (only when the user says so; never suggested for docs or tooling items): the branch is checked out in
+  the main checkout (`tools/approve.ps1 -NoWorktree`) and nothing else runs until it merges.
 - **Before Approve** there is no branch: the card and any audit brief and report live untracked in the master checkout;
   the auditor's Codex run is read-only there. At Approve they move into the new worktree and are committed on the branch.
 - **What lands on the branch:** the card, audit, reports and code, committed there as often as useful (Codex cannot
   commit: the sub-session does). Push the branch to origin freely. Branches never edit STATUS.
-- **What lands on dev: one squashed commit per item.** Between merges the master edits `.coord/STATUS.md` on dev and
-  leaves it uncommitted (the roadmap reads the working copy). At Merge, `git merge --squash <prefix>/<ID-slug>`, then the
-  item's commit carries its code, card, reports, its STATUS edits and its lessons. STATUS rides whole with whichever
-  item's commit lands next, or one `chore: status` commit at the end of the day if nothing lands.
-  No other direct commits to dev; urgent one-line fixes also go through a branch.
-- **Commit message:** subject `<ID-slug>: <what changed>`, 72 characters or fewer; body of 3-6 short lines: why, what
-  changed, the gate result, the hand test. No Claude attribution lines (`.claude/settings.json`).
+- **What lands on dev: the item's tidy commits plus one merge commit** (user, 2026-11-06: "so that i can atleast trace
+  out which incremental change broke something"; "i'm more worried about slop commits than high number of comits").
+  Between merges the master edits `.coord/STATUS.md` on dev and leaves it uncommitted (the roadmap reads the working
+  copy). No other direct commits to dev; urgent one-line fixes also go through a branch. At Merge, in this order:
+  1. **Commit review**, by the item's own session before it asks for a merge: list `git log dev..<branch>` and fold
+     tiny and back-and-forth commits into the commit they belong to (`git commit --fixup`, then
+     `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash dev`; `-i` itself is not available here). No fixed count: one
+     commit per meaningful change, and a few lines fixed after some back and forth is not a commit. Messages say what
+     changed (`<ID-slug>: <what>`), never wip, fix or try-again. Lab variants and debug code are removed. Every commit
+     builds.
+  2. **Rebase** the branch onto dev (`tools/catch-up.ps1 -Push`, which pushes the item branch only, with
+     `--force-with-lease`), then re-run the gate: it must pass at the final tip.
+  3. **Preflight**: `tools/merge-preflight.ps1` also builds each commit of `dev..<branch>` and runs `--selftest`,
+     skipping commits that touch no product code. A failure names the commit.
+  4. **Merge**: the master runs `git merge --no-ff --no-commit <branch>` on dev, adds the item's STATUS edits and its
+     lessons, then commits once. The merge commit's subject is `<ID-slug>: <what changed>`.
+  STATUS rides in the item's merge commit, so there are no separate `chore: status` commits; with nothing to merge it
+  stays uncommitted.
+- **Commit message:** the branch's commits: subject `<ID-slug>: <what changed>`, 72 characters or fewer, body only when
+  the why is not obvious. The merge commit: the same subject and a body of 3-6 short lines: why, what changed, the gate
+  result, the hand test. No Claude attribution lines (`.claude/settings.json`).
 - **Clean-up at Merge:** remove the worktree (`git worktree remove`, never `--force`: leftover files stop the merge and
-  are listed for the user), then delete the branch locally (`git branch -D`, since a squash does not mark it merged) and
-  on origin.
+  are listed for the user), then delete the branch locally (`git branch -d`, which works because the merge marks it merged)
+  and on origin.
 
-**Catching up with dev:** merge, never rebase (item branches are pushed). Catch up at two points: before Check and before
-Merge when dev is not an ancestor of HEAD. The item's own session runs `tools/catch-up.ps1`, pushes the branch, then runs
-the gate. `RETEST: yes` repeats the hand test before Merge; `RETEST: no` keeps the earlier result.
+**Catching up with dev:** rebase, never merge (user, 2026-11-06). Catch up at two points: before Check and before Merge
+when dev is not an ancestor of HEAD. The item's own session runs `tools/catch-up.ps1 -Push`, which rebases the item
+branch onto dev and pushes that branch only with `--force-with-lease` (never dev, never a plain `--force`), then runs the
+gate. A conflict leaves the rebase open: resolve, `git add`, `git rebase --continue`. `RETEST: yes` repeats the hand test
+before Merge; `RETEST: no` keeps the earlier result.
 
 ## Triggers in practice
 Three commands drive the loop: `/next-task` (Request to Approve, then starts Build; master), `/review-task <ID-slug>`
@@ -335,11 +357,11 @@ Three commands drive the loop: `/next-task` (Request to Approve, then starts Bui
 | `tools/check-design-tokens.ps1` | inventory and ratchet literal design values |
 | `tools/loop-lint.ps1` | read-only consistency check of live loop files and their file references |
 | `tools/loop-lint.allow` | path, rule and line-substring exceptions for historical mentions |
-| `tools/catch-up.ps1` | merge local dev into an item branch; report conflicts and whether to repeat the hand test |
+| `tools/catch-up.ps1` | rebase an item branch onto local dev, optionally push it with `--force-with-lease`; report conflicts and whether to repeat the hand test |
 | `tools/files-overlap.ps1` | compare an item's Files with other item checkouts |
 | `tools/scan-delta.ps1` | compare a backlog scan SHA and Where files with dev; flag rescans and cards to read |
 | `tools/approve.ps1` | check the item cap and overlap, then create the branch and worktree |
-| `tools/merge-preflight.ps1` | check the card, gate, branch and dev before Merge |
+| `tools/merge-preflight.ps1` | check the card, gate, branch and dev before Merge, and that every commit builds and passes `--selftest` |
 | `product/AntiNotepad/SelfTest/Contracts.cs` | the `CONTRACTS` table of cross-feature promises |
 | `.agents/skills/lens-review/SKILL.md` | Codex review checklist (logic, coupling, reliability, plan bounds, proof rule) |
 | `.codex/agents/lens-reviewer.toml` | Codex role the director spawns before reporting |

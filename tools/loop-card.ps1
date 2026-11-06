@@ -27,7 +27,7 @@ if (Test-Path $status) {
 }
 
 # ASCII only: hook output passes through the console code page.
-"AntiNotepad loop v5.1.0: if this reply is about an item or project work, open it with the one-line status card '>> ID-slug - phase - what changed' (full card only on a phase change, first reply, or decision; sub-sessions add their role); follow the AntiNotepad output style and docs/loop.md (""Status card"")."
+"AntiNotepad loop v5.2.0: if this reply is about an item or project work, open it with the one-line status card '>> ID-slug - phase - what changed' (full card only on a phase change, first reply, or decision; sub-sessions add their role); follow the AntiNotepad output style and docs/loop.md (""Status card"")."
 if ($live.Count) { "In flight per STATUS: $($live -join '; ')." } else { 'In flight per STATUS: none.' }
 if ($pastApprove -gt 3) { "WARNING: $pastApprove items past Approve (cap 3)." }
 

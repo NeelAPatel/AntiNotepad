@@ -20,7 +20,7 @@ Paths here are relative to the repository root. This wiki explains the rules; `d
 | `.claude/skills/next-task/SKILL.md` | Request through Approve and Build dispatch |
 | `.claude/skills/scan-backlog/SKILL.md` | Snapshot research and proposed backlog order |
 | `.claude/skills/review-task/SKILL.md` | Gates, bounds check, triage, and hand-test handover |
-| `.claude/skills/merge-task/SKILL.md` | Merge checks, squash, lessons, push, and cleanup |
+| `.claude/skills/merge-task/SKILL.md` | Merge checks, merge commit, lessons, push, and cleanup |
 | `.claude/skills/roadmap/SKILL.md` | Open the local roadmap |
 
 The purpose and ownership of these files are defined in `docs/loop.md`, “Files,” and in each skill's numbered steps. See [Getting Started](Getting-Started) for the commands a user types.
@@ -46,7 +46,7 @@ Codex logs and usage.tsv live in the main checkout's .coord/logs, shared across 
 
 ## Checkouts and app data
 
-Each approved item normally gets a branch and a matching folder under .claude/worktrees, with feat/, fix/, refactor/, docs/, or chore/ prefix. The master stays on dev; item branches never edit STATUS. At Merge, one squashed commit carries the item and STATUS/lessons changes. Cleanup removes the worktree without force and deletes local and remote branches (`docs/loop.md`, “Branches, worktrees and commits”; `.claude/skills/merge-task/SKILL.md`, steps 3–7).
+Each approved item normally gets a branch and a matching folder under .claude/worktrees, with feat/, fix/, refactor/, docs/, or chore/ prefix. The master stays on dev; item branches never edit STATUS. At Merge, one `--no-ff` merge commit carries the STATUS/lessons changes on top of the item's tidy commits. Cleanup removes the worktree without force and deletes local and remote branches (`docs/loop.md`, “Branches, worktrees and commits”; `.claude/skills/merge-task/SKILL.md`, steps 3–7).
 
 Only a user-authorized docs/tooling item can run without a worktree; that blocks other work until merge. See [Parallel and Branches](Parallel-and-Branches) (`docs/loop.md`, “No worktree”).
 

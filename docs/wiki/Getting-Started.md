@@ -55,7 +55,7 @@ rule are in `docs/loop.md`, "Sessions."
    DATA, and log paths, and tells you the badge and checks to expect. Try those checks and report what passed or failed.
    Your words go on the card. Visible items need this; High tier always does
    (`.claude/skills/review-task/SKILL.md`, step 5; `docs/loop.md`, "Tiers").
-6. **Say "merge it" to the master.** It preflights, squashes the item onto dev, gates again, records lessons, commits,
+6. **Say "merge it" to the master.** It preflights, merges the item onto dev with a merge commit, gates again, records lessons, commits,
    pushes, and cleans up. A preflight failure stops that route for resolution
    (`.claude/skills/merge-task/SKILL.md`, steps 1–8).
 

@@ -1,12 +1,12 @@
 **In short**
 
-Each item passes through eight phases, from your request to one commit on dev.
+Each item passes through eight phases, from your request to tidy commits and one merge commit on dev.
 The card records the agreement; the scripts check readiness; separate reviews question the work.
 You approve the plan and test visible results before the master merges them (`docs/loop.md`, "Phases").
 
 # Dev loop overview
 
-![Loop v5.1.0: phases across; you, masters, Claude sub-chats, Codex runs, and scripts down](images/loop-v5-flow.svg)
+![Loop v5.2.0: phases across; you, masters, Claude sub-chats, Codex runs, and scripts down](images/loop-v5-flow.svg)
 
 Read left to right. The optional backlog scan comes before an item exists. Medium/High items add an audit and fresh
 Codex review; High adds design review. See [Who Does What](Who-Does-What) for exact brief headers and permissions
@@ -75,8 +75,8 @@ pwsh -NoProfile -File tools/approve.ps1 -Task <ID-slug> -Prefix <prefix>
 ```
 
 The script creates the branch and nested worktree, moves the untracked card/audit/research files there, and commits the
-card. `-NoWorktree` is allowed only for user-authorized docs/tooling work; it uses the main checkout and pauses other
-items (`.claude/skills/next-task/SKILL.md`, step 4; `tools/approve.ps1`; `docs/loop.md`, "Branches, worktrees and commits").
+card. Every item gets a worktree by default; `-NoWorktree` is only for when you say so, and it uses the main checkout
+and pauses other items (`.claude/skills/next-task/SKILL.md`, step 4; `tools/approve.ps1`; `docs/loop.md`, "Branches, worktrees and commits").
 
 **Why it is safe.** The preflight rejects an unfilled Approve, a busy/dirty main checkout except permitted unstaged
 STATUS, the active-item cap, and disallowed file overlap. Shared hot-file overlaps warn rather than block
@@ -117,7 +117,7 @@ under `## Check` (`.claude/skills/review-task/SKILL.md`, steps 1–4; `docs/agen
 
 **Why it is safe.** Scope outside Files fails on item branches, excluding `.coord/` paths and explicit loose/CI modes; the gate records `Head:` for commit matching.
 Missing report sections, a rework verdict, or a broken "Must not change" blocks acceptance. An unapproved difference
-asks the user; failures get a cause before another run. Catch-up uses merge, never rebase
+asks the user; failures get a cause before another run. Catch-up rebases onto dev, never merges
 (`tools/gate.ps1`; `.claude/skills/review-task/SKILL.md`, steps 1–4a; `tools/catch-up.ps1`).
 
 ## 7. Hand test: judge what the screen shows
@@ -141,9 +141,10 @@ Tell the master to merge the accepted item. Integration gets another gate run, n
 (`.claude/skills/merge-task/SKILL.md`, steps 1–4).
 
 **Under the hood.** The master runs `pwsh -NoProfile -File tools/merge-preflight.ps1 -Task <ID-slug>`, checks scope,
-squashes the branch onto dev, gates on dev, updates STATUS and lessons, and makes one item commit. It pushes and removes
-the worktree without force, then deletes the branch locally and remotely
-(`.claude/skills/merge-task/SKILL.md`, steps 1–8).
+merges the already-tidied, rebased branch onto dev with `--no-ff`, gates on dev, adds STATUS and lessons, and commits once.
+Before that the item's own session reviews the branch's commits and folds tiny or back-and-forth ones together, and the
+preflight builds every commit. It pushes and removes the worktree without force, then deletes the branch locally and
+remotely (`.claude/skills/merge-task/SKILL.md`, steps 1–8).
 
 **Why it is safe.** The preflight refuses an incomplete card, dirty item checkout, branch behind dev, or stale/failing
 gate. Behind-dev work goes back to its own session. A dev gate failure stops the push; cleanup refuses leftover files.

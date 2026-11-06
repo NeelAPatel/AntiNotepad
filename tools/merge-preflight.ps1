@@ -1,7 +1,11 @@
-# Read-only merge checks: card phases, clean checkouts, dev ancestry and a gate tied to the branch tip.
-# Run from the main checkout before squash-merging an item onto dev.
+# Merge checks: card phases, clean checkouts, dev ancestry, the gate and per-commit builds.
+# Run from the main checkout before merging an item onto dev with --no-ff.
 [CmdletBinding()]
-param([Parameter(Mandatory)][string]$Task)
+param(
+    [Parameter(Mandatory)][string]$Task,
+    [switch]$Offline,
+    [switch]$SkipBuilds
+)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $prefixes = @('feat', 'fix', 'refactor', 'docs', 'chore')
@@ -20,7 +24,7 @@ function Test-UnfilledSection([string]$Text) {
         $Text -match '(?m)^[^\S\r\n]*(?:[-*][^\S\r\n]+)?(?:\*\*[^*\r\n]+:\*\*[^\S\r\n]*)?<[^>\r\n]+>(?=\s|$)'
 }
 
-# True when the gate report's Head is the branch tip, or an ancestor of it with only this item's card and reports changed since.
+# Accept the gate tip or an ancestor whose later tree changes are limited to this item's card, reports and STATUS.
 function Test-GateHead([string]$Root, [string]$Task, [string]$Tip, [string]$Report) {
     if ($Report -cmatch "(?m)^Head: $Tip\r?`$") { return $true }
     if ($Report -cnotmatch '(?m)^Head: (?<head>[0-9a-f]{40})\r?$') { return $false }
@@ -29,7 +33,94 @@ function Test-GateHead([string]$Root, [string]$Task, [string]$Tip, [string]$Repo
     if ($LASTEXITCODE -ne 0) { return $false }
     $allowed = '^\.coord/(?:tasks|reports)/' + [regex]::Escape($Task) + '(?:[-.]|$)'
     $files = @(Invoke-Git $Root @('diff', '--name-only', '--no-renames', $gateHead, $Tip))
-    @($files | Where-Object { $_ -cnotmatch $allowed }).Count -eq 0
+    @($files | Where-Object { $_ -cnotmatch $allowed -and $_ -cne '.coord/STATUS.md' }).Count -eq 0
+}
+
+# Build each product-changing commit in an isolated detached worktree and remove it afterwards.
+function Test-CommitBuilds([string]$Root, [string]$Branch, [string]$Task) {
+    $commits = @(Invoke-Git $Root @('rev-list', '--reverse', '--no-merges', "dev..$Branch"))
+    $scratch = Join-Path $Root "build/$Task-preflight"
+    $created = $false
+    $built = 0
+    $skipped = 0
+    $oldTelemetry = $env:AVALONIA_TELEMETRY_OPTOUT
+    $oldData = $env:ANTINOTEPAD_DATA
+    $oldDev = $env:ANTINOTEPAD_DEV
+    try {
+        foreach ($commit in $commits) {
+            $short = (Invoke-Git $Root @('rev-parse', '--short', $commit)) -join ''
+            $subject = (Invoke-Git $Root @('show', '-s', '--format=%s', $commit)) -join ''
+            $files = @(Invoke-Git $Root @('diff-tree', '--no-commit-id', '--name-only', '-r', '--root', $commit))
+            # Product code and repository-level build inputs can change what builds.
+            if (@($files | Where-Object { $_ -cmatch '^(product/|Directory\.|global\.json$|[Nn]u[Gg]et\.config$)' }).Count -eq 0) {
+                Write-Host "SKIP ${short} ${subject}: no product code"
+                $skipped++
+                continue
+            }
+            if (-not $created) {
+                $others = @(Invoke-Git $Root @('worktree', 'list', '--porcelain'))
+                $own = [regex]::Escape($scratch.Replace([char]92, '/'))
+                for ($i = 0; $i -lt $others.Count; $i++) {
+                    if ($others[$i] -match "^worktree $own$" -and ($i + 2) -lt $others.Count -and $others[$i + 2] -like 'branch *') {
+                        throw "scratch path is a branch checkout: $scratch"
+                    }
+                }
+                # A leftover from an earlier killed run is ours (build/ is ignored scratch space): clear it.
+                if (Test-Path -LiteralPath $scratch) {
+                    & git -C $Root worktree remove --force $scratch 2>$null
+                    Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue
+                    & git -C $Root worktree prune
+                    if (Test-Path -LiteralPath $scratch) { throw "cannot clear scratch worktree: $scratch" }
+                }
+                New-Item -ItemType Directory -Path (Split-Path $scratch -Parent) -Force | Out-Null
+                Invoke-Git $Root @('worktree', 'add', '--detach', $scratch, $commit) | Out-Null
+                $created = $true
+            }
+            Invoke-Git $scratch @('checkout', '--detach', $commit) | Out-Null
+            $temp = Join-Path $scratch 'build/preflight-temp'
+            if (Test-Path -LiteralPath $temp) { Remove-Item -LiteralPath $temp -Recurse -Force }
+            $out = Join-Path $temp 'out'
+            $data = Join-Path $temp 'data'
+            $env:AVALONIA_TELEMETRY_OPTOUT = '1'
+            Remove-Item Env:ANTINOTEPAD_DEV, Env:ANTINOTEPAD_DATA -ErrorAction SilentlyContinue
+            $arguments = @('build', (Join-Path $scratch 'product/AntiNotepad/AntiNotepad.csproj'), '-c', 'Debug', '-o', $out, '-nodeReuse:false', '-p:UseSharedCompilation=false')
+            if ($Offline) { $arguments += '-p:NuGetAudit=false' }
+            Push-Location $scratch
+            try { & dotnet @arguments | Out-Host }
+            catch { throw "commit $short `"$subject`" does not build" }
+            finally { Pop-Location }
+            if ($LASTEXITCODE -ne 0) { throw "commit $short `"$subject`" does not build" }
+            $env:ANTINOTEPAD_DATA = $data
+            $exe = Join-Path $out 'AntiNotepad.exe'
+            if (-not (Test-Path -LiteralPath $exe -PathType Leaf)) { throw "commit $short `"$subject`" fails --selftest" }
+            # The exe is a GUI-subsystem program, so run it as a process with redirected output (as gate.ps1 does).
+            $logFile = Join-Path $temp 'selftest.log'
+            $process = Start-Process -FilePath $exe -ArgumentList '--selftest' -WorkingDirectory $out -NoNewWindow -Wait `
+                -PassThru -RedirectStandardOutput $logFile -RedirectStandardError (Join-Path $temp 'selftest.err')
+            $output = @(Get-Content -LiteralPath $logFile -ErrorAction SilentlyContinue)
+            if ($process.ExitCode -ne 0 -or @($output | Where-Object { $_ -match '^SELFTEST PASS\s*$' }).Count -eq 0) {
+                $output | Select-Object -Last 15 | Out-Host
+                throw "commit $short `"$subject`" fails --selftest"
+            }
+            $built++
+        }
+        if ($built -eq 0) { Write-Host "CHECK: all $skipped commit(s) skipped (no product code)" }
+        else { Write-Host "CHECK: $built commit(s) build and pass --selftest ($skipped skipped, no product code)" }
+    }
+    finally {
+        $env:AVALONIA_TELEMETRY_OPTOUT = $oldTelemetry
+        $env:ANTINOTEPAD_DATA = $oldData
+        $env:ANTINOTEPAD_DEV = $oldDev
+        if ($created) {
+            # Git cannot always delete the build output on Windows; fall back to a plain delete, then prune.
+            & git -C $Root worktree remove --force $scratch 2>$null
+            if ($LASTEXITCODE -ne 0) {
+                Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue
+                & git -C $Root worktree prune
+                if (Test-Path -LiteralPath $scratch) { Write-Host "WARN: scratch worktree left behind: $scratch" }
+            }
+        }
+    }
 }
 
 try {
@@ -66,6 +157,9 @@ try {
     & git -C $root merge-base --is-ancestor dev $branch
     if ($LASTEXITCODE -eq 1) { throw "behind dev: run tools/catch-up.ps1 -Task $Task" }
     if ($LASTEXITCODE -ne 0) { throw 'cannot compare dev with item branch' }
+    if (@(Invoke-Git $root @('rev-list', '--merges', "dev..$branch")).Count) {
+        throw 'branch has merge commits: rebase onto dev (tools/catch-up.ps1)'
+    }
     Write-Host 'CHECK: item checkout clean except STATUS; caught up with dev'
 
     $reports = Join-Path $checkout '.coord/reports'
@@ -79,17 +173,18 @@ try {
     if (-not (Test-GateHead $root $Task $head $report)) { throw 'stale Head: re-run the gate' }
     Write-Host "CHECK: newest gate PASS at $head ($($gate[0].Name))"
     if ($report -cnotmatch "(?m)^Head: $head\r?`$") {
-        Write-Host 'CHECK: commits after the gate touch only the card and reports'
+        Write-Host 'CHECK: commits after the gate touch only the card, reports and STATUS'
     }
+
+    if ($SkipBuilds) { Write-Host 'CHECK: per-commit builds skipped (-SkipBuilds)' }
+    else { Test-CommitBuilds $root $branch $Task }
 
     & git -C $root diff --cached --quiet
     if ($LASTEXITCODE -ne 0) { throw 'staged changes in main checkout' }
-    foreach ($marker in @('SQUASH_MSG', 'MERGE_HEAD')) {
-        $path = (Invoke-Git $root @('rev-parse', '--path-format=absolute', '--git-path', $marker)) -join ''
-        if (Test-Path -LiteralPath $path) { throw "merge in progress: $marker" }
-    }
+    $path = (Invoke-Git $root @('rev-parse', '--path-format=absolute', '--git-path', 'MERGE_HEAD')) -join ''
+    if (Test-Path -LiteralPath $path) { throw 'merge in progress: MERGE_HEAD' }
     $mainBranch = (Invoke-Git $root @('branch', '--show-current')) -join ''
-    if ($mainBranch -ceq 'dev') { Write-Host 'Main checkout on dev: squash can run' }
+    if ($mainBranch -ceq 'dev') { Write-Host 'Main checkout on dev: merge can run' }
     elseif ($mainBranch -ceq $branch) { Write-Host 'Main checkout on item branch (-NoWorktree): switch to dev first' }
     else { throw 'main checkout must be on dev or the item branch' }
     Write-Host 'MERGE-PREFLIGHT: PASS (ready)'

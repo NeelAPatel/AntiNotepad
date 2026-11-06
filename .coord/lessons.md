@@ -43,6 +43,7 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 | 2026-11-06 | A6-note-switch-instant-swap | Check (gate r2) | plan | gate | plan | round brief lacked a Files list (second time after A5 r2) | idea: round-brief-files |
 | 2026-11-06 | A6-note-switch-instant-swap | Merge | judgment | - | - | override: merged before the final hand test on the user's go ("Merge A5 and A6, both into dev, then run a new build"; rule: hand test before Merge, docs/loop.md) | - |
 | 2026-11-06 | A7-version-rc2 | Merge | plan | master | review | merge preflight "stale Head" again (third time: A2, A5, A7); master re-ran the gate in the worktree | - |
+| 2026-11-06 | Loop8-merge-policy | Build (scratch test) | code | builder | brief | per-commit selftest always failed: the app is a GUI-subsystem exe, so `& $exe` returns no output; copy the gate's process runner whenever a script launches the app | - |
 
 ## Scores
 One row per merged item: what each check found. A reviewer with many empty rows on items that later had misses is not
@@ -71,6 +72,7 @@ earning its run.
 | 2026-11-04 | Loop6-loop-v5-wiki | Low | 0 | 0 | - | - | - | 0 |
 | 2026-11-06 | T9-roadmap-step-rows | Low | 0 | 1 | - | - | - | - |
 | 2026-11-06 | Loop7-top-level-rules | Low | 1 | 0 | - | - | - | - |
+| 2026-11-06 | Loop8-merge-policy | Medium | 0 | 0 | 4 | - | - | - |
 | 2026-11-06 | T10-roadmap-live-reload | Low | 0 | 0 | - | - | - (user said "merge it" before reporting checks) | - |
 | 2026-11-06 | A5-search-bar-overlap | Medium | 1 (-r2 whitespace) | 2 | 0 | - | 0 | - |
 | 2026-11-06 | A6-note-switch-instant-swap | Medium | 1 (-r2 lab removal) | 1 | 0 | - | - (merged before hand test) | - |
