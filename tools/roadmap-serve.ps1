@@ -4,6 +4,7 @@
 param(
     [ValidateRange(1, 65535)][int]$Port = 47811,
     [string]$Root,
+    [string]$Label,
     [switch]$Open,
     [switch]$Stop,
     [switch]$Background
@@ -241,6 +242,9 @@ if ($Background) {
     if (-not [string]::IsNullOrWhiteSpace($Root)) {
         $arguments += ' -Root "{0}"' -f $Root
     }
+    if (-not [string]::IsNullOrWhiteSpace($Label)) {
+        $arguments += ' -Label "{0}"' -f $Label
+    }
 
     try {
         $backgroundProcess = Start-Process -FilePath $powerShell -ArgumentList $arguments -WindowStyle Hidden -PassThru
@@ -340,6 +344,9 @@ try {
                 if (-not [string]::IsNullOrWhiteSpace($Root)) {
                     $arguments += ' -Root "{0}"' -f $Root
                 }
+                if (-not [string]::IsNullOrWhiteSpace($Label)) {
+                    $arguments += ' -Label "{0}"' -f $Label
+                }
                 try {
                     [void](Start-Process -FilePath $hostProcess.Path -ArgumentList $arguments -WindowStyle Hidden -PassThru)
                 }
@@ -434,6 +441,11 @@ try {
                     if (Test-Path -LiteralPath $pagePath -PathType Leaf) {
                         try {
                             $page = Get-Content -LiteralPath $pagePath -Raw -ErrorAction Stop
+                            if (-not [string]::IsNullOrWhiteSpace($Label)) {
+                                $safeLabel = [System.Net.WebUtility]::HtmlEncode($Label)
+                                $page = $page.Replace('id="devLabel" class="dev-label" hidden', 'id="devLabel" class="dev-label"')
+                                $page = $page.Replace('<!-- ROADMAP_LABEL_SLOT -->', $safeLabel)
+                            }
                             Send-RoadmapResponse -Response $context.Response -StatusCode 200 -ContentType 'text/html; charset=utf-8' -Body $page
                         }
                         catch {
