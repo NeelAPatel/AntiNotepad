@@ -1,0 +1,3 @@
+Implemented the roadmap Hide/Show controls, per-browser `roadmap-hidden` storage, hidden count on the All filter, and optional `-Label` header badge. The report is at [.coord/reports/T11-roadmap-hide-rows.md](F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/chore/T11-roadmap-hide-rows/.coord/reports/T11-roadmap-hide-rows.md).
+
+The inline JavaScript check, PowerShell parse, and offline gate all passed. The labeled page was not launched, so the visual comparison and hover/click hand check remain. Parent and child association follows the nearest preceding `idea:` row in its STATUS group because the roadmap data has no explicit parent field.
