@@ -80,7 +80,9 @@ Report: `.coord/reports/L4-lv4-skill-diet.md`, short, sections: 1 Summary, 2 Cha
 8 Checks run, 9 Hand checks for the user.
 
 ## Check
-<Filled by `/review-task`.>
+- Gate: PASS (offline; NU1900 online is env). Bounds: four allowed files only, **within plan**; `!` form changed from Codex's (permission block) **justified**; whole-skill fork dropped **justified** (see report). Real typed runs of the four not yet done: carried to Hand test.
+- Noticed: stale "say merge X" prose for L6.
+- Misses: Codex used `; exit 0`/`Select-String` in `!` lines; found at manager test; cause plan (docs silent on permissions); should have caught earlier: a tiny test before briefing.
 
 ## Hand test
 <Filled by the sub-session.>

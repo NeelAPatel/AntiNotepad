@@ -1,10 +1,21 @@
 ---
 name: next-task
-description: Master-session start of the AntiNotepad loop - take the user's request or the next STATUS plan item, open its item card, get Findings (scout or Codex audit), write the Plan with gates and tests, ask the user to approve, then create the branch and worktree and start the Build sub-session. Use when the user asks for a change, says "/next-task", "next", "next item" or "/next-task <ID-slug>".
+description: Start the AntiNotepad loop by preparing, planning, and approving an item.
+disable-model-invocation: true
+shell: powershell
+allowed-tools: PowerShell(git *)
 argument-hint: "[ID-slug]"
 ---
 
 # /next-task [ID-slug]
+
+## Live facts
+
+!`git branch --show-current`
+!`git rev-list --count dev..HEAD`
+!`git status --short`
+
+Branch, commits ahead of dev and changed files are above; steps below need not re-run them.
 
 Phases 1-4 of `docs/loop.md` (Request, Findings, Plan, Approve), run in the master session, then the start of Build.
 Every reply opens with the status card (`docs/loop.md`, "Status card"). Keep STATUS's State cell current at every phase.
