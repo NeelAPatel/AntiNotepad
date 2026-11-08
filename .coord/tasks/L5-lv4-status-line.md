@@ -117,3 +117,6 @@ Codex quick rebuilt `tools/status-line.ps1` to wrap the user's global status lin
 Verified (run here): global script's three lines unchanged, then `loop: WT | <branch> | item <slug> | in flight <ids>` in a worktree; `loop: dev | in flight ...` in main; empty input and a missing global script (`STATUSLINE_GLOBAL` override) exit 0 with only the loop line; cost, ctx and model no longer printed by the project part.
 Timing: 746 ms for the wrapper (global script alone 299 ms), machine busy with other sessions; runs in the background.
 Assumed, not verified: live render in the terminal Claude Code (needs a new terminal session in this branch); `$CLAUDE_PROJECT_DIR` expansion in the `statusLine` command; workspace trust accepted. The Desktop app does not draw it (out of scope, top-level mod plans).
+
+## Hand test
+Accepted without a live terminal run. User, 2026-11-08, in the L5 chat: "yeah good enough for now". The live terminal render stays unverified; first real use will confirm it.
