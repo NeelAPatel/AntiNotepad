@@ -73,7 +73,7 @@ checked out: never switch, merge or commit (you cannot write to `.git`). Read `A
 
 Constraints:
 - Build exactly the Plan's "After" (a) and (b). No edits to approve.ps1 or other files.
-- Hook entry in settings.json uses `"shell": "powershell"`-compatible `pwsh -NoProfile -File "$CLAUDE_PROJECT_DIR/tools/worktree-check.ps1"` like the existing hooks, under `SessionStart` (no matcher or `startup`), one entry, so undo is deleting it.
+- Hook entry in settings.json copies the style of the existing `PreToolUse` guard-bash entry (`"shell": "powershell"`, `pwsh -NoProfile -File \"$env:CLAUDE_PROJECT_DIR/tools/worktree-check.ps1\"`, timeout 15), as a second object in `SessionStart` with `"matcher": "startup"`, one entry, so undo is deleting it. Keep every existing entry. Also add `"worktree": {"baseRef": "head"}` as a top-level key.
 - Script reads the hook JSON on stdin (`cwd`), never throws, always exits 0, writes only to the log, no stdout.
 - Never launch or kill AntiNotepad. Never run `--quit`. Never edit `.coord/STATUS.md` or this card. No ports, servers or browser.
 
