@@ -24,9 +24,9 @@ SKILL.md bodies grew 22,216 to 22,624 bytes (+408); bodies load only when a skil
 | `!` runs, `$ARGUMENTS` is substituted, `shell: powershell` works (temp skill via `claude -p`, deleted) | verified |
 | `!` command needs a permission: without `allowed-tools: PowerShell(git *)` it was refused, and compound `; exit 0` or `Select-String` would not match that rule | verified; Codex's first form fixed |
 | `context: fork` + `agent: design-reviewer` runs and the agent sees CLAUDE.md | verified (temp skill, deleted) |
-| Typed `/name` runs a `disable-model-invocation` skill | verified for the `!` test skill only (that one lacked the flag): NOT tested on the real four |
+| Typed `/name` runs a `disable-model-invocation` skill | verified: temp skill with the flag ran; the real four ran headless as `/name <ID-slug>` (dry run, no tools) with live facts filled in (note: Git Bash rewrites a bare `/name` argument to a path; use `MSYS_NO_PATHCONV=1`) |
 | "merge X" in plain words no longer starts merge-task | implied by the list test; not tried directly (a real merge risk) |
-| Full end-to-end run of each changed skill | NOT done; the `!` path is tested, the first real runs are this item's own Check and Loop Hub's `/merge-task` |
+| Full end-to-end run of each changed skill | partly: the dry-run start of all four verified (merge-task correctly refused: hand test not done); the long steps (Codex, merges) not run |
 | `git grep` in review-task aborts the skill if the card is missing | by design (assumed from docs: failed command aborts) |
 
 ## Change list / Behavior changes / Deviations
