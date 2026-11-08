@@ -42,6 +42,8 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 | 2026-11-06 | A5-search-bar-overlap | Merge | plan | master | review | merge preflight "stale Head": catch-up for a STATUS-only dev commit forced a full gate re-run | - |
 | 2026-11-06 | A6-note-switch-instant-swap | Check (gate r2) | plan | gate | plan | round brief lacked a Files list (second time after A5 r2) | idea: round-brief-files |
 | 2026-11-06 | A6-note-switch-instant-swap | Merge | judgment | - | - | override: merged before the final hand test on the user's go ("Merge A5 and A6, both into dev, then run a new build"; rule: hand test before Merge, docs/loop.md) | - |
+| 2026-11-08 | L7-lv4-playbook | Approve | judgment | - | - | override: L7 started with 3 items already building (cap 4, `approve.ps1 -Cap 4`) on the user's go ("yes L7 can start building by itself"; rule: cap 3 past Approve, docs/loop.md) | - |
+| 2026-11-08 | L2-lv4-worktree-rules, L5-lv4-status-line | Approve | judgment | - | - | override: both passed Approve with L3, L4 and L7 holding the 3 slots (one-off cap bypass, cap stays 3) on the user's go, given in the "Agentic Levels 4+5 · native features" chat and relayed by it (rule: cap 3 past Approve, docs/loop.md) | - |
 | 2026-11-06 | A7-version-rc2 | Merge | plan | master | review | merge preflight "stale Head" again (third time: A2, A5, A7); master re-ran the gate in the worktree | - |
 | 2026-11-06 | Loop8-merge-policy | Build (scratch test) | code | builder | brief | per-commit selftest always failed: the app is a GUI-subsystem exe, so `& $exe` returns no output; copy the gate's process runner whenever a script launches the app | - |
 
@@ -79,3 +81,4 @@ earning its run.
 | 2026-11-06 | A7-version-rc2 | Low | 0 | 0 | - | - | - (no visible change) | - |
 | 2026-11-06 | T11-roadmap-hide-rows | Low | 0 | 0 | - | - | 0 | - |
 | 2026-11-08 | L1-lv4-native-guards | Medium | 0 | 0 | - | - | 0 | - |
+| 2026-11-08 | L2-lv4-worktree-rules | Medium | 0 | 0 | - | - | 0 | - |

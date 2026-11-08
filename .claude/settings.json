@@ -5,6 +5,9 @@
     "sessionUrl": false
   },
   "outputStyle": "AntiNotepad",
+  "worktree": {
+    "baseRef": "head"
+  },
   "permissions": {
     "ask": [
       "Edit(.coord/STATUS.md)",
@@ -38,6 +41,17 @@
       }
     ],
     "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "command": "pwsh -NoProfile -File \"$env:CLAUDE_PROJECT_DIR/tools/worktree-check.ps1\"",
+            "timeout": 15
+          }
+        ]
+      },
       {
         "matcher": "compact",
         "hooks": [
