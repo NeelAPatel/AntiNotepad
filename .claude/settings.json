@@ -5,7 +5,27 @@
     "sessionUrl": false
   },
   "outputStyle": "AntiNotepad",
+  "permissions": {
+    "ask": [
+      "Edit(.coord/STATUS.md)",
+      "Edit(.coord/lessons.md)",
+      "Edit(docs/loop.md)"
+    ]
+  },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "command": "pwsh -NoProfile -File \"$env:CLAUDE_PROJECT_DIR/tools/guard-bash.ps1\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "hooks": [

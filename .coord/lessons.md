@@ -78,3 +78,4 @@ earning its run.
 | 2026-11-06 | A6-note-switch-instant-swap | Medium | 1 (-r2 lab removal) | 1 | 0 | - | - (merged before hand test) | - |
 | 2026-11-06 | A7-version-rc2 | Low | 0 | 0 | - | - | - (no visible change) | - |
 | 2026-11-06 | T11-roadmap-hide-rows | Low | 0 | 0 | - | - | 0 | - |
+| 2026-11-08 | L1-lv4-native-guards | Medium | 0 | 0 | - | - | 0 | - |
