@@ -1,0 +1,9 @@
+**L2-lv4-worktree-rules is built and the offline gate passed.** The changes are in [settings.json](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/.claude/worktrees/chore/L2-lv4-worktree-rules/.claude/settings.json>) and [worktree-check.ps1](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/.claude/worktrees/chore/L2-lv4-worktree-rules/tools/worktree-check.ps1>).
+
+The setting requests `baseRef: head`. The startup hook logs path, branch and possible main-base problems to the linked worktree’s `.coord/logs/worktree-check.log`; it produces no output and exits successfully. Removing the startup hook object disables the check; removing the `worktree` setting separately restores Claude’s default base behavior.
+
+The fixture checks confirmed that the main checkout and a correctly named worktree at the current `dev` tip produce no log, while flat and wrong-branch worktrees produce the expected entries. The base check is only a heuristic: a correctly created worktree can also be flagged if it remains at the old shared `main` tip after `dev` advances.
+
+The actual Claude native-worktree experiment and desktop behavior remain unverified under the offline-only constraint. For the hand test, open a throwaway native worktree session and inspect **that worktree’s** `.coord/logs/worktree-check.log`. The approved decision remains that `approve.ps1` is the item-worktree path; native worktrees are for scratch work.
+
+The requested separate report was not written because the brief limits changes to the two listed files. The gate generated its usual ignored report, and temporary fixture directories remain under ignored `build/` because cleanup was blocked by the execution policy. I did not commit, merge, or change the item card. I’ll wait for your corrections or green light to prepare for merging.

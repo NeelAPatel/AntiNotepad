@@ -84,7 +84,17 @@ Done means (offline checks only):
 Report: `.coord/reports/L2-lv4-worktree-rules.md`, short, sections: Summary, Change list, Behavior changes, Out-of-scope files, Plan deviations, Contracts, Lens review, Checks run, Hand checks for the user.
 
 ## Check
-<Filled by `/review-task`.>
+Gate PASS (online, 2026-11-08): build, selftest, seam, tokens, scope 2 files, loop-lint.
+Review by me (no Codex review; Medium, config only). Fixes after Codex, mine, small: log goes to the main checkout's `.coord/logs` (Codex wrote to the worktree's own); base test uses merge-base with dev (Codex compared HEAD to main tip, which missed a main-based branch that already had commits). Codex wrote no separate report (brief limited it to 2 files); its last message is `.coord/reports/L2-lv4-worktree-rules.terra.codex.md`.
+Bounds: within plan.
+
+Verified (run, 2026-11-08):
+- `claude -p --worktree` with `baseRef: head` branches from the current HEAD of the checkout it starts in (probe HEAD = item branch HEAD), path `.claude/worktrees/<name>`, branch `worktree-<name>`.
+- The SessionStart hook fires in a real native session and logged path and branch problems for it; silent stdout; exit 0 on bad input.
+- Fixtures: main checkout and a nested good worktree log nothing; flat main-based worktree logs 3 lines; app-made `claude/dreamy-raman-7c3f1c` logs 2 lines.
+Not verified: slash names in `--worktree`; whether `baseRef` applies to the desktop app's worktree button; minimum Claude Code version for `baseRef`; base heuristic is a heuristic (a branch cut at main's tip when dev == main passes).
+
+Misses: None.
 
 ## Hand test
-<Filled by the sub-session.>
+Hand test: user opens a throwaway worktree from the app button, then reads `.coord/logs/worktree-check.log` in the main checkout. Result: pending.
