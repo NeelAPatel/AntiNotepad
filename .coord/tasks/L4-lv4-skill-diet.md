@@ -85,4 +85,5 @@ Report: `.coord/reports/L4-lv4-skill-diet.md`, short, sections: 1 Summary, 2 Cha
 - Misses: Codex used `; exit 0`/`Select-String` in `!` lines; found at manager test; cause plan (docs silent on permissions); should have caught earlier: a tiny test before briefing.
 
 ## Hand test
-<Filled by the sub-session.>
+Not visible (skill files only; no app build, no dev badge). Manager dry runs of `/review-task`, `/merge-task`, `/next-task`, `/scan-backlog` on 2026-11-08 filled the live facts and started correctly (merge-task refused, hand test not yet recorded).
+User, 2026-11-08, after reading those results and being asked to approve for merge: "approve"
