@@ -84,3 +84,4 @@ earning its run.
 | 2026-11-08 | L2-lv4-worktree-rules | Medium | 0 | 0 | - | - | 0 | - |
 | 2026-11-08 | L3-lv4-agent-roster | Low | 1 (round 2 tests) | 0 | - | - | 0 | - |
 | 2026-11-08 | L4-lv4-skill-diet | Low | 0 | 0 | - | - | 0 | - |
+| 2026-11-08 | L5-lv4-status-line | Low | 1 (r2 wrap global line) | 0 | - | - | 0 | - |
