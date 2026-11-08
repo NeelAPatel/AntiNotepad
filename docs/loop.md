@@ -79,8 +79,9 @@ usage is back-and-forth to get things right, so use whatever cuts that:
 
 ## Rules
 - Every bug fixed adds a `CONTRACTS` row, so it cannot come back unseen.
-- Every Codex run happens in its own linked, visible sub-session that reports back to the master, named and modeled as in
-  "Sessions" below. The master never launches Codex directly.
+- Every Codex run is launched by the item's own sub-session as a background run (a helper chat only when truly needed, on
+  Haiku), named and modeled as in "Sessions" below. The master never launches Codex directly. While a run is going the
+  sub-session's title starts with `[Codexing..] `; when its item is merged and cleaned up it becomes `[Closed] <ID> · merged · <slug>`.
 - Sub-sessions own the card's Build, Check and Hand test sections; the master owns Request, Findings, Plan, Approve and
   STATUS. A sub-session that needs a user decision asks it with the card, and records the answer verbatim.
 - Release markers in the STATUS plan: the master asks the user before moving `main`. Only on the user's go.

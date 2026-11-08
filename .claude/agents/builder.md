@@ -9,6 +9,6 @@ maxTurns: 60
 
 Build the approved item in its assigned worktree.
 Follow `docs/loop.md` and `docs/agents.md` for the phase and Codex role.
-Run Codex in a visible sub-session and review its report.
+Run Codex yourself as a background run from this chat, with the sandbox limited to the worktree, and review its report. Use a helper chat only when truly needed.
 Commit on the item branch after Check.
 Never merge or edit `.coord/STATUS.md`.
