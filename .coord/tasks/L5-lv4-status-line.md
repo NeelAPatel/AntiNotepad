@@ -84,3 +84,13 @@ Done means:
 - `loop-card.ps1` still prints the in-flight line (run with empty stdin; report the character count before 487 and after).
 - `tools/gate.ps1 -Task L5-lv4-status-line -Offline` passes.
 - Report at `.coord/reports/L5-lv4-status-line.md` with sections: Changed, Checks run, Open questions.
+
+## Check
+Codex quick (Luna medium) built it; report `.coord/reports/L5-lv4-status-line.md`. Gate `-Offline`: GATE PASS.
+Verified (run here, 2026-11-08):
+- Status line with mock JSON in the worktree (`chore/... | item | WT | ctx 42% | $1.23` plus an in-flight line), with null context and cost, and with empty input (prints `-`, exit 0); in the main checkout it prints `dev` and the in-flight line, no `WT`.
+- `session-where` prints item, phase, next action and card path in the worktree; prints nothing on `dev`.
+- Per-turn hook text: 487 -> 279 characters (-43%), in-flight line, cap warning and roadmap auto-start kept.
+- Speed: bare `pwsh` start 264 ms; status-line 358 ms (Codex) and 473 ms (me, machine busy with other sessions). Claude runs it in the background after each message, so it never blocks typing.
+- Docs (statusline.md, 2026-11-08): fields, Windows support, refresh events, multi-line output.
+Assumed, not verified: the live Claude Code render (needs a restart of a session in this branch); `$CLAUDE_PROJECT_DIR` expands in the `statusLine` command (the other hooks rely on it, docs do not say); workspace trust must be accepted or the line stays blank; the `STATUS: planned` text in `session-where` reads the main checkout's STATUS, which can lag the branch.
