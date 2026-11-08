@@ -64,6 +64,7 @@ function Get-GitContext([string]$Directory) {
     if ($LASTEXITCODE -ne 0) { return 'other' }
     if (-not [IO.Path]::IsPathRooted($common)) { $common = Join-Path $Directory $common }
     $common = [IO.Path]::GetFullPath($common)
+    $gitDir = [IO.Path]::GetFullPath($gitDir)
     if (-not [string]::Equals($gitDir.TrimEnd('\', '/'), $common.TrimEnd('\', '/'), [StringComparison]::OrdinalIgnoreCase)) { return 'worktree' }
     $branch = & git -C $Directory symbolic-ref --quiet --short HEAD 2>$null
     if ($LASTEXITCODE -eq 0 -and $branch -ceq 'dev') { return 'main-dev' }
