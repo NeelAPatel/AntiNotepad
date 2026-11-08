@@ -260,6 +260,7 @@ handover); new checks, scripts, routes or research steps bump the minor version 
   | `build` | `builder` | after Approve | Sonnet medium | runs Codex, then Check (`/review-task`) and the hand-test handover |
   | `review` | `reviewer` | Check; a fresh one only when the build session stalled | Sonnet medium | `/review-task` |
   | `test` | `tester` | the hand test; a separate one only for a re-test the user asked for | Sonnet medium | launches the build, gives the UI checks, records the result |
+  Each role's model, effort and tools are fixed in `.claude/agents/<role>.md` (builder, reviewer, auditor); this table says when to use them.
   A build session moving into Check or Hand test renames itself to that step (`A1 · review · list-commands`,
   `A1 · test · list-commands`) and changes its role, so the sidebar shows where it is; the master renames it if it
   cannot. The Codex role for each run is picked by the job (`docs/agents.md`).
