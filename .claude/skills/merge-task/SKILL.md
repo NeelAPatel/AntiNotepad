@@ -9,6 +9,8 @@ argument-hint: <ID-slug>
 
 # /merge-task <ID-slug>
 
+Phase detail: `.claude/skills/merge-task/branches.md`.
+
 ## Live facts
 
 !`git branch --show-current`
@@ -17,7 +19,7 @@ argument-hint: <ID-slug>
 
 Branch, commits ahead of dev and changed files are above; steps below need not re-run them.
 
-Phase 8 (Merge) of `docs/loop.md` ("Branches, worktrees and commits"). Only for an item whose card has `## Check` accepted
+Phase 8 (Merge) of `docs/loop.md` (.claude/skills/merge-task/branches.md). Only for an item whose card has `## Check` accepted
 and, if it had UI checks, `## Hand test` with the user's pass in their own words. Not for release markers: moving `main`
 and tagging happen only on the user's explicit go. Every reply opens with the status card.
 `<branch>` is `<prefix>/<ID-slug>`; `<wt>` is `.claude/worktrees/<prefix>/<ID-slug>`.
@@ -51,7 +53,7 @@ and tagging happen only on the user's explicit go. Every reply opens with the st
 7. `git push origin dev`. Remove the worktree with `git worktree remove <wt>` (never `--force`): if it refuses because of
    leftover files, stop, list them for the user and wait. Then delete the branch: `git branch -d <branch>` (it works
    because the merge marks the branch merged) and `git push origin --delete <branch>`.
-8. **Version bump:** if this item bumped the loop version (`docs/loop.md`, "Sessions"), the merging director also (a)
+8. **Version bump:** if this item bumped the loop version (`docs/loop.md`, .claude/skills/merge-task/branches.md), the merging director also (a)
    updates the STATUS "Loop vX.Y.Z is live" line and the three director names in STATUS "Working rules", and (b) renames
    the three live director chats (Master 4, Loop Hub 2, Roadmap Hub 1) to the new `LP<vX.Y.Z>`.
 9. Reply with the status card at Merge ✓: the merge commit hash, gate result, and the next plan item (offer `/next-task`).

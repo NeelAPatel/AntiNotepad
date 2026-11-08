@@ -4,7 +4,7 @@ One line per term, as used in the docs, cards, comments and chat. Add a term the
 UI region names (the parts of the window) come with `D1-ui-region-names`.
 
 ## Work and the loop
-- **Item**: one unit of work with an ID and a slug, `A1-list-commands`; it has one card and one commit on dev.
+- **Item**: one unit of work with an ID and a slug, `A1-list-commands`; it has one card and one merge commit on dev.
 - **ID prefix**: `A` app, `Loop` dev loop and agents, `D` docs, `T` non-AI tooling (`docs/loop.md`, "IDs and numbering").
 - **Slug**: the short kebab-case name after the ID; never written without its ID.
 - **Step**: a lettered part of a large item, `A1a`, `A1b`; each is its own loop run and commit.
@@ -22,7 +22,7 @@ UI region names (the parts of the window) come with `D1-ui-region-names`.
 - **Triage**: naming one cause for a failure (`code`, `test`, `plan`, `env`, `conflict`, `judgment`) and routing it.
 - **Status card**: the line every reply about an item opens with: one line by default, the full block (tier, phase
   strip, goal, now, decision block or "nothing") on a phase change, a session's first reply, or a decision.
-- **Loop version**: the version of these rules, written `v5.2.0` (in chat names `LPv5.2.0`); patch increments cover chat output only, not a `Loop` item ID.
+- **Loop version**: the version of these rules, written `v5.3.0` (in chat names `LPv5.3.0`); patch increments cover chat output only, not a `Loop` item ID.
 - **Catch-up**: merging `dev` into an item branch with `tools/catch-up.ps1`.
 - **Overlap check**: compares an item's Files with other in-flight items (`tools/files-overlap.ps1`).
 - **Hot file**: a shared file that only warns in the overlap check.

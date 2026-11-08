@@ -93,3 +93,19 @@ Newest first. History before 2026-10-23 (overnight build log and write-up) is in
 - **Memory**: Settings' live trace runs only while something moves; closing Settings compacts the heap and trims the working set.
 - **Scrolling** (user's mouse: MX Master 3S, whole clicks only): vertical modes Lines (eased glide), Free, Rate-matched (default),
   Wheel-driven; note paging by Detent or Progress swipe (default; 220 px of input = one note, fires at 0.35, re-arms after 110 ms).
+
+## Loop version history
+
+v5.2.0 (user, 2026-11-06: `Loop8-merge-policy`, minor bump). v5.1.0 was the same day (`Loop7-top-level-rules`). v5.0.0 was set on 2026-11-04 by `Loop6-loop-v5-wiki` (v4 skipped by the user; based on v3.2 plus `Loop5-reply-style`).
+
+v3.2 (2026-10-31, `Loop4-retro-fixes`: Codex roles by job and no run caps, offline-only Codex checks,
+expected time in the plan, a side-task fast lane, masters per area with sub-sessions per phase, master notes after
+compaction. v3.1 was 2026-10-30, `Loop2-loop-v3-1`: approve and merge preflights, catch-up with dev, strict scope,
+read-only audits, backlog scans with a delta at task time, loop-lint; the dormant v2.2 drop absorbed). v3 was
+`Loop1-process-v3`: Approve phase, A/Loop/D/T IDs and eras, type-prefixed branches and nested worktrees, squash merges
+with STATUS inside (replaced in v5.2.0 by rebase plus a merge commit), roles, widgets, `docs/coding.md`. v2 was C26-item-card-loop, v2.1
+C28-loop-cheap-checks; v1 was C13-dev-loop-kit through C25. v2.2 was never activated; v3.1 absorbed it (its notes were deleted on 2026-10-31; git history keeps them).
+A merged item that changes the phases, the roles or who runs which phase bumps the major version (new master at the next
+handover); new checks, scripts, routes or research steps bump the minor version and need no new master. Changes to chat output only (reply style, status card or hook wording) bump the patch version (`x.y.1`).
+
+- v5.3.0 (2026-11-08, L6-lv4-docs-diet): docs/loop.md split by audience, coding rules path-scoped, L prefix added.
