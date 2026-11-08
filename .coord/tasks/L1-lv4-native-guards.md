@@ -118,3 +118,24 @@ Done means (offline checks only):
 - `pwsh -NoProfile -File tools/gate.ps1 -Task L1-lv4-native-guards -Offline` passes.
 
 Report: `.coord/reports/L1-lv4-native-guards.md`, short, sections: Summary, Change list, Checks run, Open questions.
+
+## Check
+Codex (terra) built `tools/guard-bash.ps1` and `tools/guard.mode`; the manager added the hook and `permissions.ask` to
+`.claude/settings.json`. Gate: `GATE: PASS` (offline).
+
+| Claim | Status | Evidence |
+|---|---|---|
+| `-SelfTest` passes on `pwsh` 7 and Windows PowerShell 5.1 (33 cases + log/block mode) | Verified | both print `GUARD SELFTEST PASS` |
+| Hook runs with `"shell": "powershell"` and `$env:CLAUDE_PROJECT_DIR` on this machine | Verified | `claude -p` in the worktree wrote `build/guard.log` lines |
+| Merge guard logs `git merge` and `git push ... HEAD:dev` in a worktree | Verified | 2 log lines, `merge BLOCK`, mode `log`, commands still ran (harmless: missing ref, `--dry-run`) |
+| Installed-copy wall logs `--quit` without `ANTINOTEPAD_DATA` | Verified | log line `installed-copy BLOCK` |
+| Control command `echo hi` logs nothing | Verified | no log line |
+| `block` mode stops the call, reason reaches Claude (exit 2) | Verified once | `git merge --no-ff nonexistent-xyz` refused with "Merging in an item worktree is blocked."; mode set back to `log` |
+| `permissions.ask` on `Edit(.coord/lessons.md)` prompts in a worktree session | Verified | headless run reported the permission request and the file stayed unchanged |
+| Main-checkout rules (`main-dev` context) | Self-test only | not exercised live; would need a run in the main checkout |
+| Hooks inside subagents, `ask` for STATUS.md and loop.md paths | Assumed | same rule form as lessons.md; docs say hooks fire in subagents |
+| Plain-text `--quit` in a commit message or echo is flagged (false positive) | Known | log-only; note for block mode |
+| `git checkout dev -- <file>` in a worktree is flagged (false positive) | Known | log-only; note for block mode |
+
+Concern: `permissions.ask` has no per-session switch, so a director editing STATUS.md in the main checkout is also asked.
+Undo (one block each): delete the `PreToolUse` entry; delete the `permissions` block. Mode switch: `tools/guard.mode`.

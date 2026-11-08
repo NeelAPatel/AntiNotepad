@@ -1,0 +1,5 @@
+Implemented **L1-lv4-native-guards** in [guard-bash.ps1](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/.claude/worktrees/chore/L1-lv4-native-guards/tools/guard-bash.ps1>) with [guard.mode](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/.claude/worktrees/chore/L1-lv4-native-guards/tools/guard.mode>) set to `log`.
+
+Self-tests passed under PowerShell 7 and Windows PowerShell 5.1, including the temporary mode switch. The offline gate passed, including scope and loop lint. The [report](<F:/LocalVSProj/Visual Studio Apps/AntiQuickPad/.claude/worktrees/chore/L1-lv4-native-guards/.coord/reports/L1-lv4-native-guards.md>) records three hook JSON examples.
+
+The manager still needs to add the hook and ask rules, then conduct the planned live Claude hand test. The installed-copy check intentionally flags `--quit` in quoted messages and echo text; nested shell commands are outside the parser’s scope.
