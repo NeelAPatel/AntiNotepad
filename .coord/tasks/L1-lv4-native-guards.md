@@ -68,3 +68,53 @@ None.
 ## Approve
 User, 2026-11-08, in the L1 chat: "approved, start the worktree, branch and build this out" (plan including the
 merge-policy-aware guard). Routing: Codex Terra medium for the script.
+
+## For Codex
+Role: terra (`docs/agents.md`), because a command parser with many allow/block cases needs care. Product is not touched.
+The branch is already checked out: never switch, merge or commit (you cannot write to `.git`). Read `AGENTS.md`,
+`docs/coding.md`, then `tools/catch-up.ps1` for script style.
+
+Constraints:
+- Build exactly the Plan's "After" for the Files above. Do not edit anything else, and do not add the `.claude/settings.json`
+  hook or `permissions` block: the manager does that after testing.
+- `tools/guard-bash.ps1` must run under both Windows PowerShell 5.1 and `pwsh` 7 (no 7-only syntax). Hook JSON arrives on
+  stdin (`cwd`, `tool_name`, `tool_input.command`). Read the project root from `$env:CLAUDE_PROJECT_DIR`, else the
+  script's parent folder.
+- Mode: first word of `tools/guard.mode` (`log` or `block`; missing file or anything else means `log`). The shipped file
+  contains `log`. `log`: append one line (`ISO time<TAB>mode<TAB>guard<TAB>verdict<TAB>cwd<TAB>command`) to
+  `<root>/build/guard.log` (create the folder), exit 0, print nothing. `block`: for a BLOCK verdict also write the reason to
+  stderr and exit 2. Allowed commands log nothing in `log` mode except guards that flagged (log flagged only, to keep the log small).
+- Fail open: any internal error or unparsable input logs `guard-error` and exits 0.
+- Parse the command: split on `;` `&&` `||` `|` and newlines (respect simple quotes), skip env-var prefixes, find `git`,
+  consume `-C <dir>` (resolve the effective directory against `cwd`; may be relative) and `-c k=v`, then the subcommand.
+  Handle `git.exe`. A quoted or heredoc body is not a command.
+- Context of a directory: `worktree` when `git rev-parse --git-dir` differs from `--git-common-dir`; `main-dev` when they
+  are equal and the current branch is `dev`; otherwise `other` (log "unknown context", allow).
+- Merge guard rules (decide on directory and target ref, never on `--no-ff`):
+  - `worktree`: ALLOW `git push` / `--force-with-lease` for the item's own branch (bare push, or a refspec naming the
+    current branch or a `chore|feat|fix|refactor|docs/<slug>` branch), `git rebase`, `git commit`, `git fetch`. BLOCK `git merge`
+    (any args), `git checkout` / `git switch` to `main` or `dev`, and any push whose target is `dev` or `main`
+    (`origin dev`, `HEAD:dev`, `HEAD:refs/heads/main`, `--all`, `--mirror`, `--delete dev|main`, `:dev`).
+  - `main-dev`: ALLOW `git merge --no-ff [--no-commit] <branch>`, `git merge --abort`, `git push origin dev` and
+    `git push origin --delete <non-main, non-dev branch>`, `git branch -d`. BLOCK `git rebase`, any force push (`--force`,
+    `-f`, `--force-with-lease`, `+refspec`), and any push of `main`.
+- Installed-copy wall: BLOCK when the text contains `--quit`, `Programs\AntiNotepad` or `%LOCALAPPDATA%\AntiNotepad`
+  (either slash direction, case-insensitive) and neither the command text nor the environment has `ANTINOTEPAD_DATA`.
+  `--quit` inside a quoted `git commit -m` message or `echo` is still flagged in `log` mode (fine; note it in the report).
+- `-SelfTest` switch: runs table-driven cases on a pure function `Get-GuardVerdict -Command -Context -HasData`
+  (context passed in, so no git repo is needed) and prints `GUARD SELFTEST PASS` or fails with the case name, exit 1.
+  Cases: every ALLOW and BLOCK in the rules above, `git -C . push origin HEAD:dev` in `worktree` = block,
+  `git push --force-with-lease origin chore/X` in `worktree` = allow, `git merge --no-ff --no-commit b` in `main-dev` = allow,
+  `git rebase dev` in `main-dev` = block, `git switch main` in `worktree` = block, `--quit` with and without data env,
+  installed path with and without it, `a && git merge x` in `worktree` = block, `echo hi` = allow.
+- Also add the mode-switch test: with a temp root, mode `log` gives exit 0 and a log line for a BLOCK case; mode `block`
+  gives exit 2 and a stderr reason.
+- Follow `docs/coding.md` (header comment, formatting). No ports, no servers, no AntiNotepad launch, never `--quit`.
+
+Done means (offline checks only):
+- `pwsh -NoProfile -File tools/guard-bash.ps1 -SelfTest` prints `GUARD SELFTEST PASS`; same under `powershell -NoProfile`.
+- Piping sample hook JSON to the script behaves as the rules say (show 3 examples in the report).
+- `tools/guard.mode` exists containing `log`.
+- `pwsh -NoProfile -File tools/gate.ps1 -Task L1-lv4-native-guards -Offline` passes.
+
+Report: `.coord/reports/L1-lv4-native-guards.md`, short, sections: Summary, Change list, Checks run, Open questions.
