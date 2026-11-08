@@ -39,7 +39,7 @@ what the user still does, every slash command (who runs it, when), what to do wh
 ## Files
 Only these files may change.
 - `docs/playbook.md`
-- `AGENTS.md`
+- `AGENTS.md` (one link line, after L6 merged)
 - `docs/glossary.md` (only if a new term needs a line)
 
 ## Contracts
@@ -51,3 +51,18 @@ None.
 ## For Codex
 Role: quick (Luna medium), because it is a short docs write from verified facts. Brief to be written at Approve, after
 L1-L6 merge, listing exact hook/agent/skill names read from the merged tree. No port, server or browser checks.
+
+## Hand test
+"Reads clearly" (user, 2026-11-08). No live walk-through of a real item yet; guard still log-only.
+
+## Check
+Gate: `tools/gate.ps1 -Task L7-lv4-playbook -Offline` PASS (build 0 warnings, selftest, seam, tokens, format, scope, loop-lint, size).
+Bounds: request = one-page guide + AGENTS link; plan = same; done = `docs/playbook.md` and one line in `AGENTS.md`. No other files.
+| Claim | State |
+|---|---|
+| Commands, hook names, ask rules, agent limits, skill flags in the guide match the merged files (read on dev 21b72b9) | verified by reading each file |
+| Guard messages and `log`/`block` switch (`tools/guard.mode`), log at `build/guard.log` | verified in `tools/guard-bash.ps1` |
+| Results numbers (skills 1,395 to 150 B; start reading 39,078 to 18,225 B; hook text 487 to 279; status line 358 ms) | taken from L4, L5, L6 reports; start-reading sum re-measured with `wc -c` |
+| Guard stopping a real command in a live session; auditor's real model and tools | not tested (stated as open in the guide) |
+| Walk of a real item through the guide | not done |
+Deviation: no Codex run (short docs file written directly from verified files).
