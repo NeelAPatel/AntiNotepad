@@ -1,13 +1,48 @@
-# Claude status line: shows branch, item, worktree, context, cost and live in-flight items.
+# Adds this checkout's loop context to the user's global Claude status line.
 $ErrorActionPreference = 'Stop'
-$branch = '-'
+$raw = [Console]::In.ReadToEnd()
+$globalPath = $env:STATUSLINE_GLOBAL
+if (-not $globalPath) { $globalPath = Join-Path $HOME '.claude/statusline-command.mjs' }
+$globalOutput = ''
+
 try {
-    $raw = [Console]::In.ReadToEnd()
-    if (-not $raw) { throw 'No status input.' }
-    $inputData = $raw | ConvertFrom-Json -ErrorAction Stop
-    $cwd = [string]$inputData.cwd
-    if (-not $cwd) { $cwd = [string]$inputData.workspace.current_dir }
-    if (-not $cwd) { throw 'No current directory.' }
+    $node = Get-Command node -ErrorAction SilentlyContinue
+    if ($node -and (Test-Path -LiteralPath $globalPath -PathType Leaf)) {
+        $start = [Diagnostics.ProcessStartInfo]::new()
+        $start.FileName = $node.Source
+        $start.ArgumentList.Add($globalPath)
+        $start.RedirectStandardInput = $true
+        $start.RedirectStandardOutput = $true
+        $start.RedirectStandardError = $true
+        $start.UseShellExecute = $false
+        $start.StandardOutputEncoding = [Text.Encoding]::UTF8
+        $process = [Diagnostics.Process]::new()
+        $process.StartInfo = $start
+        if ($process.Start()) {
+            $process.StandardInput.Write($raw)
+            $process.StandardInput.Close()
+            $globalOutput = $process.StandardOutput.ReadToEnd()
+            $process.WaitForExit()
+            if ($process.ExitCode -ne 0) { $globalOutput = '' }
+        }
+        $process.Dispose()
+    }
+}
+catch {
+    $globalOutput = ''
+}
+
+if ($globalOutput) { [Console]::Out.Write($globalOutput) }
+
+try {
+    $cwd = ''
+    if ($raw) {
+        $inputData = $raw | ConvertFrom-Json -ErrorAction Stop
+        $cwd = [string]$inputData.cwd
+        if (-not $cwd) { $cwd = [string]$inputData.workspace.current_dir }
+    }
+    if (-not $cwd) { $cwd = $env:CLAUDE_PROJECT_DIR }
+    if (-not $cwd) { $cwd = Split-Path $PSScriptRoot -Parent }
 
     $gitInfo = @(& git -C $cwd rev-parse --abbrev-ref HEAD --git-dir --git-common-dir 2>$null)
     if ($LASTEXITCODE -ne 0 -or $gitInfo.Count -lt 3) { throw 'Git metadata unavailable.' }
@@ -21,18 +56,8 @@ try {
     if ($branch -match '/') { $item = $branch.Substring($branch.IndexOf('/') + 1) }
     elseif ($cwd -match '[\\/]\.claude[\\/]worktrees[\\/].+[\\/]([^\\/]+)$') { $item = $Matches[1] }
 
-    $parts = @($branch)
-    if ($item) { $parts += $item }
-    if ($isWorktree) { $parts += 'WT' }
-    $percent = $inputData.context_window.used_percentage
-    if ($null -ne $percent) { $parts += ('ctx {0}%' -f [math]::Round([double]$percent)) }
-    $cost = $inputData.cost.total_cost_usd
-    if ($null -ne $cost) { $parts += ('${0:N2}' -f [double]$cost) }
-    $firstLine = $parts -join ' | '
-
-    $mainRoot = Split-Path $commonDirPath -Parent
-    $statusPath = Join-Path $mainRoot '.coord/STATUS.md'
     $ids = @()
+    $statusPath = Join-Path (Split-Path $commonDirPath -Parent) '.coord/STATUS.md'
     $inPlan = $false
     foreach ($line in (Get-Content $statusPath -Encoding utf8)) {
         if ($line -match '^## Plan') { $inPlan = $true; continue }
@@ -43,9 +68,18 @@ try {
         if ($cells[4] -match '^(done|dropped|planned|needs you|proposed|paused)(\b|\s|\()|^-$') { continue }
         if ($cells[0] -match '^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$') { $ids += $cells[0] }
     }
-    "$firstLine`nin flight: $(if ($ids.Count) { $ids -join ', ' } else { 'none' })"
+
+    $parts = @()
+    if ($isWorktree) { $parts += 'WT' }
+    if ($branch) { $parts += $branch }
+    if ($item) { $parts += "item $item" }
+    if ($ids.Count) { $parts += "in flight $($ids -join ', ')" }
+    if ($parts.Count -and ($isWorktree -or $branch -notin @('dev', 'main') -or $ids.Count)) {
+        if ($globalOutput -and -not $globalOutput.EndsWith("`n") -and -not $globalOutput.EndsWith("`r")) { [Console]::Out.WriteLine() }
+        [Console]::Out.WriteLine("loop: $($parts -join ' | ')")
+    }
 }
 catch {
-    $branch
+    # Status-line failures should not interfere with Claude's session.
 }
 exit 0

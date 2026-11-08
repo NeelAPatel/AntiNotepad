@@ -111,3 +111,9 @@ script's lines followed by the `loop:` line (or none on dev with nothing in flig
 missing (use a `$env:STATUSLINE_GLOBAL` override, default the path above) only the loop line prints; exit 0 in every
 case; `tools/gate.ps1 -Task L5-lv4-status-line -Offline` passes; the report `.coord/reports/L5-lv4-status-line.md` gets a
 "Rework r2" section with commands, output and timing (10 runs).
+
+## Check r2
+Codex quick rebuilt `tools/status-line.ps1` to wrap the user's global status line. Gate `-Offline`: GATE PASS.
+Verified (run here): global script's three lines unchanged, then `loop: WT | <branch> | item <slug> | in flight <ids>` in a worktree; `loop: dev | in flight ...` in main; empty input and a missing global script (`STATUSLINE_GLOBAL` override) exit 0 with only the loop line; cost, ctx and model no longer printed by the project part.
+Timing: 746 ms for the wrapper (global script alone 299 ms), machine busy with other sessions; runs in the background.
+Assumed, not verified: live render in the terminal Claude Code (needs a new terminal session in this branch); `$CLAUDE_PROJECT_DIR` expansion in the `statusLine` command; workspace trust accepted. The Desktop app does not draw it (out of scope, top-level mod plans).
