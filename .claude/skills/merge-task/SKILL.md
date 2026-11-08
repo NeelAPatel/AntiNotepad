@@ -1,10 +1,21 @@
 ---
 name: merge-task
-description: Master-session end of the AntiNotepad loop - after the user's hand test passes, merge <prefix>/<ID-slug> onto dev with one --no-ff merge commit that carries the item's STATUS and lessons edits (the branch's own commits stay), re-run the gate on dev, push, remove the worktree and delete the branch. Use when the user says "/merge-task <ID-slug>", "merge <ID-slug>", or reports a passed hand test for an accepted item.
+description: Merge an accepted AntiNotepad item to dev, re-gate, push, and clean up its branch and worktree.
+disable-model-invocation: true
+shell: powershell
+allowed-tools: PowerShell(git *)
 argument-hint: <ID-slug>
 ---
 
 # /merge-task <ID-slug>
+
+## Live facts
+
+!`git branch --show-current`
+!`git rev-list --count dev..HEAD`
+!`git status --short`
+
+Branch, commits ahead of dev and changed files are above; steps below need not re-run them.
 
 Phase 8 (Merge) of `docs/loop.md` ("Branches, worktrees and commits"). Only for an item whose card has `## Check` accepted
 and, if it had UI checks, `## Hand test` with the user's pass in their own words. Not for release markers: moving `main`

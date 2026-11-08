@@ -1,6 +1,7 @@
 ---
 name: scan-backlog
-description: Scan several backlog ideas in one dev snapshot with read-only Haiku scouts, then propose a priority order for the user.
+description: Scan backlog ideas in a dev snapshot and propose their priority order.
+disable-model-invocation: true
 argument-hint: "[slug ...]"
 ---
 

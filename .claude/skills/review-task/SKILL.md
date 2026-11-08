@@ -1,10 +1,22 @@
 ---
 name: review-task
-description: Run the AntiNotepad Check phase on a finished Codex round - the gates the item card planned, then the bounds check (request vs plan vs done), then a verdict and the hand-test handover. Use when the user or manager says "/review-task <ID-slug>", "review <ID-slug>", or a Codex Build run for an item has just exited.
+description: Check a finished AntiNotepad round against its plan, run gates, and hand over accepted work.
+disable-model-invocation: true
+shell: powershell
+allowed-tools: PowerShell(git *)
 argument-hint: <ID-slug>
 ---
 
 # /review-task <ID-slug>
+
+## Live facts
+
+!`git branch --show-current`
+!`git rev-list --count dev..HEAD`
+!`git status --short`
+!`git grep -h -E "^(Tier|Branch):" -- ".coord/tasks/$ARGUMENTS.md"`
+
+Branch, commits ahead of dev and changed files are above; steps below need not re-run them. A missing card stops this skill.
 
 Phase 6 (Check) of `docs/loop.md`, then the hand-over to Hand test. Every reply opens with the status card, with your
 role (`reviewer`, then `tester` at the hand-over) on its first line. Keep Claude
@@ -36,6 +48,9 @@ Run every gate the Plan lists (at least the tier's defaults):
 - **Contracts / reproduction test**: confirm the named rows and checks exist in the diff and pass in the gate's selftest.
 
 ## 4. Bounds check and verdict
+For a large diff the read-only comparison below may run in a forked pass (Agent tool, `subagent_type: design-reviewer`, until the
+L3 reviewer agent replaces it). It does not see this chat: give it the card path, the round, the report path and ask for one
+line per difference. You still write `## Check` and ask the user.
 Compare Request, Plan (and Approve) with what was done: the report's Change list, Behavior changes, Out-of-scope files, Plan
 deviations, and `git diff --stat dev...HEAD`. Write `## Check` on the card:
 - Gate and review result lines.
