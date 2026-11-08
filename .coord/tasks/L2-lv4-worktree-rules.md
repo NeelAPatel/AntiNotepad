@@ -97,4 +97,4 @@ Not verified: slash names in `--worktree`; whether `baseRef` applies to the desk
 Misses: None.
 
 ## Hand test
-Hand test: user opens a throwaway worktree from the app button, then reads `.coord/logs/worktree-check.log` in the main checkout. Result: pending.
+Hand test: user opens a throwaway worktree from the app button, then reads `.coord/logs/worktree-check.log` in the main checkout. Result (user, 2026-11-08): "Accept, test after merge" after the folder-specific test proved fiddly. The app button's `baseRef` behavior is checked after the merge: press the app's worktree button in a session on dev and read `.coord/logs/worktree-check.log` in the main checkout (flat path and branch lines expected, no base-on-main line if `head` is honored).
