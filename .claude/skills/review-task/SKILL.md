@@ -9,6 +9,8 @@ argument-hint: <ID-slug>
 
 # /review-task <ID-slug>
 
+Phase detail: `.claude/skills/review-task/phases.md`.
+
 ## Live facts
 
 !`git branch --show-current`
@@ -67,7 +69,7 @@ Then decide:
 
 ## 4a. Triage (every failure, no extra agent)
 You already hold the context, so triage here instead of spawning anyone. Name one cause from the failing lines or
-findings, and route by it (`docs/loop.md`, "Triage, lessons, scores"):
+findings, and route by it (.claude/skills/review-task/phases.md, Triage, lessons, scores):
 | Cause | Route |
 |---|---|
 | `code`: the build does not do what the Plan says | `<ID-slug>-rN` round brief from `.coord/templates/round.md` with exactly the failing lines or proven findings; relaunch Codex; run this skill again when it exits |

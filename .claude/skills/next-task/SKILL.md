@@ -9,6 +9,8 @@ argument-hint: "[ID-slug]"
 
 # /next-task [ID-slug]
 
+Phase detail: `.claude/skills/next-task/phases.md`.
+
 ## Live facts
 
 !`git branch --show-current`
@@ -19,14 +21,14 @@ Branch, commits ahead of dev and changed files are above; steps below need not r
 
 Phases 1-4 of `docs/loop.md` (Request, Findings, Plan, Approve), run in the master session, then the start of Build.
 Every reply opens with the status card (`docs/loop.md`, "Status card"). Keep STATUS's State cell current at every phase.
-Use the widgets (`docs/loop.md`, "Widgets"): question cards for scope questions and Approve, the task list for the
+Use the widgets in .claude/skills/next-task/phases.md (Widgets): question cards for scope questions and Approve, the task list for the
 phase's steps, the next-step box at the end of each reply.
 
 ## 1. Request
-- The item is the user's request, the named item, or the first plan row not done (`.coord/STATUS.md`, "Plan"). Stop and
+- The item is the user's request, the named item, or the first plan row not done (`.coord/STATUS.md`, .claude/skills/next-task/phases.md, 3. Plan). Stop and
   ask if the next row is a release marker, a `Decision:` row, `proposed`/`needs you`, or lab-first design. An unnumbered
   `idea:`/`step:` row needs the user to confirm its scope first; on that confirmation assign the next free number
-  (`docs/loop.md`, "Numbering").
+  (`docs/loop.md`, "IDs and numbering").
 - No branch yet: it is created at Approve. Until then the card and any audit files live untracked in the master
   checkout (on dev); STATUS stays on dev, edited but uncommitted.
 - Pick the prefix (`A`, `Loop`, `D`, `T`; the area it affects most) and the branch prefix it will get (`feat/`, `fix/`,
@@ -64,9 +66,9 @@ Answer the card's Findings lines with evidence. Never skip this, whatever the ti
 Fill the card's `## Plan`, `## Files` (exact paths; the gate reads them), `## Contracts`, `Tier:` and "For Codex" (role
 picked by the job with a one-line reason, `docs/agents.md`; Done means with offline checks only). Write "Expected time"
 from similar runs in `.coord/logs/usage.tsv`; over an hour, say so and offer a smaller cut. Side tasks (`T`, tooling
-that does not ship) take the fast lane in `docs/loop.md` "Rules" instead of this skill. Pick gates from the menu in `docs/loop.md`: the tier's defaults plus what this item needs, each with what it
+that does not ship) take the fast lane in `docs/loop.md` "Rules" instead of this skill. Pick gates from the menu in .claude/skills/next-task/phases.md: the tier's defaults plus what this item needs, each with what it
 catches here. Put every open scope question in "Scope questions" now. Over about 400 lines of product code: split into
-lettered steps (`docs/loop.md`, "Plan"). A touched file over 600 lines: answer the "one job?" check from
+lettered steps (.claude/skills/next-task/phases.md, 3. Plan). A touched file over 600 lines: answer the "one job?" check from
 `docs/coding.md`. STATUS: `plan ready (<tier>)`.
 
 ## 4. Approve
@@ -80,7 +82,7 @@ STATUS: `approved`.
 
 ## 5. Start Build
 Start the Build sub-session titled `<ID> · build · <slug>` (linked, **Sonnet medium**, use_worktree false; names, roles
-and the other step sessions: `docs/loop.md`, "Sessions") with a brief that says:
+and the other step sessions: `docs/loop.md`, .claude/skills/merge-task/branches.md) with a brief that says:
 - your role is `builder`; show it on the status card's first line; rename yourself `<ID> · review · <slug>` (role
   `reviewer`) when Check starts and `<ID> · test · <slug>` (role `tester`) at the hand test;
 - work only in `.claude/worktrees/<prefix>/<ID-slug>` with absolute paths; read the card first;

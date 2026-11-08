@@ -17,8 +17,8 @@ try {
     $Root = (Resolve-Path -LiteralPath $Root).Path
     if (-not [IO.Directory]::Exists($Root)) { throw "Root must be an existing directory: $Root" }
     $patterns = @(
-        'AGENTS.md', 'docs/loop.md', 'docs/glossary.md', 'docs/agents.md', 'docs/coding.md', 'docs/dev-loop.md',
-        '.claude/skills/*/SKILL.md', '.claude/agents/*.md', '.coord/templates/*.md', '.agents/skills/*/SKILL.md',
+        'AGENTS.md', 'docs/loop.md', 'docs/glossary.md', 'docs/agents.md', 'docs/coding.md', 'docs/dev-loop.md', 'docs/loop-*.md',
+        '.claude/skills/*/SKILL.md', '.claude/skills/*/*.md', '.claude/rules/*.md', '.claude/agents/*.md', '.coord/templates/*.md', '.agents/skills/*/SKILL.md',
         '.codex/agents/*.toml', 'tools/*.ps1', 'tools/*.sh', '.coord/tools/*.sh'
     )
     $escapedRoot = [Management.Automation.WildcardPattern]::Escape($Root)

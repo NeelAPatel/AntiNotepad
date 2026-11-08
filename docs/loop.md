@@ -1,10 +1,12 @@
 # Dev loop (per item)
 
-Who does what, what triggers each phase, and what it leaves behind. Model routing and the Codex wrapper: `docs/agents.md`.
-Terms used here: `docs/glossary.md`. How code is written: `docs/coding.md`.
+Who does what, what triggers each phase, and what it leaves behind. Start/resume: .coord/STATUS.md; roadmap: /roadmap (http://localhost:47811). Routing: docs/agents.md; terms: docs/glossary.md; coding: docs/coding.md.
+
 Every item has one **item card**, `.coord/tasks/<ID-slug>.md` (from `.coord/templates/item.md`), that grows phase by
-phase: the request, what was found, the approved plan, and the check of what was done against both. Anyone can open the
-card and see why the item exists, what was agreed and where it stands.
+phase: the request, what was found, the approved plan, and the check of what was done against both. Anyone can
+open the card and see why the item exists, what was agreed and where it stands.
+
+**Loop version: v5.3.0** (LP<vX.Y.Z> in master names). Phase, role or ownership changes bump major; new checks, scripts, routes or research steps bump minor; chat output only bumps patch (x.y.1). On a bump, the master updates STATUS and all live master names.
 
 ## Phases
 `Request → Findings → Plan → Approve → Build → Check → Hand test → Merge`
@@ -23,80 +25,6 @@ card and see why the item exists, what was agreed and where it stands.
 "Approve" was "Go" before loop v3; old cards keep `## Go`.
 
 `paused` (any state after Approve): the user set a started item aside. Its branch, worktree and card stay, it does not count against the 3-item cap, and resuming sets the earlier state back.
-
-### 2. Findings: what they must answer
-- **Kind and why**: bug, feature, polish or process; what about today's behavior justifies the item.
-- **Now**: what the app does today, with evidence: a code path with file:line, a selftest or probe result, or the user's
-  description or screenshot. For anything visible, say what dev does today in plain words; if that already matches what
-  the user asked for, stop and ask (A53-split-divider-height lost three commits to this).
-- **Bugs: reproduce first.** A reproduction (probe, failing selftest, exact code path, or the user's steps confirmed in
-  the dev copy) is required before building. No reproduction: stop and ask the user; never build a guess (A54 r1 could not
-  reproduce and claimed no fix).
-- **Where**: the files and callers the change reaches, shared state, the riskiest part.
-- **Size**: a file the change touches that is over 600 lines gets the "one job?" check from `docs/coding.md`; a split it
-  calls for is proposed as its own item, not done in passing.
-- **Tier**: findings confirm or raise the tier. A bug whose cause is not proven by the findings is at least Medium.
-- Low items get the master's own scout (a few `rg` and reads, at most about ten tool calls). Anything that needs more
-  becomes a Codex audit, and the item is at least Medium.
-
-**Backlog scans:** `/scan-backlog [slug ...]` runs one read-only Haiku scout per idea in a shared detached dev snapshot
-and proposes an order for the user. Reports stay untracked in `.coord/research/<slug>.md`, stamped with the full scanned
-SHA, until Approve moves and commits them with the card. At task time Findings reads the scan plus `tools/scan-delta.ps1`:
-commits, changed Where files and their neighbors, and the related cards. More than half the Where files changed, or any
-Where file deleted, requires a fresh scout or audit; Medium/High audits still run with the scan and delta as inputs.
-
-### 3. Plan: what the user approves
-- **After**: what it will do, written next to "Now" so the difference is the change.
-- **Expected time**: request to merge, from similar runs in `.coord/logs/usage.tsv` and past cards. Over an hour is said
-  plainly, with a smaller cut offered, even when the user wants the full scope (T1-roadmap-overview: expected 30
-  minutes, took 4 h 45 min, never called).
-- **Scope questions**: anything the request leaves open, asked now (A54 found "all URLs or only shortened ones?" only at
-  the hand test).
-- **Test plan**: selftest or `CONTRACTS` rows in code, and the exact UI checks for the hand test.
-- **Gates**: which checks run and what each one catches for this item (menu below). The tier sets the defaults; the plan
-  may add gates, never drop the tier's defaults.
-- **Size**: more than about 400 lines of product code (generated files, tests and docs not counted) means lettered steps
-  (`A1a`, `A1b`), each its own loop run and commit.
-- **Needs from you**: decisions, screenshots, a live check, or "Nothing".
-- **Files**: exact paths (the gate reads `## Files`).
-The master asks one question: approve, change, or drop. Nothing is built, and no branch exists, before approval.
-
-### Gates menu
-| Gate | Catches | Default for |
-|---|---|---|
-| `tools/gate.ps1` (build 0 warnings, selftest, LAYERS, CONTRACTS, seam, tokens, format, scope, loop-lint, size) | compile errors, broken promises, layering leaks, rising design literal counts, new format problems on changed lines (rules: `.editorconfig`), files outside the plan (FAIL on item branches; WARN on dev, CI or `-LooseScope`), inconsistent loop files, god-file growth | every tier |
-| Codex fresh review (`lens-review`) | logic, behavioral coupling, shared state and latches, timing and caches, missed inputs, cleanup | Medium, High |
-| Claude `design-reviewer` | responsibility, boundaries, coupling between features, future cost | High |
-| New `CONTRACTS` row | the fixed bug or new promise coming back unseen | every bug fix |
-| Reproduction test | the bug is real and is the one fixed | every bug |
-| Lab build | a design change the user has not approved yet | design changes (`AGENTS.md`) |
-| Hand test | what only the screen shows | anything visible; always for High |
-
-### 6. Check: plan vs done (bounds check)
-After the gates, the reviewer compares three things and writes `## Check` on the card:
-- **Requested** (`## Request`), **approved** (`## Plan`, `## Approve`), **done** (the report's Change list, Behavior
-  changes and Out-of-scope files, and `git diff --stat dev...HEAD`).
-- Every difference gets one line: **within plan**, **justified** (why, and why the user does not need to decide), or
-  **ask the user** (it changes behavior or scope the user did not approve). Ask-the-user items stop the item until answered.
-- Comments and formatting in the changed files follow `docs/coding.md` (on touch); a gap is a rework line, not a pass.
-- Side bugs noticed on the way go under "Noticed" as proposed follow-ups, never fixed in passing.
-- A scope change from the user mid-item (A54 r3) is recorded on the card with the user's words and goes through Plan again
-  for that round.
-
-### Triage, lessons, scores
-Strictness is cheap by design: scripts first (zero model tokens), model judgment only on exceptions.
-- **Triage on every failure** (gate fail, review rework, hand-test fail), done by the Check session that already has the
-  context, no extra agent: one cause, `code`, `test`, `plan`, `env`, `conflict` or `judgment`, routed by the table in
-  `/review-task` step 4a. Only `code` and `test` go back to Codex; `plan` goes to the master, `judgment` to the user.
-- **Lessons:** each failure leaves one "Misses" line on the card; the master copies them into `.coord/lessons.md` at Merge
-  with one Scores row per item (what each check found). Master-owned on dev, like STATUS.
-- **Self-improvement, user-approved:** when the same cause and "should have caught" pair appears twice without a rule
-  change, the master proposes an unnumbered `idea:` row naming the rule or bot file to change. Rules change only through
-  an item the user approves.
-- **Reviewer scores:** the Scores table shows whether each review earns its run. Empty reviews on items that later had
-  misses mean that review's checklist needs a change (an `idea:` row), not more reviewers.
-- **Cost:** a green item adds no model calls (format and the ledger are scripts); a failure adds a few lines in a
-  session already open; the retro is one row written at Merge.
 
 ## Tiers
 Set at Plan; findings may raise it. When unsure, pick the higher tier.
@@ -150,13 +78,6 @@ usage is back-and-forth to get things right, so use whatever cuts that:
 - The Markdown **status card** above stays text: it costs about the same as plain lines.
 
 ## Rules
-- A failed gate, a `rework` verdict or a user scope change goes back to Build as `<ID-slug>-r2`, `-r3` (STATUS `rework rN`),
-  with the round's brief listing what changed and why, written by the item's own sub-session (it saw the failure).
-  Counting: the first build is round 1 (no suffix), so two rework rounds (`-r2`, `-r3`) run without asking; a fourth
-  round (`-r4`) needs the user's go. A round's gate and review run under the round's name (`-Task <ID-slug>-rN`): the gate allows the Files of the base card and every round's brief, and the
-  reviews read that round's report plus the base report.
-- Gate reports (`.coord/reports/*.gate.md`) are regenerated on every run and not committed; the result lines go into the
-  card's `## Check`.
 - Every bug fixed adds a `CONTRACTS` row, so it cannot come back unseen.
 - Every Codex run happens in its own linked, visible sub-session that reports back to the master, named and modeled as in
   "Sessions" below. The master never launches Codex directly.
@@ -195,6 +116,7 @@ usage is back-and-forth to get things right, so use whatever cuts that:
 | `Loop` | The dev loop and agent processes | `Loop1-process-v3` |
 | `D` | Documentation: code comments, wiki, `.md` file management | `D1-ui-region-names` |
 | `T` | Tooling and process that is not AI | `T1-<slug>` |
+| `L` | Level 4/5 loop automation | `L6-lv4-docs-diet` |
 - An item that fits more than one prefix takes the prefix of the area it affects most.
 - **Giving a number brings an item into existence:** only the user's confirmation of an idea and its scope assigns one.
   Until then it is an unnumbered plan row `idea: <slug>` with `step: <slug>` rows under it (or a Backlog line).
@@ -204,19 +126,11 @@ usage is back-and-forth to get things right, so use whatever cuts that:
 - **Eras:** counters can be reset and reprioritized at any time; each reset ends an era, and an ID only means one item
   within its era. Era one (2026-10-17 to 2026-10-29) used `A`, `C`, `N`, `P` and `S<n>-status`, all retired; old cards
   and reports keep their old meaning. Within an era a number is never reused, even if dropped.
+- L numbering restarts at `L1` on 2026-11-08: L1-L7 Level 4, L8-L15 Level 5; slugs are lowercase.
 - Always write `<ID>-<slug>` plus its scope, never a bare ID or a range.
 
 ## Sessions: master, sub-sessions, names (user, 2026-10-29)
-**Loop version: v5.2.0** (user, 2026-11-06: `Loop8-merge-policy`, minor bump). v5.1.0 was the same day. v5.0.0 was set on 2026-11-04 by `Loop6-loop-v5-wiki` (v4 skipped by the user; based on v3.2 plus `Loop5-reply-style`).
-History: v3.2 (2026-10-31, `Loop4-retro-fixes`: Codex roles by job and no run caps, offline-only Codex checks,
-expected time in the plan, a side-task fast lane, masters per area with sub-sessions per phase, master notes after
-compaction. v3.1 was 2026-10-30, `Loop2-loop-v3-1`: approve and merge preflights, catch-up with dev, strict scope,
-read-only audits, backlog scans with a delta at task time, loop-lint; the dormant v2.2 drop absorbed). v3 was
-`Loop1-process-v3`: Approve phase, A/Loop/D/T IDs and eras, type-prefixed branches and nested worktrees, squash merges
-with STATUS inside (replaced in v5.2.0 by rebase plus a merge commit), roles, widgets, `docs/coding.md`. v2 was C26-item-card-loop, v2.1
-C28-loop-cheap-checks; v1 was C13-dev-loop-kit through C25. v2.2 was never activated; v3.1 absorbed it (its notes were deleted on 2026-10-31; git history keeps them).
-A merged item that changes the phases, the roles or who runs which phase bumps the major version (new master at the next
-handover); new checks, scripts, routes or research steps bump the minor version and need no new master. Changes to chat output only (reply style, status card or hook wording) bump the patch version (`x.y.1`).
+**Loop version: v5.3.0** (LP<vX.Y.Z> in master names). A merged item that changes the phases, the roles or who runs which phase bumps the major version (new master at the next handover); new checks, scripts, routes or research steps bump the minor version and need no new master. Changes to chat output only (reply style, status card or hook wording) bump the patch version (`x.y.1`).
 
 - **The picture** (user, 2026-10-30): the user is the CEO; masters are directors, one per area (today three live
   directors: Master 4 for app and design, Loop Hub 2 for `Loop` and `T`, Roadmap Hub 1 for the roadmap; earlier masters
@@ -239,95 +153,9 @@ handover); new checks, scripts, routes or research steps bump the minor version 
   ask them to self update and catch up, unless something im working on really impacts heavily on their domain."
 - **Live directors:** Master 4 (app and design, owns STATUS), Loop Hub 2 (`Loop` and `T`), Roadmap Hub 1 (roadmap).
   Earlier masters are closed.
-- **Master notes:** each master keeps `.coord/directors/<slug>.md` (gitignored; slug from its name): its role, open
-  threads, decisions waiting on the user, linked sub-sessions, and where it left off. It updates the file when a
-  decision is made, not later. After a context compaction a `SessionStart` hook (`tools/director-notes.ps1`) prints the
-  notes back into the chat, so the master resumes from its own notes rather than the summary alone.
-- **Master name:** `<Role> <N> · LP<vX.Y.Z> · <slug>`, Role the chat's role (Master, Loop Hub, Roadmap Hub), N one
-  higher than the last of its role (STATUS "Working rules" names the current one), vX.Y.Z the loop version above
-  (written `LPv5.2.0` so it never reads as a `Loop` item ID), the slug the remaining work it was opened for. When a
-  merged item bumps the loop version, the merging director updates STATUS and renames all three live director chats to
-  the new `LP<vX.Y.Z>` (user, 2026-11-06: "propogate the versions to yourself, master4 and roadmap"). Example: `Master 4 · LPv5.2.0 · design-tokens`.
-- **Sub-session per step, well scoped:** each has one item, one step, one worktree, and a brief that names its done
-  condition. Several sub-sessions per item, one per phase, is normal and often better (`A55` ran an audit chat, then a
-  test chat); the item card is what they share. A sub-session records the user's scope changes on its card in the
-  user's words and gets a design approval from the user itself. Name: `<ID> · <step> · <slug>`, for example `A1 · build · list-commands`. Its **role** is shown in its
-  status card.
-  | Step | Role | When | Model | Does |
-  |---|---|---|---|---|
-  | `scan` | `scout` | rarely: a Low scout too big for the master | Haiku | read-only findings, no Codex |
-  | `audit` | `auditor` | Findings for Medium, High | Haiku | runs the Codex findings audit, leaves it untracked until Approve, reports |
-  | `build` | `builder` | after Approve | Sonnet medium | runs Codex, then Check (`/review-task`) and the hand-test handover |
-  | `review` | `reviewer` | Check; a fresh one only when the build session stalled | Sonnet medium | `/review-task` |
-  | `test` | `tester` | the hand test; a separate one only for a re-test the user asked for | Sonnet medium | launches the build, gives the UI checks, records the result |
-  Each role's model, effort and tools are fixed in `.claude/agents/<role>.md` (builder, reviewer, auditor); this table says when to use them.
-  A build session moving into Check or Hand test renames itself to that step (`A1 · review · list-commands`,
-  `A1 · test · list-commands`) and changes its role, so the sidebar shows where it is; the master renames it if it
-  cannot. The Codex role for each run is picked by the job (`docs/agents.md`).
-- **Roadmap:** every master uses the same local server page `http://localhost:47811` (`/roadmap`), served live from STATUS
-  and Git.
-- **Handing over to a new master** (the chat grew long, or the loop version changed): no sub-session mid-step (or each one
-  named in STATUS with its state), STATUS "Now" says where every item stands, dev clean and pushed. Retitle the old master
-  `Master <N> · Loop v<V> · <slug> (closed)`, stop and archive it. The user opens the new master with:
-  > You are `Master <N+1> · Loop v<V> · <slug>` for AntiNotepad. Read `AGENTS.md`, `docs/loop.md` (all of it, it is the
-  > law for how you run items and start Claude and Codex sub-sessions) and `.coord/STATUS.md`. Rename this chat to that
-  > name, update STATUS "Working rules" with it, open `/roadmap`, then reply with the status card for the next plan item
-  > and wait for my approval. Computer Use only when I say so.
 
-## Branches, worktrees and commits (user, 2026-10-29)
-- **`main`** holds releases only. At a release, on the user's go, it fast-forwards to `dev` (no merge commits) and gets
-  a plain semver tag: `v0.7.0`, with `-rc1`, `-rc2` for builds not yet hand-tested. No pull requests for now; they come
-  back with the release pipeline.
-- **`dev`** is integration: each item (or lettered step) lands as its own tidy commits plus one `--no-ff` merge commit
-  that carries its STATUS and lessons edits. No other commits.
-- **Every item gets a branch** `<prefix>/<ID-slug>` off the latest dev, created at **Approve** (not before), including
-  docs and tooling items. The prefix follows the kind of change: `feat/`, `fix/` or `refactor/` for A, `docs/` for D,
-  `chore/` for Loop and T. Rework rounds stay on the same branch.
-- **Worktree per item, by default** (user, 2026-11-06: "worktree preferred for parallelization unless explicitly said not
-  to"), in a folder that mirrors the branch: `.claude/worktrees/<prefix>/<ID-slug>`
-  (`git worktree add .claude/worktrees/feat/A1-list-commands -b feat/A1-list-commands dev`; also fix/, refactor/, docs/, chore/). The master's checkout stays
-  on dev. Sub-sessions share the master's folder (`use_worktree: false`) and work only inside that path, with absolute
-  paths; Codex runs from the worktree's own `.coord/tools/codex-run.sh`. **At most 3 items** past Approve at once, and
-  only if their Files lists do not overlap. After Check accepts, the implementation sub-session runs `tools/dev.ps1`
-  from the worktree immediately before the hand checks; it verifies the dev badge and EXE/DATA/log paths. One dev copy
-  runs at a time, so up to 3 items can build in parallel but hand tests take turns, oldest accepted item first.
-  Without worktrees there is no parallel work at all (user, 2026-10-30).
-- **No worktree** (only when the user says so; never suggested for docs or tooling items): the branch is checked out in
-  the main checkout (`tools/approve.ps1 -NoWorktree`) and nothing else runs until it merges.
-- **Before Approve** there is no branch: the card and any audit brief and report live untracked in the master checkout;
-  the auditor's Codex run is read-only there. At Approve they move into the new worktree and are committed on the branch.
-- **What lands on the branch:** the card, audit, reports and code, committed there as often as useful (Codex cannot
-  commit: the sub-session does). Push the branch to origin freely. Branches never edit STATUS.
-- **What lands on dev: the item's tidy commits plus one merge commit** (user, 2026-11-06: "so that i can atleast trace
-  out which incremental change broke something"; "i'm more worried about slop commits than high number of comits").
-  Between merges the master edits `.coord/STATUS.md` on dev and leaves it uncommitted (the roadmap reads the working
-  copy). No other direct commits to dev; urgent one-line fixes also go through a branch. At Merge, in this order:
-  1. **Commit review**, by the item's own session before it asks for a merge: list `git log dev..<branch>` and fold
-     tiny and back-and-forth commits into the commit they belong to (`git commit --fixup`, then
-     `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash dev`; `-i` itself is not available here). No fixed count: one
-     commit per meaningful change, and a few lines fixed after some back and forth is not a commit. Messages say what
-     changed (`<ID-slug>: <what>`), never wip, fix or try-again. Lab variants and debug code are removed. Every commit
-     builds.
-  2. **Rebase** the branch onto dev (`tools/catch-up.ps1 -Push`, which pushes the item branch only, with
-     `--force-with-lease`), then re-run the gate: it must pass at the final tip.
-  3. **Preflight**: `tools/merge-preflight.ps1` also builds each commit of `dev..<branch>` and runs `--selftest`,
-     skipping commits that touch no product code. A failure names the commit.
-  4. **Merge**: the master runs `git merge --no-ff --no-commit <branch>` on dev, adds the item's STATUS edits and its
-     lessons, then commits once. The merge commit's subject is `<ID-slug>: <what changed>`.
-  STATUS rides in the item's merge commit, so there are no separate `chore: status` commits; with nothing to merge it
-  stays uncommitted.
-- **Commit message:** the branch's commits: subject `<ID-slug>: <what changed>`, 72 characters or fewer, body only when
-  the why is not obvious. The merge commit: the same subject and a body of 3-6 short lines: why, what changed, the gate
-  result, the hand test. No Claude attribution lines (`.claude/settings.json`).
-- **Clean-up at Merge:** remove the worktree (`git worktree remove`, never `--force`: leftover files stop the merge and
-  are listed for the user), then delete the branch locally (`git branch -d`, which works because the merge marks it merged)
-  and on origin.
-
-**Catching up with dev:** rebase, never merge (user, 2026-11-06). Catch up at two points: before Check and before Merge
-when dev is not an ancestor of HEAD. The item's own session runs `tools/catch-up.ps1 -Push`, which rebases the item
-branch onto dev and pushes that branch only with `--force-with-lease` (never dev, never a plain `--force`), then runs the
-gate. A conflict leaves the rebase open: resolve, `git add`, `git rebase --continue`. `RETEST: yes` repeats the hand test
-before Merge; `RETEST: no` keeps the earlier result.
+## Branches
+One <prefix>/<ID-slug> per item, made at Approve. Worktree per item by default. Tidy buildable commits plus one --no-ff merge commit per item carrying STATUS/lessons. Only a master merges to dev or moves main.
 
 ## Triggers in practice
 Three commands drive the loop: `/next-task` (Request to Approve, then starts Build; master), `/review-task <ID-slug>`
@@ -342,39 +170,15 @@ Three commands drive the loop: `/next-task` (Request to Approve, then starts Bui
 - **Any time, any terminal:** `pwsh -NoProfile -File tools/gate.ps1 -Task <ID-slug>` (gate only).
 - **CI (manual for now):** GitHub Actions workflow `gate`, run from the Actions tab; it runs `tools/gate.ps1 -Ci`.
 
-## Files
-| File | For |
+## Where the detail lives
+| Detail | File |
 |---|---|
-| `AGENTS.md` (loaded by `CLAUDE.md` and by Codex) | project rules; points here |
-| `docs/coding.md` | comments, formatting, file and folder rules |
-| `docs/glossary.md` | one line per term |
-| `.editorconfig` | formatting rules the gate's Format step checks |
-| `.coord/templates/item.md` | the item card: Request, Findings, Plan, Approve, Codex brief, Check, Hand test |
-| `.coord/templates/findings.md` | brief for the read-only Codex audit (Findings) |
-| `.coord/templates/scan.md` | brief for one read-only Haiku backlog scout |
-| `.coord/templates/review.md` | brief for the fresh Codex review |
-| `.coord/templates/round.md` | brief for a rework round |
-| `tools/gate.ps1` | build, selftest (LAYERS, CONTRACTS), seam, tokens, format, scope, loop-lint, size |
-| `tools/check-design-tokens.ps1` | inventory and ratchet literal design values |
-| `tools/loop-lint.ps1` | read-only consistency check of live loop files and their file references |
-| `tools/loop-lint.allow` | path, rule and line-substring exceptions for historical mentions |
-| `tools/catch-up.ps1` | rebase an item branch onto local dev, optionally push it with `--force-with-lease`; report conflicts and whether to repeat the hand test |
-| `tools/files-overlap.ps1` | compare an item's Files with other item checkouts |
-| `tools/scan-delta.ps1` | compare a backlog scan SHA and Where files with dev; flag rescans and cards to read |
-| `tools/approve.ps1` | check the item cap and overlap, then create the branch and worktree |
-| `tools/merge-preflight.ps1` | check the card, gate, branch and dev before Merge, and that every commit builds and passes `--selftest` |
-| `product/AntiNotepad/SelfTest/Contracts.cs` | the `CONTRACTS` table of cross-feature promises |
-| `.agents/skills/lens-review/SKILL.md` | Codex review checklist (logic, coupling, reliability, plan bounds, proof rule) |
-| `.codex/agents/lens-reviewer.toml` | Codex role the director spawns before reporting |
-| `.coord/tools/codex-run.sh` | Codex wrapper: roles by job, failover on usage limits, ledger (`docs/agents.md`) |
-| `.claude/agents/design-reviewer.md` | Claude design reviewer (Opus, read-only) |
-| `.claude/skills/next-task/SKILL.md` | `/next-task [ID-slug]`: Request, Findings, Plan, Approve, start Build |
-| `.claude/skills/scan-backlog/SKILL.md` | `/scan-backlog [slug ...]`: snapshot scouts and proposed backlog order |
-| `.claude/skills/review-task/SKILL.md` | `/review-task <ID-slug>`: Check (gates, bounds check, verdict), hand over |
-| `.claude/skills/merge-task/SKILL.md` | `/merge-task <ID-slug>`: Merge |
-| `tools/loop-card.ps1` | `UserPromptSubmit` hook: status-card reminder and the items in flight |
-| `.coord/lessons.md` | misses (cause, caught by, should have caught) and per-item reviewer scores; master-owned |
-| `.github/workflows/gate.yml` | CI gate, manual trigger |
-| `tools/roadmap-data.ps1`, `tools/roadmap-serve.ps1`, `tools/roadmap/index.html`, `tools/roadmap.url`, `.claude/skills/roadmap/SKILL.md` | live roadmap from STATUS and Git (`/roadmap`); snapshot Artifact on request |
-| `tools/director-notes.ps1` | `SessionStart` hook after compaction: prints the master's `.coord/directors/<slug>.md` |
-| `.claude/settings.json` | hooks: status card plus roadmap auto-start (UserPromptSubmit), master notes after compaction (SessionStart); attribution off |
+| Findings, Plan, Gates, Widgets | .claude/skills/next-task/phases.md |
+| Check, triage, lessons, scores, rework | .claude/skills/review-task/phases.md |
+| Branches, catch-up | .claude/skills/merge-task/branches.md |
+| Sessions and file inventory | docs/loop-sessions.md |
+| Coding rules | .claude/rules/coding.md (Codex reads docs/coding.md) |
+| Agent routing | docs/agents.md |
+| Build/dev/install | docs/dev-loop.md |
+| Terms | docs/glossary.md |
+| Decisions/version history | docs/decisions.md |

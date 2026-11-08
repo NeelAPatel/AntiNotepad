@@ -1,0 +1,5 @@
+Implemented the requested restores in [docs/loop.md](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/chore/L6-lv4-docs-diet/docs/loop.md) and reduced [docs/coding.md](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/chore/L6-lv4-docs-diet/docs/coding.md) to two lines. The loop core is **15,684 bytes**; the coding pointer is **125 bytes**. The report is [L6-lv4-docs-diet-r2.md](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/chore/L6-lv4-docs-diet/.coord/reports/L6-lv4-docs-diet-r2.md).
+
+**Behavior changes:** None.
+
+**Checks:** `loop-lint` passed. The offline gate passed build, selftest, seam, tokens, format, LoopLint, and size checks, but **failed Scope** because `.coord/tasks/L6-lv4-docs-diet-r2.md` is missing. The gate expects that task card; I did not create or edit it, per your instruction. No commit was made.

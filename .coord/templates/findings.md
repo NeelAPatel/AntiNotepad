@@ -12,7 +12,7 @@ Read `AGENTS.md`, then the item card `.coord/tasks/<ID-slug>.md` (its Request is
    steps for the user/manager to run; do not run builds or probes that write files. If you cannot, say "not reproduced"
    and what you would need from the user. Do not guess a cause.
 4. **Where**: the files that would change, their callers, and shared state, timers or caches the change can reach.
-5. **Risk**: the riskiest part, and which gate in `docs/loop.md` ("Gates menu") would catch it.
+5. **Risk**: the riskiest part, and which gate in .claude/skills/next-task/phases.md ("Gates menu") would catch it.
 6. **Tier**: confirm or raise the card's tier, with the reason.
 7. **Recommendation**: the smallest change that meets the Request, the "After" state, the code tests and UI checks that
    would prove it, open scope questions for the user, and whether to split the item.

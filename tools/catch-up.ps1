@@ -1,5 +1,5 @@
 <#
-Loop v5.2.0: fetches dev and rebases an item checkout onto it; pushes only with -Push, and only the item branch with --force-with-lease.
+Loop v5.3.0: fetches dev and rebases an item checkout onto it; pushes only with -Push, and only the item branch with --force-with-lease.
 Usage: pwsh -NoProfile -File tools/catch-up.ps1 -Task <ID-slug> [-Base dev] [-Push]
 Exit 0 = UP TO DATE/CLEAN; 1 = REFUSED; 2 = CONFLICT (hot files marked, rebase left open for resolution).
 #>
