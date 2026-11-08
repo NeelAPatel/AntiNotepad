@@ -139,3 +139,6 @@ Codex (terra) built `tools/guard-bash.ps1` and `tools/guard.mode`; the manager a
 
 Concern: `permissions.ask` has no per-session switch, so a director editing STATUS.md in the main checkout is also asked.
 Undo (one block each): delete the `PreToolUse` entry; delete the `permissions` block. Mode switch: `tools/guard.mode`.
+
+## Hand test
+Passed. User, 2026-11-08, in the L1 chat: "Accept, prep merge" after reading the Check table and the known false positives.
