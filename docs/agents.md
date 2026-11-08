@@ -8,6 +8,7 @@ Headless, in the background; the process exit wakes the manager:
 ```
 
 ## Pick the role by the job
+Claude session roles (builder, reviewer, auditor) are config files in `.claude/agents/`; this table covers Codex roles only.
 Every brief names its role with a one-line reason ("Role: quick, a two-line rename"). There is no default role, and
 xhigh is never the default. When unsure, start with the cheaper role.
 

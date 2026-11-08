@@ -75,4 +75,11 @@ Report: `.coord/reports/L3-lv4-agent-roster.md`, short, with exactly these secti
 9 Hand checks for the user.
 
 ## Check
+- Files: 3 agent files + 2 doc lines, only the card's Files changed; within plan.
+- Verified: frontmatter fields/values (Codex offline check + my read); proof run `claude -p` from the worktree spawned
+  `auditor`: it loaded, reported Haiku 5.5 and tools Read/Grep/Glob/Bash (+ `advisor`), no Edit/Write.
+- Assumed (not verified): model and tools are the agent's self-report, not a harness readout; `effort` and `maxTurns`
+  have no readout; `reviewer` and `builder` were not spawned; `claude --agent` does not list project subagents.
+- Note: this app session's Agent tool did not see the new files until a fresh `claude` process (agent list loads at start).
+
 ## Hand test
