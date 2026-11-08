@@ -78,8 +78,12 @@ Report: `.coord/reports/L3-lv4-agent-roster.md`, short, with exactly these secti
 - Files: 3 agent files + 2 doc lines, only the card's Files changed; within plan.
 - Verified: frontmatter fields/values (Codex offline check + my read); proof run `claude -p` from the worktree spawned
   `auditor`: it loaded, reported Haiku 5.5 and tools Read/Grep/Glob/Bash (+ `advisor`), no Edit/Write.
-- Assumed (not verified): model and tools are the agent's self-report, not a harness readout; `effort` and `maxTurns`
-  have no readout; `reviewer` and `builder` were not spawned; `claude --agent` does not list project subagents.
+- Round 2 (user asked for cheap-model tests; driver was `claude -p --model haiku`, no Codex needed): `builder` loaded, Sonnet 5.5
+  (differs from the Haiku driver, so `model` is applied, not inherited), tools Read/Grep/Glob/Bash/Edit/Write + `advisor`.
+  `reviewer` loaded, Sonnet 5.5, no Edit/Write/NotebookEdit; no probe file was created. `maxTurns` works: a temp agent
+  (`--agents` JSON, maxTurns 2) was cut off with a partial note after 2 turns.
+- Still assumed: all of it is agent self-report except the turn cutoff and the missing file; `effort` has no readout;
+  `advisor` is a harness tool (user, 2026-11-08), not config; `claude --agent` does not list project subagents.
 - Note: this app session's Agent tool did not see the new files until a fresh `claude` process (agent list loads at start).
 
 ## Hand test
