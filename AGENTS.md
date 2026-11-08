@@ -14,5 +14,5 @@ Windows 11 hotkey-summoned translucent scratchpad; Avalonia 12 + AvaloniaEdit 12
 ## Roles and startup
 - Codex implements; roles and launch: docs/agents.md. Codex checks run offline only.
 - Masters are area directors: route work, own STATUS and alone merge to dev/main. Sub-sessions own item/phase work, brief/check Codex and commit on their branch; Codex cannot write to .git.
-- Start/resume: .coord/STATUS.md, docs/loop.md, then /roadmap (http://localhost:47811). Phase steps: skill files named by docs/loop.md; build/install: docs/dev-loop.md; terms: docs/glossary.md; locked choices: docs/decisions.md.
+- Start/resume: .coord/STATUS.md, docs/loop.md, then /roadmap (http://localhost:47811). Phase steps: skill files named by docs/loop.md; build/install: docs/dev-loop.md; terms: docs/glossary.md; locked choices: docs/decisions.md. Habit guide (steps, slash commands, blocked hooks): docs/playbook.md.
 - Product layout: product/AntiNotepad uses Model/ (store/settings/notes; Search/ has search types and Store.Search.cs), Editor/ (PadView, colorizers, renderers, motion), UI/ (windows, Settings, menu, Kit), Calc/ (Calculator.cs and Units, Dates, Values, Lexer, Parser, SelfTest parts), Theme/ (palettes), Platform/ (Win32, tray, hotkey), SelfTest/ (checks by area).

@@ -86,3 +86,4 @@ earning its run.
 | 2026-11-08 | L4-lv4-skill-diet | Low | 0 | 0 | - | - | 0 | - |
 | 2026-11-08 | L5-lv4-status-line | Low | 1 (r2 wrap global line) | 0 | - | - | 0 | - |
 | 2026-11-08 | L6-lv4-docs-diet | Low | 1 (r2) | 0 | - | - | 0 | - |
+| 2026-11-08 | L7-lv4-playbook | Low | 0 | 0 | - | - | 0 | - |
