@@ -94,3 +94,20 @@ Verified (run here, 2026-11-08):
 - Speed: bare `pwsh` start 264 ms; status-line 358 ms (Codex) and 473 ms (me, machine busy with other sessions). Claude runs it in the background after each message, so it never blocks typing.
 - Docs (statusline.md, 2026-11-08): fields, Windows support, refresh events, multi-line output.
 Assumed, not verified: the live Claude Code render (needs a restart of a session in this branch); `$CLAUDE_PROJECT_DIR` expands in the `statusLine` command (the other hooks rely on it, docs do not say); workspace trust must be accepted or the line stays blank; the `STATUS: planned` text in `session-where` reads the main checkout's STATUS, which can lag the branch.
+
+## Rework r2 (user, 2026-11-08: keep the terminal status line, but best of both)
+Role: quick (gpt-6-luna medium), one script. Same constraints as `## For Codex` (offline, no commit, only `tools/status-line.ps1`
+and, if needed, this item's report). Change `tools/status-line.ps1` to WRAP the user's global status line:
+1. Read all stdin once as raw text. If `$HOME/.claude/statusline-command.mjs` exists and `node` is on PATH, run
+   `node <that file>` with the SAME raw stdin and print its output unchanged (UTF-8, no re-encoding of ANSI codes). If it is
+   missing or fails, skip silently.
+2. Then print ONE extra line starting `loop:` (dim ANSI is fine): parts separated by ` | `, each omitted when absent:
+   `WT` (only in a linked worktree, same detection as now), the branch, `item <ID-slug>` (same derivation as now), and
+   `in flight <ids>` (same STATUS parsing as now, from the main checkout). On `dev`/`main` with nothing in flight print
+   no loop line. Remove context %, cost and model from the output. Any error: print nothing extra, exit 0.
+3. Keep the file fast: one git call, no other processes besides the node wrapper.
+Done means: parses; with mock stdin (cwd = this worktree, cwd = main checkout, empty input) the output is the global
+script's lines followed by the `loop:` line (or none on dev with nothing in flight); with the global script path forced
+missing (use a `$env:STATUSLINE_GLOBAL` override, default the path above) only the loop line prints; exit 0 in every
+case; `tools/gate.ps1 -Task L5-lv4-status-line -Offline` passes; the report `.coord/reports/L5-lv4-status-line.md` gets a
+"Rework r2" section with commands, output and timing (10 runs).
