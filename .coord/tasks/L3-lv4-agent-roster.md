@@ -87,3 +87,4 @@ Report: `.coord/reports/L3-lv4-agent-roster.md`, short, with exactly these secti
 - Note: this app session's Agent tool did not see the new files until a fresh `claude` process (agent list loads at start).
 
 ## Hand test
+User, 2026-11-08: "ready to merge" (after reading the files and the cheap-model test results).
