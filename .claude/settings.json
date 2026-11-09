@@ -12,7 +12,8 @@
     "ask": [
       "Edit(.coord/STATUS.md)",
       "Edit(.coord/lessons.md)",
-      "Edit(docs/loop.md)"
+      "Edit(docs/loop.md)",
+      "mcp__ccd_session__start_session"
     ]
   },
   "hooks": {

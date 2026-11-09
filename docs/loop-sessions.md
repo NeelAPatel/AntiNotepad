@@ -31,8 +31,8 @@
   merged item bumps the loop version, the merging director updates STATUS and renames all three live director chats to
   the new `LP<vX.Y.Z>` (user, 2026-11-06: "propogate the versions to yourself, master4 and roadmap"). Example: `Master 4 · LPv5.3.0 · design-tokens`.
 - **Sub-session per step, well scoped:** each has one item, one step, one worktree, and a brief that names its done
-  condition. Several sub-sessions per item, one per phase, is normal and often better (`A55` ran an audit chat, then a
-  test chat); the item card is what they share. A sub-session records the user's scope changes on its card in the
+  condition. At most two sub-sessions per item: one to investigate, one to build, test and wrap up (`A55` ran an audit chat,
+  then a test chat); a third only on the user's word. The item card is what they share. A sub-session records the user's scope changes on its card in the
   user's words and gets a design approval from the user itself. Name: `<ID> · <step> · <slug>`, for example `A1 · build · list-commands`. Its **role** is shown in its
   status card.
   | Step | Role | When | Model | Does |
@@ -41,7 +41,7 @@
   | `audit` | `auditor` | Findings for Medium, High | Haiku | runs the Codex findings audit, leaves it untracked until Approve, reports |
   | `build` | `builder` | after Approve | Sonnet medium | runs Codex, then Check (`/review-task`) and the hand-test handover |
   | `review` | `reviewer` | Check; a fresh one only when the build session stalled | Sonnet medium | `/review-task` |
-  | `test` | `tester` | the hand test; a separate one only for a re-test the user asked for | Sonnet medium | launches the build, gives the UI checks, records the result |
+  | `test` | `tester` | the hand test; a separate one only for a re-test the user asked for | Sonnet medium | launches the build, gives the UI checks, records the result |
   Each role's model, effort and tools are fixed in `.claude/agents/<role>.md` (builder, reviewer, auditor); this table says when to use them.
   A build session moving into Check or Hand test renames itself to that step (`A1 · review · list-commands`,
   `A1 · test · list-commands`) and changes its role, so the sidebar shows where it is; the master renames it if it

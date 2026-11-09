@@ -79,8 +79,10 @@ usage is back-and-forth to get things right, so use whatever cuts that:
 
 ## Rules
 - Every bug fixed adds a `CONTRACTS` row, so it cannot come back unseen.
-- Every Codex run is launched by the item's own sub-session as a background run (a helper chat only when truly needed, on
-  Haiku), named and modeled as in "Sessions" below. The master never launches Codex directly. While a run is going the
+- **Two chats per item at most (user, 2026-11-09):** one to investigate (scout or audit) and one to build, test and wrap up.
+  No sub-chat starts another chat (no `start_session`, no helper or Codex-run chat) unless the user says so in that chat or
+  asks a director to. Need a third? Ask the user once, with the reason.
+- Every Codex run is launched by the item's own build sub-session as a background run in that same chat, named and modeled as in "Sessions" below. The master never launches Codex directly. While a run is going the
   sub-session's title starts with `[Codexing..] `; when its item is merged and cleaned up it becomes `[Closed] <ID> · merged · <slug>`.
 - Sub-sessions own the card's Build, Check and Hand test sections; the master owns Request, Findings, Plan, Approve and
   STATUS. A sub-session that needs a user decision asks it with the card, and records the answer verbatim.
