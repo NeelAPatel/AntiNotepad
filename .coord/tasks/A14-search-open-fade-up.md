@@ -1,7 +1,7 @@
 # A14-search-open-fade-up: Search fades up when it opens
 
 Tier: Low · ui-motion (lab-first)
-State: plan ready
+State: hand-tested
 Branch: `feat/A14-search-open-fade-up` in `.claude/worktrees/feat/A14-search-open-fade-up` (created at Approve)
 
 ## Request
@@ -47,3 +47,9 @@ Role: terra, a few files with timing and interruption to reason about. The branc
 - `docs/decisions.md`
 - `product/AntiNotepad/UI/PadWindow.cs`: add a "Motion reference" entry: values above, source Microsoft Learn "Timing and easing" and "Motion in practice" (https://learn.microsoft.com/en-us/windows/apps/design/motion/timing-and-easing), user approval 2026-11-12 via the lab; 16 px slide is our choice (Microsoft gives no popup offset); the later Settings and window-motion items reuse the `Win11*` tokens.
 - Done means (offline): build, `--selftest`, `tools/gate.ps1 -Offline -Task A14-search-open-fade-up`. Report `.coord/reports/A14-search-open-fade-up.md`: what changed, checks run, anything not verified. Do not launch the app.
+
+## Check
+Gate PASS (build, selftest, seam, tokens, format, scope). Builder fix after Codex: `HideResident` finishes the overlay close at once, since a fade never completes on a hiding window. Codex's "> 0.5 at t=0.1" test spec was wrong for (0,0,0,1) (value 0.446); test checks the real value.
+
+## Hand test
+2026-11-12, user: "Hand test passes".
