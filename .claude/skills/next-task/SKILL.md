@@ -20,9 +20,7 @@ Phase detail: `.claude/skills/next-task/phases.md`.
 Branch, commits ahead of dev and changed files are above; steps below need not re-run them.
 
 Phases 1-4 of `docs/loop.md` (Request, Findings, Plan, Approve), run in the master session, then the start of Build.
-Every reply opens with the status card (`docs/loop.md`, "Status card"). Keep STATUS's State cell current at every phase.
-Use the widgets in .claude/skills/next-task/phases.md (Widgets): question cards for scope questions and Approve, the task list for the
-phase's steps, the next-step box at the end of each reply.
+Every reply opens with the status card (`docs/loop.md`, "Status card"). Keep STATUS's State cell current. Widgets: `.claude/skills/next-task/phases.md`.
 
 ## 1. Request
 - The item is the user's request, the named item, or the first plan row not done (`.coord/STATUS.md`, .claude/skills/next-task/phases.md, 3. Plan). Stop and
@@ -47,17 +45,14 @@ Answer the card's Findings lines with evidence. Never skip this, whatever the ti
   and delta as inputs. With no scan, follow the existing scout/audit path below.
 - **Low:** your own scout: a few `rg` and targeted reads, at most about ten tool calls. If that is not enough, or the item
   is a bug whose cause you cannot prove, raise it to Medium and use the audit.
-- **Medium, High:** fill `.coord/templates/findings.md` into `.coord/tasks/<ID-slug>-audit.md`. Start a linked **Haiku**
-  sub-session titled `<ID> · audit · <slug>`, role `auditor` (start_session, user_asked, use_worktree false,
-  wake_when_done) whose brief is: in the master checkout (absolute paths only; read-only for product files), run
-  `CODEX_SANDBOX=read-only bash .coord/tools/codex-run.sh director <ID-slug>-audit .coord/tasks/<ID-slug>-audit.md` in the background, wait for
-  the exit notification (no polling), read only this invocation's output and copy the report named after `Report:` on
-  its final `DONE via <role>. Report: <path>` line (any role; the path ends before `  Log:`) to
-  `.coord/reports/<ID-slug>-audit.md`. If this invocation has no `DONE` line (stopped or failed), stop and end its turn
-  with the wrapper's last lines without copying anything; never use output or a report from an earlier run. Check the
-  copied report exists, commit nothing, and end its turn with the report path,
-  its `READY:` line and the run's last lines. Tell the user in one line: working folder,
-  brief file, log, report. Wait for the note; do not poll.
+- **Medium, High:** fill `.coord/templates/findings.md` into `.coord/tasks/<ID-slug>-audit.md` and start a linked **Haiku**
+  sub-session `<ID> · audit · <slug>`, role `auditor` (start_session, user_asked, use_worktree false, wake_when_done). Its
+  brief: in the master checkout (absolute paths, product files read-only) run
+  `CODEX_SANDBOX=read-only bash .coord/tools/codex-run.sh director <ID-slug>-audit .coord/tasks/<ID-slug>-audit.md` in the
+  background, wait for the exit notification, copy the report named on the final `DONE via <role>. Report: <path>` line to
+  `.coord/reports/<ID-slug>-audit.md`, and end with the path and its `READY:` line. No `DONE` line (stopped or failed):
+  stop and report the wrapper's last lines; never reuse an earlier run's output. Tell the user in one line: folder, brief,
+  log, report. Wait for the note; do not poll.
 - Stop and ask the user, with the card, when: dev already does what was asked; a bug did not reproduce (`READY: no`); the
   findings show the request means something else.
 - STATUS: `findings`.
@@ -81,15 +76,15 @@ FAIL: stop and tell the user the reason. PASS: the script created the branch and
 STATUS: `approved`.
 
 ## 5. Start Build
-Start the Build sub-session titled `<ID> · build · <slug>` (linked, **Sonnet medium**, use_worktree false; names, roles
-and the other step sessions: `docs/loop.md`, .claude/skills/merge-task/branches.md) with a brief that says:
-- your role is `builder`; show it on the status card's first line; rename yourself `<ID> · review · <slug>` (role
-  `reviewer`) when Check starts and `<ID> · test · <slug>` (role `tester`) at the hand test;
+Start the Build sub-session `<ID> · build · <slug>` (linked, **Sonnet medium**, use_worktree false; names and roles:
+`docs/loop.md`) with a brief that says:
+- your role is `builder`; show it on the status card's first line; rename yourself `<ID> · review · <slug>` when Check
+  starts and `<ID> · test · <slug>` at the hand test;
 - work only in `.claude/worktrees/<prefix>/<ID-slug>` with absolute paths; read the card first;
-- launch `bash .coord/tools/codex-run.sh director <ID-slug> .coord/tasks/<ID-slug>.md` there, then run
-  `/review-task <ID-slug>` when it exits, relaunch rework itself, commit each round on `<prefix>/<ID-slug>` and push;
-- open every reply with the status card; ask the user, with the card, anything the bounds check marks "ask the user";
+- launch `bash .coord/tools/codex-run.sh director <ID-slug> .coord/tasks/<ID-slug>.md` there, run `/review-task <ID-slug>`
+  when it exits, relaunch rework itself, commit each round on the item branch; you start no other chat;
+- open every reply with the status card; ask the user, with the card, whatever the bounds check marks "ask the user";
 - never touch dev or STATUS; never mint IDs;
-- only after Check accepts, run `tools/dev.ps1` from that worktree, verify the dev badge, EXE, DATA and app log paths,
-  then give the user the Plan's UI checks, record their result under `## Hand test`, and report back here.
+- after Check accepts: run `tools/dev.ps1` from the worktree, verify the dev badge, EXE, DATA and log paths, give the user
+  the Plan's UI checks, record their result under `## Hand test`, report back.
 STATUS: `building`.

@@ -18,82 +18,73 @@ Phase detail: `.claude/skills/review-task/phases.md`.
 !`git status --short`
 !`git grep -h -E "^(Tier|Branch):" -- ".coord/tasks/$ARGUMENTS.md"`
 
-Branch, commits ahead of dev and changed files are above; steps below need not re-run them. A missing card stops this skill.
+Branch, commits ahead of dev and changed files are above. A missing card stops this skill.
 
-Phase 6 (Check) of `docs/loop.md`, then the hand-over to Hand test. Every reply opens with the status card, with your
-role (`reviewer`, then `tester` at the hand-over) on its first line. Keep Claude
-reading small: report sections and verdict lines, not whole diffs. Never fix product code here; rework goes back to Codex.
+Phase 6 (Check) of `docs/loop.md`, then the hand-over. Every reply opens with the status card, role `reviewer` (then
+`tester` at the hand-over). Read report sections and verdict lines, not whole diffs. Never fix product code here; rework goes
+back to Codex.
 
 ## 1. Read the card
-From `.coord/tasks/<ID-slug>.md`: `Tier:`, `## Request`, `## Plan` (After, Must not change, Gates, Test plan), `## Approve`
-(`## Go` on era-one cards). Missing Plan or Approve: stop and tell the master the item skipped phases. Missing tier: treat as Medium and say so.
-`<round>` is the round just finished: `<ID-slug>` first, `<ID-slug>-rN` after a rework. Check that
-`.coord/reports/<round>.md` has the "Change list", "Behavior changes" and "Plan deviations" sections; if not, that is a rework.
+From `.coord/tasks/<ID-slug>.md`: `Tier:`, `## Request`, `## Plan` (After, Must not change, Gates, Test plan), `## Approve`.
+Missing Plan or Approve: stop, tell the master the item skipped phases. Missing tier: treat as Medium, say so.
+`<round>` is the round just finished: `<ID-slug>`, or `<ID-slug>-rN` after a rework. `.coord/reports/<round>.md` needs
+"Change list", "Behavior changes" and "Plan deviations"; if not, that is a rework.
 
 ## 2. Gate (always)
-If `dev` is not an ancestor of HEAD, run `pwsh -NoProfile -File tools/catch-up.ps1 -Task <ID-slug>` (it rebases the item branch onto dev; no push, no force-push), then run the gate. CONFLICT: stop,
-leave the rebase open, and tell the master (conflict routes: step 4a).
+If `dev` is not an ancestor of HEAD, run `pwsh -NoProfile -File tools/catch-up.ps1 -Task <ID-slug>` (rebase only; no push,
+no force-push), then the gate. CONFLICT: stop, leave the rebase open, tell the master (step 4a).
 
-`pwsh -NoProfile -File tools/gate.ps1 -Task <round>` from the worktree. It writes `.coord/reports/<round>.gate.md` (not
-committed) and exits non-zero on failure. Read only its Summary.
-- Fail: triage it (step 4a) before anything is relaunched.
-- Warnings (scope, size): carry them into step 4.
+`pwsh -NoProfile -File tools/gate.ps1 -Task <round>` from the worktree writes `.coord/reports/<round>.gate.md` (not
+committed); read only its Summary. Fail: triage (4a) before relaunching anything. Warnings (scope, size): carry to step 4.
 
 ## 3. The card's other gates
 Run every gate the Plan lists (at least the tier's defaults):
 - **Codex review** (Medium, High): fill `.coord/templates/review.md` into `.coord/tasks/<round>-review.md`, launch
   `bash .coord/tools/codex-run.sh reviewer <round>-review .coord/tasks/<round>-review.md` in the background, tell the user
   in one line (folder, brief, log, report `.coord/reports/<round>.review.md`), wait for the exit notification.
-- **Design review** (High): after the Codex review exists, spawn the `design-reviewer` agent (Agent tool,
-  `subagent_type: design-reviewer`) with "Design review of <ID-slug>, latest round <round>."
-- **Contracts / reproduction test**: confirm the named rows and checks exist in the diff and pass in the gate's selftest.
+- **Design review** (High): after the Codex review exists, spawn the `design-reviewer` agent with "Design review of
+  <ID-slug>, latest round <round>."
+- **Contracts / reproduction test**: confirm the named rows and checks are in the diff and pass in the gate's selftest.
 
 ## 4. Bounds check and verdict
-For a large diff the read-only comparison below may run in a forked pass (Agent tool, `subagent_type: design-reviewer`, until the
-L3 reviewer agent replaces it). It does not see this chat: give it the card path, the round, the report path and ask for one
-line per difference. You still write `## Check` and ask the user.
-Compare Request, Plan (and Approve) with what was done: the report's Change list, Behavior changes, Out-of-scope files, Plan
-deviations, and `git diff --stat dev...HEAD`. Write `## Check` on the card:
+Compare Request, Plan and Approve with what was done (the report's Change list, Behavior changes, Out-of-scope files, Plan
+deviations; `git diff --stat dev...HEAD`). For a large diff a forked `design-reviewer` pass may do the comparison: give it
+the card path, round and report path, ask for one line per difference. You still write `## Check` and ask the user.
+`## Check` holds:
 - Gate and review result lines.
 - One line per difference: **within plan**, **justified** (why the user need not decide), or **ask the user**.
-- Comments and formatting in the changed files follow `docs/coding.md` (on touch); a gap is a `code` rework line.
-- "Noticed": side bugs or follow-ups, as proposals only. Tell the master each one in one line now, so it becomes an
-  `idea:` row in STATUS at once (`docs/loop.md`, "Proposals go into STATUS at once").
-Then decide:
-- Any review `rework`, a blocker or major finding, a missing Behavior changes entry, or a Plan's "Must not change" broken:
-  triage it (4a). Two rework rounds (`-r2`, `-r3`) run without asking; a fourth round (`-r4`) needs the user's go.
-- Any "ask the user" line, or a review `ask-user`: ask the user that one question with the card; STATUS `ask-user`.
-  A scope change they give becomes a round brief with their words under "Why this round".
-- Otherwise accept. Commit the card and reports on the branch (`<ID-slug>: check`). STATUS `accepted`.
+- Comments and formatting follow `docs/coding.md` (on touch); a gap is a `code` rework line.
+- "Noticed": side bugs and follow-ups as proposals; tell the master each in one line now (`docs/loop.md`, "Proposals go
+  into STATUS at once").
+Then:
+- Review `rework`, a blocker or major finding, a missing Behavior changes entry, or a broken "Must not change": triage (4a).
+  Rounds `-r2` and `-r3` run without asking; `-r4` needs the user's go.
+- Any "ask the user" line or review `ask-user`: ask that one question with the card; STATUS `ask-user`. A scope change
+  becomes a round brief quoting their words under "Why this round".
+- Otherwise accept: commit card and reports (`<ID-slug>: check`); STATUS `accepted`.
 
 ## 4a. Triage (every failure, no extra agent)
-You already hold the context, so triage here instead of spawning anyone. Name one cause from the failing lines or
-findings, and route by it (.claude/skills/review-task/phases.md, Triage, lessons, scores):
+Name one cause and route by it (`.claude/skills/review-task/phases.md`, Triage, lessons, scores):
 | Cause | Route |
 |---|---|
-| `code`: the build does not do what the Plan says | `<ID-slug>-rN` round brief from `.coord/templates/round.md` with exactly the failing lines or proven findings; relaunch Codex; run this skill again when it exits |
-| `test`: a selftest, contract or probe is wrong, not the product | round brief limited to the test files; say so under "Why this round" |
-| `plan`: Findings or Plan were wrong (wrong cause, missed caller, impossible After) | stop; write the corrected plan as the round brief, ask the user to approve it, and tell the master in one line |
-| `env`: tooling, build cache, flaky run, sandbox | re-run the gate once; still failing: one-line gate fix if it is the manager's to make, else tell the master |
-| `conflict`: a catch-up stopped on conflicts | resolve on the branch in the item's session, keeping both sides as the two plans intend; `git add`, `git rebase --continue` and re-run the gate. If the other item changed something this item's Plan relies on (a semantic clash), abort the rebase (`git rebase --abort`) and route it as `plan` instead |
-| `judgment`: only the user can decide | ask the user that one question with the card; STATUS `ask-user` |
-Add one line per failure under "Misses" in the card's `## Check`: found at, cause, caught by, which check should have
-caught it earlier, a one-line lesson. The master copies these into `.coord/lessons.md` at Merge.
+| `code`: build misses the Plan | `<ID-slug>-rN` brief from `.coord/templates/round.md` with exactly the failing lines or proven findings; relaunch Codex; run this skill again on exit |
+| `test`: a selftest, contract or probe is wrong | round brief limited to the test files; say so under "Why this round" |
+| `plan`: Findings or Plan were wrong | stop; write the corrected plan as the round brief, ask the user to approve it, tell the master |
+| `env`: tooling, cache, flaky run, sandbox | re-run the gate once; still failing: one-line gate fix if it is the manager's, else tell the master |
+| `conflict`: catch-up stopped on conflicts | resolve on the branch keeping both sides, `git add`, `git rebase --continue`, re-run the gate; a semantic clash: `git rebase --abort` and route as `plan` |
+| `judgment`: only the user can decide | ask that one question with the card; STATUS `ask-user` |
+Add one "Misses" line per failure in `## Check` (found at, cause, caught by, should have caught, lesson); the master copies
+them to `.coord/lessons.md` at Merge.
 
 ## 5. Hand over
-A catch-up after acceptance that prints `RETEST: yes` repeats the hand test before Merge; `RETEST: no` keeps the earlier
-result.
-
-For an accepted item with UI checks: run `tools/dev.ps1` from the worktree immediately before the hand checks. Verify the
-printed EXE and DATA paths and the app log under that DATA before reporting ready; if any fails, report that and do not
-claim the build is ready. The on-screen dev badge is the user's first hand check while Computer Use is off: give them
-the badge text they should see. Never launch during review or rework. Give the user the Plan's UI checks plus the
-report's new ones. Record their result verbatim under `## Hand test`, commit it, and tell the master. A failed hand check
-is triaged (4a) and gets a "Misses" line. Not visible: say no hand test is needed. Merging is the master's `/merge-task`.
+A catch-up after acceptance printing `RETEST: yes` repeats the hand test before Merge; `RETEST: no` keeps the result.
+With UI checks: run `tools/dev.ps1` from the worktree just before the hand checks, verify the printed EXE and DATA paths
+and the app log, and report not-ready if any fails. Give the user the dev badge text to expect, the Plan's UI checks and the
+report's new ones; record their result verbatim under `## Hand test`, commit it, tell the master. A failed check is
+triaged (4a) with a "Misses" line. Not visible: say no hand test is needed. Never launch during review or rework.
 
 ## 6. Commit review (before suggesting the merge)
-After the hand test passes (or at once for a not-visible item), tidy the branch the way `/merge-task` step 0 describes:
-list `git log --oneline dev..HEAD`, fold tiny and back-and-forth commits (a quick fix, a few lines changed after some
-back and forth) into the commit they belong to, give every commit a message that says what changed, remove lab and
-debug code, and keep each commit buildable. No fixed count. Then `tools/catch-up.ps1 -Task <ID-slug>`, re-run the
-gate at the tip, and tell the master the branch is ready to merge. Record the tidy-up as one line under `## Check`.
+After the hand test passes (at once if not visible), tidy the branch as `/merge-task` step 0 says: fold tiny and
+back-and-forth commits, make every message say what changed, drop lab and debug code, keep each commit buildable. Then
+`tools/catch-up.ps1 -Task <ID-slug>`, re-run the gate at the tip, tell the master it is ready to merge, and record the
+tidy-up as one line under `## Check`.
