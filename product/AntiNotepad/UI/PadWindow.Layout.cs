@@ -20,6 +20,15 @@ namespace AntiNotepad.UI;
 internal sealed partial class PadWindow
 {
     private readonly Border _tint = new() { IsHitTestVisible = false };
+    private readonly Border _pinRing = new()
+    {
+        IsHitTestVisible = false,
+        Opacity = 0,
+        BorderThickness = new Thickness(ChromeTokens.PinRingThickness),
+        CornerRadius = new CornerRadius(Shape.Card),
+    };
+    private Anim.Handle? _pinRingFade;
+    private bool _pinRingInitialized;
     private readonly LayoutTransformControl _scaler = new();
     private readonly Grid _content = new() { RowDefinitions = new RowDefinitions($"{ChromeTokens.DockedRowHeight},*") };
     private readonly Grid _top = new() { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto") };
@@ -152,6 +161,9 @@ internal sealed partial class PadWindow
         _overlayDragBand = AddOverlayDragBand(root);
         InitializeTopBlurVisuals();
         AddChromeLayers(root, _topLayer, _bottomLayer, _toast, _pill, _floatPager);
+        root.Children.Add(_pinRing);
+        // The pager can be reparented later; the ring must remain above every chrome layer.
+        _pinRing.ZIndex = int.MaxValue;
         _topLayer.RenderTransform = new TranslateTransform();
         _floatPager.PlacementTarget = root;
         _bottomLayer.RenderTransform = new TranslateTransform();
@@ -166,6 +178,24 @@ internal sealed partial class PadWindow
         _chromeSleep.Tick += (_, _) => { _chromeSleep.Stop(); SleepChrome(soon: false); };
         _toastTimer.Tick += (_, _) => { _toastTimer.Stop(); HideToast(); };
         InitializeTopBlur();
+    }
+
+    internal static double PinRingOpacity(bool pinned) => pinned ? Paint.FocusBorder : 0;
+
+    /// <summary>Recolors the ring and replaces any pending fade from its current opacity.</summary>
+    private void ApplyPinRing(bool animate)
+    {
+        _pinRingFade?.Cancel();
+        _pinRingFade = null;
+        _pinRing.BorderBrush = new SolidColorBrush(_palette.Accent);
+        var from = _pinRing.Opacity;
+        var to = PinRingOpacity(Settings.Pinned);
+        if (!animate || !_pinRingInitialized || from == to)
+            _pinRing.Opacity = to;
+        else
+            _pinRingFade = Anim.Run(_pinRing, MotionTokens.PinRingFade,
+                t => _pinRing.Opacity = from + (to - from) * t);
+        _pinRingInitialized = true;
     }
 
     private PadView NewPane()

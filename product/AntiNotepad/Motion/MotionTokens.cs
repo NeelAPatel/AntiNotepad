@@ -11,6 +11,9 @@ internal static class MotionTokens
     /// <summary>Chrome and feedback transitions.</summary>
     public const double BarsReveal = 160, PillFade = 160, ChromeShift = 200, Nudge = 200;
 
+    /// <summary>Pinned window ring fade in either direction.</summary>
+    public const double PinRingFade = 250;
+
     /// <summary>Toast transitions.</summary>
     public const double ToastIn = 120, ToastOut = 160;
 

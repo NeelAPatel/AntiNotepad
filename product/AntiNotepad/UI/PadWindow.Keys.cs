@@ -59,7 +59,8 @@ internal sealed partial class PadWindow
             return;
         }
         if (!ctrl && !alt && e.Key == Key.F1) { e.Handled = true; OpenHelp(); return; }
-        if (e.Key is not (Key.LeftShift or Key.RightShift or Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt)) SleepChrome(soon: false);
+        if (!(ctrl && !shift && e.Key == Key.T)
+            && e.Key is not (Key.LeftShift or Key.RightShift or Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt)) SleepChrome(soon: false);
         if (alt && !ctrl)
         {
             switch (e.Key)
@@ -272,7 +273,11 @@ internal sealed partial class PadWindow
     internal void HandleSettingsChanged(SettingsChange change)
     {
         var flags = change.Flags;
-        if ((flags & (SettingsChangeFlags.Appearance | SettingsChangeFlags.WindowPolicy)) != 0) Topmost = Settings.Pinned;
+        if ((flags & (SettingsChangeFlags.Appearance | SettingsChangeFlags.WindowPolicy)) != 0)
+        {
+            Topmost = Settings.Pinned;
+            if ((flags & SettingsChangeFlags.Appearance) == 0) ApplyPinRing(animate: true);
+        }
         if ((flags & (SettingsChangeFlags.Appearance | SettingsChangeFlags.Taskbar)) != 0)
         {
             if (Settings.Taskbar != "never") EnsureTaskbarProxy();
@@ -281,7 +286,8 @@ internal sealed partial class PadWindow
         if ((flags & SettingsChangeFlags.Appearance) != 0) ApplyAppearance();
         if ((flags & SettingsChangeFlags.Persistence) != 0)
         {
-            if ((flags & SettingsChangeFlags.Appearance) != 0) Edited();
+            if ((flags & SettingsChangeFlags.Appearance) != 0)
+                Edited(sleepChrome: !change.Properties.All(name => name is nameof(Settings.Pinned) or nameof(Settings.DimWhenPinned)));
             else ScheduleSave();
         }
     }
