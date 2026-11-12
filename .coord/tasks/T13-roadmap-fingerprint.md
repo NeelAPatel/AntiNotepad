@@ -31,3 +31,8 @@ User, 2026-11-12: "Merge T12, then start T13".
 
 ## Hand test
 None, no UI change (tooling only).
+
+## Check
+- Plan: add the two paths to the foreach list. Done: added both paths and variables, nothing else.
+- Plan: test on a spare port, revert edits, stop server. Done: port 47931, both files change /data within 5 s, reverted, stopped.
+- Plan: gate offline. Done: GATE PASS.
