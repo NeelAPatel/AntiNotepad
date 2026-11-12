@@ -1,6 +1,7 @@
 // Routes pad commands, overlays, and settings changes from keyboard and chrome actions.
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Media;
 using Avalonia.Threading;
 using AntiNotepad;
 using AntiNotepad.Model;
@@ -12,6 +13,7 @@ namespace AntiNotepad.UI;
 internal sealed partial class PadWindow
 {
     private Control? _overlay;
+    private Anim.Handle? _overlayAnimation;
     private int _galleryShot;
     private bool _overlayOpen => _overlay is not null;
 
@@ -119,6 +121,9 @@ internal sealed partial class PadWindow
 
     private void ShowOverlay(Control overlay)
     {
+        _overlayAnimation?.Cancel();
+        _overlayHost.RenderTransform = null;
+        _overlayHost.IsHitTestVisible = true;
         _left.Flush(); _right.Flush();
         _overlay = overlay;
         _overlayHost.Children.Clear();
@@ -128,22 +133,51 @@ internal sealed partial class PadWindow
         _panes.Opacity = 0.0;
         _pill.IsVisible = false;
         WakeChrome(hold: true);
-        Anim.Run(_overlayHost, MotionTokens.OverlayIn, t => _overlayHost.Opacity = t);
+        var shift = new TranslateTransform();
+        _overlayHost.RenderTransform = shift;
+        _overlayAnimation = Anim.Run(_overlayHost, MotionTokens.OverlayIn, t =>
+        {
+            _overlayHost.Opacity = t;
+            shift.Y = MotionTokens.OverlayRise * (1 - t);
+        }, easing: MotionTokens.Win11Enter);
     }
 
     internal bool IsOverlay(Control control) => ReferenceEquals(_overlay, control);
 
     internal void CloseOverlay()
     {
-        if (_overlay is null) return;
+        _overlayAnimation?.Cancel();
+        if (_overlay is null)
+        {
+            FinishOverlayClose();
+            return;
+        }
         _overlay = null;
-        _overlayHost.Children.Clear();
-        _overlayHost.IsVisible = false;
+        _overlayHost.IsHitTestVisible = false;
         UpdateOverlayLayout();
         _panes.Opacity = 1;
         _pill.IsVisible = true;
         UpdateChrome();
         FocusActive();
+        var startOpacity = _overlayHost.Opacity;
+        var startY = (_overlayHost.RenderTransform as TranslateTransform)?.Y ?? 0;
+        var shift = new TranslateTransform(0, startY);
+        _overlayHost.RenderTransform = shift;
+        _overlayAnimation = Anim.Run(_overlayHost, MotionTokens.OverlayOut, t =>
+        {
+            _overlayHost.Opacity = startOpacity * (1 - t);
+            shift.Y = startY + (MotionTokens.OverlayRise - startY) * t;
+        }, FinishOverlayClose, easing: MotionTokens.Win11Exit);
+    }
+
+    /// <summary>Removes a closed overlay and restores the host for its next use; also called at once when the pad hides.</summary>
+    private void FinishOverlayClose()
+    {
+        _overlayHost.Children.Clear();
+        _overlayHost.IsVisible = false;
+        _overlayHost.RenderTransform = null;
+        _overlayHost.Opacity = 1;
+        UpdateOverlayLayout();
     }
 
     private void ReopenOverlay(Control current)
