@@ -240,7 +240,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         if (SessionEnd.IsEnding) return;
         _trace.TracePadAction(cause, "hide-begin", IsVisible);
         CancelQueuedHideOnBlur();
-        CloseOverlay();
+        CloseOverlay(); FinishOverlayClose();   // the window hides now, so a fade would never finish
         QueueSave();
         _hiddenAt = DateTime.Now;
         Hide();

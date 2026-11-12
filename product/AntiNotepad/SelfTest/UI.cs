@@ -14,6 +14,19 @@ namespace AntiNotepad;
 
 internal static partial class SelfTest
 {
+    /// <summary>Checks the Windows motion curves at endpoints and throughout their range.</summary>
+    private static bool MotionCurveChecks(out string report)
+    {
+        var enter = MotionTokens.Win11Enter;
+        var exit = MotionTokens.Win11Exit;
+        bool Monotonic(Func<double, double> curve) => Enumerable.Range(1, 1000)
+            .All(i => curve(i / 1000.0) >= curve((i - 1) / 1000.0));
+        var passed = enter(0) == 0 && enter(1) == 1 && exit(0) == 0 && exit(1) == 1
+            && Monotonic(enter) && Monotonic(exit) && Math.Abs(enter(0.1) - 0.4463304) < 0.00001 && exit(0.1) < 0.1;
+        report = passed ? "endpoints, monotonicity and start speeds" : "motion curve check failed";
+        return passed;
+    }
+
     /// <summary>Checks the real ring's state, palette, geometry, and input ownership without showing a window.</summary>
     private static bool PinRingChecks(out string report)
     {
@@ -25,6 +38,7 @@ internal static partial class SelfTest
         }
         var failures = new List<string>();
         void Expect(bool ok, string name) { if (!ok) failures.Add(name); }
+        Expect(MotionCurveChecks(out _), "Windows motion curves");
         var folder = Path.Combine(Path.GetTempPath(), "AntiNotepad-ring-" + Guid.NewGuid().ToString("N"));
         using var log = new RuntimeLog();
         var reduced = Anim.Reduced;

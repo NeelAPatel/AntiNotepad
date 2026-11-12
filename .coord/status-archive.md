@@ -335,3 +335,4 @@ Done and dropped Plan rows moved out of STATUS by Loop10b-pending-list (2026-11-
 | T12-settings-drift-readers | `catch-up`, `merge-preflight`, `gate` ignore `.claude/settings.json` drift like `approve`. Card: `.coord/tasks/T12-settings-drift-readers.md` | Low | Small | done |
 | T13-roadmap-fingerprint | Roadmap live reload also watches `.coord/pending.md` and `.coord/status-archive.md`. Card: `.coord/tasks/T13-roadmap-fingerprint.md` | Low | Small | done |
 | A13-search-toggle-off | Second click on the Search button closes search (`ToggleSearch()`); Ctrl+F and menu still open only. Card: `.coord/tasks/A13-search-toggle-off.md` | Low | Small | done |
+| A14-search-open-fade-up | Overlays (Search, Help, Trash search) fade and slide in and out with Windows 11 motion: open 167 ms, close 83 ms, 16 px; values in `docs/decisions.md`. Card: `.coord/tasks/A14-search-open-fade-up.md` | Low | Small | done |
