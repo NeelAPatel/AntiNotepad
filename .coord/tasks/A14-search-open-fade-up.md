@@ -28,9 +28,20 @@ Branch: `feat/A14-search-open-fade-up` in `.claude/worktrees/feat/A14-search-ope
 - `product/AntiNotepad/UI/PadWindow.Keys.cs`
 - `product/AntiNotepad/SelfTest/UI.cs`
 - `tools/playground/a14-search-open-lab.html`
+- `docs/decisions.md`
 
 ## Contracts
 - none (motion polish)
 
 ## Approve
 2026-11-12, user: "yes use microsoft's open and close. Log it in our documents as well along with source being microsoft learn". Lab v2 values: open 167 ms (0,0,0,1), close 83 ms (1,0,1,1), 16 px slide. Scope: all overlays (my default; director may change). Also log the values in `docs/decisions.md`.
+
+## For Codex
+Role: terra, a few files with timing and interruption to reason about. The branch is checked out: never switch, merge or commit. Read `AGENTS.md`, `.claude/rules/coding.md`, then the Files; re-read before editing. Build exactly the Plan's "After"; scope is all overlays (Search, Help, Trash); no drive-by changes.
+- Tokens in `Motion/MotionTokens.cs`: `Win11Faster 83`, `Win11Fast 167`, `Win11Normal 250` (ms), `OverlayRise 16` (px); `OverlayIn` = `Win11Fast`, new `OverlayOut` = `Win11Faster`. Curves: add `Anim.CubicBezier(x1,y1,x2,y2)` returning a `Func<double,double>` easing (solve x(t) by Newton/bisection); `Win11Enter` = (0,0,0,1), `Win11Exit` = (1,0,1,1). Comments name the source: Microsoft Learn "Timing and easing" (no item IDs in code).
+- `Anim.Run` gets an optional easing parameter; default stays the current cubic ease-out so other animations are unchanged.
+- `ShowOverlay`: cancel any running close, reset the host transform, then fade 0 to 1 and slide `OverlayRise` px up to rest (Win11Enter). Reduced motion: no slide (Anim already skips decorative runs).
+- `CloseOverlay`: all state changes stay immediate (`_overlay = null`, panes back, pill, chrome, focus) so A13's `ToggleSearch` and Esc behave as now. Only the overlay host's removal is deferred: it fades to 0 and slides down `OverlayRise` px over `OverlayOut` (Win11Exit), host not hit-testable meanwhile, then clears children and hides. A `ShowOverlay` or second `CloseOverlay` during the fade must cancel and finish teardown cleanly (no stale overlay, no stuck transform/opacity). Check what `UpdateOverlayLayout()` does and keep layout correct during the fade.
+- Selftest in `SelfTest/UI.cs`: `CubicBezier` endpoints (0 -> 0, 1 -> 1), monotonic for both curves, (0,0,0,1) fast start (value at t=0.1 above 0.5), (1,0,1,1) slow start (t=0.1 below 0.1).
+- `docs/decisions.md`: add a "Motion reference" entry: values above, source Microsoft Learn "Timing and easing" and "Motion in practice" (https://learn.microsoft.com/en-us/windows/apps/design/motion/timing-and-easing), user approval 2026-11-12 via the lab; 16 px slide is our choice (Microsoft gives no popup offset); the later Settings and window-motion items reuse the `Win11*` tokens.
+- Done means (offline): build, `--selftest`, `tools/gate.ps1 -Offline -Task A14-search-open-fade-up`. Report `.coord/reports/A14-search-open-fade-up.md`: what changed, checks run, anything not verified. Do not launch the app.

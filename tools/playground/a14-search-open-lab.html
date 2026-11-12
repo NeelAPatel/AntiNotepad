@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>A14 search open and close lab</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#1b1c1f;--fg:#e6e6e6;--mut:#9a9a9a;--card:#26282c;--line:#3a3d42}
+body{margin:0;font:14px/1.4 "Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+header{padding:14px 20px;border-bottom:1px solid var(--line)}h1{margin:0;font-size:17px}
+header p{margin:4px 0 0;color:var(--mut);max-width:860px}
+.bar{display:flex;flex-wrap:wrap;gap:18px;padding:12px 20px;background:var(--card);border-bottom:1px solid var(--line)}
+.grp b{display:block;font-size:11px;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
+button{font:inherit;color:var(--fg);background:transparent;border:1px solid var(--line);padding:4px 10px;cursor:pointer;margin-right:-1px}
+button.on,button.go{background:#0090ff;border-color:#0090ff;color:#fff}
+main{display:flex;flex-wrap:wrap;gap:28px;padding:24px 20px}
+.stage{padding:30px;border-radius:8px;background:linear-gradient(135deg,#3b6ea5,#8a5ea8 60%,#c9794f)}
+.win{position:relative;width:340px;height:300px;border-radius:8px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.08);background:#1c1c1ce6;color:#ddd;font:13px/1.5 Consolas,monospace}
+.top{height:36px;display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:0 10px}
+.top button{font:12px "Segoe UI";color:#ddd;background:#ffffff18;border:0;border-radius:4px;padding:3px 9px}
+.txt{padding:6px 20px}
+.ov{position:absolute;left:0;right:0;top:36px;bottom:0;background:#1c1c1c;padding:10px 14px;opacity:0;pointer-events:none}
+.ov .q{border:1px solid #555;border-radius:6px;padding:5px 8px;margin-bottom:8px;color:#aaa}
+.ov .r{padding:5px 8px;border-radius:4px;background:#ffffff0d;margin-bottom:5px}
+.cap{margin-top:8px;color:var(--mut);font-size:12px;max-width:340px}
+</style></head><body>
+<header><h1>A14-search-open-fade-up: search open and close</h1>
+<p>Click Search in a pad to open it; click again (or Esc key, or Close) to close it. Left = today (opens with a 120 ms fade, closes instantly). Right = the proposal. Curves and durations are from Microsoft Learn "Timing and easing" (Fluent motion): enter = Fast Out, Slow In cubic-bezier(0,0,0,1); exit = Slow Out, Fast In cubic-bezier(1,0,1,1); durations 83 / 167 / 250 ms. Microsoft's own examples make exits shorter than entrances and slide up on the way in.</p></header>
+<div class="bar">
+<div class="grp"><b>Open duration</b><span id="din"></span></div>
+<div class="grp"><b>Close duration</b><span id="dout"></span></div>
+<div class="grp"><b>Slide (px)</b><span id="off"></span></div>
+<div class="grp"><b>&nbsp;</b><button class="go" onclick="demo()">Play open, then close</button></div>
+</div>
+<main>
+<div><div class="stage"><div class="win" id="a"><div class="top"><button onclick="tog('a')">Search</button></div><div class="txt">Meeting notes<br>- call back Sam<br>- 2 + 2 = 4</div>
+<div class="ov"><div class="q">Search notes</div><div class="r">Meeting notes</div><div class="r">Groceries</div><div class="r">Ideas</div></div></div></div><div class="cap">Today: open = fade 120 ms (cubic ease-out), no movement. Close = instant.</div></div>
+<div><div class="stage"><div class="win" id="b"><div class="top"><button onclick="tog('b')">Search</button></div><div class="txt">Meeting notes<br>- call back Sam<br>- 2 + 2 = 4</div>
+<div class="ov"><div class="q">Search notes</div><div class="r">Meeting notes</div><div class="r">Groceries</div><div class="r">Ideas</div></div></div></div><div class="cap" id="capb"></div></div>
+</main>
+<script>
+const ENTER='0,0,0,1',EXIT='1,0,1,1';
+const S={din:167,dout:83,off:16},open={a:false,b:false};
+function chips(id,key,vals,fmt){const el=document.getElementById(id);el.innerHTML='';vals.forEach(v=>{const b=document.createElement('button');b.textContent=fmt(v);b.className=S[key]==v?'on':'';b.onclick=()=>{S[key]=v;draw();demo('b')};el.appendChild(b)})}
+function draw(){chips('din','din',[120,167,250],v=>v+' ms');chips('dout','dout',[0,83,167],v=>v?v+' ms':'instant');chips('off','off',[0,8,16,24],v=>v+' px');
+document.getElementById('capb').textContent=`Proposal: open = fade + slide up ${S.off} px, ${S.din} ms, (0,0,0,1). Close = fade + slide down ${S.off} px, ${S.dout?S.dout+' ms':'instant'}, (1,0,1,1).`}
+function anim(id,frames,dur,ease){const o=document.querySelector('#'+id+' .ov');o.getAnimations().forEach(a=>a.cancel());
+if(!dur){o.style.opacity=frames[1].opacity;return}o.animate(frames,{duration:dur,easing:`cubic-bezier(${ease})`,fill:'both'})}
+function tog(id){open[id]=!open[id];const up=`translateY(${S.off}px)`;
+if(id==='a'){open.a?anim('a',[{opacity:0},{opacity:1}],120,'0.33,1,0.68,1'):anim('a',[{opacity:1},{opacity:0}],0,'0,0,1,1')}
+else open.b?anim('b',[{opacity:0,transform:up},{opacity:1,transform:'none'}],S.din,ENTER):anim('b',[{opacity:1,transform:'none'},{opacity:0,transform:up}],S.dout,EXIT)}
+function demo(w){const ids=w?[w]:['a','b'];ids.forEach(id=>{open[id]=false;document.querySelector('#'+id+' .ov').getAnimations().forEach(a=>a.cancel());document.querySelector('#'+id+' .ov').style.opacity=0;tog(id);setTimeout(()=>tog(id),S.din+900)})}
+draw();demo();
+</script></body></html>
