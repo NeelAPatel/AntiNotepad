@@ -15,13 +15,7 @@ User, 2026-11-12: STATUS must be a high read/write stop, so keep it small.
 
 ## Findings
 - **Size:** after `Loop9d` STATUS is 54 KB; the Pending work table is 41 KB (133 rows, 14 over 600 characters). Other sections are small.
-- **Duplicates found (Loop Hub 3, 2026-11-12):**
-  - Row Scope text repeats the item card (142 cards in `.coord/tasks/`).
-  - "Now" repeats card and report text.
-  - Sessions and roles text is in `docs/loop.md`, `docs/loop-sessions.md`, `docs/playbook.md`, `docs/agents.md`, `AGENTS.md`, wiki Who-Does-What.
-  - File inventory is in `docs/loop-sessions.md`, `docs/loop.md` "Where the detail lives", wiki Where-Files-Live.
-  - Glossary is in `docs/glossary.md`, wiki Glossary and `docs/playbook.md`.
-  - Loop version is stated in `docs/loop.md` twice, `docs/decisions.md` and STATUS.
+- **Duplicates (Loop Hub 3, 2026-11-12):** row Scope repeats the card; "Now" repeats card and report; sessions/roles, file inventory, glossary and loop version each appear in several docs.
 - **Roadmap today:** `tools/roadmap-data.ps1` reads only STATUS "### Pending work", a 5-column table (Item, Scope, Tier, Effort, State). Other readers of STATUS: `approve`, `catch-up`, `merge-preflight`, `loop-card`, `session-where`, `status-line`, four skills, `builder.md`.
 - **Reuse:** `.coord/status-archive.md` (exists from Loop9d) holds finished rows. The item card is the single home for scope.
 
@@ -33,11 +27,9 @@ User, 2026-11-12: STATUS must be a high read/write stop, so keep it small.
 - **e-card-state:** the card header gets a `State:` line the roadmap can read for an item with a card (one source of truth).
 - **f-dedupe-docs:** one home each. Sessions and roles in `docs/loop-sessions.md`; the other docs link to it. One file inventory. Glossary only in `docs/glossary.md`. One "Loop version" line in `docs/loop.md`. Wiki is not touched (not loaded by chats).
 - **g-readers-checked:** every script and skill that reads STATUS still works (listed in Findings); `tools/loop-lint.ps1` budget WARN for the new `pending.md` is optional.
-- **Expected time:** about 2-3 hours of build with gates. Over an hour, so the cut line is **a-d** (roadmap, pending file, STATUS shape, move rules): they carry about 90% of the saving. Steps e-g can be a follow-up.
 - **Must not change:** product code, the installed copy, the Plan row format the roadmap parses, Level 4 hooks and agents.
 - **Test plan:** gate offline on every commit; `pwsh tools/roadmap-data.ps1` row count and per-state counts equal before and after; `tools/loop-card.ps1`, `approve.ps1 -WhatIf` style dry runs and `merge-preflight` run on a sample item; before and after sizes in the report.
 - **Lab-first:** the user previews the new STATUS (the real file, with the live rows) before the rest is built; step c waits for that nod.
-- **Overnight rules (if run unattended):** a permission prompt is never worked around; three failed tries per step then stop; no force-push.
 
 ## Files
 - `.coord/STATUS.md`
@@ -68,3 +60,14 @@ None (no product code).
 
 ## Approve
 User, 2026-11-12: "Approve Loop10" (on the plan above, after Loop9 merged; tier map approved earlier). Lab-first: build a-b, then stop with a preview of the new STATUS for the user before step c.
+
+## Check
+Bounds check (build chat, 2026-11-12): **within plan**. Request met: STATUS 56 KB to 2.8 KB, active rows only; pending, archive and cards hold the rest; roadmap reads all tiers (130 rows before and after, same per-state counts); no product code.
+- Plan a-g all done. Changed files match `## Files` plus reports (13 files, none outside).
+- Gate PASS (offline) after each commit a-g. loop-lint PASS; WARNs: loop.md, lessons.md budgets.
+- Deviations: Now stays bullets (roadmap reads bullets); f is small (Loop9 had deduped most).
+- Noticed: playbook.md repeats sessions text (follow-up); loop-card reads the main checkout STATUS; roadmap page does not yet draw card State.
+- Misses: None.
+
+## Hand test
+None: no UI, docs and tooling only.
