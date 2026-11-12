@@ -187,6 +187,7 @@ try {
     if ($mainBranch -ceq 'dev') { Write-Host 'Main checkout on dev: merge can run' }
     elseif ($mainBranch -ceq $branch) { Write-Host 'Main checkout on item branch (-NoWorktree): switch to dev first' }
     else { throw 'main checkout must be on dev or the item branch' }
+    Write-Host "NEXT: in the merge, move the $Task row from STATUS Pending work to the Finished rows table in .coord/status-archive.md (state done)"
     Write-Host 'MERGE-PREFLIGHT: PASS (ready)'
     exit 0
 } catch {
