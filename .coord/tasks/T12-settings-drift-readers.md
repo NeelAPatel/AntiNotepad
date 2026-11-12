@@ -32,3 +32,11 @@ None (no product code).
 
 ## Approve
 User, 2026-11-12: "go ahead and fix it, a heavy plan stage isn't needed for a small fix like this".
+
+## Check
+- Plan: change three regexes to allow settings.json -> done (catch-up, merge-preflight, gate).
+- Plan: update refusal text if STATUS-only -> done (catch-up refusal, preflight CHECK line).
+- Plan: test refuse on other dirty file, pass on settings/STATUS -> done (catch-up live, preflight by regex, gate run); see report.
+- Plan: gate offline -> GATE PASS.
+
+## Hand test: none, no UI
