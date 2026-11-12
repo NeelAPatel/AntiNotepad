@@ -48,6 +48,10 @@ internal sealed partial class PadWindow
         return true;
     }
 
+    /// <summary>Returns the notice for a stack edge or an implicit new note.</summary>
+    internal static string? EdgeNotice(int target, int count, bool leavingEmpty) =>
+        target < 0 ? "No older Notes" : target >= count ? leavingEmpty ? "Already at Latest" : "New Note Created" : null;
+
     internal void Navigate(int direction)
     {
         if (_active == _right) { CycleSplitSlot(direction); return; }
@@ -55,13 +59,12 @@ internal sealed partial class PadWindow
         _left.Flush();
         var leaving = Data.Stack[Data.Current];
         var target = Data.Current + direction;
-        var created = false;
-        if (target < 0) { Bump(-1); return; }
+        var notice = EdgeNotice(target, Data.Stack.Count, leaving.IsEmpty);
+        if (target < 0) { Bump(-1); Toast(notice!, brief: true); return; }
         if (target >= Data.Stack.Count)
         {
-            if (leaving.IsEmpty) { Bump(1); return; }
+            if (leaving.IsEmpty) { Bump(1); Toast(notice!, brief: true); return; }
             Data.Stack.Add(new Note());
-            created = true;
         }
         Data.Current = target;
         var arriving = Data.Stack[target];
@@ -69,7 +72,7 @@ internal sealed partial class PadWindow
         Data.Current = Data.Stack.IndexOf(arriving);
         BindPanes(direction);
         // Small confirmations for the two things that happen implicitly while swiping.
-        if (created) Toast("New note", brief: true);
+        if (notice is not null) Toast(notice, brief: true);
         else if (dropped) Toast("Empty note removed", brief: true);
         Edited();
     }

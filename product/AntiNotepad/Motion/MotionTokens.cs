@@ -20,9 +20,6 @@ internal static class MotionTokens
     /// <summary>Pinned window ring fade in either direction.</summary>
     public const double PinRingFade = 250;
 
-    /// <summary>Toast transitions.</summary>
-    public const double ToastIn = 120, ToastOut = 160;
-
     /// <summary>Editor and note transitions.</summary>
     public const double NoteArrive = 200, SwipeSpringBack = 200, CaretGlide = 80;
 
