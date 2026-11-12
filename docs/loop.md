@@ -58,7 +58,7 @@ One line by default: `**>> <ID-slug>** · ● <phase> · <what changed>`. The **
 - **Who builds:** every item is built by Codex in a builder chat, role by the job (`docs/agents.md`); a docs-only change of a few lines may be made by the builder itself, and says so in the report. Codex checks are offline only.
 - **Progress checks need evidence:** two samples about 30 s apart, never one timestamp.
 - **Rule overrides:** the chat names the rule once; on the user's go it proceeds and logs the override in the item's `.coord/lessons.md` row.
-- **Proposals go into STATUS at once:** every item or idea a chat names becomes an unnumbered `idea:` or `proposed` plan row when named.
+- **Proposals go into `.coord/pending.md` at once:** every item or idea a chat names becomes an unnumbered `idea:` or `proposed` plan row when named. Approve moves the row to STATUS; Merge moves it to `.coord/status-archive.md` (Finished rows).
 - **Merging:** only a director merges to dev or moves `main`; a sub-chat suggests the merge and merges only branches it created.
 - Loop rules change only when `.coord/lessons.md` shows the same miss twice or the user asks.
 - **Hot-file budgets:** STATUS 8 KB, this file 8 KB, `.coord/lessons.md` 3 KB, item cards 4 KB (`tools/loop-lint.ps1` warns). Finished history goes to `.coord/status-archive.md` and `.coord/lessons-archive.md`.

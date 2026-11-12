@@ -3,6 +3,7 @@
 Item card (`docs/loop.md`). Claude fills Request to Approve before any build; Codex reads the whole card, follows "For Codex", never edits it. Budget: 4 KB (logs go in reports).
 
 Tier: <Low | Medium | High> · <reason slug>
+State: <pending | approved | building | checking | hand test | done> (one source of truth for the roadmap; STATUS row mirrors it)
 Branch: `<feat|fix|refactor|docs|chore>/<ID-slug>` in `.claude/worktrees/<prefix>/<ID-slug>` (created at Approve)
 
 ## Request

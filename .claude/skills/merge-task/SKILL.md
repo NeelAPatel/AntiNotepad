@@ -40,7 +40,7 @@ and tagging happen only on the user's explicit go. Every reply opens with the st
    (`git merge --abort` leaves dev as it was).
 4. Re-gate on dev: `pwsh -NoProfile -File tools/gate.ps1 -Task <ID-slug>` (scope step is expected to warn on dev; build,
    selftest and seam must pass; the gate report is not committed). Fail: tell the user, `git merge --abort`, do not push.
-5. STATUS: the plan row's State cell `done`, "Now" updated (keep only the last 5 done items there; move older ones to `.coord/status-archive.md`), gate line, any of the card's "Noticed" follow-ups not
+5. STATUS: move the item's plan row from STATUS to the "Finished rows" table in `.coord/status-archive.md` (State `done`); remove its "Now" line (STATUS keeps active items only), gate line, any of the card's "Noticed" follow-ups not
    already in STATUS as unnumbered plan or Backlog rows. `.coord/lessons.md`: copy the card's "Misses" lines, add the item's Scores row (rework rounds,
    gate fails, Codex review proven findings, design review findings, hand-test fails). If a Misses cause and "should
    have caught" pair now appears twice without a rule change, add an unnumbered `idea:` plan row naming the rule or bot

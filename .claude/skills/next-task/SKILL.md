@@ -20,7 +20,7 @@ Phase detail: `.claude/skills/next-task/phases.md`.
 Branch, commits ahead of dev and changed files are above; steps below need not re-run them.
 
 Phases 1-4 of `docs/loop.md` (Request, Findings, Plan, Approve), run in the master session, then the start of Build.
-Every reply opens with the status card (`docs/loop.md`, "Status card"). Keep STATUS's State cell current. Widgets: `.claude/skills/next-task/phases.md`.
+Every reply opens with the status card (`docs/loop.md`, "Status card"). Keep the plan row's State cell current. At Approve the row moves from `.coord/pending.md` to STATUS Pending work. Widgets: `.claude/skills/next-task/phases.md`.
 
 ## 1. Request
 - The item is the user's request, the named item, or the first plan row not done (`.coord/STATUS.md`, .claude/skills/next-task/phases.md, 3. Plan). Stop and

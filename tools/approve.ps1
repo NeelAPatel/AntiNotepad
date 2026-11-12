@@ -99,6 +99,7 @@ try {
         Invoke-Git $destination @('commit', '-m', "${Task}: card") | Out-Host
     }
     $reason = if ($DryRun) { 'dry run' } else { 'card committed' }
+    Write-Host "NEXT: move the $Task row from .coord/pending.md to STATUS Pending work (state approved)"
     Write-Host "APPROVE: PASS ($reason)"
     exit 0
 } catch {
