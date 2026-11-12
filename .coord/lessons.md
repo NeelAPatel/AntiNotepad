@@ -92,3 +92,4 @@ earning its run.
 | 2026-11-08 | L7-lv4-playbook | Low | 0 | 0 | - | - | 0 | - |
 | 2026-11-09 | A9-pinned-accent-ring | Medium | 3 (r2 selftest hang, r3 pin must not fade chrome) | 1 | 0 | - | 1 (pin button faded toolbar; fixed in r3) | - |
 | 2026-11-12 | A10-hotkey-recorder | Medium | 4 (r2 Esc routing, r3 format, r4 no Windows key) | 1 | 0 | - | 1 (Windows key allowed; fixed in r4) | - |
+| 2026-11-12 | A12-version-rc3 | Low | 0 | 0 | - | - | 0 | - |
