@@ -379,7 +379,7 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | idea: release-checklist | A dev -> main release checklist that re-checks gate rules; doc only. Tag names were settled by loop v3 (era-0 C18 retired) (user, 2026-11-06: tidy) | Low | Small | needs you |
 | Release marker | dev -> main with a tag, on your go | - | - | planned |
 | **Performance** | | | | |
-| idea: settings-thread-count | Find why the Settings window runs about 90 threads; report, fix only if cheap (was A74) | Low | Small | needs you |
+| A11-settings-thread-count | Find why the Settings window runs about 90 threads; report, fix only if cheap (was A74); scope confirmed by user 2026-11-09 | Low | Small | approved |
 | idea: large-note-perf | Measure then reduce typing lag in a 6,000-line note; one change at a time (ideas in Backlog; era-0 A49 retired) (user, 2026-11-06: tidy) | Medium | Large | needs you |
 | **Features and polish (lab-first where visible)** | | | | |
 | idea: notes-folder-move-flow | Choosing and moving the notes folder is clear and safe; first step follows code-ownership's notes-path-dedupe | - | - | needs you |
@@ -392,13 +392,13 @@ A44b-interop-guards leftover hand checks (Explorer restart, tray right-click men
 | idea: recovered-folder-always-open | Recovered-notes folder always exists and its Open button always works (era-0 A51 retired) (user, 2026-11-06: tidy) | Low | Small | needs you |
 | idea: answers-toggle-clarity | Rename the "Answers" toggle to say what it does, and apply it live; lab-first (era-0 A48 retired) (user, 2026-11-06: tidy) | Low | Small | needs you |
 | idea: native-timer-notification | Windows notification when a timer ends (was A55) | Medium | Medium | needs you |
-| idea: hotkey-recorder | Set a hotkey in Settings by pressing the keys; lab-first (era-0 A47 retired) (user, 2026-11-06: tidy) | Medium | Medium | needs you |
+| A10-hotkey-recorder | Set a hotkey in Settings by pressing the keys; lab-first (era-0 A47 retired); scope confirmed by user 2026-11-09 | Medium | Medium | approved |
 | idea: chime-picker | Choose the timer chime: native sound plus two more, stretch (was A56) | Low | Medium | needs you |
 | idea: floating-scrollbar | Modern floating scrollbar at the side, shown only while scrolling (user, 2026-10-29, A55 hand test: "a scroll bar shows, i didn't expect that"); open: hide vs fade, both split panes, existing bar styles | - | - | needs you |
 | idea: timer-enter-no-autostart | In a timer note, Enter after a timer line (e.g. `10s test`) starts that timer at once (`Editor/PadView.cs:698`, existing by design); user wants to write several timers first (user, 2026-10-29, A42c hand test: "that shouldnt be the case because i might be writing multiple timers"); open: what starts a timer then (Ctrl+Enter, chip click only?) | - | - | needs you |
 | idea: wrap-hanging-indent | When an indented bullet line soft-wraps, the wrapped part should start under the bullet's text, not under the bullet itself: in "• We're at a point w… they're easier to", "they're" sits about 4 columns left of "We're" (user, 2026-10-29, screenshots). Wanted: the same alignment as a typed new line, just without the bullet. Open: plain indented lines with no bullet, numbered lists and checkboxes | - | - | needs you |
 | idea: selection-convert-menu | Select several lines, right-click, and turn them into a list, checkboxes, timers etc.: each selected line gets the matching prefix (user, 2026-10-29, screenshot of the current right-click menu: Cut/Copy/Paste/Delete, Undo/Redo, Select all, New note, Search, split, pin, Settings, Hide). Open: which kinds (bullet, numbered, checkbox, timer, others?), a submenu or flat entries, toggling off or swapping lines that already have a prefix, blank lines in the selection | - | - | needs you |
-| idea: pinned-accent-ring | When the window is pinned (Ctrl+T), draw an accent-colored ring 2-4 px thick around the window's edge, so pinned is visible at a glance (user, 2026-10-29). Open: exact thickness, whether it follows the rounded corners, theme accent or a fixed color, a fade on pin/unpin, how it works with the frameless window and its shadow | - | - | needs you |
+| A9-pinned-accent-ring | When the window is pinned (Ctrl+T), draw an accent-colored ring 2-4 px thick around the window's edge, so pinned is visible at a glance (user, 2026-10-29; scope confirmed 2026-11-09). Lab-first: thickness, rounded corners, accent vs fixed color and fade are chosen in the lab; 4 px accent ring, 250 ms fade, pinning leaves toolbar and pager alone. Gate on dev PASS (size warn only); user hand test: "All checks pass" | Medium | Medium | done |
 | idea: wiki-loop-v3 | Bring `docs/wiki/` up to loop v3. Done by Loop2-loop-v3-1-wiki and Loop6-loop-v5-wiki (user, 2026-11-06: tidy) | - | - | dropped |
 
 ## Open (needs the user)

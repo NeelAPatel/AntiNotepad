@@ -1,3 +1,4 @@
+// Owns the resident pad window's lifecycle, persistence, and appearance.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -375,11 +376,11 @@ internal sealed partial class PadWindow : Window, ISettingsHost
 
     // ---------- persistence ----------
 
-    private void Edited()
+    private void Edited(bool sleepChrome = true)
     {
         ScheduleSave();
         UpdateChrome();
-        SleepChrome(soon: false);
+        if (sleepChrome) SleepChrome(soon: false);
     }
 
     private void ScheduleSave()
@@ -488,6 +489,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         _palette = ResolvePalette();
         Anim.Reduced = Settings.ReduceMotion;
         RequestedThemeVariant = _palette.Dark ? ThemeVariant.Dark : ThemeVariant.Light;
+        ApplyPinRing(animate: _pinRingInitialized);
         // Re-applying the material or the styles makes the window flash, so each happens only when its input changed.
         if (_appliedMaterial != Settings.Material) { TransparencyLevelHint = Kit.Material(Settings.Material); _appliedMaterial = Settings.Material; }
         TransparencyBackgroundFallback = new SolidColorBrush(_palette.Canvas);

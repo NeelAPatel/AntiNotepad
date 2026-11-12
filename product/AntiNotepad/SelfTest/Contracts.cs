@@ -108,7 +108,14 @@ internal static partial class SelfTest
                 "Enter continuation and Tab/Shift+Tab renumber preserve the same text and one Undo step; caret position and scrolling remain a dev-copy check.",
                 "A42d-list-commands",
                 () => RunExistingCheck(ListCommandsChecks, "list commands: "),
-                "Dev copy: Enter at the end and in the middle of - ab, 9. ab, 9) ab and [x] ab; confirm the same markers, trailing text movement and caret after the new marker. Enter on an empty nested item outdents; Enter on an empty root item exits the list. Tab/Shift+Tab a numbered list across 9 -> 10 and confirm one Ctrl+Z per Enter or Tab. Check Shift+Enter, Enter with a selection and completion open, caret visibility at the bottom of a long note, and typing in a long list. In a timer note, Enter after 10s test still starts the timer and Ctrl+Enter still toggles it.")
+                "Dev copy: Enter at the end and in the middle of - ab, 9. ab, 9) ab and [x] ab; confirm the same markers, trailing text movement and caret after the new marker. Enter on an empty nested item outdents; Enter on an empty root item exits the list. Tab/Shift+Tab a numbered list across 9 -> 10 and confirm one Ctrl+Z per Enter or Tab. Check Shift+Enter, Enter with a selection and completion open, caret visibility at the bottom of a long note, and typing in a long list. In a timer note, Enter after 10s test still starts the timer and Ctrl+Enter still toggles it."),
+            // Keep last: this check initializes shared Avalonia state and constructs a PadWindow.
+            new(
+                "pinned-accent-ring",
+                "Pinned window shows the accent ring; pin changes leave chrome visibility unchanged.",
+                "A9-pinned-accent-ring",
+                () => RunExistingCheck(PinRingChecks, "pinned accent ring: "),
+                "Dev copy: with Fade chrome on, pin button and Ctrl+T leave toolbar and pager visible while the ring fades; typing still fades the bars. Check both themes, custom accents, split view, rapid toggles, Reduce motion, dragging, resizing and top-bar clicks.")
         ];
 
         var passed = 0;

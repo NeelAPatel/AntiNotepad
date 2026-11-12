@@ -1,8 +1,11 @@
+// Measurements and paint values shared by the pad's window chrome.
 namespace AntiNotepad.Theme;
 
 /// <summary>Shared measurements for the pad's top bar and pager.</summary>
 internal static class ChromeTokens
 {
+    // Named exception to the Stroke scale: the pinned window ring is 4 px.
+    public const double PinRingThickness = 4;
     public const double DockedRowHeight = 40;
     public const double TopScrollableWhitespace = DockedRowHeight;
     public const double ButtonSize = 32;

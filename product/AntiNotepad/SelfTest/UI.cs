@@ -2,6 +2,8 @@
 using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media;
 using AntiNotepad.Editor;
 using AntiNotepad.Model;
@@ -12,6 +14,79 @@ namespace AntiNotepad;
 
 internal static partial class SelfTest
 {
+    /// <summary>Checks the real ring's state, palette, geometry, and input ownership without showing a window.</summary>
+    private static bool PinRingChecks(out string report)
+    {
+        if (Application.Current is null) AppBuilder.Configure<Application>().UsePlatformDetect().SetupWithoutStarting();
+        if (!Application.Current!.Styles.OfType<Avalonia.Themes.Fluent.FluentTheme>().Any())
+        {
+            Application.Current.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
+            Application.Current.Styles.Add(new StyleInclude(new Uri(AppInfo.ResourceUri)) { Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml") });
+        }
+        var failures = new List<string>();
+        void Expect(bool ok, string name) { if (!ok) failures.Add(name); }
+        var folder = Path.Combine(Path.GetTempPath(), "AntiNotepad-ring-" + Guid.NewGuid().ToString("N"));
+        using var log = new RuntimeLog();
+        var reduced = Anim.Reduced;
+        try
+        {
+            var palette = Palette.All[0];
+            var store = new Store(Path.Combine(folder, palette.Id));
+            store.Load();
+            var settings = store.SettingsService;
+            settings.Current.Theme = palette.Dark ? "dark" : "light";
+            if (palette.Dark) settings.Current.DarkPalette = palette.Id; else settings.Current.LightPalette = palette.Id;
+            Welcome.SeedIfNew(store.Data, settings);
+            var notes = new NotesSession(store, folder, folder, null, log.Write);
+            var pad = new UI.PadWindow(store, settings, log, false, true, notes);
+            const BindingFlags fields = BindingFlags.Instance | BindingFlags.NonPublic;
+            var ring = (Border)typeof(UI.PadWindow).GetField("_pinRing", fields)!.GetValue(pad)!;
+            Expect(UI.PadWindow.PinRingOpacity(false) == 0
+                && UI.PadWindow.PinRingOpacity(true) == Paint.FocusBorder, "target opacity");
+            Expect(!ring.IsHitTestVisible && ring.Opacity == 0, "initial state and input pass-through");
+            Expect(ring.BorderThickness == new Thickness(ChromeTokens.PinRingThickness)
+                && ring.CornerRadius == new CornerRadius(Shape.Card), "ring geometry");
+            foreach (var pinned in new[] { true, false, true, false })
+            {
+                settings.Current.Pinned = pinned;
+                settings.Current.ReduceMotion = true;
+                pad.ApplyAppearance();
+                Expect(ring.Opacity == UI.PadWindow.PinRingOpacity(pinned), "reduced-motion toggle settles");
+                Expect(ring.BorderBrush is SolidColorBrush brush && brush.Color == pad.CurrentPalette.Accent,
+                    "palette accent brush");
+            }
+            settings.Current.Chrome = "fade";
+            settings.Changed += pad.HandleSettingsChanged;
+            var icons = (Control)typeof(UI.PadWindow).GetField("_icons", fields)!.GetValue(pad)!;
+            var pill = (Control)typeof(UI.PadWindow).GetField("_pill", fields)!.GetValue(pad)!;
+            var awake = typeof(UI.PadWindow).GetField("_chromeAwake", fields)!;
+            var iconsOpacity = icons.Opacity;
+            var pillOpacity = pill.Opacity;
+            settings.Update(s => s.Pinned = true);
+            settings.Update(s => s.DimWhenPinned = !s.DimWhenPinned);
+            Expect((bool)awake.GetValue(pad)! && icons.Opacity == iconsOpacity && pill.Opacity == pillOpacity,
+                "pin settings preserve awake chrome");
+            var keyDown = typeof(UI.PadWindow).GetMethod("OnWindowKeyDown", fields)!;
+            keyDown.Invoke(pad, [null, new KeyEventArgs { Key = Key.T, KeyModifiers = KeyModifiers.Control }]);
+            Expect((bool)awake.GetValue(pad)! && icons.Opacity == iconsOpacity && pill.Opacity == pillOpacity,
+                "pin shortcut preserves awake chrome");
+            typeof(UI.PadWindow).GetMethod("Edited", fields)!.Invoke(pad, [true]);
+            Expect(!(bool)awake.GetValue(pad)!, "normal edit sleeps chrome");
+            iconsOpacity = icons.Opacity;
+            pillOpacity = pill.Opacity;
+            settings.Update(s => { s.Pinned = !s.Pinned; s.DimWhenPinned = !s.DimWhenPinned; });
+            Expect(!(bool)awake.GetValue(pad)! && icons.Opacity == iconsOpacity && pill.Opacity == pillOpacity,
+                "pin settings preserve sleeping chrome");
+            report = failures.Count == 0 ? "ring and pin chrome visibility" : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+        finally
+        {
+            Anim.Reduced = reduced;
+            if (Directory.Exists(folder)) Directory.Delete(folder, true);
+        }
+    }
+
     private static bool SettingsChangedChecks(out string report)
     {
         var failures = new List<string>();
