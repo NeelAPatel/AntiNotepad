@@ -77,6 +77,7 @@ internal sealed partial class SettingsWindow : Window
         AddHandler(KeyDownEvent, (_, e) =>
         {
             if (e.Key != Key.Escape) return;
+            if (HotkeyRecorder.IsRecordingSource(e.Source)) return;
             if (e.Source is TextBox box && !ReferenceEquals(box, _find)) return;
             e.Handled = true;
             if (_find.Text is { Length: > 0 }) _find.Text = "";
@@ -495,8 +496,8 @@ internal sealed partial class SettingsWindow : Window
     {
         page.Children.Add(Group("Shortcuts"));
         page.Children.Add(Card(
-            Row(() => Fl(0xf4b8), $"Show or hide {AppInfo.Name}", null, () => HotkeyEditor(() => _host.HotkeyStatus, text => _host.RegisterHotkey(text) && Store(() => S.Hotkey = text), allowEmpty: false)),
-            Row(() => Fl(0xf8bd), "Open on a new note", null, () => HotkeyEditor(() => _host.NewNoteHotkeyStatus, text =>
+            Row(() => Fl(0xf4b8), $"Show or hide {AppInfo.Name}", null, () => HotkeyControl(() => _host.HotkeyStatus, text => _host.RegisterHotkey(text) && Store(() => S.Hotkey = text), allowEmpty: false)),
+            Row(() => Fl(0xf8bd), "Open on a new note", null, () => HotkeyControl(() => _host.NewNoteHotkeyStatus, text =>
             {
                 var value = string.IsNullOrWhiteSpace(text) ? null : text;
                 return _host.RegisterNewNoteHotkey(value) && Store(() => S.NewNoteHotkey = value);
@@ -536,61 +537,9 @@ internal sealed partial class SettingsWindow : Window
 
     private bool Store(System.Action change) { _settings.Update(_ => change()); return true; }
 
-    /// <summary>The shortcut as key caps with a Change button; Change swaps in a box (Enter applies, Esc cancels).</summary>
-    private Control HotkeyEditor(Func<string> current, Func<string, bool> apply, bool allowEmpty)
-    {
-        var host = new ContentControl();
-        void ShowCaps()
-        {
-            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
-            var label = current();
-            if (label is "off" or "") row.Children.Add(Kit.Text("None", _p.Muted, Typography.Body));
-            else
-                foreach (var key in label.Split('+', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
-                    row.Children.Add(new Border
-                    {
-                        BorderBrush = Line,
-                        BorderThickness = new Thickness(1, 1, 1, 2),
-                        CornerRadius = new CornerRadius(Shape.Key),
-                        Padding = new Thickness(8, 2),
-                        Background = new SolidColorBrush(_p.Surface),
-                        Child = Kit.Text(key, _p.Ink, Typography.Small),
-                    });
-            var change = TextButton("Change", ShowBox);
-            change.Margin = new Thickness(8, 0, 0, 0);
-            row.Children.Add(change);
-            host.Content = row;
-        }
-        void ShowBox()
-        {
-            var label = current();
-            var box = new TextBox
-            {
-                Text = label is "off" ? "" : label,
-                Width = 200,
-                FontSize = Typography.Body,
-                PlaceholderText = allowEmpty ? "Empty for none" : "e.g. Ctrl+Alt+Shift+S",
-                Foreground = new SolidColorBrush(_p.Ink),
-                CaretBrush = new SolidColorBrush(_p.Caret),
-                CornerRadius = new CornerRadius(Shape.Control),
-            };
-            var status = Kit.Text("Enter to apply, Esc to cancel", _p.Muted, Typography.Caption);
-            box.KeyDown += (_, e) =>
-            {
-                if (e.Key == Key.Escape) { e.Handled = true; ShowCaps(); }
-                if (e.Key != Key.Enter) return;
-                e.Handled = true;
-                var text = box.Text?.Trim() ?? "";
-                if (text.Length == 0 && !allowEmpty) return;
-                if (apply(text)) ShowCaps();
-                else status.Text = $"Windows won't give {AppInfo.Name} {text}; another app may use it.";
-            };
-            host.Content = new StackPanel { Spacing = 4, Children = { box, status } };
-            Dispatcher.UIThread.Post(() => { box.Focus(); box.SelectAll(); });
-        }
-        ShowCaps();
-        return host;
-    }
+    /// <summary>Builds a key-press recorder with the Settings button style.</summary>
+    private Control HotkeyControl(Func<string> current, Func<string, bool> apply, bool allowEmpty) =>
+        new HotkeyRecorder(_p, current, apply, allowEmpty, TextButton).View;
 
     private void AboutPage(StackPanel page)
     {

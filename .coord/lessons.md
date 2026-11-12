@@ -44,6 +44,8 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 | 2026-11-06 | A6-note-switch-instant-swap | Merge | judgment | - | - | override: merged before the final hand test on the user's go ("Merge A5 and A6, both into dev, then run a new build"; rule: hand test before Merge, docs/loop.md) | - |
 | 2026-11-08 | L7-lv4-playbook | Approve | judgment | - | - | override: L7 started with 3 items already building (cap 4, `approve.ps1 -Cap 4`) on the user's go ("yes L7 can start building by itself"; rule: cap 3 past Approve, docs/loop.md) | - |
 | 2026-11-08 | L2-lv4-worktree-rules, L5-lv4-status-line | Approve | judgment | - | - | override: both passed Approve with L3, L4 and L7 holding the 3 slots (one-off cap bypass, cap stays 3) on the user's go, given in the "Agentic Levels 4+5 · native features" chat and relayed by it (rule: cap 3 past Approve, docs/loop.md) | - |
+| 2026-11-09 | A10-hotkey-recorder | Build r1 (Codex lens review) | plan | codex-review | brief | the brief limited SettingsWindow.cs edits to the editor block while the window's Esc handler was unknown (Esc blocker); for key-capturing controls, Findings list every ancestor key handler | - |
+| 2026-11-09 | A10-hotkey-recorder | Build r3 (online gate) | env | gate | gate | Format whitespace failed online; the offline gate does not run the online Format step | - |
 | 2026-11-09 | A9-pinned-accent-ring | Build r1 (gate) | test | gate | brief | the new ring selftest hung the whole selftest (it set up Avalonia differently from the Design dump and stalled a later contract); a PadWindow selftest must install the Fluent theme, use a loaded seeded store and run last among contracts | - |
 | 2026-11-06 | A7-version-rc2 | Merge | plan | master | review | merge preflight "stale Head" again (third time: A2, A5, A7); master re-ran the gate in the worktree | - |
 | 2026-11-06 | Loop8-merge-policy | Build (scratch test) | code | builder | brief | per-commit selftest always failed: the app is a GUI-subsystem exe, so `& $exe` returns no output; copy the gate's process runner whenever a script launches the app | - |
@@ -89,3 +91,4 @@ earning its run.
 | 2026-11-08 | L6-lv4-docs-diet | Low | 1 (r2) | 0 | - | - | 0 | - |
 | 2026-11-08 | L7-lv4-playbook | Low | 0 | 0 | - | - | 0 | - |
 | 2026-11-09 | A9-pinned-accent-ring | Medium | 3 (r2 selftest hang, r3 pin must not fade chrome) | 1 | 0 | - | 1 (pin button faded toolbar; fixed in r3) | - |
+| 2026-11-12 | A10-hotkey-recorder | Medium | 4 (r2 Esc routing, r3 format, r4 no Windows key) | 1 | 0 | - | 1 (Windows key allowed; fixed in r4) | - |

@@ -87,6 +87,80 @@ internal static partial class SelfTest
         }
     }
 
+    /// <summary>Checks every supported recorder key against the unchanged platform parser.</summary>
+    private static bool HotkeyRecorderChecks(out string report)
+    {
+        var failures = new List<string>();
+        void Expect(bool ok, string name) { if (!ok) failures.Add(name); }
+        const Avalonia.Input.KeyModifiers mods = Avalonia.Input.KeyModifiers.Control | Avalonia.Input.KeyModifiers.Alt;
+        var keys = Enumerable.Range((int)Avalonia.Input.Key.A, 26)
+            .Concat(Enumerable.Range((int)Avalonia.Input.Key.D0, 10))
+            .Concat(Enumerable.Range((int)Avalonia.Input.Key.F1, 24))
+            .Select(value => (Avalonia.Input.Key)value)
+            .Concat([Avalonia.Input.Key.Space, Avalonia.Input.Key.Escape, Avalonia.Input.Key.Tab,
+                Avalonia.Input.Key.Enter, Avalonia.Input.Key.Insert, Avalonia.Input.Key.Delete]).ToArray();
+        foreach (var key in keys)
+        {
+            var text = UI.HotkeyRecorder.GestureText(key, mods);
+            Expect(text is not null && Platform.GlobalHotkey.HotkeyGesture.Parse(text).Label == text, $"round trip {key}");
+            Expect(UI.HotkeyRecorder.GestureText(key, Avalonia.Input.KeyModifiers.None) is null, $"unmodified {key}");
+        }
+        Expect(UI.HotkeyRecorder.GestureText(Avalonia.Input.Key.K, mods | Avalonia.Input.KeyModifiers.Shift)
+            == "Ctrl+Alt+Shift+K", "modifier order");
+        foreach (var key in Enum.GetValues<Avalonia.Input.Key>().Distinct())
+        {
+            foreach (var modifiers in new[] { Avalonia.Input.KeyModifiers.None, Avalonia.Input.KeyModifiers.Control,
+                Avalonia.Input.KeyModifiers.Alt, Avalonia.Input.KeyModifiers.Control | Avalonia.Input.KeyModifiers.Alt,
+                Avalonia.Input.KeyModifiers.Shift, Avalonia.Input.KeyModifiers.Control | Avalonia.Input.KeyModifiers.Shift,
+                Avalonia.Input.KeyModifiers.Alt | Avalonia.Input.KeyModifiers.Shift, mods | Avalonia.Input.KeyModifiers.Shift })
+            {
+                var text = UI.HotkeyRecorder.GestureText(key, modifiers);
+                Expect(text is null || !text.Contains("Win", StringComparison.Ordinal), $"no Windows modifier {modifiers}+{key}");
+                Expect(UI.HotkeyRecorder.GestureText(key, modifiers | Avalonia.Input.KeyModifiers.Meta) is null,
+                    $"Windows modifier rejected {modifiers}+{key}");
+            }
+        }
+        Expect(UI.HotkeyRecorder.GestureText(Avalonia.Input.Key.D0, mods) == "Ctrl+Alt+0", "digit spelling");
+        foreach (var key in Enum.GetValues<Avalonia.Input.Key>().Distinct().Except(keys))
+            Expect(UI.HotkeyRecorder.GestureText(key, mods) is null, $"unsupported or modifier-only {key}");
+        foreach (var key in new[] { Avalonia.Input.Key.Escape, Avalonia.Input.Key.Enter })
+        {
+            Expect(UI.HotkeyRecorder.IsCommand(key, Avalonia.Input.KeyModifiers.None), $"command {key}");
+            foreach (var modifier in new[] { Avalonia.Input.KeyModifiers.Control, Avalonia.Input.KeyModifiers.Alt,
+                Avalonia.Input.KeyModifiers.Shift })
+            {
+                Expect(!UI.HotkeyRecorder.IsCommand(key, modifier)
+                    && UI.HotkeyRecorder.GestureText(key, modifier) is not null, $"modified command key {modifier}+{key}");
+            }
+        }
+        Expect(!UI.HotkeyRecorder.IsCommand(Avalonia.Input.Key.K, Avalonia.Input.KeyModifiers.None), "ordinary key is not a command");
+        report = failures.Count == 0 ? $"{keys.Length} supported main keys round-trip; modifier order, rejected keys and commands" : string.Join("; ", failures);
+        return failures.Count == 0;
+    }
+
+    /// <summary>Checks the Settings Escape deferral boundary without opening a window.</summary>
+    private static bool HotkeyRecorderEscapeChecks(out string report)
+    {
+        var failures = new List<string>();
+        void Expect(bool ok, string name) { if (!ok) failures.Add(name); }
+        var actions = new Dictionary<string, Action>();
+        var recorder = new UI.HotkeyRecorder(Palette.All[0], () => "Ctrl+Alt+K", _ => true, false,
+            (text, action, _) => { actions[text] = action; return new Button { Content = text }; });
+        var host = (ContentControl)recorder.View;
+        Expect(!UI.HotkeyRecorder.IsRecordingSource(host), "idle recorder keeps Settings Escape");
+        actions["Change"]();
+        var row = (StackPanel)((StackPanel)host.Content!).Children[0];
+        var cancel = row.Children.OfType<Button>().Single(button => Equals(button.Content, "Cancel"));
+        Expect(UI.HotkeyRecorder.IsRecordingSource(host), "active recorder receives Escape");
+        Expect(UI.HotkeyRecorder.IsRecordingSource(cancel), "recorder descendants receive Escape");
+        Expect(!UI.HotkeyRecorder.IsRecordingSource(new Button()), "outside source keeps Settings Escape");
+        Expect(!UI.HotkeyRecorder.IsRecordingSource(null), "missing source keeps Settings Escape");
+        actions["Cancel"]();
+        Expect(!UI.HotkeyRecorder.IsRecordingSource(host), "cancel restores Settings Escape");
+        report = failures.Count == 0 ? "Escape defers only inside an active recorder" : string.Join("; ", failures);
+        return failures.Count == 0;
+    }
+
     private static bool SettingsChangedChecks(out string report)
     {
         var failures = new List<string>();
