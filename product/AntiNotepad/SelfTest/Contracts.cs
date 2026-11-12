@@ -20,6 +20,18 @@ internal static partial class SelfTest
         ContractRow[] rows =
         [
             new(
+                "hotkey-recorder-escape-routing",
+                "Settings defers Escape only for event sources inside an active hotkey recorder; idle and outside sources keep the existing Settings command.",
+                "A10-hotkey-recorder",
+                () => RunExistingCheck(HotkeyRecorderEscapeChecks, "hotkey recorder Escape: "),
+                "Dev copy: Esc cancels recording without clearing search or closing Settings; Ctrl+Esc records; outside recording Esc clears search, then closes Settings."),
+            new(
+                "hotkey-recorder-round-trip",
+                "Every supported main key recorded with Ctrl, Alt or Shift round-trips through the hotkey parser; Windows-key combinations, modifier-only and unsupported keys record nothing, and unmodified Esc and Enter are commands.",
+                "A10-hotkey-recorder",
+                () => RunExistingCheck(HotkeyRecorderChecks, "hotkey recorder: "),
+                "Dev copy: both rows capture, retain on release, Save, Cancel, focus-loss cancel, unsupported-key hint, refusal and optional Clear in light and dark."),
+            new(
                 "sliding-overlay-top-band",
                 "Sliding bar modes reserve the top band above overlays and keep it a window-drag surface.",
                 "A5-search-bar-overlap",
