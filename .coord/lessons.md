@@ -34,5 +34,6 @@ One row per merged item: what each check found. Empty rows on items that later h
 | 2026-11-12 | A12-version-rc3 | Low | 0 | 0 | - | - | 0 | - |
 | 2026-11-12 | Loop9-loop-slim | Medium | 0 (override: one umbrella branch for steps a-g instead of one branch per step, user "Approve, start it") | 0 | - | - | 0 | - |
 | 2026-11-12 | Loop10-status-split | Medium | 1 (Check missing at merge; builder ran bounds check itself, /review-task is user-only) | 0 | - | - | 0 | - |
+| 2026-11-12 | T12-settings-drift-readers | Low | 1 (Hand test line missing at preflight) | 0 | - | - | 0 | - |
 
 Older rows: `.coord/lessons-archive.md` (budget: 3 KB here).

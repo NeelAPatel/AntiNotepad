@@ -153,14 +153,14 @@ try {
     }
     Write-Host 'CHECK: branch card phases filled; no open ask the user line'
     $changes = @(Invoke-Git $checkout @('status', '--porcelain', '--untracked-files=no'))
-    if (@($changes | Where-Object { $_ -cnotmatch '^.. \.coord/STATUS\.md$' }).Count) { throw 'dirty item checkout' }
+    if (@($changes | Where-Object { $_ -cnotmatch '^.. (\.coord/STATUS\.md|\.claude/settings\.json)$' }).Count) { throw 'dirty item checkout' }
     & git -C $root merge-base --is-ancestor dev $branch
     if ($LASTEXITCODE -eq 1) { throw "behind dev: run tools/catch-up.ps1 -Task $Task" }
     if ($LASTEXITCODE -ne 0) { throw 'cannot compare dev with item branch' }
     if (@(Invoke-Git $root @('rev-list', '--merges', "dev..$branch")).Count) {
         throw 'branch has merge commits: rebase onto dev (tools/catch-up.ps1)'
     }
-    Write-Host 'CHECK: item checkout clean except STATUS; caught up with dev'
+    Write-Host 'CHECK: item checkout clean except STATUS and settings.json drift; caught up with dev'
 
     $reports = Join-Path $checkout '.coord/reports'
     $gate = @(Get-ChildItem -LiteralPath $reports -File | Where-Object {

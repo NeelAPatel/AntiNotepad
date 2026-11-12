@@ -21,7 +21,7 @@ Updated: 2026-11-12 · Product: AntiNotepad (`product/AntiNotepad`) · installed
 - Roadmap page: http://localhost:47811 (`/roadmap`); reads STATUS + pending + archive.
 
 ## Now
-- Nothing in work. Last finished: Loop10-status-split (merged dev 2026-11-12): STATUS 56 KB to 2.8 KB, pending list, move rules.
+- Nothing in work. Last finished: T12-settings-drift-readers (merged dev 2026-11-12); before it Loop10-status-split.
 
 ## Plan
 Active rows only (the roadmap script parses this table; same 5 columns as `.coord/pending.md`).
