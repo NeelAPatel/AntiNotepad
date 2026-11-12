@@ -39,7 +39,10 @@ None.
 No Codex run: a one-line edit, done by the sub-chat itself.
 
 ## Check
-(pending)
+- Gate (`tools/gate.ps1 -Task A12-version-rc3`, online): GATE: PASS (build PASS 0 warnings 0 errors, selftest PASS, seam PASS, tokens PASS, format PASS, scope PASS, size PASS, cleanup PASS; LoopLint skipped, no loop files).
+- Selftest: `SELFTEST PASS`.
+- Bounds check: within plan; only `AppVersionLabel` rc2 to rc3 in `AppInfo.props`; grep found no other `rc2` in `product/`. One code commit, so no commit review.
+- Misses: None
 
 ## Hand test
 None (not visible).

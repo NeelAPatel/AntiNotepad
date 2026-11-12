@@ -2,7 +2,7 @@
   <PropertyGroup>
     <AppName>AntiNotepad</AppName>
     <AppVersion>0.7.0</AppVersion>
-    <AppVersionLabel>rc2</AppVersionLabel>
+    <AppVersionLabel>rc3</AppVersionLabel>
     <AppDescription>A quick scratchpad for Windows</AppDescription>
     <AppCopyright>Copyright © 2026</AppCopyright>
 
