@@ -1,0 +1,55 @@
+# Pending work
+
+Rows not in work now: proposed, needs you, planned, paused and deferred (user order, as they were in STATUS). Same 5 columns as the STATUS Pending work table; `tools/roadmap-data.ps1` reads this file. Approve moves a row to STATUS; Merge moves it to `status-archive.md`. One line per item.
+
+| Item | Scope | Tier | Effort | State |
+|---|---|---|---|---|
+| **Era 1 start (Master 2 priority, 2026-11-01: done rows first, then run order; numbers only on your yes)** | | | | |
+| D1-ui-region-names | Names for the parts of the window in `docs/glossary.md`, so cards, comments and chat use the same words; can run beside selftest-split (no shared files). Would be D1 Numbered by the user 2026-11-01 (parallel; merge order A2, A3, D1). Card `.coord/tasks/D1-ui-region-names.md`; a D1 lead session owned by Master 2 **Scope change (user, in D1 chat, 2026-11-01):** SVGs replaced by an interactive HTML region map (`docs/regions/`, hover a name to highlight it on a screenshot, similarity % and top 5), screenshots from the dev copy ("Yes, both"); page built by Codex terra (b3255a3); captures blocked: the Computer Use grant resolved to the installed exe and was denied. Expected 2-3 h **Paused indefinitely (user, 2026-11-01):** branch `docs/D1-ui-region-names` pushed at d96a11f (map with six dev-copy captures, gate PASS; pause on the card), waiting on the user's review; worktree kept | Low | Small | paused |
+| **Loop Level 4: config enforces the loop (user, 2026-11-08, via "Loop Levels 4+5 · native features"; approved; merge in this order; new prefix `L`, Loop1-Loop8 keep theirs)** | | | | |
+| L16-lv41-agent-progress-panel | Level 4.1: a Claude Code mod (panel beside the director chat, see the `plugin-authoring` skill) with one row per linked sub-chat: item, phase, progress bar, and an icon while Codex runs for it. Why: the sidebar does not show which sub-chats are working; the `[Codexing..] ` title prefix (stopgap since 2026-11-08) depends on the chat remembering. Wanted for day-to-day use after Level 4; showcase piece. Inputs: linked sessions and state, STATUS states, card phase, Codex process or log activity. Unverified: what a mod can read, how to detect Codex reliably, where mod files live (repo or user config; decides the branch flow). Claude Code Desktop does not appear to draw status lines, so the Desktop view of loop info (worktree, item, in-flight items, phase) belongs here too, above the chat next to the per-chat progress bars and Codex icon; it can reuse the logic in `tools/status-line.ps1`. Pairs with L5-lv4-status-line and L8-lv5-loop-state-tool, blocked by neither. First step: findings on the three unknowns, then a plan for the user. Owner Loop Hub 2. User via "Agentic Levels 4+5 · native features", 2026-11-08. Deferred by the user 2026-11-12 (check lot-map first) | Low | Medium | deferred |
+| idea: roadmap-l-prefix | Roadmap page colors `L` rows as old items (grey): `family()` in `tools/roadmap/index.html` knows A, Loop, T, D, C only; add `L` with the loop color. Added by Roadmap Hub 1 (2026-11-08) | Low | Small | proposed |
+| **Loop Level 5: the loop runs as an automated pipeline (later; the user discusses it in "Loop Levels 4+5 · native features" first)** | | | | |
+| L8-lv5-loop-state-tool | Loop state in card front matter, `loop.ps1` verbs, a can-merge hook | Medium | Large | proposed |
+| L9-lv5-headless-review | Headless review runs that return JSON verdicts | Medium | Medium | proposed |
+| L10-lv5-ci | CI on push to dev and on release tags | Medium | Medium | proposed |
+| L11-lv5-scheduled-routines | Scheduled routines: nightly backlog scan, doc-drift check | Low | Medium | proposed |
+| L12-lv5-loop-config | One `loop.config.json` plus a lint for it | Low | Medium | proposed |
+| L13-lv5-metrics-page | Metrics page from usage and lessons | Low | Medium | proposed |
+| L14-lv5-public-writeup | Public write-up of the results | Low | Small | proposed |
+| L15-lv5-roadmap-loop-state | Roadmap page reads item phase from L8's card front matter instead of parsing STATUS table text. Added by Roadmap Hub 1 (2026-11-08) | Low | Medium | proposed |
+| **Reorg leftovers** | | | | |
+| C29-headless-render-probe | Off-screen Avalonia render helper for the selftest, so audits can reproduce visual bugs and `split-pane-clipping` checks pixels automatically instead of manually; run after A42d-list-commands (user order 2026-10-29: A42c, A42d, then C29; all touch the selftest) **Proposed (Master 2, 2026-10-30):** renumber as an `A` item (product selftest code), run after selftest-split; you choose A, T or idea. | Medium | Small | proposed |
+| **Design system and ownership** | | | | |
+| step: scale-apply | After the lab is approved: tokens become scale > role > control tiers and the app adopts the scale; new DESIGN hash | High | Medium | needs you |
+| step: design-plugins-review | After design-questions (user, 2026-11-02): install the Design (Anthropic) and design-skills plugins, run them end to end on the project, compare with our findings; then decide whether a top-level Design Master chat reviews the design independently | Low | Small | needs you |
+| step: timer-names | Fuzziest: named behavior timers (save, debounces, toast hold, caret blink, bar sleep; about 40 values) at today's values, owned where they are used (user, 2026-11-01: timers included) Trimmed from design-tokens (user, 2026-11-02: "Shape, then trim"); revive with design-unify if those values need changing | High | Medium | deferred |
+| Release marker | dev -> main after the look-identical work, on your go | - | - | planned |
+| idea: code-ownership | Every responsibility has one owner and no copies; behavior unchanged | - | - | needs you |
+| step: notes-path-dedupe | One same-or-nested path rule in `Platform/` replacing the copies in `NotesSession`, `NotesLocation`, `SettingsWindow` and `KeepOldCopy`; CONTRACTS row | High | Small | needs you |
+| step: ui-kit-merge | One control kit: Settings' private controls merge into `Kit`; `Material()` and `Ago()` move to their owners | Medium | Medium | needs you |
+| step: ownership-map | `docs/architecture.md` owner per responsibility; `NotesSession`, `RuntimeLog` into `App/`; LAYERS rows for `App/` and `Motion/` | Low | Small | needs you |
+| step: behavior-timer-names | Optional: name save, debounce, toast and taskbar timers beside their owners, values unchanged | High | Small | needs you |
+| **Cleanup** | | | | |
+| idea: archive-finished-sessions | Archive finished Claude sessions (era-0 C16 retired); no code (user, 2026-11-06: tidy) | Low | Small | needs you |
+| idea: release-checklist | A dev -> main release checklist that re-checks gate rules; doc only. Tag names were settled by loop v3 (era-0 C18 retired) (user, 2026-11-06: tidy) | Low | Small | needs you |
+| Release marker | dev -> main with a tag, on your go | - | - | planned |
+| **Performance** | | | | |
+| A11-settings-thread-count | Find why the Settings window runs about 90 threads; report, fix only if cheap (was A74); scope confirmed by user 2026-11-09. Report done on `fix/A11-settings-thread-count` (no change needed: about 71 of 81 threads are GPU driver and ANGLE threads, Settings adds 1-2, no leak). Paused by the user 2026-11-12, not merged | Low | Small | paused |
+| idea: large-note-perf | Measure then reduce typing lag in a 6,000-line note; one change at a time (ideas in Backlog; era-0 A49 retired) (user, 2026-11-06: tidy) | Medium | Large | needs you |
+| **Features and polish (lab-first where visible)** | | | | |
+| idea: notes-folder-move-flow | Choosing and moving the notes folder is clear and safe; first step follows code-ownership's notes-path-dedupe | - | - | needs you |
+| step: path-validator | One shared Platform check for a chosen folder: blocks invalid, same, nested, not writable, has notes; warns new, non-empty, network, low space, cloud-synced | High | Medium | needs you |
+| step: editable-path-field | Editable path box plus Browse in Settings with a validation line; Migrate enabled only when valid or warned; lab mock first | Medium | Medium | needs you |
+| step: move-preview | Before moving, show note count, size and what happens to the old folder | Medium | Small | needs you |
+| step: move-undo | "Move back" after a move, using the kept old copy | High | Medium | needs you |
+| step: picker-last-location | The folder picker opens at the last picked folder | Low | Small | needs you |
+| step: single-result-message | Settings shows the move's own result message instead of rebuilding it | Low | Small | needs you |
+| idea: recovered-folder-always-open | Recovered-notes folder always exists and its Open button always works (era-0 A51 retired) (user, 2026-11-06: tidy) | Low | Small | needs you |
+| idea: answers-toggle-clarity | Rename the "Answers" toggle to say what it does, and apply it live; lab-first (era-0 A48 retired) (user, 2026-11-06: tidy) | Low | Small | needs you |
+| idea: native-timer-notification | Windows notification when a timer ends (was A55) | Medium | Medium | needs you |
+| idea: chime-picker | Choose the timer chime: native sound plus two more, stretch (was A56) | Low | Medium | needs you |
+| idea: floating-scrollbar | Modern floating scrollbar at the side, shown only while scrolling (user, 2026-10-29, A55 hand test: "a scroll bar shows, i didn't expect that"); open: hide vs fade, both split panes, existing bar styles | - | - | needs you |
+| idea: timer-enter-no-autostart | In a timer note, Enter after a timer line (e.g. `10s test`) starts that timer at once (`Editor/PadView.cs:698`, existing by design); user wants to write several timers first (user, 2026-10-29, A42c hand test: "that shouldnt be the case because i might be writing multiple timers"); open: what starts a timer then (Ctrl+Enter, chip click only?) | - | - | needs you |
+| idea: wrap-hanging-indent | When an indented bullet line soft-wraps, the wrapped part should start under the bullet's text, not under the bullet itself: in "• We're at a point w… they're easier to", "they're" sits about 4 columns left of "We're" (user, 2026-10-29, screenshots). Wanted: the same alignment as a typed new line, just without the bullet. Open: plain indented lines with no bullet, numbered lists and checkboxes | - | - | needs you |
+| idea: selection-convert-menu | Select several lines, right-click, and turn them into a list, checkboxes, timers etc.: each selected line gets the matching prefix (user, 2026-10-29, screenshot of the current right-click menu: Cut/Copy/Paste/Delete, Undo/Redo, Select all, New note, Search, split, pin, Settings, Hide). Open: which kinds (bullet, numbered, checkbox, timer, others?), a submenu or flat entries, toggling off or swapping lines that already have a prefix, blank lines in the selection | - | - | needs you |
