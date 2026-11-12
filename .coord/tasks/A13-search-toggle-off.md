@@ -30,3 +30,12 @@ Branch: `fix/A13-search-toggle-off` in `.claude/worktrees/fix/A13-search-toggle-
 
 ## Approve
 2026-11-12, user: "approve" (plan as written: only the Search button toggles; Ctrl+F and menu keep opening).
+
+## For Codex
+Role: quick (`docs/agents.md`), because it is a few lines in two known files. The branch is checked out: never switch, merge or commit. Read `AGENTS.md`, then the Files; re-read before editing.
+- Build exactly the Plan's "After": add `internal void ToggleSearch()` in `PadWindow.Keys.cs` next to `OpenSearch` (`if (_overlay is SearchOverlay) CloseOverlay(); else OpenSearch();`) and make the top-right Search icon button in `PadWindow.Layout.cs` call it. Menu entry and Ctrl+F stay `OpenSearch()`. Do not touch `ShowOverlay` or any animation (A14-search-open-fade-up edits those). No drive-by changes. If the Findings are wrong, stop and report that.
+- Build into `build/A13-search-toggle-off-check` with `AVALONIA_TELEMETRY_OPTOUT=1`, run `--selftest`, delete the folder. Gate: `pwsh -NoProfile -File tools/gate.ps1 -Task A13-search-toggle-off -Offline`.
+- Never launch or kill AntiNotepad, never run `--quit`, never edit `.coord/STATUS.md` or this card. Offline checks only.
+- Done means: the Search button closes an open search overlay; build 0 warnings, `SELFTEST PASS`, gate passes. No selftest is added (no window harness; Plan says hand test).
+
+Report `.coord/reports/A13-search-toggle-off.md`, short: 1 Summary; 2 Change list; 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 6 Contracts; 7 Lens review (skip: quick role); 8 Checks run; 9 Hand checks for the user.
