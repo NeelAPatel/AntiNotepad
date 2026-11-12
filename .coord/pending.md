@@ -53,3 +53,36 @@ Rows not in work now: proposed, needs you, planned, paused and deferred (user or
 | idea: timer-enter-no-autostart | In a timer note, Enter after a timer line (e.g. `10s test`) starts that timer at once (`Editor/PadView.cs:698`, existing by design); user wants to write several timers first (user, 2026-10-29, A42c hand test: "that shouldnt be the case because i might be writing multiple timers"); open: what starts a timer then (Ctrl+Enter, chip click only?) | - | - | needs you |
 | idea: wrap-hanging-indent | When an indented bullet line soft-wraps, the wrapped part should start under the bullet's text, not under the bullet itself: in "• We're at a point w… they're easier to", "they're" sits about 4 columns left of "We're" (user, 2026-10-29, screenshots). Wanted: the same alignment as a typed new line, just without the bullet. Open: plain indented lines with no bullet, numbered lists and checkboxes | - | - | needs you |
 | idea: selection-convert-menu | Select several lines, right-click, and turn them into a list, checkboxes, timers etc.: each selected line gets the matching prefix (user, 2026-10-29, screenshot of the current right-click menu: Cut/Copy/Paste/Delete, Undo/Redo, Select all, New note, Search, split, pin, Settings, Hide). Open: which kinds (bullet, numbered, checkbox, timer, others?), a submenu or flat entries, toggling off or swapping lines that already have a prefix, blank lines in the selection | - | - | needs you |
+
+## Backlog (someday)
+Moved from STATUS by Loop10c-status-shape. IDs A53 and later are dissolved (user, 2026-10-29); the table above holds those as unnumbered ideas.
+- A44a hand test (user, 2026-10-28), proposed backlog IDs (parent may renumber):
+  - A54-link-hover-click (done, merged f32b92a): Ctrl+click on a link does nothing and links show no hand cursor. Only shortened URLs (over 34 chars, caret off the line) become `LinkGenerator` elements with Hand and Pressed (`Editor/Elements.cs`); short URLs are plain colored text. Not changed by A44a (its diff is only the OpenUrl name); confirm on the dev baseline.
+  - (old A55, now idea native-timer-notification): a native Windows popup notification when a timer ends.
+  - (old A56, now idea chime-picker) (stretch): chime picker, native sound plus two more.
+  - (old A57, now A55-split-view-clip) (after current tasks): in split view, scrolling text overlaps across the divider; the divider should crop the visual of each pane.
+  - (old A58, now A53-split-divider-height) (after current tasks): the split divider does not reach the bottom edge.
+- Settings window runs about 90 threads (memory is stable, freed 5 of 5 cycles).
+- A45-dev-build-badge (done, merged 56a85cd; user wish 2026-10-26; widened 2026-10-29 to branch glyph + `dev/<branch>@<build time>`, now in the Plan): the dev badge shows which task/build is live (e.g. "dev · A39"), so the user
+  knows exactly what is being checked. Lab-first.
+- A47-hotkey-recorder (user wish, 2026-10-26): binding a hotkey in Settings should record the actual key press, not typed text.
+  Lab-first.
+- A48-answers-toggle-clarity (user wish, 2026-10-26): the Settings toggle "Answers" (`Settings.InlineMath`) should say what it does
+  (basic `=` math on any note; off = results only in math-mode notes), e.g. "Basic math in all notes", and apply live
+  (today it applies only on note bind/analysis). Lab-first.
+- A46-motion-timings (after A44, if needed): user finds the Settings page change and the pill appearing too fast;
+  investigate Windows 11 motion timings as the reference across the app. Lab-first.
+- A51-recovered-folder-always-open (user, 2026-10-27, A43b-notes-session hand test): the "Recovered notes" row shows Open only when the recovered folder has files; the recovered folder should always exist (even empty) and Open should always work. Today the row says Empty with no Open (`SettingsWindow.cs`, `recoveredCount is > 0`).
+- A52-move-old-folder-rename-warning (user, 2026-10-27): moving notes logs "Notes are now in the new folder, but the old folder could not be renamed and remains at <old>: The parameter is incorrect." (seen moving `test targetA` to `B`). Notes move fine; investigate and fix the old-folder rename in `NotesLocation.Move` (looks like a path-format problem), then update the user-facing message. Reproduce on a pre-A43b build first.
+- A49-large-note-perf (user observation, 2026-10-26, A42b live check): a 6,000-line note with live rendering shows about a half-second
+  lag when typing; accepted as within the intended limits. CPU and GPU both rise during active scrolling and drop at idle.
+  Task Manager during fast scrolling in the dev copy (user screenshot): 4.2% CPU, 2.8% GPU, 113.7 MB, 2 processes.
+  Ideas, measure first (timestamps in the analysis path, a profiler pass on the 6,000-line fixture) and change one at a time:
+  1. Cap or window the incremental analysis to the visible lines plus a margin, finish the rest in idle slices.
+  2. Raise the 140 ms debounce adaptively with line count (for example above 2,000 lines).
+  3. Throttle colorizer, folding and inline-math redraws while scrolling; skip off-screen lines in line transformers.
+  4. Cache per-line brush/typeface lookups and shaped text; avoid per-redraw allocations (ChipText / FoldSelection).
+  5. Cheaper full-fallback after a big paste or delete (over 1,500 lines): chunk it across frames.
+  6. Check GPU cost of translucency/blur and the scroll animation while scrolling (less repainting, a cheaper blur path).
+  7. Add a `--perf` selftest or stress scenario with a latency budget (keystroke to repaint on the 5,000-line fixture) so
+     regressions are caught. Lab-first for anything visible.
