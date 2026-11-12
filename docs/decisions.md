@@ -21,6 +21,7 @@ Newest first. History before 2026-10-23 (overnight build log and write-up) is in
 15. US spelling in UI; first-party libraries first.
 
 ## 2026-11-12
+- **Motion reference:** User approved the lab on 2026-11-12. Overlay entry uses 167 ms and cubic-bezier(0, 0, 0, 1); exit uses 83 ms and cubic-bezier(1, 0, 1, 1). The reusable Windows 11 durations are 83, 167 and 250 ms. The 16 px slide is our choice; Microsoft does not prescribe a popup offset. Later Settings and window-motion items reuse the `Win11*` tokens. Sources: Microsoft Learn [Timing and easing](https://learn.microsoft.com/en-us/windows/apps/design/motion/timing-and-easing) and [Motion in practice](https://learn.microsoft.com/en-us/windows/apps/design/motion/motion-in-practice).
 - **Loop slim-down** (Loop9-loop-slim): usage rose after Level 4 because long chats re-read big contexts, STATUS was 82 KB
   and read by every director, the compaction hook printed every director's notes, project `ask` rules prompted on every
   STATUS edit, and an enabled mod rewrote tracked `.claude/settings.json`. Level 4 itself (about 280 characters per turn)
