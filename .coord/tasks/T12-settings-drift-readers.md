@@ -39,4 +39,5 @@ User, 2026-11-12: "go ahead and fix it, a heavy plan stage isn't needed for a sm
 - Plan: test refuse on other dirty file, pass on settings/STATUS -> done (catch-up live, preflight by regex, gate run); see report.
 - Plan: gate offline -> GATE PASS.
 
-## Hand test: none, no UI
+## Hand test
+None, no UI (tooling only).
