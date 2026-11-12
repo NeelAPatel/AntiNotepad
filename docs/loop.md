@@ -6,7 +6,7 @@ Every item has one **item card**, `.coord/tasks/<ID-slug>.md` (from `.coord/temp
 
 **Loop version: v5.4.0** (LP<vX.Y.Z> in director names). Roles or ownership change: major; new checks, scripts or routes: minor; chat output only: patch. On a bump the merging director updates STATUS and live director names.
 
-**One chat per item.** The director writes the Request, starts the item chat and steps back; that chat runs Findings through Hand test and the user answers it. The director merges.
+**One chat per item.** The director writes the Request, starts the item chat and steps back; that chat runs Findings through Hand test and the user answers it. The director merges. Start it in the trusted main checkout (`use_worktree: false`); it works in its worktree by absolute path.
 
 ## Phases
 `Request → Findings → Plan → Approve → Build → Check → Hand test → Merge`

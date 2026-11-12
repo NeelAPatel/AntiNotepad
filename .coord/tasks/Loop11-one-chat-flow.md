@@ -22,6 +22,7 @@ Edit docs and skills only (no product code); keep `docs/loop.md` under 8 KB.
 4. **Status rows.** The item chat edits only its own one-line row in the main checkout's `.coord/STATUS.md` by absolute path (the roadmap reads that file). It never touches other rows or sections. Director edits Now line and finished moves.
 5. **Prompts.** Remove the `start_session` `ask` rule from `.claude/settings.json` (the text rule stays: a sub-chat never starts a chat). Check that `approve.ps1` works when run by the item chat; fix only if it does not.
 6. Align every file stating the old ownership (grep); bump Loop to v5.4.0.
+8. No trust popup: item chat starts in the trusted main checkout, works in its worktree by absolute path (unverified).
 7. Gate and `tools/loop-lint.ps1` offline. Out of scope: the trust-workspace popup.
 
 ## Files

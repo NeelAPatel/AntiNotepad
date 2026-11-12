@@ -7,6 +7,9 @@ Docs-only text written by the builder chat directly (no Codex).
 - `review-task`, `merge-task/branches`, `agents`, `loop-sessions`, `playbook`, `AGENTS.md`, `decisions`, `glossary`, templates, output style aligned.
 - `.claude/settings.json`: `start_session` ask rule removed.
 
+## Step 8 (added by Loop Hub 3)
+Item chat starts in the main checkout (`use_worktree: false`) to avoid the per-worktree "Trust this workspace?" popup. **Unverified:** the next item must confirm no popup appears.
+
 ## Behavior changes
 Loop ownership only; no product code. `approve.ps1` unchanged.
 
