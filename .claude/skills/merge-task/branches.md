@@ -34,8 +34,7 @@ Read by /merge-task for branch, worktree, commit and catch-up detail.
      commit per meaningful change, and a few lines fixed after some back and forth is not a commit. Messages say what
      changed (`<ID-slug>: <what>`), never wip, fix or try-again. Lab variants and debug code are removed. Every commit
      builds.
-  2. **Rebase** the branch onto dev (`tools/catch-up.ps1 -Push`, which pushes the item branch only, with
-     `--force-with-lease`), then re-run the gate: it must pass at the final tip.
+  2. **Rebase** the branch onto dev (`tools/catch-up.ps1`, rebase only; merge from the local branch, no force-push), then re-run the gate: it must pass at the final tip.
   3. **Preflight**: `tools/merge-preflight.ps1` also builds each commit of `dev..<branch>` and runs `--selftest`,
      skipping commits that touch no product code. A failure names the commit.
   4. **Merge**: the master runs `git merge --no-ff --no-commit <branch>` on dev, adds the item's STATUS edits and its
@@ -50,7 +49,5 @@ Read by /merge-task for branch, worktree, commit and catch-up detail.
   and on origin.
 
 **Catching up with dev:** rebase, never merge (user, 2026-11-06). Catch up at two points: before Check and before Merge
-when dev is not an ancestor of HEAD. The item's own session runs `tools/catch-up.ps1 -Push`, which rebases the item
-branch onto dev and pushes that branch only with `--force-with-lease` (never dev, never a plain `--force`), then runs the
-gate. A conflict leaves the rebase open: resolve, `git add`, `git rebase --continue`. `RETEST: yes` repeats the hand test
+when dev is not an ancestor of HEAD. The item's own session runs `tools/catch-up.ps1`, which rebases the item branch onto dev (no push, never a force-push), then runs the gate. A conflict leaves the rebase open: resolve, `git add`, `git rebase --continue`. `RETEST: yes` repeats the hand test
 before Merge; `RETEST: no` keeps the earlier result.

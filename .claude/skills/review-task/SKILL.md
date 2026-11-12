@@ -31,8 +31,7 @@ From `.coord/tasks/<ID-slug>.md`: `Tier:`, `## Request`, `## Plan` (After, Must 
 `.coord/reports/<round>.md` has the "Change list", "Behavior changes" and "Plan deviations" sections; if not, that is a rework.
 
 ## 2. Gate (always)
-If `dev` is not an ancestor of HEAD, run `pwsh -NoProfile -File tools/catch-up.ps1 -Task <ID-slug> -Push` (it rebases
-the item branch onto dev and pushes that branch only, with `--force-with-lease`), then run the gate. CONFLICT: stop,
+If `dev` is not an ancestor of HEAD, run `pwsh -NoProfile -File tools/catch-up.ps1 -Task <ID-slug>` (it rebases the item branch onto dev; no push, no force-push), then run the gate. CONFLICT: stop,
 leave the rebase open, and tell the master (conflict routes: step 4a).
 
 `pwsh -NoProfile -File tools/gate.ps1 -Task <round>` from the worktree. It writes `.coord/reports/<round>.gate.md` (not
@@ -96,5 +95,5 @@ is triaged (4a) and gets a "Misses" line. Not visible: say no hand test is neede
 After the hand test passes (or at once for a not-visible item), tidy the branch the way `/merge-task` step 0 describes:
 list `git log --oneline dev..HEAD`, fold tiny and back-and-forth commits (a quick fix, a few lines changed after some
 back and forth) into the commit they belong to, give every commit a message that says what changed, remove lab and
-debug code, and keep each commit buildable. No fixed count. Then `tools/catch-up.ps1 -Task <ID-slug> -Push`, re-run the
+debug code, and keep each commit buildable. No fixed count. Then `tools/catch-up.ps1 -Task <ID-slug>`, re-run the
 gate at the tip, and tell the master the branch is ready to merge. Record the tidy-up as one line under `## Check`.
