@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`). Budget: 4 KB.
 
 Tier: <set by the item chat> · ui-pills
-State: approved
+State: hand test
 Branch: `feat/A15-notes-edge-pills` in `.claude/worktrees/feat/A15-notes-edge-pills` (created at Approve)
 
 ## Request
@@ -50,3 +50,9 @@ Role: terra (docs/agents.md), because a few files of UI logic plus a motion chan
 - Done means: the 3 pill texts come from `EdgeNotice`; toasts use the Win11 tokens; build 0 warnings, `SELFTEST PASS`, gate passes.
 
 Report `.coord/reports/A15-notes-edge-pills.md`, short: 1 Summary; 2 Change list; 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 6 Contracts; 7 Lens review; 8 Checks run; 9 Hand checks.
+
+## Check
+Gate offline PASS (build 0 warnings, SELFTEST PASS, seam, tokens, format, scope, size). Diff within plan; no deviations. No lens review (Low tier). Noticed: tokens baseline can be lowered (-Update), left alone.
+
+## Hand test
+Dev copy running from this worktree (pid 25492, build/dev, test data build/testdata). Result: pending.
