@@ -88,13 +88,15 @@ function Get-RoadmapFingerprint {
 
     $parts = [System.Collections.Generic.List[string]]::new()
     $statusPath = Join-Path $RepositoryRoot '.coord/STATUS.md'
+    $pendingPath = Join-Path $RepositoryRoot '.coord/pending.md'
+    $archivePath = Join-Path $RepositoryRoot '.coord/status-archive.md'
     $usagePath = Join-Path $RepositoryRoot '.coord/logs/usage.tsv'
     $erasPath = Join-Path $RepositoryRoot 'tools/roadmap/eras.json'
     $dataScriptPath = Join-Path $PSScriptRoot 'roadmap-data.ps1'
     if (-not (Test-Path -LiteralPath $erasPath -PathType Leaf)) {
         $erasPath = Join-Path $PSScriptRoot 'roadmap/eras.json'
     }
-    foreach ($path in @($statusPath, $usagePath, $erasPath, $dataScriptPath)) {
+    foreach ($path in @($statusPath, $pendingPath, $archivePath, $usagePath, $erasPath, $dataScriptPath)) {
         try {
             $file = Get-Item -LiteralPath $path -ErrorAction Stop
             [void]$parts.Add(('{0}|{1}|{2}' -f $file.FullName, $file.Length, $file.LastWriteTimeUtc.Ticks))
