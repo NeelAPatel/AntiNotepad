@@ -12,18 +12,18 @@ Read by /merge-task for branch, worktree, commit and catch-up detail.
 - **Worktree per item, by default** (user, 2026-11-06: "worktree preferred for parallelization unless explicitly said not
   to"), in a folder that mirrors the branch: `.claude/worktrees/<prefix>/<ID-slug>`
   (`git worktree add .claude/worktrees/feat/A1-list-commands -b feat/A1-list-commands dev`; also fix/, refactor/, docs/, chore/). The master's checkout stays
-  on dev. Sub-sessions share the master's folder (`use_worktree: false`) and work only inside that path, with absolute
+  on dev. The item chat starts in the main checkout (`use_worktree: false`), then works only inside its worktree path, with absolute
   paths; Codex runs from the worktree's own `.coord/tools/codex-run.sh`. **At most 3 items** past Approve at once, and
-  only if their Files lists do not overlap. After Check accepts, the implementation sub-session runs `tools/dev.ps1`
+  only if their Files lists do not overlap. After Check accepts, the item chat runs `tools/dev.ps1`
   from the worktree immediately before the hand checks; it verifies the dev badge and EXE/DATA/log paths. One dev copy
   runs at a time, so up to 3 items can build in parallel but hand tests take turns, oldest accepted item first.
   Without worktrees there is no parallel work at all (user, 2026-10-30).
 - **No worktree** (only when the user says so; never suggested for docs or tooling items): the branch is checked out in
   the main checkout (`tools/approve.ps1 -NoWorktree`) and nothing else runs until it merges.
-- **Before Approve** there is no branch: the card and any audit brief and report live untracked in the master checkout;
-  the auditor's Codex run is read-only there. At Approve they move into the new worktree and are committed on the branch.
+- **Before Approve** there is no branch: the card and any audit brief and report live untracked in the main checkout;
+  the item chat's read-only Codex audit runs there. At Approve they move into the new worktree and are committed on the branch.
 - **What lands on the branch:** the card, audit, reports and code, committed there as often as useful (Codex cannot
-  commit: the sub-session does). Push the branch to origin freely. Branches never edit STATUS.
+  commit: the item chat does). Push the branch to origin freely. Branches never edit STATUS.
 - **What lands on dev: the item's tidy commits plus one merge commit** (user, 2026-11-06: "so that i can atleast trace
   out which incremental change broke something"; "i'm more worried about slop commits than high number of comits").
   Between merges the master edits `.coord/STATUS.md` on dev and leaves it uncommitted (the roadmap reads the working

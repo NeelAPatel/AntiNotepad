@@ -1,23 +1,23 @@
 # Playbook: the loop as a habit
 
 One page. Rules and reasons are in `docs/loop.md`; this is only what you do. Words: an **item** is one change; a
-**director** is a top-level chat (Master 4 for app work, Loop Hub 2 for `Loop`, `L`, `T`); a **sub-chat** is the chat for
-one item; the **card** is the item's file `.coord/tasks/<ID-slug>.md`; a **hook** is a small script Claude Code runs on
+**director** is a top-level chat (Master 4 for app work, Loop Hub 2 for `Loop`, `L`, `T`); the **item chat** is the one chat
+for an item (it does everything but merge); the **card** is the item's file `.coord/tasks/<ID-slug>.md`; a **hook** is a small script Claude Code runs on
 its own before or after an action.
 
 ## The same five steps for every item
 | Step | You do | Then |
 |---|---|---|
-| 1 | Type `/next-task` (or describe the change) in the right director chat | Director writes the card and plan |
-| 2 | Read the plan; answer the one approve question | Director runs `approve.ps1` (makes the branch and worktree) and starts the item's sub-chat |
-| 3 | Open the item's sub-chat; it builds with Codex and checks (`/review-task` runs there) | Sub-chat hands you a hand test, or "None" for non-visible items |
-| 4 | Do the hand test; say **pass** or **fail** (your own words) | Sub-chat records it on the card and says it is ready |
+| 1 | Type `/next-task` (or describe the change) in the right director chat | Director writes the Request and starts the item chat; open that chat, it is the one you talk to |
+| 2 | In the item chat: read the plan; answer "Approve?" | Item chat runs `approve.ps1` (branch and worktree) and builds with Codex |
+| 3 | Stay in the item chat while it checks (`/review-task`) | It hands you a hand test, or "None" for non-visible items |
+| 4 | Do the hand test; say **pass** or **fail** (your own words) | Item chat records it on the card and says it is ready |
 | 5 | Tell the director `/merge-task <ID-slug>` | Director merges to dev, re-checks, pushes, cleans up |
 
 ## Pick the director
 | Item | Example | Start `/next-task` in | What differs |
 |---|---|---|---|
-| **A** (app) | `A4-design-tokens` | Master 4 (app director) | Step 4 is a real hand test: the sub-chat opens the item's dev copy (never your installed copy) and gives you UI checks |
+| **A** (app) | `A4-design-tokens` | Master 4 (app director) | Step 4 is a real hand test: the item chat opens the item's dev copy (never your installed copy) and gives you UI checks |
 | **T** (tooling) | `T11-roadmap-hide-rows` | Loop Hub 2 | Hand test is usually "open the page or run the script, say if it works" |
 | **L** (Level 4/5 loop config) | `L7-lv4-playbook` | Loop Hub 2 | Hand test is reading the file or trying the command; hooks start in log-only mode, so nothing can lock you out |
 
@@ -39,7 +39,7 @@ Still entirely yours: approving the plan, hand test pass/fail, "release" at a ma
 | Command | Who types it | Where | When |
 |---|---|---|---|
 | `/next-task [ID-slug]` | you | director chat | start an item or take the next planned one |
-| `/review-task <ID-slug>` | the sub-chat (you may) | item sub-chat | after Codex finishes a build or rework round |
+| `/review-task <ID-slug>` | the item chat (you may) | item chat | after Codex finishes a build or rework round |
 | `/merge-task <ID-slug>` | you, to the director | director chat | after a passed hand test |
 | `/roadmap` | you | any chat | open the plan page `http://localhost:47811` |
 | `/scan-backlog [slug ...]` | you | director chat | rank several ideas before choosing |

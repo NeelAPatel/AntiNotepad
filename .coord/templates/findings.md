@@ -1,6 +1,6 @@
 # <ID-slug>-audit: findings for <ID-slug>
 
-Role: director (gpt-6.1-sol medium), read-only. Product `product/AntiNotepad`. You run in the master checkout on `dev`
+Role: director (gpt-6.1-sol medium), read-only. Product `product/AntiNotepad`. You run in the main checkout on `dev`
 (no item branch exists before Approve): never switch, merge, commit, or write any files. Never launch or kill AntiNotepad.
 Read `AGENTS.md`, then the item card `.coord/tasks/<ID-slug>.md` (its Request is what the user asked for).
 

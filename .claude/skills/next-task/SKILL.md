@@ -19,7 +19,7 @@ Phase detail: `.claude/skills/next-task/phases.md`.
 
 Branch, commits ahead of dev and changed files are above; steps below need not re-run them.
 
-Phases 1-4 of `docs/loop.md` (Request, Findings, Plan, Approve), run in the master session, then the start of Build.
+Phase 1 (Request) runs in the director chat, which then starts the item chat (section 1a). Phases 2-5 (Findings, Plan, Approve, Build) run in that **item chat**, which the user answers; the director steps back.
 Every reply opens with the status card (`docs/loop.md`, "Status card"). Keep the plan row's State cell current. At Approve the row moves from `.coord/pending.md` to STATUS Pending work. Widgets: `.claude/skills/next-task/phases.md`.
 
 ## 1. Request
@@ -35,7 +35,14 @@ Every reply opens with the status card (`docs/loop.md`, "Status card"). Keep the
   words verbatim (and screenshot paths). A plan row's Scope cell counts as the request only if the user wrote or confirmed it.
 - STATUS: `request`.
 
-## 2. Findings
+## 1a. Start the item chat (director, once)
+Write the Request and the pending/STATUS row, then start one linked **Sonnet medium** chat `<ID> · <slug>`
+(start_session, user_asked, use_worktree false) and step back. Brief: you are the item chat for `<ID-slug>`; read the
+card, `AGENTS.md`, `docs/loop.md`; run sections 2-5 below and `/review-task`; the user answers you, not the director; send
+the director one line (tier, reason) after Findings; edit only your own row in the main checkout's `.coord/STATUS.md` by
+absolute path; never start a chat; never merge. The director asks the user only about merges, releases and cross-item matters.
+
+## 2. Findings (item chat)
 Answer the card's Findings lines with evidence. Never skip this, whatever the tier.
 - **Scan first:** if `.coord/research/<slug>.md` exists (slug = the item name without its leading `<ID>-`), run
   `pwsh -NoProfile -File tools/scan-delta.ps1 -Slug <slug>`. On failure, resolve the missing input or Git error before
@@ -45,19 +52,18 @@ Answer the card's Findings lines with evidence. Never skip this, whatever the ti
   and delta as inputs. With no scan, follow the existing scout/audit path below.
 - **Low:** your own scout: a few `rg` and targeted reads, at most about ten tool calls. If that is not enough, or the item
   is a bug whose cause you cannot prove, raise it to Medium and use the audit.
-- **Medium, High:** fill `.coord/templates/findings.md` into `.coord/tasks/<ID-slug>-audit.md` and start a linked **Haiku**
-  sub-session `<ID> · audit · <slug>`, role `auditor` (start_session, user_asked, use_worktree false, wake_when_done). Its
-  brief: in the master checkout (absolute paths, product files read-only) run
-  `CODEX_SANDBOX=read-only bash .coord/tools/codex-run.sh director <ID-slug>-audit .coord/tasks/<ID-slug>-audit.md` in the
-  background, wait for the exit notification, copy the report named on the final `DONE via <role>. Report: <path>` line to
-  `.coord/reports/<ID-slug>-audit.md`, and end with the path and its `READY:` line. No `DONE` line (stopped or failed):
-  stop and report the wrapper's last lines; never reuse an earlier run's output. Tell the user in one line: folder, brief,
-  log, report. Wait for the note; do not poll.
+- **Medium, High:** fill `.coord/templates/findings.md` into `.coord/tasks/<ID-slug>-audit.md`, then in the main checkout
+  (absolute paths, product files read-only) run
+  `CODEX_SANDBOX=read-only bash .coord/tools/codex-run.sh director <ID-slug>-audit .coord/tasks/<ID-slug>-audit.md` as a
+  background run in this chat (no audit chat). On exit copy the report named on the final `DONE via <role>. Report: <path>`
+  line to `.coord/reports/<ID-slug>-audit.md`. No `DONE` line: stop and report the wrapper's last lines; never reuse an
+  earlier run's output. Tell the user in one line: folder, brief, log, report. Do not poll.
 - Stop and ask the user, with the card, when: dev already does what was asked; a bug did not reproduce (`READY: no`); the
   findings show the request means something else.
+- Tier: set it here and send the director one line (tier, reason). If findings raise it, tell the user at once: what changes, why, the extra cost.
 - STATUS: `findings`.
 
-## 3. Plan
+## 3. Plan (item chat)
 Fill the card's `## Plan`, `## Files` (exact paths; the gate reads them), `## Contracts`, `Tier:` and "For Codex" (role
 picked by the job with a one-line reason, `docs/agents.md`; Done means with offline checks only). Write "Expected time"
 from similar runs in `.coord/logs/usage.tsv`; over an hour, say so and offer a smaller cut. Side tasks (`T`, tooling
@@ -66,25 +72,23 @@ catches here. Put every open scope question in "Scope questions" now. Over about
 lettered steps (.claude/skills/next-task/phases.md, 3. Plan). A touched file over 600 lines: answer the "one job?" check from
 `docs/coding.md`. STATUS: `plan ready (<tier>)`.
 
-## 4. Approve
+## 4. Approve (item chat)
 Show the user, under the status card: Now -> After, the test plan (code and UI), the gates and what they catch, Files,
 and what you need from them. Ask one question: approve, change, or drop. Record their answer verbatim under
 `## Approve`. Change: back to Plan. Drop: STATUS `dropped`, delete the untracked card on their word.
-On approval, from the master checkout, run
+On approval, from the main checkout (this chat's start folder), run
 `pwsh -NoProfile -File tools/approve.ps1 -Task <ID-slug> -Prefix <prefix>` (add `-NoWorktree` only when the user said so).
 FAIL: stop and tell the user the reason. PASS: the script created the branch and committed the card and audit files.
-STATUS: `approved`.
+STATUS: `approved` (your own row only).
 
-## 5. Start Build
-Start the Build sub-session `<ID> · build · <slug>` (linked, **Sonnet medium**, use_worktree false; names and roles:
-`docs/loop.md`) with a brief that says:
-- your role is `builder`; show it on the status card's first line; rename yourself `<ID> · review · <slug>` when Check
-  starts and `<ID> · test · <slug>` at the hand test;
-- work only in `.claude/worktrees/<prefix>/<ID-slug>` with absolute paths; read the card first;
-- launch `bash .coord/tools/codex-run.sh director <ID-slug> .coord/tasks/<ID-slug>.md` there, run `/review-task <ID-slug>`
-  when it exits, relaunch rework itself, commit each round on the item branch; you start no other chat;
-- open every reply with the status card; ask the user, with the card, whatever the bounds check marks "ask the user";
-- never touch dev or STATUS; never mint IDs;
-- after Check accepts: run `tools/dev.ps1` from the worktree, verify the dev badge, EXE, DATA and log paths, give the user
-  the Plan's UI checks, record their result under `## Hand test`, report back.
+## 5. Build (same chat)
+Continue in this chat; no new chat. Show the user the status card, role `builder` on line one. Rename the chat
+`<ID> · review · <slug>` when Check starts and `<ID> · test · <slug>` at the hand test.
+- Work only in `.claude/worktrees/<prefix>/<ID-slug>` with absolute paths.
+- Launch `bash .coord/tools/codex-run.sh director <ID-slug> .coord/tasks/<ID-slug>.md` there, run `/review-task <ID-slug>`
+  when it exits, relaunch rework yourself, commit each round on the item branch.
+- Ask the user, with the card, whatever the bounds check marks "ask the user". Never touch dev or other STATUS rows;
+  never mint IDs; never start a chat.
+- After Check accepts: run `tools/dev.ps1` from the worktree, verify the dev badge, EXE, DATA and log paths, give the user
+  the Plan's UI checks, record their result under `## Hand test`, tell the director it is ready to merge.
 STATUS: `building`.

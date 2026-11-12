@@ -6,13 +6,11 @@
   not a wall: the user talks to either level directly. Testing an item or changing its scope goes to its sub-session;
   backlog and cross-item matters go to the master. Assume the master always finds out; it may give
   its view through the sub-session but does not override what the user asked there.
-- **A master** owns its area's STATUS rows and the roadmap, runs Request to Approve and Merge, checks Files overlap
-  before dispatching (`tools/files-overlap.ps1`), and starts sub-sessions. It never runs Codex, builds or hand-test
-  launches itself; its own reading is the Low-tier scout.
-- **Routing:** directors do not do item work themselves. They ask the user how to route it; the default is a
-  Sonnet-or-lower sub-chat per change that runs Codex workers. Sonnet when the user will refine the ask in that chat
-  (user, 2026-11-06: "use sonnet"); Haiku when the brief fully specifies the job, such as audits and tests, so the user
-  has no need to "travel" with the delegation.
+- **A master** owns its area's STATUS (except an item chat's own row) and the roadmap, writes each Request, checks Files
+  overlap before dispatching (`tools/files-overlap.ps1`), starts the item chat once, and merges. It never runs Codex,
+  builds or hand-test launches itself, and does not scout or plan items (v5.4.0).
+- **Routing:** directors do not do item work themselves. The default is one Sonnet item chat per change that runs Codex
+  workers (user, 2026-11-06: "use sonnet"); Haiku only when the brief fully specifies a repeatable job.
 - **Step back after dispatch.** Once a director dispatches, it steps back. User: "Assume that when top level delegates,
   i am traveling WITH that delegation to work together with Sonnet etc. Otherwise expect that it finishes what its
   working on and updates you periodically."
@@ -27,20 +25,20 @@
   notes back into the chat, so the master resumes from its own notes rather than the summary alone.
 - **Master name:** `<Role> <N> · LP<vX.Y.Z> · <slug>`, Role the chat's role (Master, Loop Hub, Roadmap Hub), N one
   higher than the last of its role (STATUS "Working rules" names the current one), vX.Y.Z the loop version above
-  (written `LPv5.3.0` so it never reads as a `Loop` item ID), the slug the remaining work it was opened for. When a
+  (written `LPv5.4.0` so it never reads as a `Loop` item ID), the slug the remaining work it was opened for. When a
   merged item bumps the loop version, the merging director updates STATUS and renames all three live director chats to
-  the new `LP<vX.Y.Z>` (user, 2026-11-06: "propogate the versions to yourself, master4 and roadmap"). Example: `Master 4 · LPv5.3.0 · design-tokens`.
-- **Sub-session per step, well scoped:** each has one item, one step, one worktree, and a brief that names its done
-  condition. At most two sub-sessions per item: one to investigate, one to build, test and wrap up (`A55` ran an audit chat,
-  then a test chat); a third only on the user's word. The item card is what they share. A sub-session records the user's scope changes on its card in the
-  user's words and gets a design approval from the user itself. Name: `<ID> · <step> · <slug>`, for example `A1 · build · list-commands`. Its **role** is shown in its
-  status card.
+  the new `LP<vX.Y.Z>` (user, 2026-11-06: "propogate the versions to yourself, master4 and roadmap"). Example: `Master 4 · LPv5.4.0 · design-tokens`.
+- **One item chat per item** (v5.4.0; user, 2026-11-12: too many hops and two sets of buttons): one item, one worktree,
+  a brief that names its done condition. It does Findings through hand test, sets the tier and tells the director in one
+  line, and the user answers it. A second chat only if it sat idle over an hour with a large context, or on the user's
+  word. It records the user's scope changes on the card in their words. Name: `<ID> · <step> · <slug>`, for example
+  `A1 · build · list-commands`; its **role** is shown in its status card.
   | Step | Role | When | Model | Does |
   |---|---|---|---|---|
   | `scan` | `scout` | rarely: a Low scout too big for the master | Haiku | read-only findings, no Codex |
-  | `audit` | `auditor` | Findings for Medium, High | Haiku | runs the Codex findings audit, leaves it untracked until Approve, reports |
-  | `build` | `builder` | after Approve | Sonnet medium | runs Codex, then Check (`/review-task`) and the hand-test handover |
-  | `review` | `reviewer` | Check; a fresh one only when the build session stalled | Sonnet medium | `/review-task` |
+  | `audit` | `auditor` | no longer a chat: the item chat runs the Codex audit itself | n/a | `.claude/agents/auditor.md` stays for an explicit ask |
+  | `build` | `builder` | the item chat's role after Approve | Sonnet medium | runs Codex, then Check (`/review-task`) and the hand-test handover |
+  | `review` | `reviewer` | Check; the item chat renamed; a fresh one only when it stalled | Sonnet medium | `/review-task` |
   | `test` | `tester` | the hand test; a separate one only for a re-test the user asked for | Sonnet medium | launches the build, gives the UI checks, records the result |
   Each role's model, effort and tools are fixed in `.claude/agents/<role>.md` (builder, reviewer, auditor); this table says when to use them.
   A build session moving into Check or Hand test renames itself to that step (`A1 · review · list-commands`,

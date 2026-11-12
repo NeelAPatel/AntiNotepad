@@ -8,7 +8,7 @@ Newest first. History before 2026-10-23 (overnight build log and write-up) is in
 2. Design changes are lab-first: the user approves the lab before the real change.
 3. Never type into or stop the installed copy; dev uses `tools/dev.ps1`; upgrade only on request with `tools/install.ps1`.
 4. Codex implements every item in a build chat; Codex checks run offline only; Claude briefs, gates and relays.
-5. At most two chats per item (investigate; build, test, wrap up); a sub-chat never starts a chat.
+5. One chat per item (Findings through hand test; user answers it); it never starts a chat (v5.4.0).
 6. Directors (top-level chats) route work, own STATUS, and alone merge to dev and main; the user is the CEO.
 7. Item branches are `<prefix>/<ID-slug>` in worktrees made at Approve; dev gets tidy commits plus one `--no-ff` merge per item.
 8. `main` is releases only: fast-forwarded on the user's go and tagged semver.
@@ -139,4 +139,5 @@ C28-loop-cheap-checks; v1 was C13-dev-loop-kit through C25. v2.2 was never activ
 A merged item that changes the phases, the roles or who runs which phase bumps the major version (new master at the next
 handover); new checks, scripts, routes or research steps bump the minor version and need no new master. Changes to chat output only (reply style, status card or hook wording) bump the patch version (`x.y.1`).
 
+- v5.4.0 (2026-11-12, Loop11-one-chat-flow): one chat per item; it sets the tier, runs Findings to hand test, owns its STATUS row; director only writes Request and merges.
 - v5.3.0 (2026-11-08, L6-lv4-docs-diet): docs/loop.md split by audience, coding rules path-scoped, L prefix added.

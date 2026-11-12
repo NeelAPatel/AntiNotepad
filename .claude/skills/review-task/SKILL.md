@@ -20,19 +20,19 @@ Phase detail: `.claude/skills/review-task/phases.md`.
 
 Branch, commits ahead of dev and changed files are above. A missing card stops this skill.
 
-Phase 6 (Check) of `docs/loop.md`, then the hand-over. Every reply opens with the status card, role `reviewer` (then
+Phase 6 (Check) of `docs/loop.md`, then the hand-over. Run by the item chat that built it. Every reply opens with the status card, role `reviewer` (then
 `tester` at the hand-over). Read report sections and verdict lines, not whole diffs. Never fix product code here; rework goes
 back to Codex.
 
 ## 1. Read the card
 From `.coord/tasks/<ID-slug>.md`: `Tier:`, `## Request`, `## Plan` (After, Must not change, Gates, Test plan), `## Approve`.
-Missing Plan or Approve: stop, tell the master the item skipped phases. Missing tier: treat as Medium, say so.
+Missing Plan or Approve: stop, tell the director the item skipped phases. Missing tier: treat as Medium, say so.
 `<round>` is the round just finished: `<ID-slug>`, or `<ID-slug>-rN` after a rework. `.coord/reports/<round>.md` needs
 "Change list", "Behavior changes" and "Plan deviations"; if not, that is a rework.
 
 ## 2. Gate (always)
 If `dev` is not an ancestor of HEAD, run `pwsh -NoProfile -File tools/catch-up.ps1 -Task <ID-slug>` (rebase only; no push,
-no force-push), then the gate. CONFLICT: stop, leave the rebase open, tell the master (step 4a).
+no force-push), then the gate. CONFLICT: stop, leave the rebase open, tell the director (step 4a).
 
 `pwsh -NoProfile -File tools/gate.ps1 -Task <round>` from the worktree writes `.coord/reports/<round>.gate.md` (not
 committed); read only its Summary. Fail: triage (4a) before relaunching anything. Warnings (scope, size): carry to step 4.
@@ -54,8 +54,8 @@ the card path, round and report path, ask for one line per difference. You still
 - Gate and review result lines.
 - One line per difference: **within plan**, **justified** (why the user need not decide), or **ask the user**.
 - Comments and formatting follow `docs/coding.md` (on touch); a gap is a `code` rework line.
-- "Noticed": side bugs and follow-ups as proposals; tell the master each in one line now (`docs/loop.md`, "Proposals go
-  into STATUS at once").
+- "Noticed": side bugs and follow-ups as proposals; tell the director each in one line now (`docs/loop.md`, "Proposals go
+  into `.coord/pending.md` at once").
 Then:
 - Review `rework`, a blocker or major finding, a missing Behavior changes entry, or a broken "Must not change": triage (4a).
   Rounds `-r2` and `-r3` run without asking; `-r4` needs the user's go.
@@ -69,22 +69,22 @@ Name one cause and route by it (`.claude/skills/review-task/phases.md`, Triage, 
 |---|---|
 | `code`: build misses the Plan | `<ID-slug>-rN` brief from `.coord/templates/round.md` with exactly the failing lines or proven findings; relaunch Codex; run this skill again on exit |
 | `test`: a selftest, contract or probe is wrong | round brief limited to the test files; say so under "Why this round" |
-| `plan`: Findings or Plan were wrong | stop; write the corrected plan as the round brief, ask the user to approve it, tell the master |
-| `env`: tooling, cache, flaky run, sandbox | re-run the gate once; still failing: one-line gate fix if it is the manager's, else tell the master |
+| `plan`: Findings or Plan were wrong | stop; write the corrected plan as the round brief, ask the user to approve it, tell the director |
+| `env`: tooling, cache, flaky run, sandbox | re-run the gate once; still failing: one-line gate fix if it is the manager's, else tell the director |
 | `conflict`: catch-up stopped on conflicts | resolve on the branch keeping both sides, `git add`, `git rebase --continue`, re-run the gate; a semantic clash: `git rebase --abort` and route as `plan` |
 | `judgment`: only the user can decide | ask that one question with the card; STATUS `ask-user` |
-Add one "Misses" line per failure in `## Check` (found at, cause, caught by, should have caught, lesson); the master copies
+Add one "Misses" line per failure in `## Check` (found at, cause, caught by, should have caught, lesson); the director copies
 them to `.coord/lessons.md` at Merge.
 
 ## 5. Hand over
 A catch-up after acceptance printing `RETEST: yes` repeats the hand test before Merge; `RETEST: no` keeps the result.
 With UI checks: run `tools/dev.ps1` from the worktree just before the hand checks, verify the printed EXE and DATA paths
 and the app log, and report not-ready if any fails. Give the user the dev badge text to expect, the Plan's UI checks and the
-report's new ones; record their result verbatim under `## Hand test`, commit it, tell the master. A failed check is
+report's new ones; record their result verbatim under `## Hand test`, commit it, tell the director. A failed check is
 triaged (4a) with a "Misses" line. Not visible: say no hand test is needed. Never launch during review or rework.
 
 ## 6. Commit review (before suggesting the merge)
 After the hand test passes (at once if not visible), tidy the branch as `/merge-task` step 0 says: fold tiny and
 back-and-forth commits, make every message say what changed, drop lab and debug code, keep each commit buildable. Then
-`tools/catch-up.ps1 -Task <ID-slug>`, re-run the gate at the tip, tell the master it is ready to merge, and record the
+`tools/catch-up.ps1 -Task <ID-slug>`, re-run the gate at the tip, tell the director it is ready to merge, and record the
 tidy-up as one line under `## Check`.
