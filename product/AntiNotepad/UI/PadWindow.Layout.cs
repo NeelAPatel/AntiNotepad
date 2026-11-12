@@ -229,7 +229,7 @@ internal sealed partial class PadWindow
         _badges.Children.Clear();
         if (_isDev) _badges.Children.Add(DevBadge(p.Number));
         _badges.IsVisible = _isDev;
-        _icons.Children.Add(Kit.IconButton(Glyph.Search, "Search notes (Ctrl+F)", p, () => OpenSearch()));
+        _icons.Children.Add(Kit.IconButton(Glyph.Search, "Search notes (Ctrl+F)", p, ToggleSearch));
         _icons.Children.Add(Kit.IconButton(Glyph.Split, "Split view with a slot (Ctrl+\\)", p, ToggleSplit));
         // Pinned: the pin is filled with the accent, so the state reads at a glance.
         _icons.Children.Add(Kit.IconButton(Glyph.Pin, Settings.Pinned ? "Unpin (Ctrl+T)" : "Keep on top (Ctrl+T)", p, TogglePin,

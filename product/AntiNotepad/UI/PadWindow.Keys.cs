@@ -162,6 +162,12 @@ internal sealed partial class PadWindow
         search.FocusQuery();
     }
 
+    internal void ToggleSearch()
+    {
+        if (_overlay is SearchOverlay) CloseOverlay();
+        else OpenSearch();
+    }
+
     private SettingsWindow? _settingsWindow;
 
     /// <summary>Settings open in their own window beside the pad, so every change shows on the real note.</summary>

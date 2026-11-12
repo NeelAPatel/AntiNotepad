@@ -21,7 +21,7 @@ Updated: 2026-11-12 · Product: AntiNotepad (`product/AntiNotepad`) · installed
 - Roadmap page: http://localhost:47811 (`/roadmap`); reads STATUS + pending + archive.
 
 ## Now
-- Nothing in work. Last finished: T13-roadmap-fingerprint (merged dev 2026-11-12); before it T12-settings-drift-readers.
+- Nothing in work. A14-search-open-fade-up is next (plan ready; approve now that A13 is merged). Last finished: A13-search-toggle-off (dev 2026-11-12).
 
 ## Plan
 Active rows only (the roadmap script parses this table; same 5 columns as `.coord/pending.md`).
