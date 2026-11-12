@@ -1,6 +1,6 @@
 # Dev loop (per item)
 
-Who does what, when, and what each phase leaves behind. Start/resume: .coord/STATUS.md; roadmap: /roadmap (http://localhost:47811). Routing: docs/agents.md; terms: docs/glossary.md; coding: docs/coding.md; chats, names, handover: docs/loop-sessions.md; locked choices and rationale: docs/decisions.md.
+Who does what, when, and what each phase leaves behind. Start/resume: .coord/STATUS.md; roadmap: /roadmap (http://localhost:47811).
 
 Every item has one **item card**, `.coord/tasks/<ID-slug>.md` (from `.coord/templates/item.md`), that grows phase by phase: request, findings, approved plan, then the check of what was done against both. Budget: 4 KB per card (logs go in reports).
 
@@ -44,9 +44,9 @@ One line by default: `**>> <ID-slug>** · ● <phase> · <what changed>`. The **
 **Waiting on you:** <the decision block, or "nothing">
 ```
 - Reply body, decision block and glosses: `.claude/output-styles/antinotepad.md`. `✓` done, `●` current, `○` not reached, `–` skipped by tier; rework is `● Build (r2)`. Chats add their role on line one (`· builder`).
-- Tier reason slugs: Low `ui-text`, `theme-tokens`, `docs-tools`, `calc-rules`, `pure-move`; Medium `editor-feature`, `settings-section`, `new-setting`, `shared-state`, `bug-unproven-cause`; High `store-notes`, `startup-quit`, `platform-window`, `timers-deferred`, `save-paths`, `memory`.
+- Tier reason slugs: the "Touches" column of Tiers, as a lowercase slug (`docs-tools`, `editor-feature`, `store-notes`, ...).
 - One line per field and a blank line before `---`. Several items in flight: one card each. A note that changes nothing gets one plain line, no card.
-- Widgets: question cards (`AskUserQuestion`) for decisions, next-step box (`wrap_up`) after work, task list (`update_plan`) per phase; the card stays text. The `UserPromptSubmit` hook (`tools/loop-card.ps1`) lists the items in flight.
+- The `UserPromptSubmit` hook (`tools/loop-card.ps1`) lists the items in flight.
 
 ## Rules
 - Every bug fixed adds a `CONTRACTS` row.
@@ -54,7 +54,7 @@ One line by default: `**>> <ID-slug>** · ● <phase> · <what changed>`. The **
 - Codex runs are launched by the item's build chat as background runs in that chat; the director never launches Codex. Title starts `[Codexing..] ` while a run goes; after cleanup it becomes `[Closed] <ID> · merged · <slug>`.
 - Sub-chats own Build, Check and Hand test on the card; the director owns Request, Findings, Plan, Approve and STATUS. A user decision is asked with the card and recorded verbatim.
 - Release markers in the Plan: ask the user before moving `main`; only on their go. Design changes are lab-first (`AGENTS.md`).
-- **Side tasks** (`T`, tooling that does not ship) take the fast lane: card of a few lines or none, no audit, no Codex if the Claude chat can do it in minutes, only the checks the change touches; one commit on dev and a short change list. `Loop` and `D` items keep a short card and a branch.
+- **Side tasks** (`T`, tooling that does not ship): fast lane, a few-line card or none, no audit, only the checks the change touches. `Loop` and `D` items keep a short card and a branch.
 - **Who builds:** every item is built by Codex in a builder chat, role by the job (`docs/agents.md`); a docs-only change of a few lines may be made by the builder itself, and says so in the report. Codex checks are offline only.
 - **Progress checks need evidence:** two samples about 30 s apart, never one timestamp.
 - **Rule overrides:** the chat names the rule once; on the user's go it proceeds and logs the override in the item's `.coord/lessons.md` row.
@@ -74,7 +74,7 @@ One line by default: `**>> <ID-slug>** · ● <phase> · <what changed>`. The **
 - An item fitting several prefixes takes the one it affects most. Always write `<ID>-<slug>`, never a bare ID or a range.
 - **A number is given only on the user's confirmation** of an idea and scope; until then it is an unnumbered `idea: <slug>` row with `step: <slug>` rows (or a Backlog line).
 - One ID = one idea; steps are lettered in run order (`A1a-<slug>`), each a loop run with its own card, branch and commit; more than about 8 steps: split the idea. Rework rounds add `-r<N>`.
-- Eras: counters can be reset; an ID only means one item within its era (Era 0 and Era 1 are in `docs/decisions.md`). Numbers are never reused within an era. L restarted at `L1` on 2026-11-08; slugs are lowercase.
+- Eras (`docs/decisions.md`): an ID means one item within its era; numbers are never reused in an era. Slugs are lowercase.
 
 ## Branches and triggers
 One `<prefix>/<ID-slug>` per item, made at Approve, in a worktree by default. Tidy buildable commits plus one `--no-ff` merge commit per item carrying STATUS and lessons. Detail: .claude/skills/merge-task/branches.md.
@@ -83,14 +83,4 @@ One `<prefix>/<ID-slug>` per item, made at Approve, in a worktree by default. Ti
 - Any time: `pwsh -NoProfile -File tools/gate.ps1 -Task <ID-slug>`. CI (manual): GitHub Actions `gate` runs `tools/gate.ps1 -Ci`.
 
 ## Where the detail lives
-| Detail | File |
-|---|---|
-| Findings, Plan, Gates, Widgets | .claude/skills/next-task/phases.md |
-| Check, triage, lessons, scores, rework | .claude/skills/review-task/phases.md |
-| Branches, catch-up | .claude/skills/merge-task/branches.md |
-| Chats, names, handover, file inventory | docs/loop-sessions.md |
-| Coding rules | .claude/rules/coding.md (Codex reads docs/coding.md) |
-| Agent routing | docs/agents.md |
-| Build/dev/install | docs/dev-loop.md |
-| Terms | docs/glossary.md |
-| Locked choices, rationale, version history | docs/decisions.md |
+Phases: `.claude/skills/{next-task/phases.md,review-task/phases.md,merge-task/branches.md}`; chats, names, handover: docs/loop-sessions.md; coding: .claude/rules/coding.md (Codex: docs/coding.md); routing: docs/agents.md; build/install: docs/dev-loop.md; terms: docs/glossary.md; locked choices and history: docs/decisions.md.
