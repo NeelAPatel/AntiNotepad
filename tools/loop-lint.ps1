@@ -74,6 +74,26 @@ try {
             if ($missing) { Write-Problem $path $number 'missing-path' $line }
         }
     }
+    # Hot-file budgets: WARN only, never fails (bytes).
+    $budgets = @(
+        @{ Path = '.coord/STATUS.md'; Limit = 8192 }, @{ Path = 'docs/loop.md'; Limit = 8192 },
+        @{ Path = '.coord/lessons.md'; Limit = 3072 }
+    )
+    foreach ($b in $budgets) {
+        $full = Join-Path $Root $b.Path
+        if ((Test-Path -LiteralPath $full) -and (Get-Item -LiteralPath $full).Length -gt $b.Limit) {
+            Write-Output "  WARN budget: $($b.Path) is $((Get-Item -LiteralPath $full).Length) bytes (budget $($b.Limit))"
+        }
+    }
+    $cards = Join-Path $Root '.coord/tasks'
+    if (Test-Path -LiteralPath $cards) {
+        # Only the current item's card: older cards are history and stay as they are.
+        $branchName = [string](& git -C $Root rev-parse --abbrev-ref HEAD 2>$null)
+        $slug = if ($branchName -match '^[^/]+/(.+)$') { $Matches[1] } else { '' }
+        foreach ($card in Get-ChildItem -LiteralPath $cards -Filter "$slug.md" -File | Where-Object { $slug -and $_.Length -gt 4096 }) {
+            Write-Output "  WARN budget: .coord/tasks/$($card.Name) is $($card.Length) bytes (budget 4096)"
+        }
+    }
     if ($script:problems -gt 0) { Write-Output "LOOP-LINT: FAIL ($script:problems problems)"; exit 1 }
     Write-Output "LOOP-LINT: PASS ($($files.Count) files)"
     exit 0
