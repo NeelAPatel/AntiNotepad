@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`). Budget: 4 KB.
 
 Tier: <set by the item chat> · ui-pills
-State: hand test
+State: hand-tested
 Branch: `feat/A15-notes-edge-pills` in `.claude/worktrees/feat/A15-notes-edge-pills` (created at Approve)
 
 ## Request
@@ -55,4 +55,4 @@ Report `.coord/reports/A15-notes-edge-pills.md`, short: 1 Summary; 2 Change list
 Gate offline PASS (build 0 warnings, SELFTEST PASS, seam, tokens, format, scope, size). Diff within plan; no deviations. No lens review (Low tier). Noticed: tokens baseline can be lowered (-Update), left alone.
 
 ## Hand test
-Dev copy running from this worktree (pid 25492, build/dev, test data build/testdata). Result: pending.
+Dev copy running from this worktree (pid 25492, build/dev, test data build/testdata). Result (user, 2026-11-12): "Passed". Dev copy stopped.
