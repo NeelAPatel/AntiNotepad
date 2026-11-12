@@ -57,3 +57,12 @@ None (no product code).
 
 ## Approve
 User, 2026-11-12: "Approve, start it" (on the plan above: umbrella branch, steps a-g, overnight, merge tomorrow after reading the report; plugins and connectors guide paused).
+
+## Build
+Overnight build chat, 2026-11-12: steps a-g committed one per step (b58689e, 3fc7eda, 6f87ff4, 8aafbe3, e06c417, 14e5e76, d1f28e2); no Codex needed (docs and scripts). Blocked: `docs/loop.md` edit (ask rule), so the slim version is a proposal file. Report: `.coord/reports/Loop9-loop-slim.md`.
+
+## Check
+Offline gate PASS on every commit. STATUS Plan md5 identical; roadmap-data parses 121 rows before and after; STATUS 8 KB target missed (Plan table is 42 KB).
+
+## Hand test
+None beyond the user reading `.coord/reports/Loop9-loop-slim.md`.
