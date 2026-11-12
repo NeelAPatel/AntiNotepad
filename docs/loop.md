@@ -2,7 +2,7 @@
 
 Who does what, and what each phase leaves behind. Start/resume: .coord/STATUS.md; roadmap: /roadmap (http://localhost:47811).
 
-Every item has one **item card**, `.coord/tasks/<ID-slug>.md` (from `.coord/templates/item.md`) that grows phase by phase. Budget 4 KB (logs go in reports).
+Every item has one **item card**, `.coord/tasks/<ID-slug>.md` (from `.coord/templates/item.md`) that grows phase by phase. .
 
 **Loop version: v5.4.0** (LP<vX.Y.Z> in director names). Roles or ownership change: major; new checks, scripts or routes: minor; chat output only: patch. On a bump the merging director updates STATUS and live director names.
 
