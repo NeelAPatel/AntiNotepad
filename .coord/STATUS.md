@@ -1,6 +1,6 @@
 # STATUS
 
-Updated: 2026-11-12 · Product: AntiNotepad (`product/AntiNotepad`) · Loop v5.3.0 · installed `v0.7.0-rc1`
+Updated: 2026-11-12 · Product: AntiNotepad (`product/AntiNotepad`) · installed `v0.7.0-rc1`
 - Only active work lives here. Pending: `.coord/pending.md`. Finished: `.coord/status-archive.md`. Detail: item card in `.coord/tasks/`.
 
 ## Working rules right now
@@ -17,10 +17,11 @@ Updated: 2026-11-12 · Product: AntiNotepad (`product/AntiNotepad`) · Loop v5.3
 - History rewritten 2026-10-29 (623 commits to 156). Old hashes: tags `archive/full-history-2026-10-29`, `archive/main-2026-10-29`, bundle `AntiNotepad-history-backup-2026-10-29.bundle`.
 - Installed copy: `v0.7.0-rc1` (upgrade only on request, `tools/install.ps1`).
 - Locked choices: `docs/decisions.md`. Phases and states: `docs/loop.md`. Files: `docs/loop-sessions.md`.
+- Loop version: `docs/loop.md`.
 - Roadmap page: http://localhost:47811 (`/roadmap`); reads STATUS + pending + archive.
 
 ## Now
-- Loop10-status-split (Medium): building; steps a-b done, c-g in progress. Card `.coord/tasks/Loop10-status-split.md`.
+- Loop10-status-split (Medium): checking; steps a-g built. Card `.coord/tasks/Loop10-status-split.md`.
 - Last finished: Loop9-loop-slim (merged dev 2026-11-12).
 
 ## Plan
@@ -29,7 +30,7 @@ Active rows only (the roadmap script parses this table; same 5 columns as `.coor
 ### Pending work
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
-| Loop10-status-split | STATUS holds only active work; pending list, archive and cards hold the rest; roadmap reads all tiers; dedupe docs. Card: `.coord/tasks/Loop10-status-split.md`. Starts after Loop9 merges | Medium | Medium | building (a-b done; step c waits for the preview nod) |
+| Loop10-status-split | STATUS holds only active work; pending list, archive and cards hold the rest; roadmap reads all tiers; dedupe docs. Card: `.coord/tasks/Loop10-status-split.md`. Starts after Loop9 merges | Medium | Medium | checking (a-g built; user approved preview 2026-11-12) |
 
 ## Open (needs the user)
 - Live check: A30 restart/sign-out saves an edit typed just before.

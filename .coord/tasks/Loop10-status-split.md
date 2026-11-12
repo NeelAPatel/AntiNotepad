@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`). Director (Loop Hub 3) writes Request to Approve; the build chat owns Build, Check, Hand test.
 
 Tier: Medium · docs-tools (loop tooling and docs; no product code)
-State: building (a-e done)
+State: checking
 Branch: `chore/Loop10-status-split` in `.claude/worktrees/chore/Loop10-status-split` (created at Approve). Starts after `Loop9-loop-slim` is merged to dev.
 
 ## Request
