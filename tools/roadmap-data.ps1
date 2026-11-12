@@ -110,7 +110,9 @@ function Get-RoadmapSection {
 function Get-RoadmapPlanRows {
     param(
         [Parameter(Mandatory)][AllowEmptyCollection()][AllowEmptyString()][string[]]$Lines,
-        [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.Generic.List[string]]$Warnings
+        [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.Generic.List[string]]$Warnings,
+        [string]$Heading = 'Pending work',
+        [string]$Source = 'STATUS.md'
     )
 
     $rows = [System.Collections.Generic.List[object]]::new()
@@ -119,18 +121,23 @@ function Get-RoadmapPlanRows {
         return [pscustomobject]@{ Rows = @(); Groups = 0; TableRows = 0 }
     }
 
-    $headingPattern = '^###\s+Pending work\s*$'
-    $start = -1
-    for ($index = 0; $index -lt $Lines.Count; $index++) {
-        if ($Lines[$index] -match $headingPattern) {
-            $start = $index + 1
-            break
+    # Plan rows live in three tiers: STATUS "### Pending work" (active), .coord/pending.md and the
+    # "## Finished rows" section of .coord/status-archive.md. -Heading '' reads the whole file.
+    $start = 0
+    if (-not [string]::IsNullOrWhiteSpace($Heading)) {
+        $headingPattern = '^#{2,3}\s+' + [regex]::Escape($Heading) + '\s*$'
+        $start = -1
+        for ($index = 0; $index -lt $Lines.Count; $index++) {
+            if ($Lines[$index] -match $headingPattern) {
+                $start = $index + 1
+                break
+            }
         }
-    }
 
-    if ($start -lt 0) {
-        Add-RoadmapWarning -Warnings $Warnings -Message 'STATUS.md: the Pending work section is missing.'
-        return [pscustomobject]@{ Rows = @(); Groups = 0; TableRows = 0 }
+        if ($start -lt 0) {
+            Add-RoadmapWarning -Warnings $Warnings -Message ('{0}: the {1} section is missing.' -f $Source, $Heading)
+            return [pscustomobject]@{ Rows = @(); Groups = 0; TableRows = 0 }
+        }
     }
 
     $end = $Lines.Count
@@ -177,7 +184,8 @@ function Get-RoadmapPlanRows {
             tier = $cells[2]
             effort = $cells[3]
             state = $cells[4]
-            section = 'Pending work'
+            section = $(if ([string]::IsNullOrWhiteSpace($Heading)) { 'Pending' } else { $Heading })
+            source = $Source
             group = $currentGroup
         })
     }
@@ -187,6 +195,49 @@ function Get-RoadmapPlanRows {
         Groups = $groups.Count
         TableRows = $tableRows
     }
+}
+
+function Get-RoadmapAllRows {
+    param(
+        [Parameter(Mandatory)][string]$Repository,
+        [Parameter(Mandatory)][AllowEmptyCollection()][AllowEmptyString()][string[]]$StatusLines,
+        [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.Generic.List[string]]$Warnings
+    )
+
+    $all = [System.Collections.Generic.List[object]]::new()
+    $tableRows = 0
+    $groups = 0
+    $parts = @(
+        @{ Lines = $StatusLines; Heading = 'Pending work'; Source = 'STATUS.md'; Optional = $false },
+        @{ Path = '.coord/pending.md'; Heading = ''; Source = 'pending.md'; Optional = $true },
+        @{ Path = '.coord/status-archive.md'; Heading = 'Finished rows'; Source = 'status-archive.md'; Optional = $true }
+    )
+    foreach ($part in $parts) {
+        $lines = $part.Lines
+        if ($part.ContainsKey('Path')) {
+            $full = Join-Path $Repository $part.Path
+            if (-not (Test-Path -LiteralPath $full -PathType Leaf)) {
+                continue
+            }
+            try {
+                $lines = @((Get-Content -LiteralPath $full -Raw -ErrorAction Stop) -split "\r?\n")
+            }
+            catch {
+                Add-RoadmapWarning -Warnings $Warnings -Message ('{0}: file is unreadable.' -f $part.Path)
+                continue
+            }
+            # An archive without a Finished rows section (older layout) is not an error.
+            if ($part.Heading -ne '' -and -not ($lines -match ('^#{2,3}\s+' + [regex]::Escape($part.Heading) + '\s*$'))) {
+                continue
+            }
+        }
+        $result = Get-RoadmapPlanRows -Lines $lines -Warnings $Warnings -Heading $part.Heading -Source $part.Source
+        foreach ($row in $result.Rows) { [void]$all.Add($row) }
+        $tableRows += $result.TableRows
+        $groups += $result.Groups
+    }
+
+    return [pscustomobject]@{ Rows = $all.ToArray(); Groups = $groups; TableRows = $tableRows }
 }
 
 function Get-RoadmapNowItems {
@@ -942,7 +993,7 @@ function Get-RoadmapData {
         Add-RoadmapWarning -Warnings $warnings -Message '.coord/STATUS.md: file is missing or unreadable.'
     }
 
-    $plan = Get-RoadmapPlanRows -Lines $statusLines -Warnings $warnings
+    $plan = Get-RoadmapAllRows -Repository $repository -StatusLines $statusLines -Warnings $warnings
     $nowSection = Get-RoadmapSection -Lines $statusLines -Heading 'Now'
     $whereSection = Get-RoadmapSection -Lines $statusLines -Heading 'Where things are'
     if ($statusLoaded -and [string]::IsNullOrWhiteSpace($nowSection)) {
@@ -1023,7 +1074,7 @@ function Get-RoadmapCheckResult {
     catch {
         $lines = @()
     }
-    $tableRows = Get-RoadmapPlanRows -Lines $lines -Warnings ([System.Collections.Generic.List[string]]::new())
+    $tableRows = Get-RoadmapAllRows -Repository $Repository -StatusLines $lines -Warnings ([System.Collections.Generic.List[string]]::new())
     if ($Data.rows.Count -ne $tableRows.TableRows) {
         return [pscustomobject]@{ Success = $false; Reason = ('Plan row count differs from STATUS table ({0} != {1}).' -f $Data.rows.Count, $tableRows.TableRows) }
     }
