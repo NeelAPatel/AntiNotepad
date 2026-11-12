@@ -1,7 +1,7 @@
 # A13-search-toggle-off: second click on the Search button closes search
 
 Tier: Low · ui-toggle (fast lane: director scout, no audit, no lab)
-State: approved
+State: hand-tested
 Branch: `fix/A13-search-toggle-off` in `.claude/worktrees/fix/A13-search-toggle-off` (created at Approve)
 
 ## Request
@@ -39,3 +39,14 @@ Role: quick (`docs/agents.md`), because it is a few lines in two known files. Th
 - Done means: the Search button closes an open search overlay; build 0 warnings, `SELFTEST PASS`, gate passes. No selftest is added (no window harness; Plan says hand test).
 
 Report `.coord/reports/A13-search-toggle-off.md`, short: 1 Summary; 2 Change list; 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 6 Contracts; 7 Lens review (skip: quick role); 8 Checks run; 9 Hand checks for the user.
+
+## Check
+Done by the build chat itself (read-only; `/review-task` is user-only), 2026-11-12.
+- **Gate:** `tools/gate.ps1 -Task A13-search-toggle-off -Offline` PASS (build 0 warnings, `SELFTEST PASS`, seam, tokens, format, scope, size).
+- **Requested vs approved vs done:** requested a second click on Search closes it; approved the Search button only toggling. Done: `ToggleSearch()` in `PadWindow.Keys.cs` (+6) and the Search icon wired to it in `PadWindow.Layout.cs` (1 line). Diff touches only the two Files. Within plan.
+- **Behavior:** Esc, X button, Ctrl+F/P/K, menu entry, Help overlay and open animation unchanged (A14-search-open-fade-up owns animation). A trash search also closes on click: within plan. Within plan.
+- **Coding rules:** no new comments needed; format check clean on changed lines.
+- **Noticed:** none. **Misses:** None.
+
+## Hand test
+Build checked: dev copy badge "dev", run from this worktree (`build/dev`). User, 2026-11-12, verbatim: "A13 works, hand tested and passed. relay info to subchat if needed but its cleared for merging to dev." Ctrl+F and the menu stay open-only.
