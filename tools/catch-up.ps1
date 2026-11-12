@@ -1,5 +1,5 @@
 <#
-Loop v5.3.0: fetches dev and rebases an item checkout onto it; pushes only with -Push, and only the item branch with --force-with-lease.
+Loop v5.3.0: fetches dev and rebases an item checkout onto it; merge runs from the local branch, so no push is suggested.
 Usage: pwsh -NoProfile -File tools/catch-up.ps1 -Task <ID-slug> [-Base dev] [-Push]
 Exit 0 = UP TO DATE/CLEAN; 1 = REFUSED; 2 = CONFLICT (hot files marked, rebase left open for resolution).
 #>
@@ -85,7 +85,7 @@ if ($LASTEXITCODE -ne 0) { Write-Host 'REFUSED: cannot list incoming files.'; ex
 $incoming = @(($incoming -join "`n").Split([char]0, [StringSplitOptions]::RemoveEmptyEntries))
 $rebaseOutput = @(& git -C $repoRoot rebase "refs/heads/$baseRef" 2>&1)
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "CLEAN: rebased onto $baseRef ($($incoming.Count) incoming file(s)); re-run tools/gate.ps1 -Task $Task; push with -Push or git push --force-with-lease origin $branch"
+    Write-Host "CLEAN: rebased onto $baseRef ($($incoming.Count) incoming file(s)); re-run tools/gate.ps1 -Task $Task; merge from the local branch (no push needed)"
     $incoming | ForEach-Object { Write-Host "  incoming $_" }
     Write-Retest $incoming
     Push-ItemBranch

@@ -116,3 +116,6 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
   migration; failed migration retains the old folder.
 - A name change updates runtime identities and assembly naming from props. Source namespaces and checked-in project/tool
   paths remain source layout choices.
+
+## Mods and settings scope
+Enable mods in user scope or the local settings file, never project scope: the app rewrites tracked `.claude/settings.json` and dirties the checkout (`tools/approve.ps1` now ignores that drift).

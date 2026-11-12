@@ -23,7 +23,7 @@
   Earlier masters are closed.
 - **Master notes:** each master keeps `.coord/directors/<slug>.md` (gitignored; slug from its name): its role, open
   threads, decisions waiting on the user, linked sub-sessions, and where it left off. It updates the file when a
-  decision is made, not later. After a context compaction a `SessionStart` hook (`tools/director-notes.ps1`) prints the
+  decision is made, not later. After a context compaction a `SessionStart` hook (`tools/director-notes.ps1`) prints only the active director's
   notes back into the chat, so the master resumes from its own notes rather than the summary alone.
 - **Master name:** `<Role> <N> · LP<vX.Y.Z> · <slug>`, Role the chat's role (Master, Loop Hub, Roadmap Hub), N one
   higher than the last of its role (STATUS "Working rules" names the current one), vX.Y.Z the loop version above
@@ -72,7 +72,7 @@
 | `tools/check-design-tokens.ps1` | inventory and ratchet literal design values |
 | `tools/loop-lint.ps1` | read-only consistency check of live loop files and their file references |
 | `tools/loop-lint.allow` | path, rule and line-substring exceptions for historical mentions |
-| `tools/catch-up.ps1` | rebase an item branch onto local dev, optionally push it with `--force-with-lease`; report conflicts and whether to repeat the hand test |
+| `tools/catch-up.ps1` | rebase an item branch onto local dev, report conflicts and whether to repeat the hand test |
 | `tools/files-overlap.ps1` | compare an item's Files with other item checkouts |
 | `tools/scan-delta.ps1` | compare a backlog scan SHA and Where files with dev; flag rescans and cards to read |
 | `tools/approve.ps1` | check the item cap and overlap, then create the branch and worktree |
@@ -90,5 +90,5 @@
 | `.coord/lessons.md` | misses (cause, caught by, should have caught) and per-item reviewer scores; master-owned |
 | `.github/workflows/gate.yml` | CI gate, manual trigger |
 | `tools/roadmap-data.ps1`, `tools/roadmap-serve.ps1`, `tools/roadmap/index.html`, `tools/roadmap.url`, `.claude/skills/roadmap/SKILL.md` | live roadmap from STATUS and Git (`/roadmap`); snapshot Artifact on request |
-| `tools/director-notes.ps1` | `SessionStart` hook after compaction: prints the master's `.coord/directors/<slug>.md` |
+| `tools/director-notes.ps1` | `SessionStart` hook after compaction: prints only the active director's `.coord/directors/<slug>.md` (director chats only) |
 | `.claude/settings.json` | hooks: status card plus roadmap auto-start (UserPromptSubmit), master notes after compaction (SessionStart); attribution off |

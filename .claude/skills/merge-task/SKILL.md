@@ -27,8 +27,7 @@ and tagging happen only on the user's explicit go. Every reply opens with the st
 0. **Commit review (the item's session, before it asks for this merge).** Ask the item's session whether it has done it;
    if not, it does it now: `git log --oneline dev..<branch>`, fold tiny and back-and-forth commits into the commit they
    belong to (`git commit --fixup <sha>`, then `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash dev`), reword vague
-   messages to `<ID-slug>: <what changed>`, drop lab variants and debug code, then `tools/catch-up.ps1 -Task <ID-slug>
-   -Push` (rebase, push with `--force-with-lease`, item branch only) and re-run the gate at the new tip. No fixed
+   messages to `<ID-slug>: <what changed>`, drop lab variants and debug code, then `tools/catch-up.ps1 -Task <ID-slug>` (rebase only; merge runs from the local branch, no force-push) and re-run the gate at the new tip. No fixed
    count: one commit per meaningful change. Never rebase or force-push from the master checkout.
 1. From the master checkout, run `pwsh -NoProfile -File tools/merge-preflight.ps1 -Task <ID-slug>`. It also builds
    each commit of `dev..<branch>` that touches product code and runs `--selftest`; a failure names the commit, and the
@@ -41,7 +40,7 @@ and tagging happen only on the user's explicit go. Every reply opens with the st
    (`git merge --abort` leaves dev as it was).
 4. Re-gate on dev: `pwsh -NoProfile -File tools/gate.ps1 -Task <ID-slug>` (scope step is expected to warn on dev; build,
    selftest and seam must pass; the gate report is not committed). Fail: tell the user, `git merge --abort`, do not push.
-5. STATUS: the plan row's State cell `done`, "Now" updated, gate line, any of the card's "Noticed" follow-ups not
+5. STATUS: the plan row's State cell `done`, "Now" updated (keep only the last 5 done items there; move older ones to `.coord/status-archive.md`), gate line, any of the card's "Noticed" follow-ups not
    already in STATUS as unnumbered plan or Backlog rows. `.coord/lessons.md`: copy the card's "Misses" lines, add the item's Scores row (rework rounds,
    gate fails, Codex review proven findings, design review findings, hand-test fails). If a Misses cause and "should
    have caught" pair now appears twice without a rule change, add an unnumbered `idea:` plan row naming the rule or bot

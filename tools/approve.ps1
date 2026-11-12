@@ -34,14 +34,14 @@ try {
     if ($branch -cne 'dev') { throw 'main checkout must be on dev' }
     Write-Host 'CHECK: main checkout on dev'
     $changes = @(Invoke-Git $root @('status', '--porcelain', '--untracked-files=no'))
-    if (@($changes | Where-Object { $_ -cnotmatch '^.. \.coord/STATUS\.md$' }).Count) { throw 'dirty checkout' }
+    if (@($changes | Where-Object { $_ -cnotmatch '^.. (\.coord/STATUS\.md|\.claude/settings\.json)$' }).Count) { throw 'dirty checkout' }
     & git -C $root diff --cached --quiet
     if ($LASTEXITCODE -ne 0) { throw 'staged changes in main checkout' }
     foreach ($marker in @('SQUASH_MSG', 'MERGE_HEAD')) {
         $path = (Invoke-Git $root @('rev-parse', '--path-format=absolute', '--git-path', $marker)) -join ''
         if (Test-Path -LiteralPath $path) { throw "merge in progress: $marker" }
     }
-    Write-Host 'CHECK: tracked changes limited to unstaged STATUS; no merge in progress'
+    Write-Host 'CHECK: tracked changes limited to unstaged STATUS and settings.json drift; no merge in progress'
 
     $card = ".coord/tasks/$Task.md"
     $untracked = @(Invoke-Git $root @('-c', 'core.quotePath=false', 'ls-files', '--others', '--exclude-standard'))

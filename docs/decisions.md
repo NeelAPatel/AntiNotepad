@@ -3,6 +3,36 @@
 Newest first. History before 2026-10-23 (overnight build log and write-up) is in git history and the tags `v0.1`,
 `antipad-v*` and `baseline/m8c-v1-compact`.
 
+## Locked choices (short list; detail and quotes below)
+1. Product: Windows 11 hotkey-summoned translucent scratchpad, Avalonia 12 + AvaloniaEdit 12 on .NET 10; show/hide speed first.
+2. Design changes are lab-first: the user approves the lab before the real change.
+3. Never type into or stop the installed copy; dev uses `tools/dev.ps1`; upgrade only on request with `tools/install.ps1`.
+4. Codex implements every item in a build chat; Codex checks run offline only; Claude briefs, gates and relays.
+5. At most two chats per item (investigate; build, test, wrap up); a sub-chat never starts a chat.
+6. Directors (top-level chats) route work, own STATUS, and alone merge to dev and main; the user is the CEO.
+7. Item branches are `<prefix>/<ID-slug>` in worktrees made at Approve; dev gets tidy commits plus one `--no-ff` merge per item.
+8. `main` is releases only: fast-forwarded on the user's go and tagged semver.
+9. IDs: prefixes `A`, `Loop`, `D`, `T`, `L`; a number only on the user's confirmation; always `<ID>-<slug>`.
+10. Tests are small `--selftest` capability checks; every fixed bug adds a `CONTRACTS` row.
+11. Hot files stay small: STATUS 8 KB, `docs/loop.md` 8 KB, lessons 3 KB, item cards 4 KB; history goes to archive files.
+12. Mods are enabled in user scope or the local settings file, never in tracked project settings.
+13. Approve cap is 3 items; only the user allows a one-off bypass.
+14. Never run `AntiNotepad.exe --quit` without `ANTINOTEPAD_DATA`; no Computer Use without the user's go.
+15. US spelling in UI; first-party libraries first.
+
+## 2026-11-12
+- **Loop slim-down** (Loop9-loop-slim): usage rose after Level 4 because long chats re-read big contexts, STATUS was 82 KB
+  and read by every director, the compaction hook printed every director's notes, project `ask` rules prompted on every
+  STATUS edit, and an enabled mod rewrote tracked `.claude/settings.json`. Level 4 itself (about 280 characters per turn)
+  was not the cause. Fixes: hot-file budgets, finished history in archives, the compaction hook prints only the active
+  director's notes, `ask` only on `docs/loop.md` and `AGENTS.md`, no force-push hints, approve ignores settings drift.
+  User: "put it on the roadmap with the correct prefix", run overnight on a branch, merge after reading the report.
+- **Rationale moved out of `docs/loop.md`:** priority (user, 2026-10-29): good development and codebase understanding
+  first, then saving usage; wasted usage is back-and-forth, so use widgets that cut it. Side tasks (user, 2026-10-31):
+  roadmap work may skip the pipeline "as its not a critical piece of the project". Loop freeze (user, 2026-10-31, lifted for
+  `Loop4-retro-fixes`): rules change only when lessons show the same miss twice or the user asks. Eras: Era 0
+  (2026-10-17 to 2026-10-29) used `A`, `C`, `N`, `P`, `S<n>-status`, all retired.
+
 ## 2026-11-06
 - **Merge policy: tidy commits plus a `--no-ff` merge commit, worktree by default** (Loop8-merge-policy, loop v5.2.0;
   supersedes the squash rule of the 2026-10-29 entry below). User to Master 4: "i prefer #2's bubbles ... so that i can
@@ -12,8 +42,8 @@ Newest first. History before 2026-10-23 (overnight build log and write-up) is in
   list of commits made on it and see if any of them can be squashed together, such as minute tiny changes, or a quick
   fix, etc." and "I'm okay with meaningful commits not commits for fixing 3 lines with a bit of back and forth".
   Rule: before Merge the item's session reviews `git log dev..<branch>` and folds tiny and back-and-forth commits
-  (no fixed count, every commit builds); the branch is rebased onto dev (catch-up rebases, pushing the item branch only
-  with `--force-with-lease`); the master lands it with `git merge --no-ff --no-commit`, adds STATUS and lessons, and
+  (no fixed count, every commit builds); the branch is rebased onto dev (catch-up rebases; later: no push, merge from the local branch;
+  originally pushed with `--force-with-lease`); the master lands it with `git merge --no-ff --no-commit`, adds STATUS and lessons, and
   commits once; no separate status commits; the branch is deleted with `git branch -d`. The merge preflight builds and
   selftests each commit that touches product code and names a failing one. Every item gets a worktree unless the user
   says otherwise. Also: the gate-Head check ignores later commits that touch only the card, reports or STATUS; the round
