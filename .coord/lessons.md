@@ -39,4 +39,5 @@ One row per merged item: what each check found. Empty rows on items that later h
 | 2026-11-12 | A13-search-toggle-off | Low | 0 (Check section missing at preflight; build chat filled it) | 0 | - | - | 0 | - |
 | 2026-11-12 | A14-search-open-fade-up | Low | 0 (builder fixed Codex flaw: hide must end overlay at once; stale gate head at preflight) | 0 | - | - | 0 | - |
 
+| 2026-11-12 | Loop11-one-chat-flow | Low | 0 (user asked to fix then merge: card intro typo and lost sentence fixed on branch) | 0 | - | - | 0 | - |
 Older rows: `.coord/lessons-archive.md` (budget: 3 KB here).

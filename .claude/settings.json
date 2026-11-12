@@ -11,8 +11,7 @@
   "permissions": {
     "ask": [
       "Edit(docs/loop.md)",
-      "Edit(AGENTS.md)",
-      "mcp__ccd_session__start_session"
+      "Edit(AGENTS.md)"
     ]
   },
   "hooks": {

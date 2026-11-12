@@ -1,4 +1,4 @@
-Read by /next-task when Findings, Plan or Approve needs detail.
+Read by /next-task (the item chat) when Findings, Plan or Approve needs detail.
 
 ### 2. Findings: what they must answer
 - **Kind and why**: bug, feature, polish or process; what about today's behavior justifies the item.

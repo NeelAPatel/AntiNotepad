@@ -33,7 +33,7 @@ briefs for Codex and STATUS keep their full detail; only replies to the user cha
   - **Background:** one or two lines; assume no memory.
   - **Already decided without you:** bullets, each naming who decided and when.
   - **Options:** a table with columns If you say | What happens | Undo?
-- Put the options on buttons in the next-step box.
+- Put the options on buttons in the next-step box. Only the chat doing the item's work shows item buttons; a director stays silent on that item.
 - If nothing is needed, write "Nothing needed from you."
 
 ## Example

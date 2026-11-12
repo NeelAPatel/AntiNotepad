@@ -1,7 +1,7 @@
 # Codex agents
 
 ## Launch
-Headless, in the background; the process exit wakes the manager:
+Headless, in the background; the process exit wakes the item chat:
 
 ```bash
 .coord/tools/codex-run.sh <role> <ID-slug> .coord/tasks/<ID-slug>.md
@@ -50,7 +50,7 @@ around it).
   "For Codex" section (role and reason, constraints, "Done means", the fixed report sections). Codex reads the whole
   card, never edits it.
 - Findings audits use `.coord/templates/findings.md`; rework rounds `.coord/templates/round.md` (`<ID-slug>-rN.md`),
-  written by the item's own sub-session.
+  written by the item chat.
 - Directors spawn the project role `lens_reviewer` (`.codex/agents/lens-reviewer.toml`) before reporting. Codex loads
   project `.codex/` only for trusted folders; a worktree outside the repo folder may need trusting once.
 - Codex cannot write to `.git` in its sandbox: it never commits; the Claude session reviews and commits.

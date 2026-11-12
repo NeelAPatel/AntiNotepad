@@ -13,7 +13,7 @@ Branch: `<feat|fix|refactor|docs|chore>/<ID-slug>` in `.claude/worktrees/<prefix
 - **Kind and why:** <bug | feature | polish | process>; <why today justifies it>
 - **Now:** <what it does today, with evidence (file:line, probe, user description); bugs: how reproduced>
 - **Where / Risk:** <files and callers reached; the riskiest part>
-- **Source:** <master scout | `.coord/reports/<ID-slug>-audit.md`>
+- **Source:** <own scout | `.coord/reports/<ID-slug>-audit.md`>
 
 ## Plan
 - **After:** <what it will do>
