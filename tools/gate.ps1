@@ -41,7 +41,7 @@ $script:head = (& git -C $script:repoRoot rev-parse HEAD)
 if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve HEAD for the gate report.' }
 $trackedChanges = @(& git -C $script:repoRoot status --porcelain --untracked-files=no)
 if ($LASTEXITCODE -ne 0) { throw 'Cannot read tracked changes for the gate report.' }
-if (@($trackedChanges | Where-Object { $_ -cnotmatch '^.. \.coord/STATUS\.md$' }).Count -gt 0) {
+if (@($trackedChanges | Where-Object { $_ -cnotmatch '^.. (\.coord/STATUS\.md|\.claude/settings\.json)$' }).Count -gt 0) {
     $script:head += '-dirty'
 }
 
