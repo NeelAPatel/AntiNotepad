@@ -59,7 +59,7 @@ Rows not in work now: proposed, needs you, planned, paused and deferred (user or
 | idea: overscroll-speed | Overscroll feels faster than the page-swipe animations between notes; match them | - | - | needs you |
 | idea: win11-window-motion | Program window animations (including Settings) snap in/out or do not follow Windows 11 / WinUI 3 standard motion; align them. Overlaps an old someday note on motion timings in the Backlog section below (never a real item) | - | - | needs you |
 | idea: taskbar-summon-timing | Summoning from the taskbar animates but feels off and too fast | - | - | needs you |
-| idea: saved-label-animation | Top-left "Saved" text snaps to the new note's text when switching notes; wanted: an animated change | - | - | needs you |
+| A16-saved-label-fade | Top-left "Saved" text snaps to the new note's text when switching notes; wanted: an animated change | - | - | needs you |
 | idea: settings-tab-motion | Settings tab switching animates at the wrong speed and style; match Windows 11 / WinUI 3 | - | - | needs you |
 | idea: settings-segment-animation | Settings choice buttons (System / Light / Dark) change with no transition; add one | - | - | needs you |
 | idea: settings-toggle-animation | Settings toggle switches change with no transition; add one | - | - | needs you |
