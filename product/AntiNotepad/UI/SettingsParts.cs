@@ -240,31 +240,20 @@ internal sealed partial class SettingsWindow
                 knob.Height = fromHeight + (height - fromHeight) * t;
                 Place();
             }, easing: MotionTokens.Win11Enter);
-            Glow();
+            NoFill();
         }
         knob.Background = new SolidColorBrush(on ? _p.Surface : _p.Muted);
         Place();
         var face = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(8, 4) };
         face.Children.Add(word);
         face.Children.Add(track);
-        // The hover fill is our own layer so it can fade; Plain's snapping fill is cleared below.
-        var glow = new Border { CornerRadius = new CornerRadius(Shape.Popup), Opacity = 0, IsHitTestVisible = false };
-        var hoverBrush = new SolidColorBrush(_p.Ink, AntiNotepad.Theme.Paint.Hover(_p.Dark));
-        var pressBrush = new SolidColorBrush(_p.Ink, AntiNotepad.Theme.Paint.Press(_p.Dark));
-        var button = Kit.Plain(new Grid { Children = { glow, face } }, _p, radius: Shape.Popup);
+        var button = Kit.Plain(face, _p, radius: Shape.Popup);
+        // Plain paints a grey hover fill on pointer events; the toggle keeps the hit area but not the fill.
         var plainFill = (Border)button.Content!;
-        Anim.Handle? glowFade = null;
-        void Glow()
-        {
-            glowFade?.Cancel();
-            glow.Background = pressed ? pressBrush : hoverBrush;
-            var from = glow.Opacity; var target = hovering ? 1.0 : 0.0;
-            glowFade = Anim.Run(track, MotionTokens.Win11Faster, t => glow.Opacity = from + (target - from) * t, easing: MotionTokens.Win11Enter);
-            plainFill.Background = Brushes.Transparent;
-        }
+        void NoFill() => plainFill.Background = Brushes.Transparent;
         button.PointerEntered += (_, _) => { hovering = true; Resize(); };
         button.PointerExited += (_, _) => { hovering = false; pressed = false; Resize(); };
-        button.AddHandler(InputElement.PointerPressedEvent, (_, e) => { if (e.GetCurrentPoint(button).Properties.IsLeftButtonPressed) { pressed = true; Resize(); } }, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
+        button.AddHandler(InputElement.PointerPressedEvent, (_, e) => { if (e.GetCurrentPoint(button).Properties.IsLeftButtonPressed) { pressed = true; Resize(); } NoFill(); }, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
         button.AddHandler(InputElement.PointerReleasedEvent, (_, _) => { pressed = false; Resize(); }, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
         button.PointerCaptureLost += (_, _) => { pressed = false; Resize(); };
         button.Click += (_, _) =>
