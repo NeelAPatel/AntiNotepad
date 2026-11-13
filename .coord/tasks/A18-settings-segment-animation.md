@@ -2,12 +2,12 @@
 
 Item card (`docs/loop.md`). Budget: 4 KB.
 
-Tier: Medium · ui-motion
+Tier: Medium Â· ui-motion
 State: approved
 Branch: `feat/A18-settings-segment-animation` in `.claude/worktrees/feat/A18-settings-segment-animation` (created at Approve)
 
 ## Request
-2026-11-12, user (pasted list, Animations, Settings), verbatim: "A transition on System / Light / Dark buttons — not just system/light/dark im saying selectors of that style. this was just an example. Perhaps this should be a html web demo entirely with the current stack to see what other ways we can implement these type of settings options."
+2026-11-12, user (pasted list, Animations, Settings), verbatim: "A transition on System / Light / Dark buttons - not just system/light/dark im saying selectors of that style. this was just an example. Perhaps this should be a html web demo entirely with the current stack to see what other ways we can implement these type of settings options."
 
 Then: "start 1 and 2 in parallel". Scope: every selector-style (segmented) control in Settings, not only System/Light/Dark. The user floated an HTML lab of several selector styles to compare; show options in a lab page before building. Reuse the Windows 11 motion values in `docs/decisions.md` (167 ms in, 83 ms out, `Win11Enter`/`Win11Exit`, tokens in `Motion/MotionTokens.cs`) rather than inventing timings; the user cannot judge motion from numbers, so show it in a lab page (`tools/playground/`, served on localhost) or the dev copy. Settings controls live under `product/AntiNotepad/UI/Settings/` and `UI/Kit`.
 
