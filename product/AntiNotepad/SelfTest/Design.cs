@@ -40,12 +40,26 @@ internal static partial class SelfTest
             var secondHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(second))).ToLowerInvariant();
             report = $"{hash} {first.Count(c => c == '\n')}";
             Console.WriteLine($"DESIGN dump {report}");
-            if (first.Length > 0 && first == second && hash == DesignHash && SegmentBoundsChecks()) return true;
+            if (first.Length > 0 && first == second && hash == DesignHash && SegmentBoundsChecks() && SegmentStartChecks()) return true;
             report += $" FAIL expected {DesignHash}, second {secondHash}; run --design-dump <file> for a diff";
             Console.WriteLine("DESIGN " + report);
             return false;
         }
         catch (Exception ex) { report = ex.ToString(); Console.WriteLine("DESIGN dump FAIL " + report); return false; }
+    }
+
+    /// <summary>Checks whether a rebuilt selector resumes only from a recent different choice.</summary>
+    private static bool SegmentStartChecks()
+    {
+        var old = new Rect(10, 2, 40, 20);
+        var target = new Rect(52, 2, 70, 20);
+        var previous = new SettingsWindow.SegmentPosition("light", old, 1000, new object());
+        return SettingsWindow.SegmentStart(previous, "dark", target, 2000, false) == old
+            && SettingsWindow.SegmentStart(previous, "dark", target, 2001, false) == target
+            && SettingsWindow.SegmentStart(null, "dark", target, 1000, false) == target
+            && SettingsWindow.SegmentStart(previous, "light", target, 1000, false) == target
+            && SettingsWindow.SegmentStart(previous, "dark", target, 1000, true) == target
+            && SettingsWindow.SegmentStart(previous, "dark", target, 999, false) == target;
     }
 
     /// <summary>Checks measured targets for unequal choices and a wrapped row.</summary>

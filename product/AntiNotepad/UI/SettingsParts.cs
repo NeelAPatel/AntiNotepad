@@ -180,6 +180,13 @@ internal sealed partial class SettingsWindow
     /// <summary>Returns the measured face bounds in the selector's coordinate space.</summary>
     internal static Rect SegmentTarget(Point origin, Size size) => new(origin, size);
 
+    internal sealed record SegmentPosition(string Value, Rect Bounds, long Time, object Owner);
+
+    /// <summary>Chooses a recent previous highlight as the starting point for a rebuilt selector.</summary>
+    internal static Rect SegmentStart(SegmentPosition? previous, string current, Rect target, long now, bool reduced) =>
+        !reduced && previous is not null && previous.Value != current && now >= previous.Time && now - previous.Time <= 1000
+            ? previous.Bounds : target;
+
     /// <summary>Choices share a moving highlight while each pill fades its hover wash.</summary>
     private Control Seg(IReadOnlyList<(string Value, string Label)> options, string current, Action<string> pick)
     {
@@ -187,6 +194,8 @@ internal sealed partial class SettingsWindow
         var highlight = new Border { Background = new SolidColorBrush(_p.Accent, AntiNotepad.Theme.Paint.Selected(_p.Dark)), CornerRadius = new CornerRadius(Shape.Control), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top, IsHitTestVisible = false, IsVisible = false };
         var root = new Grid { Children = { highlight, row } };
         var items = new List<(string Value, Border Face, TextBlock Text)>();
+        var signature = string.Join("|", options.Select(option => option.Value));
+        var owner = new object();
         var chosen = current;
         Rect position = default, target = default;
         var initialized = false;
@@ -198,13 +207,23 @@ internal sealed partial class SettingsWindow
             highlight.Width = bounds.Width;
             highlight.Height = bounds.Height;
             highlight.IsVisible = true;
+            if (!_segmentPositions.TryGetValue(signature, out var saved) || ReferenceEquals(saved.Owner, owner))
+                _segmentPositions[signature] = new SegmentPosition(chosen, bounds, Environment.TickCount64, owner);
         }
         void UpdateTarget()
         {
             var face = items.FirstOrDefault(item => item.Value == chosen).Face;
             if (face is null || face.Bounds.Width <= 0 || face.TranslatePoint(default, root) is not { } origin) return;
             var next = SegmentTarget(origin, face.Bounds.Size);
-            if (!initialized) { initialized = true; target = next; Place(next); return; }
+            if (!initialized)
+            {
+                initialized = true;
+                _segmentPositions.TryGetValue(signature, out var previous);
+                var start = SegmentStart(previous, chosen, next, Environment.TickCount64, Anim.Reduced);
+                _segmentPositions[signature] = new SegmentPosition(chosen, start, Environment.TickCount64, owner);
+                Place(start);
+                if (start == next) { target = next; return; }
+            }
             if (next == target) return;
             target = next;
             slide?.Cancel();
@@ -248,7 +267,12 @@ internal sealed partial class SettingsWindow
             button.AddHandler(InputElement.PointerPressedEvent, (_, _) => face.Background = Brushes.Transparent, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
             button.AddHandler(InputElement.PointerReleasedEvent, (_, _) => face.Background = Brushes.Transparent, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
             var v = value;
-            button.Click += (_, _) => { chosen = v; Paint(v); pick(v); };
+            button.Click += (_, _) =>
+            {
+                if (v != chosen) { slide?.Cancel(); target = default; }
+                if (initialized) _segmentPositions[signature] = new SegmentPosition(chosen, position, Environment.TickCount64, owner);
+                chosen = v; Paint(v); pick(v);
+            };
             Avalonia.Automation.AutomationProperties.SetName(button, label);
             row.Children.Add(button);
         }

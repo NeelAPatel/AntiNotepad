@@ -51,6 +51,7 @@ internal sealed partial class SettingsWindow : Window
     private bool _notesFolderRestartPending;
     private Palette? _stylesPalette;
     private string? _searchQuery;
+    private readonly Dictionary<string, SegmentPosition> _segmentPositions = new();
     private Settings S => _settings.Current;
 
     public SettingsWindow(SettingsService settings, ISettingsHost host, bool softwareRendering, NotesSession notes)
