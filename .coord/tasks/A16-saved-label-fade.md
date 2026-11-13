@@ -45,3 +45,11 @@ Role: terra, a feature across a few files with timing. The branch is checked out
 - Done means: label animates per After; selftest check exists and passes; 0 warnings, `SELFTEST PASS`, gate passes.
 
 Report `.coord/reports/A16-saved-label-fade.md`, short: 1 Summary; 2 Change list; 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 6 Contracts; 7 Lens review; 8 Checks run; 9 Hand checks.
+
+## Check
+- Gate at branch tip (2026-11-12): build 0 warnings, SELFTEST PASS, seam, tokens, format, scope PASS; Size WARN: `PadWindow.Layout.cs` 647 to 696 lines (split is its own item per `.claude/rules/coding.md`).
+- Review: item-chat read of the diff; no independent Codex review (Low tier). Bounds: within plan. Noticed: a cancelled transition restarts at full opacity (small pop on very rapid switching). Misses: None.
+
+## Hand test
+- Build: dev copy from this branch, run by the item chat; stopped 2026-11-12.
+- Result: no direct reply from the user in this chat. Master 5 relayed 2026-11-12 that the user typed "/merge-task A16 + make backlog for autosave timer", treated by the director as the pass. Direction, rapid-switch and typing checks were not reported individually.
