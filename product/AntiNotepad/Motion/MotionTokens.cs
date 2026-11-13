@@ -28,4 +28,5 @@ internal static class MotionTokens
 
     /// <summary>Settings page transitions.</summary>
     public const double SettingsPage = 160;
+    public const double ToggleRest = 12, ToggleHover = 14, TogglePressedWidth = 17;
 }

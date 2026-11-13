@@ -29,6 +29,7 @@ Then: "start 1 and 2 in parallel" (with A18-settings-segment-animation; the user
 ## Files
 - `product/AntiNotepad/UI/SettingsParts.cs`
 - `product/AntiNotepad/Motion/MotionTokens.cs`
+- `product/AntiNotepad/SelfTest/Design.cs` (design snapshot hash only; dump diff confined to the toggle track)
 
 ## Contracts
 None new.
