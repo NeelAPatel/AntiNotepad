@@ -28,7 +28,7 @@ Then: "Saved label fade" (chosen next from the running UI/UX/animation list in `
 - `product/AntiNotepad/UI/PadWindow.Layout.cs`
 - `product/AntiNotepad/UI/PadWindow.Navigation.cs`
 - `product/AntiNotepad/Motion/MotionTokens.cs`
-- `product/AntiNotepad/SelfTest/*` (one check)
+- `product/AntiNotepad/SelfTest/Run.cs`
 - `tools/playground/a16-saved-label-lab.html`
 
 ## Contracts
