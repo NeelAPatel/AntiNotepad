@@ -48,4 +48,4 @@ Report `.coord/reports/A19-settings-scroll-feel.md` per docs/agents.md.
 Gate at branch tip: GATE PASS offline (build 0 warnings, selftest, seam, tokens, format, scope, size). Diff within plan: 3 files; Codex added a nested-scroll guard (editor/viewer inside Settings keeps its own wheel) and frame cancellation on content swap, both justified by the Feel preview and page rebuilds. Settings line height uses Typography.PanelTitle (18 px), so Lines mode steps a bit shorter than in the editor (24 px). Noticed: Help and Search overlays still scroll stock. Misses: None.
 
 ## Hand test
-(pending)
+Dev copy built from the branch tip (A19, Debug, dev badge). 2026-11-13, user: "perfect it works good"
