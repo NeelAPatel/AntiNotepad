@@ -25,7 +25,9 @@ Needs from you: hand test. Approved by the user 2026-11-12 ("yes with hover"). H
 ## Files
 - `product/AntiNotepad/UI/SettingsParts.cs`
 - `product/AntiNotepad/Motion/MotionTokens.cs`
-- `product/AntiNotepad/SelfTest/Design.cs` (only if the design snapshot hash changes)
+- `product/AntiNotepad/UI/SettingsWindow.cs` (round 2: per-window selector position cache for rebuild glide)
+- `product/AntiNotepad/SelfTest/Design.cs` (selector bounds/start checks)
+- `tools/playground/a18-segment-lab.html` (motion lab)
 
 ## Contracts
 None new.
@@ -39,5 +41,8 @@ Role: terra, a UI feature in one control plus tokens. The branch is checked out:
 - Build into `build/A18-settings-segment-animation-check` with `AVALONIA_TELEMETRY_OPTOUT=1`, run `--selftest`, delete the folder. Gate: `pwsh -NoProfile -File tools/gate.ps1 -Task A18-settings-segment-animation -Offline`.
 - Never launch or kill AntiNotepad, never run `--quit`, never edit STATUS or this card. Offline checks only.
 - Done means: selectors behave as in After; build 0 warnings, `SELFTEST PASS`, gate passes.
+## Check
+Gate PASS at round 2 (Size warn: SettingsParts.cs over 600 lines). Item chat read the diff: within Plan; MotionTokens.cs needed no change (existing Win11 tokens reused). Round 2 added SettingsWindow.cs (rebuild glide cache), listed in Files.
+
 ## Hand test
-2026-11-12, user: "Hand test passed" (dev copy: sliding pill, hover fade, rebuild glide). Gate PASS on branch (rounds 1-2); Size warn: SettingsParts.cs over 600 lines.
+2026-11-12, user: "Hand test passed" (dev copy: sliding pill, hover fade, rebuild glide, 2026-11-12). Gate PASS on branch (rounds 1-2); Size warn: SettingsParts.cs over 600 lines.
