@@ -1,7 +1,9 @@
 # Codex agents
 
 ## Launch
-Headless, in the background; the process exit wakes the item chat:
+Headless. Run it as one Bash tool call with `run_in_background: true` and the bare command below; the completion notice
+of that call wakes the item chat when Codex exits. Never add `&`, `nohup`, `( ... )` or `> /dev/null`: that detaches Codex
+from the call, which then reports done in seconds, so nothing wakes you and the run goes unwatched:
 
 ```bash
 .coord/tools/codex-run.sh <role> <ID-slug> .coord/tasks/<ID-slug>.md
