@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>A16 saved label lab</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#1b1c1f;--fg:#e6e6e6;--mut:#9a9a9a;--card:#26282c;--line:#3a3d42}
+body{margin:0;font:14px/1.4 "Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+header{padding:14px 20px;border-bottom:1px solid var(--line)}h1{margin:0;font-size:17px}
+header p{margin:4px 0 0;color:var(--mut);max-width:860px}
+.bar{display:flex;flex-wrap:wrap;gap:18px;padding:12px 20px;background:var(--card);border-bottom:1px solid var(--line)}
+.grp b{display:block;font-size:11px;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
+button{font:inherit;color:var(--fg);background:transparent;border:1px solid var(--line);padding:4px 10px;cursor:pointer;margin-right:-1px}
+button.on,button.go{background:#0090ff;border-color:#0090ff;color:#fff}
+main{padding:24px 20px}
+.stage{display:inline-block;padding:30px;border-radius:8px;background:linear-gradient(135deg,#3b6ea5,#8a5ea8 60%,#c9794f)}
+.win{width:380px;height:210px;border-radius:8px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.08);background:#1c1c1ce6;color:#ddd;font:13px/1.5 Consolas,monospace}
+.top{height:36px;display:flex;align-items:center;gap:8px;padding:0 12px;font:12px "Segoe UI"}
+.chip{background:#4fa3ff33;color:#6cb4ff;border-radius:4px;padding:1px 6px;font-weight:600;font-size:11px}
+.lbl{position:relative;display:inline-block;color:#9a9a9a;min-width:92px;height:18px}
+.lbl span{position:absolute;left:0;top:0;white-space:nowrap}
+.body{padding:8px 14px;white-space:pre-wrap}
+input[type=range]{width:150px}i{font-style:normal;color:#6cb4ff}.note{margin-top:14px;color:var(--mut);max-width:560px}
+</style></head><body>
+<header><h1>A16 saved label motion lab</h1>
+<p>Mock of the top-left "Saved ..." text. Timings are the Windows 11 tokens already in the app: out 83 ms with the exit curve, in 167 ms with the enter curve, rise 16 px (A14, A15). Pick a motion, then press the buttons to switch notes or type.</p></header>
+<div class="bar">
+<div class="grp"><b>Motion</b>
+<button data-m="snap">Snap (today)</button><button data-m="fade">Fade only</button><button data-m="dir" class="on">Follow page direction</button><button data-m="rise">Rise (vertical)</button></div>
+<div class="grp"><b>Triggers</b>
+<button id="prev">&larr; Previous note</button><button id="next" class="go">Next note &rarr;</button><button id="type">Type (was 3m ago)</button><button id="burst">Type fast x10</button></div>
+<div class="grp"><b>Typing rule</b>
+<button data-t="same" class="on">Animate if text differs</button><button data-t="never">Never animate typing</button></div>
+<div class="grp"><b>Page body</b><button data-p="on" class="on">Slides with note</button><button data-p="off">Static</button></div>
+</div>
+<div class="bar">
+<div class="grp"><b>Out ms <i id="vo">83</i></b><input type="range" id="out" min="0" max="400" value="83"></div>
+<div class="grp"><b>In ms <i id="vi">167</i></b><input type="range" id="inn" min="0" max="500" value="167"></div>
+<div class="grp"><b>Shift px <i id="vs">16</i></b><input type="range" id="shift" min="0" max="40" value="16"></div>
+<div class="grp"><b>Overlap (start in early) ms <i id="vv">0</i></b><input type="range" id="ov" min="0" max="83" value="0"></div>
+<div class="grp"><b>Curve</b><button data-c="win" class="on">Win11 (existing)</button><button data-c="ease">ease-in-out</button><button data-c="lin">linear</button></div>
+<div class="grp"><b>&nbsp;</b><button id="reset">Reset to tokens</button></div>
+</div>
+<main><div class="stage"><div class="win">
+<div class="top"><span class="chip">slot 2</span><span class="lbl" id="lbl"><span>Saved 3m ago</span></span></div>
+<div class="body" id="body">Groceries: milk, eggs</div></div></div>
+<p class="note">Defaults are the Windows 11 values already in the app (out 83, in 167, 16 px). "Follow page direction": next note sends the old text left and the new text in from the right; previous is mirrored, matching how the page body moves (it uses 34 px, 160 ms out, 200 ms in). Dial anything, then tell me the numbers you like; I use them.</p>
+</main>
+<script>
+const notes=[["Saved 3m ago","Groceries: milk, eggs"],["Saved 2:14 PM","Call dentist Tuesday"],["Saved yesterday","Ideas for the weekend"],["Saved Oct 3","Old draft"],["Saved just now","Meeting notes"]];
+let i=0,m="dir",rule="same",pg="on",curve="win",cur=notes[0][0];
+const $=id=>document.getElementById(id),lbl=$("lbl"),body=$("body");
+const curves={win:["cubic-bezier(0,0,0,1)","cubic-bezier(1,0,1,1)"],ease:["ease-in-out","ease-in-out"],lin:["linear","linear"]};
+const val=()=>({o:+$("out").value,n:+$("inn").value,s:+$("shift").value,v:+$("ov").value});
+["out","inn","shift","ov"].forEach((k,x)=>$(k).oninput=()=>{["vo","vi","vs","vv"][x]&&($(["vo","vi","vs","vv"][x]).textContent=$(k).value)});
+$("reset").onclick=()=>{$("out").value=83;$("inn").value=167;$("shift").value=16;$("ov").value=0;["vo","vi","vs","vv"].forEach((v,x)=>$(v).textContent=[83,167,16,0][x])};
+function setText(t,dir,typing){
+ if(t===cur)return; cur=t; const old=lbl.firstElementChild;
+ if(m==="snap"||(typing&&rule==="never")){lbl.querySelectorAll("span").forEach((e,k)=>k&&e.remove());old.textContent=t;return}
+ const {o,n,s,v}=val(),[ein,eout]=curves[curve];
+ let ox=0,oy=0,nx=0,ny=0;
+ if(m==="dir"){const d=typing?1:dir;ox=-d*s;nx=d*s}else if(m==="rise"){oy=-s;ny=s}
+ const nu=document.createElement("span");nu.textContent=t;nu.style.opacity=0;lbl.appendChild(nu);
+ old.animate([{opacity:1,transform:"none"},{opacity:0,transform:`translate(${ox}px,${oy}px)`}],{duration:o,easing:eout,fill:"forwards"});
+ setTimeout(()=>{nu.animate([{opacity:0,transform:`translate(${nx}px,${ny}px)`},{opacity:1,transform:"none"}],{duration:n,easing:ein,fill:"forwards"}).onfinish=()=>{old.remove();nu.getAnimations().forEach(a=>a.cancel());nu.style.opacity=1}},Math.max(0,o-v));
+}
+function go(d){i=(i+d+notes.length)%notes.length;
+ if(pg==="on"){body.textContent=notes[i][1];body.animate([{opacity:.25,transform:`translateX(${d*34}px)`},{opacity:1,transform:"none"}],{duration:200,easing:"cubic-bezier(0,0,0,1)"})}else body.textContent=notes[i][1];
+ setText(notes[i][0],d)}
+$("next").onclick=()=>go(1);$("prev").onclick=()=>go(-1);
+$("type").onclick=()=>{body.textContent+="x";setText("Saved just now",1,true)};
+$("burst").onclick=()=>{let n=0;const t=setInterval(()=>{body.textContent+="x";setText(n%2?"Saved just now":"Saved 3m ago",1,true);if(++n>=10)clearInterval(t)},60)};
+function grp(attr,fn){document.querySelectorAll(`[data-${attr}]`).forEach(b=>b.onclick=()=>{fn(b.dataset[attr]);document.querySelectorAll(`[data-${attr}]`).forEach(x=>x.classList.toggle("on",x===b))})}
+grp("m",v=>m=v);grp("t",v=>rule=v);grp("p",v=>pg=v);grp("c",v=>curve=v);
+</script></body></html>
