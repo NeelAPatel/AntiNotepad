@@ -272,6 +272,10 @@ internal static partial class SelfTest
     {
         var failures = new List<string>();
         void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+        CheckCase(UI.PadWindow.EdgeNotice(-1, 2, false) == "No older Notes", "first note notice");
+        CheckCase(UI.PadWindow.EdgeNotice(2, 2, false) == "New Note Created", "new note notice");
+        CheckCase(UI.PadWindow.EdgeNotice(2, 2, true) == "Already at Latest", "latest note notice");
+        CheckCase(UI.PadWindow.EdgeNotice(1, 2, false) is null, "normal move has no edge notice");
         var settings = new Settings { Swipe = "progress" };
         var pane = new Avalonia.Controls.Control();
         var cancelled = new UI.NoteSwipe(pane, () => settings, () => pane, _ => { });

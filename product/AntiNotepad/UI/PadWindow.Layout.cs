@@ -61,6 +61,7 @@ internal sealed partial class PadWindow
     private readonly DispatcherTimer _toastTimer = new() { Interval = TimeSpan.FromMilliseconds(2600) };
     private bool _chromeAwake = true;
     private Anim.Handle? _chromeAnim;
+    private Anim.Handle? _toastAnim;
     private Action? _toastAction;
     /// <summary>Ctrl+Z undoes the toast's action (a delete) until the user types something.</summary>
     private bool _undoArmed;
@@ -521,7 +522,14 @@ internal sealed partial class PadWindow
         }
         _toast.Child = row;
         _toast.IsVisible = true;
-        Anim.Run(_toast, MotionTokens.ToastIn, t => _toast.Opacity = t);
+        _toastAnim?.Cancel();
+        var shift = new TranslateTransform();
+        _toast.RenderTransform = shift;
+        _toastAnim = Anim.Run(_toast, MotionTokens.OverlayIn, t =>
+        {
+            _toast.Opacity = t;
+            shift.Y = MotionTokens.OverlayRise * (1 - t);
+        }, easing: MotionTokens.Win11Enter);
         _toastTimer.Stop();
         _toastTimer.Interval = TimeSpan.FromMilliseconds(action is not null ? 7000 : brief ? 1300 : 2400);
         _toastTimer.Start();
@@ -530,7 +538,10 @@ internal sealed partial class PadWindow
     private void HideToast()
     {
         _toastAction = null; _undoArmed = false;
-        Anim.Run(_toast, MotionTokens.ToastOut, t => _toast.Opacity = 1 - t, () => _toast.IsVisible = false);
+        _toastAnim?.Cancel();
+        var startOpacity = _toast.Opacity;
+        _toastAnim = Anim.Run(_toast, MotionTokens.OverlayOut, t => _toast.Opacity = startOpacity * (1 - t),
+            () => _toast.IsVisible = false, easing: MotionTokens.Win11Exit);
     }
 
     private void ShowSaveFailurePrompt(string? reason, Action retry, Action quitAnyway)
