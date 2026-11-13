@@ -26,7 +26,38 @@ internal sealed class SmoothScroll
     private const double Impulse = 700;           // free: px/s added per notch (about 115 px coasted alone at friction 6)
     private const double MaxSpeed = 9000;
     private enum Motion { None, Glide, Coast, Spring, Fly }
-    private readonly TextEditor _editor;
+    internal interface ISurface
+    {
+        Control Host { get; }
+        double Extent { get; }
+        double Viewport { get; }
+        double Offset { get; set; }
+        double LineHeight { get; }
+    }
+
+    internal sealed class EditorSurface(TextEditor editor) : ISurface
+    {
+        public Control Host => editor;
+        public double Extent => editor.ExtentHeight;
+        public double Viewport => editor.ViewportHeight;
+        public double Offset { get => editor.VerticalOffset; set => SetOffset(editor, value); }
+        public double LineHeight => editor.TextArea.TextView.DefaultLineHeight;
+    }
+
+    internal sealed class ViewerSurface(ScrollViewer viewer, double lineHeight) : ISurface
+    {
+        public Control Host => viewer;
+        public double Extent => viewer.Extent.Height;
+        public double Viewport => viewer.Viewport.Height;
+        public double Offset
+        {
+            get => viewer.Offset.Y;
+            set => viewer.Offset = new Vector(viewer.Offset.X, Math.Clamp(value, 0, Math.Max(0, Extent - Viewport)));
+        }
+        public double LineHeight => lineHeight;
+    }
+
+    private readonly ISurface _surface;
     private readonly Func<Model.Settings> _settings;
     private Motion _motion;
     private double _target = double.NaN;
@@ -35,18 +66,26 @@ internal sealed class SmoothScroll
     private double _gap;
     private TimeSpan? _last;
     private bool _running;
+    private int _generation;
 
-    public SmoothScroll(TextEditor editor, Func<Model.Settings> settings)
+    public SmoothScroll(TextEditor editor, Func<Model.Settings> settings) : this(new EditorSurface(editor), settings) { }
+    public SmoothScroll(ScrollViewer viewer, double lineHeight, Func<Model.Settings> settings) : this(new ViewerSurface(viewer, lineHeight), settings) { }
+
+    private SmoothScroll(ISurface surface, Func<Model.Settings> settings)
     {
-        _editor = editor; _settings = settings;
-        editor.AddHandler(InputElement.PointerWheelChangedEvent, OnWheel, RoutingStrategies.Tunnel);
+        _surface = surface; _settings = settings;
+        surface.Host.AddHandler(InputElement.PointerWheelChangedEvent, OnWheel, RoutingStrategies.Tunnel);
     }
 
-    private double Max => Math.Max(0, _editor.ExtentHeight - _editor.ViewportHeight);
-    private double Line => _editor.TextArea.TextView.DefaultLineHeight;
+    private double Max => Math.Max(0, _surface.Extent - _surface.Viewport);
+    private double Line => _surface.LineHeight;
 
     private void OnWheel(object? sender, PointerWheelEventArgs e)
     {
+        // A nested editor or scroll viewer owns its wheel input (including the Feel preview).
+        if (_surface is ViewerSurface && e.Source is Visual source)
+            for (var visual = source; visual is not null && visual != _surface.Host; visual = visual.GetVisualParent())
+                if (visual is ScrollViewer or TextEditor) return;
         if (e.KeyModifiers != KeyModifiers.None || Math.Abs(e.Delta.Y) < 0.001 || Math.Abs(e.Delta.X) > Math.Abs(e.Delta.Y)) return;
         var max = Max;
         if (max <= 0) return;
@@ -59,7 +98,7 @@ internal sealed class SmoothScroll
         if (touchpad || Anim.Reduced)
         {
             _velocity = 0; _motion = Motion.None; _target = double.NaN;
-            SetOffset(_editor, Math.Clamp(_editor.VerticalOffset - delta * (touchpad ? PxPerUnit : Line * 3), 0, max));
+            SetSurfaceOffset(Math.Clamp(_surface.Offset - delta * (touchpad ? PxPerUnit : Line * 3), 0, max));
             return;
         }
         if (mode == "rate") Rate(delta, max);
@@ -70,10 +109,10 @@ internal sealed class SmoothScroll
     private void Lines(double delta, double max)
     {
         var step = Line * Math.Clamp(_settings().LinesPerNotch, 1, 10);
-        var from = _running && _motion == Motion.Glide && !double.IsNaN(_target) ? _target : _editor.VerticalOffset;
+        var from = _running && _motion == Motion.Glide && !double.IsNaN(_target) ? _target : _surface.Offset;
         _velocity = 0;
         _target = Math.Clamp(from - delta * step, 0, max);
-        if (Anim.Reduced) { SetOffset(_editor, _target); return; }
+        if (Anim.Reduced) { SetSurfaceOffset(_target); return; }
         _motion = Motion.Glide;
         Start();
     }
@@ -83,7 +122,7 @@ internal sealed class SmoothScroll
         _target = double.NaN;
         // Spinning the other way stops the coast first.
         if (_motion != Motion.Coast || Math.Sign(_velocity) == Math.Sign(delta)) _velocity = 0;
-        if (_motion != Motion.Coast || !_running) _position = _editor.VerticalOffset;
+        if (_motion != Motion.Coast || !_running) _position = _surface.Offset;
         _velocity = Math.Clamp(_velocity - delta * Impulse * _settings().ScrollDistance, -MaxSpeed, MaxSpeed);
         _motion = Motion.Coast;
         Start();
@@ -106,7 +145,7 @@ internal sealed class SmoothScroll
     {
         var s = _settings();
         var gain = Boost(ClickRate(), 2.5 * s.ScrollBoost);
-        var offset = _editor.VerticalOffset;
+        var offset = _surface.Offset;
         if (_motion != Motion.Spring || !_running) { _position = offset; _velocity = 0; _target = offset; }
         // Turning back starts from where the sheet is, not from where it was heading.
         if (Math.Sign(_target - offset) != Math.Sign(-delta) && Math.Abs(_target - offset) > 1) _target = offset;
@@ -121,7 +160,7 @@ internal sealed class SmoothScroll
         var rate = ClickRate();
         var s = _settings();
         var gain = Boost(rate, 1.5 * s.ScrollBoost);
-        if (_motion != Motion.Fly || !_running) { _position = _editor.VerticalOffset; _velocity = 0; }
+        if (_motion != Motion.Fly || !_running) { _position = _surface.Offset; _velocity = 0; }
         if (_velocity != 0 && Math.Sign(_velocity) != Math.Sign(-delta)) _velocity = 0;
         _flyGoal = Math.Sign(-delta) * rate * Math.Abs(delta) * Line * 60 / 24 * s.ScrollDistance * gain;   // px/s matching the click rate
         _holdUntil = Environment.TickCount64 + (long)Math.Clamp(_gap * 1.6, 80, 350);    // hold it until the next click is overdue
@@ -137,19 +176,24 @@ internal sealed class SmoothScroll
         else editor.ScrollToVerticalOffset(y);
     }
 
+    private void SetSurfaceOffset(double y) => _surface.Offset = y;
+
     private void Start()
     {
         if (_running) return;
         _running = true; _last = null; Frame();
     }
 
-    private void Stop() { _running = false; _motion = Motion.None; _velocity = 0; }
+    /// <summary>Stops motion and invalidates any frame queued before a content change.</summary>
+    public void Stop() { _running = false; _motion = Motion.None; _velocity = 0; _target = double.NaN; _generation++; }
 
     private void Frame()
     {
-        if (TopLevel.GetTopLevel(_editor) is not { } top) { Stop(); return; }
+        if (TopLevel.GetTopLevel(_surface.Host) is not { } top) { Stop(); return; }
+        var generation = _generation;
         top.RequestAnimationFrame(time =>
         {
+            if (!_running || generation != _generation) return;
             var dt = _last is { } last ? Math.Clamp((time - last).TotalSeconds, 0, 0.05) : 1 / 60.0;
             _last = time;
             if (_motion == Motion.Glide ? GlideStep() : PhysicsStep(dt)) Frame();
@@ -158,18 +202,18 @@ internal sealed class SmoothScroll
 
     private bool GlideStep()
     {
-        var now = _editor.VerticalOffset;
+        var now = _surface.Offset;
         var gap = _target - now;
-        if (Math.Abs(gap) < 0.5) { SetOffset(_editor, _target); Stop(); return false; }
+        if (Math.Abs(gap) < 0.5) { SetSurfaceOffset(_target); Stop(); return false; }
         // Exponential approach: quick start, soft landing, about 140 ms for a notch.
-        SetOffset(_editor, now + gap * 0.28);
+        SetSurfaceOffset(now + gap * 0.28);
         return true;
     }
 
     private bool PhysicsStep(double dt)
     {
         // Something else moved the view (typing, the scrollbar): let it win.
-        if (Math.Abs(_editor.VerticalOffset - _position) > 2) { Stop(); return false; }
+        if (Math.Abs(_surface.Offset - _position) > 2) { Stop(); return false; }
         var max = Max;
         switch (_motion)
         {
@@ -177,7 +221,7 @@ internal sealed class SmoothScroll
                 _position = Math.Clamp(_position + _velocity * dt, 0, max);
                 _velocity *= Math.Exp(-_settings().FreeFriction * dt);
                 if (_position <= 0 || _position >= max) _velocity = 0;
-                SetOffset(_editor, _position);
+                SetSurfaceOffset(_position);
                 if (Math.Abs(_velocity) < 15) { Stop(); return false; }
                 return true;
             case Motion.Spring:
@@ -187,8 +231,8 @@ internal sealed class SmoothScroll
                     var n = Math.Max(1, (int)Math.Ceiling(dt / 0.004)); var h = dt / n;
                     for (var i = 0; i < n; i++) { _velocity += (k * (_target - _position) - c * _velocity) * h; _position += _velocity * h; }
                     _position = Math.Clamp(_position, 0, max);
-                    SetOffset(_editor, _position);
-                    if (Math.Abs(_target - _position) < 0.3 && Math.Abs(_velocity) < 4) { SetOffset(_editor, _target); _position = _target; Stop(); return false; }
+                    SetSurfaceOffset(_position);
+                    if (Math.Abs(_target - _position) < 0.3 && Math.Abs(_velocity) < 4) { SetSurfaceOffset(_target); _position = _target; Stop(); return false; }
                     return true;
                 }
             case Motion.Fly:
@@ -197,7 +241,7 @@ internal sealed class SmoothScroll
                     _velocity = holding ? _velocity + (_flyGoal - _velocity) * (1 - Math.Exp(-25 * dt)) : _velocity * Math.Exp(-14 * dt);
                     _position += _velocity * dt;
                     if (_position <= 0 || _position >= max) { _position = Math.Clamp(_position, 0, max); _velocity = 0; _holdUntil = 0; holding = false; }
-                    SetOffset(_editor, _position);
+                    SetSurfaceOffset(_position);
                     if (!holding && Math.Abs(_velocity) < 5) { Stop(); return false; }
                     return true;
                 }

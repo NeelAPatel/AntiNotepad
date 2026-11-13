@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using Avalonia.Platform.Storage;
 using AntiNotepad;
 using AntiNotepad.Model;
+using AntiNotepad.Editor;
 using AntiNotepad.Motion;
 using AntiNotepad.Platform;
 using AntiNotepad.Theme;
@@ -39,6 +40,7 @@ internal sealed partial class SettingsWindow : Window
     private readonly NotesSession _notes;
     private Palette _p;
     private readonly MotionPreview _preview;
+    private readonly SmoothScroll _smoothScroll;
     private readonly ScrollViewer _scroll = new() { HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
     private readonly StackPanel _rail = new() { Spacing = 2 };
     private TextBox _find = null!;
@@ -57,6 +59,7 @@ internal sealed partial class SettingsWindow : Window
     public SettingsWindow(SettingsService settings, ISettingsHost host, bool softwareRendering, NotesSession notes)
     {
         _settings = settings;
+        _smoothScroll = new SmoothScroll(_scroll, Typography.PanelTitle, () => S);
         _host = host;
         _softwareRendering = softwareRendering;
         _notes = notes;
@@ -254,6 +257,7 @@ internal sealed partial class SettingsWindow : Window
         BuildRail(section);
         var offset = _scroll.Offset;
         var page = BuildSection(section, withPreview: true);
+        _smoothScroll.Stop();
         _scroll.Content = page;
         if (keepScroll) Dispatcher.UIThread.Post(() => _scroll.Offset = offset, DispatcherPriority.Loaded);
         else _scroll.Offset = default;
@@ -287,6 +291,7 @@ internal sealed partial class SettingsWindow : Window
     private void ShowResults(string query)
     {
         BuildRail(null);
+        _smoothScroll.Stop();
         _scroll.Content = BuildSearchResults(query);
         _scroll.Offset = default;
     }
