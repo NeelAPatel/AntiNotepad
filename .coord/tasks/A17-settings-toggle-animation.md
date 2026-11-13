@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`). Claude fills Request to Approve before any build; Codex reads the whole card, follows "For Codex", never edits it. Budget: 4 KB.
 
 Tier: Low - ui-motion, one shared control
-State: approved
+State: hand test passed
 Branch: `feat/A17-settings-toggle-animation` in `.claude/worktrees/feat/A17-settings-toggle-animation` (created at Approve)
 
 ## Request
@@ -47,7 +47,7 @@ Role: terra, normal UI feature in one method plus tokens. The branch is checked 
 Report `.coord/reports/A17-settings-toggle-animation.md`, short: 1 Summary; 2 Change list; 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 6 Contracts; 7 Lens review; 8 Checks run; 9 Hand checks for the user.
 
 ## Check
-(pending)
+Gate PASS (Size warn: SettingsParts.cs 607 lines; a split is its own item). Diff read by item chat: within plan plus Design.cs hash (dump diff confined to toggle). Hover grey fill tried (brush fade flickered, overlay layer) then removed at user's request; final: no hover fill, knob motion only.
 
 ## Hand test
-(pending)
+Dev copy at ff13c5a. User 2026-11-12: "Looks good".
