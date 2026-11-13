@@ -1,5 +1,7 @@
 // Durations (milliseconds) and geometry for the app's animations.
 
+using Avalonia.Animation.Easings;
+
 namespace AntiNotepad.Motion;
 
 /// <summary>Named durations and geometry for each animation role.</summary>
@@ -13,6 +15,8 @@ internal static class MotionTokens
     public const double OverlayIn = Win11Fast, OverlayOut = Win11Faster, OverlayRise = 16;
     public static readonly Func<double, double> Win11Enter = Anim.CubicBezier(0, 0, 0, 1);
     public static readonly Func<double, double> Win11Exit = Anim.CubicBezier(1, 0, 1, 1);
+    /// <summary>The same enter curve as an Avalonia easing, for property transitions.</summary>
+    public static readonly Easing Win11EnterEasing = new SplineEasing(0, 0, 0, 1);
 
     /// <summary>Chrome and feedback transitions.</summary>
     public const double BarsReveal = 160, PillFade = 160, ChromeShift = 200, Nudge = 200;

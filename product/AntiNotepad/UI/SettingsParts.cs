@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
@@ -247,6 +248,10 @@ internal sealed partial class SettingsWindow
         face.Children.Add(word);
         face.Children.Add(track);
         var button = Kit.Plain(face, _p, radius: Shape.Popup);
+        // Plain sets its hover fill directly; a brush transition fades it (off under Reduce motion).
+        var hoverFill = (Border)button.Content!;
+        var fadeFill = new Transitions { new BrushTransition { Property = Border.BackgroundProperty, Duration = TimeSpan.FromMilliseconds(MotionTokens.Win11Faster), Easing = MotionTokens.Win11EnterEasing } };
+        hoverFill.Transitions = Anim.Reduced ? null : fadeFill;
         button.PointerEntered += (_, _) => { hovering = true; Resize(); };
         button.PointerExited += (_, _) => { hovering = false; pressed = false; Resize(); };
         button.AddHandler(InputElement.PointerPressedEvent, (_, e) => { if (e.GetCurrentPoint(button).Properties.IsLeftButtonPressed) { pressed = true; Resize(); } }, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
@@ -255,6 +260,7 @@ internal sealed partial class SettingsWindow
         button.Click += (_, _) =>
         {
             on = !on;
+            hoverFill.Transitions = Anim.Reduced ? null : fadeFill;
             word.Text = on ? "On" : "Off";
             knob.Background = new SolidColorBrush(on ? _p.Surface : _p.Muted);
             slide?.Cancel(); fade?.Cancel();
