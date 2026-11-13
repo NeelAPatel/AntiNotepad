@@ -42,6 +42,7 @@ One row per merged item: what each check found. Empty rows on items that later h
 | 2026-11-12 | A16-saved-label-fade | Low | 0 | 0 | - | - | 0 (pass taken from user's /merge-task words, not a direct reply) | - |
 | 2026-11-12 | A17-settings-toggle-animation | Low | 0 | 0 | - | - | 0 (hover fill tried and dropped at user request) | - |
 | 2026-11-12 | A18-settings-segment-animation | Medium | 1 (round 2: glide lost on Settings rebuild) | 0 | - | - | 0 | - |
+| 2026-11-13 | A19-settings-scroll-feel | Medium | 0 | 0 | - | - | 0 | - |
 
 | 2026-11-12 | Loop11-one-chat-flow | Low | 0 (user asked to fix then merge: card intro typo and lost sentence fixed on branch) | 0 | - | - | 0 | - |
 Older rows: `.coord/lessons-archive.md` (budget: 3 KB here).

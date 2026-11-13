@@ -341,3 +341,4 @@ Done and dropped Plan rows moved out of STATUS by Loop10b-pending-list (2026-11-
 | A16-saved-label-fade | Saved label slides between notes following page direction (Windows 11 timings). Card: `.coord/tasks/A16-saved-label-fade.md` | Low | Small | done |
 | A17-settings-toggle-animation | Settings toggle switches glide with Windows 11 motion (knob 167 ms, fill fade 83 ms, reduced motion snaps, no hover fill). Card: `.coord/tasks/A17-settings-toggle-animation.md` | Low | Small | done |
 | A18-settings-segment-animation | All 15 Settings selectors (`Seg()`) get a sliding highlight pill and hover fade, glide kept across Settings rebuilds. Card: `.coord/tasks/A18-settings-segment-animation.md` | Medium | Small | done |
+| A19-settings-scroll-feel | Settings window scrolling follows the Feel tab scroll style (smooth scroll shared with the editor; nested editor/viewer keep their own wheel). Card: `.coord/tasks/A19-settings-scroll-feel.md` | Medium | Small | done |

@@ -57,6 +57,7 @@ Rows not in work now: proposed, needs you, planned, paused and deferred (user or
 | idea: pill-bar-per-mode | Pill bar: Standard Notes shows pagination only; Permanent Notes shows dot selectors only | - | - | needs you |
 | idea: permanent-view-swap-button | Permanent selector leaves the pill bar; a new top-right button swaps between Standard and Permanent note view. Goes with pill-bar-per-mode | - | - | needs you |
 | idea: overscroll-speed | Overscroll feels faster than the page-swipe animations between notes; match them | - | - | needs you |
+| idea: overlay-scroll-feel | Help and Search overlays still scroll the stock way; make them follow the Feel scroll style like Settings (A19-settings-scroll-feel) | - | - | needs you |
 | idea: win11-window-motion | Program window animations (including Settings) snap in/out or do not follow Windows 11 / WinUI 3 standard motion; align them. Overlaps an old someday note on motion timings in the Backlog section below (never a real item) | - | - | needs you |
 | idea: taskbar-summon-timing | Summoning from the taskbar animates but feels off and too fast | - | - | needs you |
 | idea: settings-tab-motion | Settings tab switching animates at the wrong speed and style; match Windows 11 / WinUI 3 | - | - | needs you |

@@ -55,7 +55,24 @@ internal static partial class SelfTest
 
         // Initialize only windowless layout services; no app lifetime, window, or shell opener.
         AppBuilder.Configure<Application>().UsePlatformDetect().SetupWithoutStarting();
+        var viewer = new ScrollViewer();
+        typeof(ScrollViewer).GetProperty("Extent")!.SetValue(viewer, new Size(300, 500));
+        typeof(ScrollViewer).GetProperty("Viewport")!.SetValue(viewer, new Size(100, 100));
+        viewer.Offset = new Vector(40, 0);
+        var surface = new Editor.SmoothScroll.ViewerSurface(viewer, Typography.PanelTitle);
+        surface.Offset = 250;
+        var middle = surface.Offset == 250 && viewer.Offset.X == 40;
+        surface.Offset = 900;
+        var upper = surface.Offset == 400;
+        surface.Offset = -10;
+        var lower = surface.Offset == 0;
         var editor = new AvaloniaEdit.TextEditor();
+        var editorSurface = new Editor.SmoothScroll.EditorSurface(editor);
+        editorSurface.Offset = -10;
+        var adaptersPass = middle && upper && lower && surface.LineHeight == Typography.PanelTitle
+            && editorSurface.Offset == 0 && editorSurface.Extent == editor.ExtentHeight
+            && editorSurface.Viewport == editor.ViewportHeight && editorSurface.LineHeight == editor.TextArea.TextView.DefaultLineHeight;
+        Console.WriteLine($"SCROLL SURFACES viewer middle/upper/lower={middle}/{upper}/{lower}; editor={editorSurface.Offset == 0}");
         var pad = (Editor.PadView)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(Editor.PadView));
         typeof(Editor.PadView).GetField("<Editor>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(pad, editor);
         var settings = new Settings { ShortenLinks = true };
@@ -133,7 +150,7 @@ internal static partial class SelfTest
         report += $"; plain URL short/expanded/off={shortHit}/{expandedHit}/{disabledHit}; outside={outside}; plain URL once/rejected={urlTunnel}/{urlRejected}";
         Console.WriteLine("ANY URL " + report);
         return controlPass && plainPass && rightPass && generatorPass && cursorPass && tunnelPass && oncePass
-            && tunnelPlainPass && tunnelRightPass && missingPass && nonLinkPass && routePass && plainUrlsPass && errors.Count == 0;
+            && tunnelPlainPass && tunnelRightPass && missingPass && nonLinkPass && routePass && plainUrlsPass && adaptersPass && errors.Count == 0;
     }
 
     private static bool SplitDividerFullHeightChecks(out string report)
