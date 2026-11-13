@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>A18 selector lab</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#1b1c1f;--fg:#e6e6e6;--mut:#9a9a9a;--card:#26282c;--line:#3a3d42;--acc:#4fa3ff}
+body{margin:0;font:14px/1.4 "Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+header{padding:14px 20px;border-bottom:1px solid var(--line)}h1{margin:0;font-size:17px}
+header p{margin:4px 0 0;color:var(--mut);max-width:880px}
+.bar{display:flex;flex-wrap:wrap;gap:18px;padding:12px 20px;background:var(--card);border-bottom:1px solid var(--line)}
+.grp b{display:block;font-size:11px;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
+.bar button{font:inherit;color:var(--fg);background:transparent;border:1px solid var(--line);padding:4px 10px;cursor:pointer;margin-right:-1px}
+.bar button.on{background:#0090ff;border-color:#0090ff;color:#fff}
+input[type=range]{width:150px}i{font-style:normal;color:#6cb4ff}
+main{padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(460px,1fr));gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.card h2{margin:0 0 2px;font-size:14px}.card p{margin:0 0 12px;color:var(--mut);font-size:12px}
+.row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}.row span{color:var(--mut)}
+/* the control, same metrics as the app: pill padding 12x4, 2 px gap, 4 px radius */
+.seg{position:relative;display:inline-flex;gap:2px}
+.seg .opt{position:relative;z-index:1;padding:4px 12px;border-radius:4px;color:var(--mut);cursor:pointer;user-select:none;white-space:nowrap}
+.seg .opt{background:rgba(255,255,255,0);transition:background 83ms cubic-bezier(1,0,1,1)}
+.seg .opt:hover{background:rgba(255,255,255,.06);transition:background 167ms cubic-bezier(0,0,0,1)}
+.combo .it{transition:background 83ms cubic-bezier(1,0,1,1)}.combo .it:hover{transition:background 167ms cubic-bezier(0,0,0,1)}
+.seg .opt.on{color:var(--fg);font-weight:600}
+.seg .pill{position:absolute;z-index:0;top:0;height:100%;border-radius:4px;background:rgba(79,163,255,.26);pointer-events:none}
+.seg .opt .fill{position:absolute;inset:0;border-radius:4px;background:rgba(79,163,255,.26);opacity:0;z-index:-1}
+.seg .opt.on .fill{opacity:1}
+.seg.under .pill{top:auto;bottom:0;height:2px;border-radius:1px;background:var(--acc)}
+.seg.under .opt.on{background:transparent}
+.seg.bump .pill{transform-origin:center}
+.note{color:var(--mut);max-width:880px;padding:0 20px 20px}
+.radio{display:flex;flex-direction:column;gap:8px}
+.rb{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.rb .o{width:20px;height:20px;box-sizing:border-box;border-radius:50%;border:1px solid #8a8d93;display:grid;place-items:center;transition:background 167ms cubic-bezier(0,0,0,1),border-color 167ms}
+.rb .d{width:10px;height:10px;border-radius:50%;background:#fff;transform:scale(0);transition:transform 83ms cubic-bezier(1,0,1,1)}
+.rb.on .o{background:var(--acc);border-color:var(--acc)}
+.rb.on .d{transform:scale(1);transition:transform 167ms cubic-bezier(0,0,0,1)}
+.combo{position:relative;display:inline-block;min-width:170px}
+.combo .face{display:flex;justify-content:space-between;gap:16px;padding:6px 12px;border:1px solid var(--line);border-radius:4px;background:#2f3136;cursor:pointer}
+.combo .chev{display:inline-block;transition:transform 167ms cubic-bezier(0,0,0,1)}
+.combo.open .chev{transform:rotate(180deg)}
+.combo .list{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;background:#2f3136;border:1px solid var(--line);border-radius:6px;padding:4px;box-shadow:0 8px 24px rgba(0,0,0,.45);opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity 83ms cubic-bezier(1,0,1,1),transform 83ms cubic-bezier(1,0,1,1)}
+.combo.open .list{opacity:1;transform:none;pointer-events:auto;transition:opacity 167ms cubic-bezier(0,0,0,1),transform 167ms cubic-bezier(0,0,0,1)}
+.combo .it{padding:6px 10px;border-radius:4px;cursor:pointer;position:relative}
+.combo .it:hover{background:rgba(255,255,255,.06)}
+.combo .it.on::before{content:"";position:absolute;left:0;top:25%;height:50%;width:3px;border-radius:2px;background:var(--acc)}
+.tiles{display:flex;gap:10px}
+.tile{width:84px;text-align:center;cursor:pointer;font-size:12px;color:var(--mut)}
+.tile .pic{height:54px;border-radius:6px;margin-bottom:4px;box-sizing:border-box;border:1px solid var(--line);transition:border-color 167ms cubic-bezier(0,0,0,1),box-shadow 167ms cubic-bezier(0,0,0,1)}
+.tile.on{color:var(--fg)}.tile.on .pic{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.sw{display:flex;gap:8px}
+.dot{width:20px;height:20px;border-radius:50%;cursor:pointer;box-sizing:border-box;border:1px solid var(--line);transition:box-shadow 167ms cubic-bezier(0,0,0,1),transform 167ms cubic-bezier(0,0,0,1)}
+.dot.on{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--fg);transform:scale(1.05)}
+.tg{display:inline-flex;gap:2px}
+.tgb{padding:4px 12px;border-radius:4px;background:rgba(255,255,255,.06);cursor:pointer;color:var(--mut);transition:background 167ms cubic-bezier(0,0,0,1),color 167ms}
+.tgb.on{background:var(--acc);color:#fff}
+h3{grid-column:1/-1;margin:8px 0 -6px;font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+</style></head><body>
+<header><h1>A18 selector animation lab</h1>
+<p>Click any option in the three mock Settings groups (the same controls the real Settings page has). Every card uses the same style so you can feel it on short, medium and long selectors. Timings are the Windows 11 tokens already in the app: in 167 ms with the enter curve, out 83 ms with the exit curve.</p></header>
+<div class="bar">
+<div class="grp"><b>Style</b>
+<button data-s="snap">1 Snap (today)</button>
+<button data-s="slide" class="on">2 Sliding pill</button>
+<button data-s="fade">3 Cross-fade</button>
+<button data-s="slidefade">4 Slide + text fade</button>
+<button data-s="under">5 Sliding underline</button>
+<button data-s="stretch">6 Stretch pill</button></div>
+<div class="grp"><b>Reduced motion</b><button data-r="off" class="on">Off</button><button data-r="on">On (snaps)</button></div>
+<div class="grp"><b>In ms <i id="vi">167</i></b><input type="range" id="inn" min="0" max="400" value="167"></div>
+<div class="grp"><b>Out ms <i id="vo">83</i></b><input type="range" id="out" min="0" max="300" value="83"></div>
+<div class="grp"><b>&nbsp;</b><button id="reset" style="font:inherit;color:var(--fg);background:transparent;border:1px solid var(--line);padding:4px 10px;cursor:pointer">Reset to tokens</button></div>
+</div>
+<main id="m"></main>
+<main id="m2">
+<h3>Other WinUI 3 selector controls, Windows 11 motion (always animated, not tied to the style above)</h3>
+<div class="card"><h2>RadioButtons</h2><p>Dot scales in 167 ms, out 83 ms. Fits 2-4 choices that each need a full line.</p><div class="radio" id="rad"></div></div>
+<div class="card"><h2>ComboBox (dropdown)</h2><p>List drops 8 px and fades in 167 ms, closes in 83 ms; chevron turns. Our Settings Dropdown is this kind.</p>
+<div class="combo" id="cb"><div class="face"><span id="cbv">Medium</span><span class="chev">&#8964;</span></div><div class="list"></div></div><div style="height:130px"></div></div>
+<div class="card"><h2>Picture tiles</h2><p>GridView/ItemsView style: the accent ring eases on. Used for caret, material, open-at.</p><div class="tiles" id="tl"></div></div>
+<div class="card"><h2>Colour dots</h2><p>Swatch row (accent): ring eases on.</p><div class="sw" id="sw"></div></div>
+<div class="card"><h2>ToggleButton group</h2><p>Separate buttons; each fills in 167 ms, no shared sliding highlight.</p><div class="tg" id="tg"></div></div>
+<div class="card"><h2>SelectorBar (Windows App SDK)</h2><p>The WinUI 3 control closest to our pills: items in a row, one accent bar slides under the choice (same idea as style 5).</p><div class="seg under" id="sb"></div></div>
+</main>
+<script>
+(function(){
+const mk=(h,c)=>{const e=document.createElement('div');e.className=c||'';e.innerHTML=h;return e};
+const only=(list,e)=>[...list.children].forEach(x=>x.classList.toggle('on',x===e));
+const rad=document.getElementById('rad');['Docked','Overlay','Float below'].forEach((t,i)=>{const e=mk('<span class="o"><span class="d"></span></span>'+t,'rb'+(i?'':' on'));e.onclick=()=>only(rad,e);rad.appendChild(e)});
+const cb=document.getElementById('cb'),list=cb.querySelector('.list'),cv=document.getElementById('cbv');
+['Clear','Medium','Dense'].forEach(t=>{const e=mk(t,'it'+(t==='Medium'?' on':''));e.onclick=ev=>{ev.stopPropagation();only(list,e);cv.textContent=t;cb.classList.remove('open')};list.appendChild(e)});
+cb.querySelector('.face').onclick=()=>cb.classList.toggle('open');
+document.addEventListener('click',e=>{if(!cb.contains(e.target))cb.classList.remove('open')});
+const tl=document.getElementById('tl'),cols=['#3b6ea5','#8a5ea8','#c9794f'];['Bar','Block','Line'].forEach((t,i)=>{const e=mk('<div class="pic" style="background:'+cols[i]+'55"></div>'+t,'tile'+(i?'':' on'));e.onclick=()=>only(tl,e);tl.appendChild(e)});
+const sw=document.getElementById('sw');['#4fa3ff','#e0527a','#4cc38a','#e6b422','#a78bfa'].forEach((c,i)=>{const e=mk('','dot'+(i?'':' on'));e.style.background=c;e.onclick=()=>only(sw,e);sw.appendChild(e)});
+const tg=document.getElementById('tg');['Left','Center','Right'].forEach((t,i)=>{const e=mk(t,'tgb'+(i?'':' on'));e.onclick=()=>only(tg,e);tg.appendChild(e)});
+const sb=document.getElementById('sb'),pl=mk('','pill'),so=[];sb.appendChild(pl);
+function go(i,a){so.forEach((e,k)=>e.classList.toggle('on',k===i));pl.style.transition=a?'left 167ms cubic-bezier(0,0,0,1),width 167ms cubic-bezier(0,0,0,1)':'none';pl.style.left=so[i].offsetLeft+'px';pl.style.width=so[i].offsetWidth+'px'}
+['Recent','Pinned','All notes'].forEach((t,i)=>{const e=mk(t,'opt'+(i?'':' on'));e.onclick=()=>go(i,true);sb.appendChild(e);so.push(e)});
+requestAnimationFrame(()=>go(0,false));
+})();
+</script>
+<p class="note"><b>1</b> instant, as the app is now. <b>2</b> one highlight glides to the new option (the Windows pivot feel). <b>3</b> old highlight fades out in 83 ms while the new one fades in over 167 ms. <b>4</b> glide plus the text colour fades with it. <b>5</b> a thin accent bar glides under the option instead of a filled pill. <b>6</b> the pill stretches toward the target, then settles (a longer hop reads clearer).</p>
+<script>
+const ENTER='cubic-bezier(0,0,0,1)',EXIT='cubic-bezier(1,0,1,1)';
+let style='slide',reduced=false,tin=167,tout=83;
+const groups=[
+ {t:'Appearance',p:'3 short options',rows:[['Theme',['System','Light','Dark']]]},
+ {t:'Pad bars',p:'longer labels, uneven widths',rows:[['Bars',['Docked','Overlay','Float below']],['Show',['Fade while typing','Always visible']]]},
+ {t:'Text and scrolling',p:'4 options, numbers and words',rows:[['Line spacing',['Tight','Normal','Relaxed','Airy']],['Lines per notch',['2','3','4','6']],['Style',['Lines','Free','Rate-matched','Wheel-driven']]]}
+];
+const m=document.getElementById('m');
+groups.forEach(g=>{
+ const c=document.createElement('div');c.className='card';c.innerHTML=`<h2>${g.t}</h2><p>${g.p}</p>`;
+ g.rows.forEach(([name,opts])=>{
+  const r=document.createElement('div');r.className='row';r.innerHTML=`<span>${name}</span>`;
+  const s=document.createElement('div');s.className='seg';s.dataset.sel=1<opts.length?1:0;
+  const pill=document.createElement('div');pill.className='pill';s.appendChild(pill);
+  opts.forEach((o,i)=>{const e=document.createElement('div');e.className='opt';e.innerHTML=`<span class="fill"></span>${o}`;e.onclick=()=>pick(s,i);s.appendChild(e)});
+  r.appendChild(s);c.appendChild(r);
+ });
+ m.appendChild(c);
+});
+const segs=[...document.querySelectorAll('.seg')];
+function opts(s){return [...s.querySelectorAll('.opt')]}
+function place(s,i,animate){
+ const o=opts(s),t=o[i],p=s.querySelector('.pill'),prev=+s.dataset.sel;
+ o.forEach((e,k)=>e.classList.toggle('on',k===i));
+ s.dataset.sel=i;
+ const mode=reduced?'snap':style;
+ s.classList.toggle('under',mode==='under');
+ const L=t.offsetLeft,W=t.offsetWidth;
+ const hide=mode==='snap'||mode==='fade';
+ o.forEach(e=>{const f=e.querySelector('.fill');f.style.transition='none'});
+ p.style.transition='none';
+ if(hide){p.style.opacity=0;}
+ else p.style.opacity=1;
+ if(!animate||mode==='snap'){p.style.left=L+'px';p.style.width=W+'px';
+   if(mode==='snap')o.forEach(e=>e.querySelector('.fill').style.opacity=e.classList.contains('on')?1:0);
+   return}
+ if(mode==='fade'){
+  o.forEach((e,k)=>{const f=e.querySelector('.fill');f.style.transition=`opacity ${k===i?tin:tout}ms ${k===i?ENTER:EXIT}`;f.style.opacity=k===i?1:0});
+  return}
+ o.forEach(e=>e.querySelector('.fill').style.opacity=0);
+ const old=o[prev];
+ if(mode==='stretch'){
+  const a=Math.min(old.offsetLeft,L),b=Math.max(old.offsetLeft+old.offsetWidth,L+W);
+  p.style.transition=`left ${tin*.4}ms ${ENTER},width ${tin*.4}ms ${ENTER}`;
+  p.style.left=a+'px';p.style.width=(b-a)+'px';
+  setTimeout(()=>{p.style.transition=`left ${tin*.6}ms ${ENTER},width ${tin*.6}ms ${ENTER}`;p.style.left=L+'px';p.style.width=W+'px'},tin*.4);
+  return}
+ p.style.left=old.offsetLeft+'px';p.style.width=old.offsetWidth+'px';
+ void p.offsetWidth;
+ p.style.transition=`left ${tin}ms ${ENTER},width ${tin}ms ${ENTER}`;
+ p.style.left=L+'px';p.style.width=W+'px';
+ if(mode==='slidefade')o.forEach((e,k)=>e.style.transition=`color ${k===i?tin:tout}ms ${k===i?ENTER:EXIT},background 83ms ${EXIT}`);
+ else o.forEach(e=>e.style.transition='');
+}
+function pick(s,i){if(+s.dataset.sel===i&&s.dataset.init)return;place(s,i,true)}
+function all(){segs.forEach(s=>{s.dataset.init=1;place(s,+s.dataset.sel,false)})}
+segs.forEach(s=>s.dataset.sel=0);
+requestAnimationFrame(all);
+document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{style=b.dataset.s;document.querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on',x===b));all()});
+document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{reduced=b.dataset.r==='on';document.querySelectorAll('[data-r]').forEach(x=>x.classList.toggle('on',x===b))});
+const vi=document.getElementById('vi'),vo=document.getElementById('vo');
+inn.oninput=()=>{tin=+inn.value;vi.textContent=tin};out.oninput=()=>{tout=+out.value;vo.textContent=tout};
+reset.onclick=()=>{inn.value=tin=167;out.value=tout=83;vi.textContent=167;vo.textContent=83};
+</script></body></html>
