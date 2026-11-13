@@ -21,7 +21,7 @@ Updated: 2026-11-12 · Product: AntiNotepad (`product/AntiNotepad`) · installed
 - Roadmap page: http://localhost:47811 (`/roadmap`); reads STATUS + pending + archive.
 
 ## Now
-- Nothing in work. Last finished: A17-settings-toggle-animation, A16-saved-label-fade, A15-notes-edge-pills, A14-search-open-fade-up, A13-search-toggle-off (dev 2026-11-12).
+- Nothing in work. Last finished: A18-settings-segment-animation, A17-settings-toggle-animation, A16-saved-label-fade, A15-notes-edge-pills, A14-search-open-fade-up, A13-search-toggle-off (dev 2026-11-12).
 - Nothing in work. Last finished: Loop11-one-chat-flow (Loop v5.4.0, dev 2026-11-12); before it A14-search-open-fade-up, A13-search-toggle-off.
 
 ## Plan

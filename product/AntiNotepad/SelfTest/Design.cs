@@ -19,7 +19,7 @@ namespace AntiNotepad;
 
 internal static partial class SelfTest
 {
-    private const string DesignHash = "52c0898e9108191a6f92efe579d5d79d63af35da8c1934c4b23db1fa67c61e5d";
+    private const string DesignHash = "79117d22cafda0ab6ec9caccc1e9ef524f22429138e3f3d4136a087f512bc053";
     private static readonly string[] DesignProperties = ["FontSize", "FontWeight", "FontFamily", "FontStyle", "CornerRadius", "Opacity", "Background", "Foreground", "BorderBrush", "BorderThickness", "BoxShadow", "Margin", "Padding"];
 
     /// <summary>Writes the same design snapshot used by the selftest.</summary>
@@ -40,12 +40,40 @@ internal static partial class SelfTest
             var secondHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(second))).ToLowerInvariant();
             report = $"{hash} {first.Count(c => c == '\n')}";
             Console.WriteLine($"DESIGN dump {report}");
-            if (first.Length > 0 && first == second && hash == DesignHash) return true;
+            if (first.Length > 0 && first == second && hash == DesignHash && SegmentBoundsChecks() && SegmentStartChecks()) return true;
             report += $" FAIL expected {DesignHash}, second {secondHash}; run --design-dump <file> for a diff";
             Console.WriteLine("DESIGN " + report);
             return false;
         }
         catch (Exception ex) { report = ex.ToString(); Console.WriteLine("DESIGN dump FAIL " + report); return false; }
+    }
+
+    /// <summary>Checks whether a rebuilt selector resumes only from a recent different choice.</summary>
+    private static bool SegmentStartChecks()
+    {
+        var old = new Rect(10, 2, 40, 20);
+        var target = new Rect(52, 2, 70, 20);
+        var previous = new SettingsWindow.SegmentPosition("light", old, 1000, new object());
+        return SettingsWindow.SegmentStart(previous, "dark", target, 2000, false) == old
+            && SettingsWindow.SegmentStart(previous, "dark", target, 2001, false) == target
+            && SettingsWindow.SegmentStart(null, "dark", target, 1000, false) == target
+            && SettingsWindow.SegmentStart(previous, "light", target, 1000, false) == target
+            && SettingsWindow.SegmentStart(previous, "dark", target, 1000, true) == target
+            && SettingsWindow.SegmentStart(previous, "dark", target, 999, false) == target;
+    }
+
+    /// <summary>Checks measured targets for unequal choices and a wrapped row.</summary>
+    private static bool SegmentBoundsChecks()
+    {
+        var row = new WrapPanel();
+        var first = new Border { Width = 40, Height = 20, Margin = new Thickness(0, 0, 2, 0) };
+        var second = new Border { Width = 70, Height = 20, Margin = new Thickness(0, 0, 2, 0) };
+        row.Children.Add(first); row.Children.Add(second);
+        row.Measure(new Size(100, 100));
+        row.Arrange(new Rect(0, 0, 100, 100));
+        var origin = second.TranslatePoint(default, row);
+        return origin is { } point && SettingsWindow.SegmentTarget(point, second.Bounds.Size) == new Rect(0, 20, 70, 20)
+            && SettingsWindow.SegmentTarget(new Point(42, 0), new Size(70, 20)) == new Rect(42, 0, 70, 20);
     }
 
     /// <summary>Builds the hidden controls with isolated data and snapshots each palette.</summary>
