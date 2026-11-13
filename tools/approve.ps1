@@ -34,7 +34,7 @@ try {
     if ($branch -cne 'dev') { throw 'main checkout must be on dev' }
     Write-Host 'CHECK: main checkout on dev'
     $changes = @(Invoke-Git $root @('status', '--porcelain', '--untracked-files=no'))
-    if (@($changes | Where-Object { $_ -cnotmatch '^.. (\.coord/STATUS\.md|\.claude/settings\.json)$' }).Count) { throw 'dirty checkout' }
+    if (@($changes | Where-Object { $_ -cnotmatch '^.. (\.coord/(STATUS|pending|lessons|status-archive)\.md|\.claude/settings\.json)$' }).Count) { throw 'dirty checkout' }
     & git -C $root diff --cached --quiet
     if ($LASTEXITCODE -ne 0) { throw 'staged changes in main checkout' }
     foreach ($marker in @('SQUASH_MSG', 'MERGE_HEAD')) {
