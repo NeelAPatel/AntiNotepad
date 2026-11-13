@@ -21,17 +21,24 @@ internal sealed partial class PadWindow
     /// <summary>Binds both panes to the current model selection.</summary>
     private void BindPanes(int arrive, bool focus = true, int rightArrive = 0)
     {
-        _left.SwitchTo(LeftNote, _active == _left ? arrive : 0);
-        if (Settings.Split)
+        var previous = _savedNote;
+        _bindingPanes = true;
+        try
         {
-            // Never show the same slot twice side by side.
-            if (Data.ViewSlot == Settings.SplitSlot)
-                _settingsService.Update(settings => settings.SplitSlot = settings.SplitSlot % 9 + 1);
-            _right.SwitchTo(RightNote, rightArrive);
+            _left.SwitchTo(LeftNote, _active == _left ? arrive : 0);
+            if (Settings.Split)
+            {
+                // Never show the same slot twice side by side.
+                if (Data.ViewSlot == Settings.SplitSlot)
+                    _settingsService.Update(settings => settings.SplitSlot = settings.SplitSlot % 9 + 1);
+                _right.SwitchTo(RightNote, rightArrive);
+            }
         }
+        finally { _bindingPanes = false; }
         ApplyPaneSplit(_panes, _leftHost, _divider, _rightHost, _right, Settings.Split);
         if (!Settings.Split && _active == _right) _active = _left;
-        UpdateChrome();
+        var direction = _active == _left ? arrive : rightArrive;
+        UpdateChrome(ReferenceEquals(previous, _active.Note) ? 0 : direction);
         if (focus) FocusActive();
     }
 

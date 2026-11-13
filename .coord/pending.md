@@ -59,13 +59,13 @@ Rows not in work now: proposed, needs you, planned, paused and deferred (user or
 | idea: overscroll-speed | Overscroll feels faster than the page-swipe animations between notes; match them | - | - | needs you |
 | idea: win11-window-motion | Program window animations (including Settings) snap in/out or do not follow Windows 11 / WinUI 3 standard motion; align them. Overlaps an old someday note on motion timings in the Backlog section below (never a real item) | - | - | needs you |
 | idea: taskbar-summon-timing | Summoning from the taskbar animates but feels off and too fast | - | - | needs you |
-| A16-saved-label-fade | Top-left "Saved" text snaps to the new note's text when switching notes; wanted: an animated change | - | - | needs you |
 | idea: settings-tab-motion | Settings tab switching animates at the wrong speed and style; match Windows 11 / WinUI 3 | - | - | needs you |
 | idea: settings-segment-animation | Settings choice buttons (System / Light / Dark) change with no transition; add one | - | - | needs you |
 | idea: settings-toggle-animation | Settings toggle switches change with no transition; add one | - | - | needs you |
 | idea: settings-scroll-feel | Scrolling inside Settings ignores the scroll style chosen in the Feel tab; make it follow | - | - | needs you |
 | D2-ui-motion-research | Deep research report (no product code): app design, UI, motion and consistency principles; WinUI 3 / Fluent motion; Avalonia's animation tools; skills and plugins for design and motion; how AI can implement and evolve a design consistently. Ends in a short recommendation for this app's motion rules (purpose, easing, timing) and a way for the user to judge motion by seeing it, not numbers. Asked by the user 2026-11-12 after A14's lab values; Haiku sub-chat + Codex Sol. Paused by the user 2026-11-12 (sub-chat stopped, nothing written yet that matters) | Low | Medium | paused |
 | idea: split-view-modes | After the items above: left pane stays Standard Notes; Split View click offers Permanent stack or Regular notes for the right pane. Pill bars: Standard right pane = bar 1 normal, bar 2 pagination only; Permanent right pane = bar 1 normal, bar 2 permanent selector. Related: two old someday notes in the Backlog section (split text overlap, divider height) | - | - | needs you |
+| idea: save-delay-setting | Settings choice for save delay: fixed 0.4 s after last edit today; user (2026-11-12) wants 5 s, 10 s, 30 s options, default unchanged; needs Settings lab and save-on-quit/hide hand test. Split off A16-saved-label-fade | - | - | needs you |
 
 ## Backlog (someday)
 Moved from STATUS by Loop10c-status-shape. IDs A53 and later are dissolved (user, 2026-10-29); the table above holds those as unnumbered ideas.

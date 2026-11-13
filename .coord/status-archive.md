@@ -338,3 +338,4 @@ Done and dropped Plan rows moved out of STATUS by Loop10b-pending-list (2026-11-
 | A13-search-toggle-off | Second click on the Search button closes search (`ToggleSearch()`); Ctrl+F and menu still open only. Card: `.coord/tasks/A13-search-toggle-off.md` | Low | Small | done |
 | A14-search-open-fade-up | Overlays (Search, Help, Trash search) fade and slide in and out with Windows 11 motion: open 167 ms, close 83 ms, 16 px; values in `docs/decisions.md`. Card: `.coord/tasks/A14-search-open-fade-up.md` | Low | Small | done |
 | A15-notes-edge-pills | Edge pills in Standard Notes ("No older Notes", "New Note Created", "Already at Latest") and every toast uses the Windows 11 motion (167 ms in with 16 px rise, 83 ms out). Card: `.coord/tasks/A15-notes-edge-pills.md` | Low | Small | done |
+| A16-saved-label-fade | Saved label slides between notes following page direction (Windows 11 timings). Card: `.coord/tasks/A16-saved-label-fade.md` | Low | Small | done |

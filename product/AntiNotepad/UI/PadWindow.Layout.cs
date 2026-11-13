@@ -35,6 +35,10 @@ internal sealed partial class PadWindow
     /// <summary>Which copy this is; fades with the icons.</summary>
     private readonly StackPanel _badges = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.BadgeSpacing, Margin = new Thickness(0, 0, ChromeTokens.BadgeRightInset, 0), VerticalAlignment = VerticalAlignment.Center };
     private TextBlock? _saved;
+    private Note? _savedNote;
+    private string? _savedTarget;
+    private Anim.Handle? _savedMotion;
+    private bool _bindingPanes;
     private readonly StackPanel _meta = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.MetaSpacing, Margin = new Thickness(ChromeTokens.FirstItemInset, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
     private readonly StackPanel _icons = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.IconSpacing, Margin = new Thickness(0, 0, ChromeTokens.BarEdgeInset, 0), VerticalAlignment = VerticalAlignment.Center };
     private readonly Grid _panes = new() { ColumnDefinitions = new ColumnDefinitions("*,0,0") };
@@ -248,25 +252,70 @@ internal sealed partial class PadWindow
     }
 
     /// <summary>Refreshes metadata text, the pager and slot dots.</summary>
-    private void UpdateChrome()
+    private void UpdateChrome() => UpdateChrome(0);
+
+    private void UpdateChrome(int direction)
     {
+        if (_bindingPanes) return;
         if (_left is null || _active?.Note is not { } note) return;
         var p = _palette;
         _meta.Children.Clear();
         if (note.Slot > 0) _meta.Children.Add(Chip($"slot {note.Slot}", p.Accent));
         var label = Modes.Label(_active.Mode, _active.CodeLanguage);
         if (label.Length > 0) _meta.Children.Add(Chip(label, p.Keyword));
-        _meta.Children.Add(_saved = Kit.Text(SavedText(note), p.Muted, ChromeTokens.SavedLabelFontSize));
+        _saved ??= Kit.Text("", p.Muted, ChromeTokens.SavedLabelFontSize);
+        _saved.Foreground = new SolidColorBrush(p.Muted);
+        _meta.Children.Add(_saved);
+        SetSavedText(SavedText(note), ReferenceEquals(_savedNote, note) ? 0 : direction);
+        _savedNote = note;
         if (_timers.AnyRunning && _active.Mode != NoteMode.Timer) _meta.Children.Add(Kit.Text("● timer running", p.Number, ChromeTokens.RunningTimerFontSize));
         BuildPill();
     }
 
     private static string SavedText(Note note) => "Saved " + Kit.Ago(note.Modified);
 
+    /// <summary>Maps the page direction to the departure and arrival offsets.</summary>
+    internal static (double Exit, double Enter) SavedOffsets(int direction)
+    {
+        var shift = Math.Sign(direction) * MotionTokens.OverlayRise;
+        return (-shift, shift);
+    }
+
+    /// <summary>Transitions between note labels, or updates immediately for ordinary refreshes.</summary>
+    private void SetSavedText(string text, int direction)
+    {
+        if (_saved is not { } saved || _savedTarget == text) return;
+        _savedMotion?.Cancel();
+        _savedTarget = text;
+        var shift = new TranslateTransform();
+        saved.RenderTransform = shift;
+        if (direction == 0 || Anim.Reduced || saved.Text is null or "")
+        {
+            saved.Text = text;
+            saved.Opacity = 1;
+            return;
+        }
+        var offsets = SavedOffsets(direction);
+        saved.Opacity = 1;
+        _savedMotion = Anim.Run(saved, MotionTokens.OverlayOut, t =>
+        {
+            saved.Opacity = 1 - t;
+            shift.X = offsets.Exit * t;
+        }, () =>
+        {
+            saved.Text = text;
+            _savedMotion = Anim.Run(saved, MotionTokens.OverlayIn, t =>
+            {
+                saved.Opacity = t;
+                shift.X = offsets.Enter * (1 - t);
+            }, easing: MotionTokens.Win11Enter);
+        }, easing: MotionTokens.Win11Exit);
+    }
+
     /// <summary>Keeps "Saved 3m ago" true when the bar comes back after a while without edits.</summary>
     private void RefreshSaved()
     {
-        if (_saved is not null && _active?.Note is { } note) _saved.Text = SavedText(note);
+        if (_active?.Note is { } note) SetSavedText(SavedText(note), 0);
     }
 
     private Border Chip(string text, Color color) => new()
