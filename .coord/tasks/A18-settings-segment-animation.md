@@ -39,3 +39,5 @@ Role: terra, a UI feature in one control plus tokens. The branch is checked out:
 - Build into `build/A18-settings-segment-animation-check` with `AVALONIA_TELEMETRY_OPTOUT=1`, run `--selftest`, delete the folder. Gate: `pwsh -NoProfile -File tools/gate.ps1 -Task A18-settings-segment-animation -Offline`.
 - Never launch or kill AntiNotepad, never run `--quit`, never edit STATUS or this card. Offline checks only.
 - Done means: selectors behave as in After; build 0 warnings, `SELFTEST PASS`, gate passes.
+## Hand test
+2026-11-12, user: "Hand test passed" (dev copy: sliding pill, hover fade, rebuild glide). Gate PASS on branch (rounds 1-2); Size warn: SettingsParts.cs over 600 lines.
