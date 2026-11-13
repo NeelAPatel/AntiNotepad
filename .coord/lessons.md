@@ -40,6 +40,7 @@ One row per merged item: what each check found. Empty rows on items that later h
 | 2026-11-12 | A14-search-open-fade-up | Low | 0 (builder fixed Codex flaw: hide must end overlay at once; stale gate head at preflight) | 0 | - | - | 0 | - |
 | 2026-11-12 | A15-notes-edge-pills | Low | 0 (scope widened at Approve: Win11 toast motion, by user) | 0 | - | - | 0 | - |
 | 2026-11-12 | A16-saved-label-fade | Low | 0 | 0 | - | - | 0 (pass taken from user's /merge-task words, not a direct reply) | - |
+| 2026-11-12 | A17-settings-toggle-animation | Low | 0 | 0 | - | - | 0 (hover fill tried and dropped at user request) | - |
 
 | 2026-11-12 | Loop11-one-chat-flow | Low | 0 (user asked to fix then merge: card intro typo and lost sentence fixed on branch) | 0 | - | - | 0 | - |
 Older rows: `.coord/lessons-archive.md` (budget: 3 KB here).

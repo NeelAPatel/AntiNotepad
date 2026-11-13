@@ -4,6 +4,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using AntiNotepad.Motion;
 using AntiNotepad.Theme;
 
 namespace AntiNotepad.UI;
@@ -214,23 +215,65 @@ internal sealed partial class SettingsWindow
     private Control Toggle(bool on, Action<bool> set, string name)
     {
         var word = Kit.Text(on ? "On" : "Off", _p.Muted, Typography.Body);
-        var knob = new Border { Width = 12, Height = 12, CornerRadius = new CornerRadius(Shape.Round(12)), Margin = new Thickness(4, 0) };
-        var track = new Border { Width = 40, Height = 20, CornerRadius = new CornerRadius(Shape.Round(20)), Child = knob, VerticalAlignment = VerticalAlignment.Center };
-        void Paint()
+        var knob = new Border { Width = MotionTokens.ToggleRest, Height = MotionTokens.ToggleRest, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Center };
+        var outline = new Border { CornerRadius = new CornerRadius(Shape.Round(20)), BorderBrush = new SolidColorBrush(_p.Faint), BorderThickness = new Thickness(1), Opacity = on ? 0 : 1 };
+        var fill = new Border { CornerRadius = new CornerRadius(Shape.Round(20)), Background = new SolidColorBrush(_p.Accent), Opacity = on ? 1 : 0 };
+        var track = new Grid { Width = 40, Height = 20, VerticalAlignment = VerticalAlignment.Center, Children = { outline, fill, knob } };
+        var position = on ? 1.0 : 0.0;
+        var hovering = false;
+        var pressed = false;
+        Anim.Handle? slide = null, resize = null, fade = null;
+        void Place()
         {
-            word.Text = on ? "On" : "Off";
-            knob.HorizontalAlignment = on ? HorizontalAlignment.Right : HorizontalAlignment.Left;
-            knob.Background = new SolidColorBrush(on ? _p.Surface : _p.Muted);
-            track.Background = on ? new SolidColorBrush(_p.Accent) : Brushes.Transparent;
-            track.BorderBrush = new SolidColorBrush(_p.Faint);
-            track.BorderThickness = new Thickness(on ? 0 : 1);
+            knob.Margin = new Thickness(3 + (36 - knob.Width - 3) * position, 0, 0, 0);
+            knob.CornerRadius = new CornerRadius(Shape.Round(knob.Height));
         }
-        Paint();
+        void Resize()
+        {
+            resize?.Cancel();
+            var width = Anim.Reduced ? MotionTokens.ToggleRest : pressed ? MotionTokens.TogglePressedWidth : hovering ? MotionTokens.ToggleHover : MotionTokens.ToggleRest;
+            var height = Anim.Reduced ? MotionTokens.ToggleRest : pressed || hovering ? MotionTokens.ToggleHover : MotionTokens.ToggleRest;
+            var fromWidth = knob.Width; var fromHeight = knob.Height;
+            resize = Anim.Run(track, MotionTokens.Win11Faster, t =>
+            {
+                knob.Width = fromWidth + (width - fromWidth) * t;
+                knob.Height = fromHeight + (height - fromHeight) * t;
+                Place();
+            }, easing: MotionTokens.Win11Enter);
+            NoFill();
+        }
+        knob.Background = new SolidColorBrush(on ? _p.Surface : _p.Muted);
+        Place();
         var face = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(8, 4) };
         face.Children.Add(word);
         face.Children.Add(track);
         var button = Kit.Plain(face, _p, radius: Shape.Popup);
-        button.Click += (_, _) => { on = !on; Paint(); set(on); };
+        // Plain paints a grey hover fill on pointer events; the toggle keeps the hit area but not the fill.
+        var plainFill = (Border)button.Content!;
+        void NoFill() => plainFill.Background = Brushes.Transparent;
+        button.PointerEntered += (_, _) => { hovering = true; Resize(); };
+        button.PointerExited += (_, _) => { hovering = false; pressed = false; Resize(); };
+        button.AddHandler(InputElement.PointerPressedEvent, (_, e) => { if (e.GetCurrentPoint(button).Properties.IsLeftButtonPressed) { pressed = true; Resize(); } NoFill(); }, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
+        button.AddHandler(InputElement.PointerReleasedEvent, (_, _) => { pressed = false; Resize(); }, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
+        button.PointerCaptureLost += (_, _) => { pressed = false; Resize(); };
+        button.Click += (_, _) =>
+        {
+            on = !on;
+            word.Text = on ? "On" : "Off";
+            knob.Background = new SolidColorBrush(on ? _p.Surface : _p.Muted);
+            slide?.Cancel(); fade?.Cancel();
+            var from = position; var target = on ? 1.0 : 0.0; var fromFill = fill.Opacity;
+            slide = Anim.Run(track, MotionTokens.Win11Fast, t => { position = from + (target - from) * t; Place(); }, easing: MotionTokens.Win11Enter);
+            fade = Anim.Run(track, MotionTokens.Win11Faster, t => { fill.Opacity = fromFill + (target - fromFill) * t; outline.Opacity = 1 - fill.Opacity; }, easing: MotionTokens.Win11Enter);
+            set(on);
+            if (Anim.Reduced)
+            {
+                slide.Cancel(); fade.Cancel(); resize?.Cancel();
+                position = target; fill.Opacity = target; outline.Opacity = 1 - target;
+                knob.Width = knob.Height = MotionTokens.ToggleRest;
+                Place();
+            }
+        };
         Avalonia.Automation.AutomationProperties.SetName(button, name);
         return button;
     }
