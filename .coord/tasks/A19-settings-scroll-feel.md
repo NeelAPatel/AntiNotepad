@@ -2,7 +2,7 @@
 
 Item card (`docs/loop.md`). Budget: 4 KB.
 
-Tier: Medium · ui-scroll
+Tier: Medium Â· ui-scroll
 State: approved
 Branch: `feat/A19-settings-scroll-feel` in `.claude/worktrees/feat/A19-settings-scroll-feel` (created at Approve)
 
