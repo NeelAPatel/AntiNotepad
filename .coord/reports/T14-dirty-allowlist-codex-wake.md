@@ -22,3 +22,5 @@ with shell `&`/`nohup`, which detaches Codex from the tool call, so no exit noti
 Fix applied (text only): `docs/agents.md` "Launch" now says: one Bash call, `run_in_background: true`, bare command; never
 `&`, `nohup`, `( )` or `> /dev/null`. The script already writes its own log and ledger, so redirecting is unneeded.
 Not verified live (would need a Codex run); A18's form is the evidence it works.
+
+Update (user goal: the launching chat owns the run and resumes at exit without a user turn): one rule line added to `docs/agents.md` Launch, and the Codex launch bullets in `.claude/skills/next-task/SKILL.md` (build) and `review-task/SKILL.md` (Codex review) now say tracked background call, end the turn, resume on the exit notice. The audit launch in next-task already said background and no poll.

@@ -14,7 +14,7 @@ User, 2026-11-13: "another issue: this seems to happen a lot more often" (A15 it
 
 ## Plan
 - a. Widen the regex in all four scripts to `^.. (\.coord/(STATUS|pending|lessons|status-archive)\.md|\.claude/settings\.json)$`. Add one line to `docs/dev-loop.md` (these `.coord` files may be dirty at approve, catch-up, gate and preflight). Test: with `.coord/pending.md` modified, `tools/approve.ps1 -Task <name> -Prefix chore -DryRun` no longer prints "dirty checkout" (revert the test edit); a dirty product file still fails.
-- b. Find the cause with evidence, read-only first: read the A16, A17, A18 chat transcripts (`list_events`, or search transcripts) for how each launched Codex (background tool call vs a detached process) and whether the chat was woken at exit; read `.coord/tools/codex-run.sh`. Write the cause and a minimal fix in the report. Apply the fix only if it is a text or launch-script change of a few lines; otherwise propose it and stop. Never poll: two samples 30 s apart if you must check a live run.
+- b. Find the cause with evidence, read-only first: read the A16, A17, A18 chat transcripts (`list_events`, or search transcripts) for how each launched Codex (background tool call vs a detached process) and whether the chat was woken at exit; read `.coord/tools/codex-run.sh`. Write the cause and a minimal fix in the report. Apply the fix only if it is a text or launch-script change of a few lines; otherwise propose it and stop. Goal (user, 2026-11-13): "claude should be triggering codex and KNOW its responsible for a codex and automatically pick up when its complete so i dont have to waste a turn on asking to check status"; one rule line in docs/agents.md and the next-task and review-task skills. Never poll: two samples 30 s apart if you must check a live run.
 - Gate offline; no hand test. Expected time: about 40 minutes.
 
 ## Files
@@ -26,6 +26,9 @@ User, 2026-11-13: "another issue: this seems to happen a lot more often" (A15 it
 - `docs/agents.md`
 - `.coord/tasks/T14-dirty-allowlist-codex-wake.md`
 - `.coord/reports/T14-dirty-allowlist-codex-wake.md`
+
+- `.claude/skills/next-task/SKILL.md`
+- `.claude/skills/review-task/SKILL.md`
 
 ## Contracts
 None (no product code).

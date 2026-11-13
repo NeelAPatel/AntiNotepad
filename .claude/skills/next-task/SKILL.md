@@ -85,7 +85,7 @@ STATUS: `approved` (your own row only).
 Continue in this chat; no new chat. Show the user the status card, role `builder` on line one. Rename the chat
 `<ID> · review · <slug>` when Check starts and `<ID> · test · <slug>` at the hand test.
 - Work only in `.claude/worktrees/<prefix>/<ID-slug>` with absolute paths.
-- Launch `bash .coord/tools/codex-run.sh director <ID-slug> .coord/tasks/<ID-slug>.md` there, run `/review-task <ID-slug>`
+- Launch `bash .coord/tools/codex-run.sh director <ID-slug> .coord/tasks/<ID-slug>.md` there as a tracked background call you own (`docs/agents.md` "Launch": end the turn, resume on the exit notice, never ask the user to check), run `/review-task <ID-slug>`
   when it exits, relaunch rework yourself, commit each round on the item branch.
 - Ask the user, with the card, whatever the bounds check marks "ask the user". Never touch dev or other STATUS rows;
   never mint IDs; never start a chat.
