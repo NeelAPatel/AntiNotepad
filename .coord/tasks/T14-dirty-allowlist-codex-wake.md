@@ -18,12 +18,20 @@ User, 2026-11-13: "another issue: this seems to happen a lot more often" (A15 it
 - Gate offline; no hand test. Expected time: about 40 minutes.
 
 ## Files
-- `tools/approve.ps1`, `tools/catch-up.ps1`, `tools/gate.ps1`, `tools/merge-preflight.ps1`, `docs/dev-loop.md`
-- Possibly `.coord/tools/codex-run.sh`, `docs/agents.md` (step b only)
-- `.coord/tasks/T14-dirty-allowlist-codex-wake.md`, `.coord/reports/T14-dirty-allowlist-codex-wake.md`
+- `tools/approve.ps1`
+- `tools/catch-up.ps1`
+- `tools/gate.ps1`
+- `tools/merge-preflight.ps1`
+- `docs/dev-loop.md`
+- `docs/agents.md`
+- `.coord/tasks/T14-dirty-allowlist-codex-wake.md`
+- `.coord/reports/T14-dirty-allowlist-codex-wake.md`
 
 ## Contracts
 None (no product code).
 
 ## Approve
 User, 2026-11-13: "okay fix these up".
+
+## Check
+- Gate (offline): PASS (all 9 steps). Regex tested on sample status lines; step b cause and fix in the report.
