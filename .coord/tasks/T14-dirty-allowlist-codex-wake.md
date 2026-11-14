@@ -38,3 +38,6 @@ User, 2026-11-13: "okay fix these up".
 
 ## Check
 - Gate (offline): PASS (all 9 steps). Regex tested on sample status lines; step b cause and fix in the report.
+
+## Hand test
+None, no UI change (tooling and docs only).
