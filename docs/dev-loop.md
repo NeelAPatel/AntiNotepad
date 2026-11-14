@@ -108,6 +108,7 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
 - Token playground (live redraw of the pad with adjuster cards): `pwsh tools/playground-serve.ps1 -Background -Open`
   opens `http://localhost:47812`; `-Stop` ends it.
 - Computer use: only act in the dev copy; the installed copy holds real user data.
+- `.coord/STATUS.md`, `pending.md`, `lessons.md` and `status-archive.md` may be dirty (uncommitted) in the main checkout at approve, catch-up, gate and preflight; the director commits them in the merge commit. Any other dirty file still stops those tools.
 
 ## Product identity
 - `product/AntiNotepad/AppInfo.props` owns the name, version, pre-release label, description and copyright. Runtime identity

@@ -1,7 +1,10 @@
 # Codex agents
 
 ## Launch
-Headless, in the background; the process exit wakes the item chat:
+**Rule: The chat that launches Codex owns that run: launch as a tracked background Bash call (`run_in_background: true`, bare command), end the turn, and resume on the exit notice; never detach, never ask the user to check.**
+Headless. Run it as one Bash tool call with `run_in_background: true` and the bare command below; the completion notice
+of that call wakes the item chat when Codex exits. Never add `&`, `nohup`, `( ... )` or `> /dev/null`: that detaches Codex
+from the call, which then reports done in seconds, so nothing wakes you and the run goes unwatched:
 
 ```bash
 .coord/tools/codex-run.sh <role> <ID-slug> .coord/tasks/<ID-slug>.md

@@ -40,8 +40,8 @@ committed); read only its Summary. Fail: triage (4a) before relaunching anything
 ## 3. The card's other gates
 Run every gate the Plan lists (at least the tier's defaults):
 - **Codex review** (Medium, High): fill `.coord/templates/review.md` into `.coord/tasks/<round>-review.md`, launch
-  `bash .coord/tools/codex-run.sh reviewer <round>-review .coord/tasks/<round>-review.md` in the background, tell the user
-  in one line (folder, brief, log, report `.coord/reports/<round>.review.md`), wait for the exit notification.
+  `bash .coord/tools/codex-run.sh reviewer <round>-review .coord/tasks/<round>-review.md` as a tracked background call you own (`docs/agents.md` "Launch"), tell the user
+  in one line (folder, brief, log, report `.coord/reports/<round>.review.md`), end the turn and resume on the exit notice.
 - **Design review** (High): after the Codex review exists, spawn the `design-reviewer` agent with "Design review of
   <ID-slug>, latest round <round>."
 - **Contracts / reproduction test**: confirm the named rows and checks are in the diff and pass in the gate's selftest.

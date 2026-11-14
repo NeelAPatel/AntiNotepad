@@ -153,7 +153,7 @@ try {
     }
     Write-Host 'CHECK: branch card phases filled; no open ask the user line'
     $changes = @(Invoke-Git $checkout @('status', '--porcelain', '--untracked-files=no'))
-    if (@($changes | Where-Object { $_ -cnotmatch '^.. (\.coord/STATUS\.md|\.claude/settings\.json)$' }).Count) { throw 'dirty item checkout' }
+    if (@($changes | Where-Object { $_ -cnotmatch '^.. (\.coord/(STATUS|pending|lessons|status-archive)\.md|\.claude/settings\.json)$' }).Count) { throw 'dirty item checkout' }
     & git -C $root merge-base --is-ancestor dev $branch
     if ($LASTEXITCODE -eq 1) { throw "behind dev: run tools/catch-up.ps1 -Task $Task" }
     if ($LASTEXITCODE -ne 0) { throw 'cannot compare dev with item branch' }

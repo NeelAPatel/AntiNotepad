@@ -62,7 +62,7 @@ if ($branch -cnotmatch $branchPattern -or $Matches.slug -cne $Task) {
 }
 $changes = @(& git -C $repoRoot status --porcelain --untracked-files=no)
 if ($LASTEXITCODE -ne 0) { Write-Host 'REFUSED: git status failed.'; exit 1 }
-if (@($changes | Where-Object { $_ -cnotmatch '^.. (\.coord/STATUS\.md|\.claude/settings\.json)$' }).Count -gt 0) {
+if (@($changes | Where-Object { $_ -cnotmatch '^.. (\.coord/(STATUS|pending|lessons|status-archive)\.md|\.claude/settings\.json)$' }).Count -gt 0) {
     Write-Host 'REFUSED: tracked changes outside .coord/STATUS.md and .claude/settings.json; commit or stash your own changes first.'; exit 1
 }
 
