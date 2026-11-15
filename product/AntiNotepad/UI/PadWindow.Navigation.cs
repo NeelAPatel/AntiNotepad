@@ -286,8 +286,16 @@ internal sealed partial class PadWindow
         var units = horizontal ? e.Delta.X : e.Delta.Y;
         if (Math.Abs(units) < 0.001) return;
         e.Handled = true;
-        _noteSwipe ??= new NoteSwipe(this, () => Settings, () => _active, Navigate);
+        _noteSwipe ??= new NoteSwipe(this, () => _active, CanNavigate, Navigate);
         _noteSwipe.Input(units);
+    }
+
+    /// <summary>Reports whether the current pane has a note in the requested paging direction.</summary>
+    private bool CanNavigate(int direction)
+    {
+        if (_active == _right || Data.ViewSlot > 0) return true;
+        var target = Data.Current + direction;
+        return target >= 0 && (target < Data.Stack.Count || !Data.Stack[Data.Current].IsEmpty);
     }
 
     // ---------- clipboard capture ----------

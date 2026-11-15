@@ -19,6 +19,10 @@ Newest first. History before 2026-10-23 (overnight build log and write-up) is in
 13. Approve cap is 3 items; only the user allows a one-off bypass.
 14. Never run `AntiNotepad.exe --quit` without `ANTINOTEPAD_DATA`; no Computer Use without the user's go.
 15. US spelling in UI; first-party libraries first.
+16. Feel defaults are vertical Rate-matched and horizontal Follow-through; the vertical styles keep their pre-A20 glide and stop at note ends, while horizontal edge-band parameters live in `docs/scroll-feel.md`.
+
+## 2026-11-15
+- **Scroll feel** (A20-overscroll-speed): Settings calls the four existing vertical modes **Vertical Scroll Style** and adds a one-option **Horizontal Scroll Style**, Follow-through. Rate-matched remains the default inside notes; Follow-through is the horizontal default. On 2026-11-15, after the round 2 hand test, the user asked to remove vertical overscroll and keep the existing Windows 11 style smooth scrolling; vertical scrolling stops at note ends with no carry-over. Horizontal paging uses projection-based commit and spring return, with edge resistance only at the first and last notes. Locked horizontal values are in `docs/scroll-feel.md`.
 
 ## 2026-11-12
 - **Motion reference:** User approved the lab on 2026-11-12. Overlay entry uses 167 ms and cubic-bezier(0, 0, 0, 1); exit uses 83 ms and cubic-bezier(1, 0, 1, 1). The reusable Windows 11 durations are 83, 167 and 250 ms. The 16 px slide is our choice; Microsoft does not prescribe a popup offset. Later Settings and window-motion items reuse the `Win11*` tokens. Sources: Microsoft Learn [Timing and easing](https://learn.microsoft.com/en-us/windows/apps/design/motion/timing-and-easing) and [Motion in practice](https://learn.microsoft.com/en-us/windows/apps/design/motion/motion-in-practice).

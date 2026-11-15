@@ -450,26 +450,23 @@ internal sealed partial class SettingsWindow : Window
         if (withPreview) page.Children.Add(Preview(feel: true));
         page.Children.Add(Group("Scrolling"));
         page.Children.Add(Card([
-            .. Expander("scrolling", () => Fl(0xe077), "Scroll style", ScrollHint(S.Scrolling), ScrollName(S.Scrolling),
+            .. Expander("scrolling", () => Fl(0xe077), "Vertical Scroll Style", ScrollHint(S.Scrolling), ScrollName(S.Scrolling),
                 [() => SubRow("Style", () => Seg([("lines", "Lines"), ("free", "Free"), ("rate", "Rate-matched"), ("wheel", "Wheel-driven")], S.Scrolling, v => Set(() => S.Scrolling = v, rows: true))),
                  .. TuningRows()]),
         ]));
 
         page.Children.Add(Group("Switching between notes"));
         page.Children.Add(Card([
-            .. Expander("switching", () => Fl(0xf18d), "Switch style",
-                S.Swipe == "progress" ? "Same feel at any window width" : "Follows with resistance, decides when you stop",
-                S.Swipe == "progress" ? "Progress" : "Detent",
-                () => SubRow("Style", () => Seg([("detent", "Detent"), ("progress", "Progress")], S.Swipe, v => Set(() => S.Swipe = v, rows: true))),
-                S.Swipe != "progress" ? null : () => SubRow("Distance to switch",
-                    () => Seg([("150", "Short"), ("220", "Normal"), ("320", "Long")], Closest(S.SwipeLength, 150, 220, 320), v => Set(() => S.SwipeLength = Num(v)))),
-                S.Swipe != "progress" ? null : () => SubRow("Changes at",
-                    () => Seg([("0.25", "A quarter"), ("0.35", "A third"), ("0.5", "Halfway")], Closest(S.SwipeFiresAt, 0.25, 0.35, 0.5), v => Set(() => S.SwipeFiresAt = Num(v))))),
+            .. Expander("switching", () => Fl(0xf18d), "Horizontal Scroll Style",
+                "Follows input, with projection-based switching and spring edge pulls",
+                "Follow-through",
+                () => SubRow("Style", () => Seg([("follow", "Follow-through")], S.HorizontalScrollStyle,
+                    v => Set(() => S.Swipe = v, rows: true)))),
         ]));
 
         page.Children.Add(Group("Motion"));
         page.Children.Add(Card(
-            Row(() => Fl(0xf103), "Reduce motion", "No glides, coasts or slides", () => Toggle(S.ReduceMotion, v => Set(() => S.ReduceMotion = v), "Reduce motion"))));
+            Row(() => Fl(0xf103), "Reduce motion", "No glides, coasts, slides or horizontal overscroll", () => Toggle(S.ReduceMotion, v => Set(() => S.ReduceMotion = v), "Reduce motion"))));
     }
 
     /// <summary>Presets for the chosen scroll style, shown under it.</summary>

@@ -43,6 +43,7 @@ One row per merged item: what each check found. Empty rows on items that later h
 | 2026-11-12 | A17-settings-toggle-animation | Low | 0 | 0 | - | - | 0 (hover fill tried and dropped at user request) | - |
 | 2026-11-12 | A18-settings-segment-animation | Medium | 1 (round 2: glide lost on Settings rebuild) | 0 | - | - | 0 | - |
 | 2026-11-13 | A19-settings-scroll-feel | Medium | 0 | 0 | - | - | 0 | - |
+| 2026-11-15 | A20-overscroll-speed | Medium | 2 (r2 carry-over, r3 vertical overscroll dropped by user) | 0 | - | - | 0 | - |
 
 | 2026-11-12 | Loop11-one-chat-flow | Low | 0 (user asked to fix then merge: card intro typo and lost sentence fixed on branch) | 0 | - | - | 0 | - |
 | 2026-11-13 | T14-dirty-allowlist-codex-wake | Low | 0 (A16/A17 launched Codex detached with & or nohup, so no exit wake-up; Hand test section was missing at preflight) | 0 | - | - | 0 | - |

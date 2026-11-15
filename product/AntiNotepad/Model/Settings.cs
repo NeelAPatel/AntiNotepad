@@ -34,9 +34,11 @@ public sealed class Settings
     public double ScrollDistance { get; set; } = 1;       // free, rate, wheel: distance per click, x the picked default
     public double ScrollBoost { get; set; } = 1;          // rate, wheel: extra distance when spinning fast, x the picked default
     public double FreeFriction { get; set; } = 6;         // free: how quickly a coast stops
-    public double SwipeLength { get; set; } = 220;        // progress: px of input for a whole note
-    public double SwipeFiresAt { get; set; } = 0.35;      // progress: share of a note where it changes
-    public string Swipe { get; set; } = "progress";       // between notes: detent (decide when input stops) | progress (width-independent, fires mid-swipe)
+    public double SwipeLength { get; set; } = 220;
+    public double SwipeFiresAt { get; set; } = 0.35;
+    public string Swipe { get; set; } = "follow";
+    [JsonIgnore]
+    public string HorizontalScrollStyle => "follow";
     public string Chrome { get; set; } = "fade";           // fade | always
     public int FadeAfterMs { get; set; } = 1600;          // how long the controls stay after the mouse stops
     public string Bars { get; set; } = "docked";          // docked (top bar row, pager below the text) | overlay (both slide in over the note at the edges)

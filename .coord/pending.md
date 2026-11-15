@@ -56,7 +56,6 @@ Rows not in work now: proposed, needs you, planned, paused and deferred (user or
 | **UI / UX / animation running list (user, 2026-11-12; unnumbered until scope is confirmed; lab-first where visible)** | | | | |
 | idea: pill-bar-per-mode | Pill bar: Standard Notes shows pagination only; Permanent Notes shows dot selectors only | - | - | needs you |
 | idea: permanent-view-swap-button | Permanent selector leaves the pill bar; a new top-right button swaps between Standard and Permanent note view. Goes with pill-bar-per-mode | - | - | needs you |
-| A20-overscroll-speed | Overscroll feels faster than the page-swipe animations between notes; match them. Added 2026-11-13: at one point in the overscroll the note simply snaps back to position, which is jarring; user suggests recording the note pixel position / scroll events per frame to find it | - | - | needs you |
 | idea: overlay-scroll-feel | Help and Search overlays still scroll the stock way; make them follow the Feel scroll style like Settings (A19-settings-scroll-feel) | - | - | needs you |
 | idea: win11-window-motion | Program window animations (including Settings) snap in/out or do not follow Windows 11 / WinUI 3 standard motion; align them. Overlaps an old someday note on motion timings in the Backlog section below (never a real item) | - | - | needs you |
 | idea: taskbar-summon-timing | Summoning from the taskbar animates but feels off and too fast | - | - | needs you |

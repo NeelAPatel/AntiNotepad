@@ -1,0 +1,5 @@
+Implemented momentum carry-over for Lines, Free, Rate-matched, and Wheel-driven scrolling. The existing stop speeds and spring settings remain in use; Reduce motion skips carry-over. Added the regression contract and updated [scroll-feel.md](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/feat/A20-overscroll-speed/docs/scroll-feel.md:30).
+
+The build succeeded with 0 warnings, selftest passed (21 contract rows: 20 automated, 1 manual), and the offline gate passed. Its warnings were the offline NuGet audit and the inherited `PadView.cs` size warning. The nine-section report is [A20-overscroll-speed-r2.md](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/feat/A20-overscroll-speed/.coord/reports/A20-overscroll-speed-r2.md:1).
+
+The dev-copy hand test remains. The standalone build output is still present: automatic approval review rejected its recursive removal as “blocked by policy,” after its path was verified inside this worktree.

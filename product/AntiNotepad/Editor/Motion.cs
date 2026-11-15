@@ -13,7 +13,7 @@ using AntiNotepad.Theme;
 namespace AntiNotepad.Editor;
 
 /// <summary>
-/// Wheel and touchpad scrolling that glides instead of jumping. Four feels (Settings > Scrolling):
+/// Wheel and touchpad scrolling with four vertical styles (Settings > Feel):
 /// lines: each notch glides 3 lines; consecutive notches extend the same glide.
 /// free: each notch adds momentum that coasts and decays; a touchpad tracks 1:1 in pixels.
 /// rate: slow clicks glide a short way; faster spinning makes every click travel further and the glide tighter.

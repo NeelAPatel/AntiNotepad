@@ -19,7 +19,7 @@ namespace AntiNotepad;
 
 internal static partial class SelfTest
 {
-    private const string DesignHash = "79117d22cafda0ab6ec9caccc1e9ef524f22429138e3f3d4136a087f512bc053";
+    private const string DesignHash = "183c64c8a607288e0dcd12e0d2d24584bccbee4d38efab50df283d9295bc46e2";
     private static readonly string[] DesignProperties = ["FontSize", "FontWeight", "FontFamily", "FontStyle", "CornerRadius", "Opacity", "Background", "Foreground", "BorderBrush", "BorderThickness", "BoxShadow", "Margin", "Padding"];
 
     /// <summary>Writes the same design snapshot used by the selftest.</summary>

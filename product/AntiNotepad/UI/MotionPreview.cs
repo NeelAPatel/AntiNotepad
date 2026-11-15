@@ -112,9 +112,11 @@ internal sealed class MotionPreview : StackPanel
         _frame = new Border { Child = _pad, CornerRadius = new CornerRadius(Shape.Card), ClipToBounds = true, BorderThickness = new Thickness(1) };
         Children.Add(_frame);
 
-        _swipe = new NoteSwipe(_pad, () => _s, () => _pad, direction =>
+        _swipe = new NoteSwipe(_pad, () => _pad,
+            direction => Index + direction >= 0 && Index + direction < Samples.Length,
+            direction =>
         {
-            Index = (Index + direction + Samples.Length) % Samples.Length;
+            Index += direction;
             _pad.SwitchTo(Samples[Index], direction);
             Wake();
         });
@@ -168,7 +170,8 @@ internal sealed class MotionPreview : StackPanel
             if (!_sampling) return;
             var line = Math.Max(1, _pad.Editor.TextArea.TextView.DefaultLineHeight);
             // Pulling right shows the previous note, so the note position moves against the pull.
-            var v = _pad.Editor.VerticalOffset / line;
+            var pull = (_pad.Editor.TextArea.RenderTransform as TranslateTransform)?.Y ?? 0;
+            var v = (_pad.Editor.VerticalOffset - pull) / line;
             var h = Index - _pull;
             if (v != _lastV || h != _lastH) { _movedAt = Trace.Now; _lastV = v; _lastH = h; }
             _trace.Add(v, h);
@@ -209,7 +212,7 @@ internal sealed class MotionPreview : StackPanel
         _legend.Children.Add(Key(palette.Accent, "scroll"));
         _legend.Children.Add(Key(palette.Number, "note"));
         _legend.Children.Add(Kit.Text("last 2 seconds", palette.Muted, Typography.Caption));
-        var hint = Kit.Text(_feel ? "Scroll up and down, or sideways to switch notes" : "Type, scroll or switch notes here", palette.Muted, Typography.Caption);
+        var hint = Kit.Text(_feel ? "Scroll or pull past either edge; swipe sideways between notes" : "Type, scroll or switch notes here", palette.Muted, Typography.Caption);
         hint.Margin = new Thickness(12, 0, 0, 0);
         _legend.Children.Add(hint);
         _trace.InvalidateVisual();

@@ -116,6 +116,12 @@ internal static partial class SelfTest
                 () => RunExistingCheck(NoteSwitchChecks, "note switch: "),
                 "Touchpad and Shift+wheel both ways, fast repeats, split slots, stack return and Settings preview; verify departure, arrival, clipping and final opacity. Offline checks cover no-frame completion and seeded departure interruption; displayed frames and captured pixels require hand testing."),
             new(
+                "horizontal-edge-pull-no-jump",
+                "A horizontal edge pull never jumps in one frame; projected touchpad releases commit only when the projection reaches half a page.",
+                "A20-overscroll-speed",
+                () => RunExistingCheck(HorizontalScrollFeelChecks, "horizontal scroll feel: "),
+                "Dev copy: at the first and last notes, pull with touchpad and wheel; the edge pull glides in, holds, and springs home without a snap."),
+            new(
                 "list-commands-preserved",
                 "Enter continuation and Tab/Shift+Tab renumber preserve the same text and one Undo step; caret position and scrolling remain a dev-copy check.",
                 "A42d-list-commands",
