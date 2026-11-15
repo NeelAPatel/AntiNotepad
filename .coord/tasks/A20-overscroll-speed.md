@@ -30,8 +30,16 @@ Branch: `feat/A20-overscroll-speed` in `.claude/worktrees/feat/A20-overscroll-sp
 - `product/AntiNotepad/Motion/MotionTokens.cs`
 - `product/AntiNotepad/Motion/EdgeBand.cs` (new: band, spring, notch gain)
 - `product/AntiNotepad/Model/Settings.cs`
-- `product/AntiNotepad/SelfTest/` (new scroll-feel checks, registry)
-- `docs/scroll-feel.md`, `docs/decisions.md`
+- `product/AntiNotepad/SelfTest/ScrollFeel.cs` (new)
+- `product/AntiNotepad/SelfTest/Contracts.cs`
+- `product/AntiNotepad/SelfTest/Run.cs`
+- `product/AntiNotepad/SelfTest/UI.cs`
+- `product/AntiNotepad/SelfTest/App.cs`
+- `product/AntiNotepad/SelfTest/Design.cs`
+- `docs/scroll-feel.md`
+- `docs/decisions.md`
+- `tools/playground/a20-styles-lab.html`
+- `tools/playground/a20-compare.html`
 
 ## Contracts
 Add rows: edge pull never jumps in one frame; vertical overscroll holds then springs home.
@@ -49,7 +57,7 @@ Role: worker, because shared timing state across four surfaces. Never switch, me
 Report `.coord/reports/A20-overscroll-speed.md`, nine short sections per `.coord/templates/item.md`.
 
 ## Check
-(after the build)
+2026-11-15, item chat: gate PASS at the branch tip (`tools/gate.ps1 -Offline`; build 0 warnings, SELFTEST PASS, 20 contract rows 19 pass 1 manual, tokens, format, scope all allowed; Size warn: PadView.cs 943->996). Bounds: within plan. Skimmed vertical edge code (`EdgeBand`, `SmoothScroll`): matches the spec, Reduce motion bypasses. Noticed: Settings key `Swipe` kept to store Follow-through (compat). Misses: none. Not run live; hand test next.
 
 ## Hand test
 (after the build)
