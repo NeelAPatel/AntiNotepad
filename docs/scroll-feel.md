@@ -20,16 +20,10 @@ Locked by the user 2026-11-14/15 in the styles lab (macOS / iOS style), wheel in
 | `notchGain` | `0.2 + 0.8 * clamp((1000/gap - 2.5)/9, 0, 1)`, gap = smoothed time between clicks (max 400 ms) | One slow click = small nudge; a quick roll = full pull. |
 | Return from the edge | release from rest after the hold; spring period 420 ms | Never snaps: the pulled position is kept and springs home. |
 
-## Vertical (scrolling inside a note): Rate-matched keeps its glide, gains the same overscroll
-- Overscroll at the top or bottom uses the same band formula (D = view height), the same hold (220 ms for a wheel
-  click), a 96 px wheel nudge scaled by `notchGain`, and the same spring return (period 420 ms, damping 1.0).
-- Touchpad overscroll holds for 90 ms; release after a pause of 80 ms or more starts from rest (never from the size of
-  the last click).
-- Wheel clicks glide in over 70 ms (the lab's `notchMs`), smoothing for touchpad/drag is 0 ms.
-- Applies to all four vertical styles (Lines, Free, Rate-matched, Wheel-driven); Rate-matched is the default.
-- When an animated glide reaches the top or bottom with outward speed at or above that style's stop speed, it carries that speed into the edge spring from zero displacement. Lines use the final glide step's distance over its frame time.
-- Arrivals below the existing stop speed stop without overscroll; Reduce motion never carries momentum.
-- Not changed: each style's own distance and glide inside the note.
+## Vertical (scrolling inside a note): unchanged from `dev`
+- Lines, Free, Rate-matched and Wheel-driven keep their existing glide inside the note; scrolling stops at either end without overscroll or carried momentum.
+- Touchpad input follows 1:1 in pixels. Rate-matched remains the default.
+- User call, 2026-11-15: remove the vertical overscroll and keep Windows 11 style smooth scrolling vertically.
 
 ## Settings > Feel
 - "Scroll style" is renamed "Vertical Scroll Style" (Lines | Free | Rate-matched | Wheel-driven), default Rate-matched.

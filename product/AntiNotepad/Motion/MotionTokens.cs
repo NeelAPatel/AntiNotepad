@@ -27,16 +27,14 @@ internal static class MotionTokens
     /// <summary>Editor and note transitions.</summary>
     public const double NoteArrive = 200, CaretGlide = 80;
 
-    /// <summary>Shared horizontal paging and vertical edge-pull timing.</summary>
+    /// <summary>Horizontal paging and edge-pull timing.</summary>
     public const double EdgeBandRatio = 0.55, EdgeSpringPeriod = 420, EdgeSpringDamping = 1;
     public const double EdgeWheelGlide = 70, EdgeWheelHold = 220, EdgeTouchQuiet = 90;
     public const double HorizontalProjection = 499, HorizontalCommitShare = 0.5, HorizontalQuiet = EdgeTouchQuiet;
     public const double HorizontalVelocityWindow = 60, HorizontalVelocityMinimumSpan = 16, HorizontalVelocityStale = 80;
     public const double HorizontalWheelLock = 260;
     public const double HorizontalSpentQuiet = 150, HorizontalWheelNudge = 192, HorizontalPageGap = 16;
-    public const double VerticalWheelNudge = 96, TouchpadPixelsPerUnit = 50;
-    /// <summary>Existing arrival cutoffs for each vertical style; Lines and Rate-matched share the soft stop.</summary>
-    public const double VerticalCoastStopSpeed = 15, VerticalFlyStopSpeed = 5, VerticalSoftStopSpeed = 4;
+    public const double TouchpadPixelsPerUnit = 50;
 
     /// <summary>Programmatic note-arrival geometry.</summary>
     public const double NoteArrivalShift = 34, NoteArrivalOpacity = 0.25;

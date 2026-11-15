@@ -1,4 +1,4 @@
-// Shared rubber-band resistance, wheel-rate scaling, and critically damped return physics.
+// Horizontal rubber-band resistance, wheel-rate scaling, and critically damped return physics.
 namespace AntiNotepad.Motion;
 
 /// <summary>Maps raw edge pulls to a bounded visual band and returns them without a snap.</summary>
@@ -6,28 +6,14 @@ internal sealed class EdgeBand
 {
     private double _pull, _shown, _velocity;
     private long _lastInput;
-    private int _movingDirection;
     private bool _wheel, _returning;
 
     public bool Active { get; private set; }
-    internal bool Returning => _returning;
     public double Pull => _pull;
     public double Shown => _shown;
 
     /// <summary>Returns the raw pull represented by the current display during a spring return.</summary>
     public double CurrentPull(double dimension) => _returning ? Unresist(_shown, dimension) : _pull;
-
-    /// <summary>Starts a spring return at the edge with no position jump and the supplied outward speed.</summary>
-    public void StartMoving(double velocity)
-    {
-        if (Anim.Reduced) { Reset(); return; }
-        _pull = _shown = 0;
-        _velocity = velocity;
-        _lastInput = 0;
-        _movingDirection = Math.Sign(velocity);
-        _wheel = false;
-        _returning = Active = true;
-    }
 
     /// <summary>Adds input at an edge, retaining the current displayed pull if input interrupts its return.</summary>
     public void Push(double delta, double dimension, bool wheel, long now)
@@ -37,7 +23,6 @@ internal sealed class EdgeBand
         {
             _pull = CurrentPull(dimension);
             _velocity = 0;
-            _movingDirection = 0;
             _returning = false;
         }
 
@@ -72,8 +57,7 @@ internal sealed class EdgeBand
         }
 
         _shown = SpringStep(_shown, ref _velocity, 0, dt);
-        if (_movingDirection != 0 && Math.Sign(_velocity) != _movingDirection) _movingDirection = 0;
-        if (_movingDirection == 0 && Math.Abs(_shown) < 0.3 && Math.Abs(_velocity) < 10)
+        if (Math.Abs(_shown) < 0.3 && Math.Abs(_velocity) < 10)
         {
             Reset();
             return false;
@@ -120,7 +104,6 @@ internal sealed class EdgeBand
     {
         _pull = _shown = _velocity = 0;
         _lastInput = 0;
-        _movingDirection = 0;
         _wheel = _returning = Active = false;
     }
 }

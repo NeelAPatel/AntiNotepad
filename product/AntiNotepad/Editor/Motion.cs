@@ -33,23 +33,19 @@ internal sealed class SmoothScroll
         double Viewport { get; }
         double Offset { get; set; }
         double LineHeight { get; }
-        void SetPull(double y);
     }
 
     internal sealed class EditorSurface(TextEditor editor) : ISurface
     {
-        private readonly VisualPull _pull = new();
         public Control Host => editor;
         public double Extent => editor.ExtentHeight;
         public double Viewport => editor.ViewportHeight;
         public double Offset { get => editor.VerticalOffset; set => SetOffset(editor, value); }
         public double LineHeight => editor.TextArea.TextView.DefaultLineHeight;
-        public void SetPull(double y) => _pull.Set(editor.TextArea, y);
     }
 
     internal sealed class ViewerSurface(ScrollViewer viewer, double lineHeight) : ISurface
     {
-        private readonly VisualPull _pull = new();
         public Control Host => viewer;
         public double Extent => viewer.Extent.Height;
         public double Viewport => viewer.Viewport.Height;
@@ -59,67 +55,15 @@ internal sealed class SmoothScroll
             set => viewer.Offset = new Vector(viewer.Offset.X, Math.Clamp(value, 0, Math.Max(0, Extent - Viewport)));
         }
         public double LineHeight => lineHeight;
-        public void SetPull(double y) => _pull.Set(viewer.Content as Control, y);
-    }
-
-    private sealed class VisualPull
-    {
-        private Control? _target;
-        private ITransform? _original;
-        private ITransform? _applied;
-        private readonly TranslateTransform _translate = new();
-
-        public void Set(Control? target, double y)
-        {
-            if (Math.Abs(y) < 0.01)
-            {
-                if (_target is not null) Restore();
-                return;
-            }
-
-            if (!ReferenceEquals(_target, target))
-            {
-                Restore();
-                _target = target;
-                if (target is null) return;
-                _original = target.RenderTransform;
-                if (_original is null) _applied = _translate;
-                else if (_original is Transform originalTransform)
-                {
-                    var group = new TransformGroup();
-                    group.Children.Add(originalTransform);
-                    group.Children.Add(_translate);
-                    _applied = group;
-                }
-                else
-                    _applied = _translate;
-                target.RenderTransform = _applied;
-            }
-
-            if (_target is null) return;
-            _translate.Y = y;
-        }
-
-        private void Restore()
-        {
-            if (_target is not null && ReferenceEquals(_target.RenderTransform, _applied))
-                _target.RenderTransform = _original;
-            _target = null;
-            _original = _applied = null;
-            _translate.Y = 0;
-        }
     }
 
     private readonly ISurface _surface;
     private readonly Func<Model.Settings> _settings;
-    private readonly EdgeBand _edge = new();
-    private readonly NotchGainClock _notches = new();
     private Motion _motion;
     private double _target = double.NaN;
     private double _velocity, _position, _omega, _flyGoal;
     private long _lastClick, _holdUntil;
     private double _gap;
-    private double _edgeBoundary = double.NaN;
     private TimeSpan? _last;
     private bool _running;
     private int _generation;
@@ -144,104 +88,22 @@ internal sealed class SmoothScroll
                 if (visual is ScrollViewer or TextEditor) return;
         if (e.KeyModifiers != KeyModifiers.None || Math.Abs(e.Delta.Y) < 0.001 || Math.Abs(e.Delta.X) > Math.Abs(e.Delta.Y)) return;
         var max = Max;
+        if (max <= 0) return;
+        e.Handled = true;
         var delta = e.Delta.Y;
         var mode = _settings().Scrolling;
-        var now = Environment.TickCount64;
-        var notch = Math.Abs(delta - Math.Round(delta)) < 0.01;
-        var gain = notch ? _notches.Next(now) : 0;
-
-        if (_edge.Active && !Anim.Reduced)
-        {
-            e.Handled = true;
-            PushEdgeInput(notch ? -delta * MotionTokens.VerticalWheelNudge * gain : -delta * PxPerUnit,
-                notch, now, max);
-            return;
-        }
-        if (_edge.Active) ClearEdge();
-
-        if (!Anim.Reduced && notch && AtOutwardEdge(-delta, max))
-        {
-            e.Handled = true;
-            var boundary = -delta < 0 ? 0 : max;
-            StartEdge(boundary, -delta * MotionTokens.VerticalWheelNudge * gain, wheel: true, now: now);
-            return;
-        }
-
-        if (max <= 0 && Anim.Reduced) return;
-        if (mode == "lines")
-        {
-            if (!notch && !Anim.Reduced && TryStartEdge(-delta * PxPerUnit, now, max)) { e.Handled = true; return; }
-            e.Handled = true;
-            Lines(delta, max);
-            return;
-        }
+        if (mode == "lines") { Lines(delta, max); return; }
         // Precision touchpads send fractions of a notch and already carry their own inertia: follow them exactly.
-        var touchpad = !notch;
+        var touchpad = Math.Abs(delta - Math.Round(delta)) > 0.01;
         if (touchpad || Anim.Reduced)
         {
-            var requested = -delta * (touchpad ? PxPerUnit : Line * 3);
-            if (touchpad && !Anim.Reduced && TryStartEdge(requested, now, max)) { e.Handled = true; return; }
-            e.Handled = true;
-            StopMotionOnly();
-            SetSurfaceOffset(Math.Clamp(_surface.Offset + requested, 0, max));
+            _velocity = 0; _motion = Motion.None; _target = double.NaN;
+            SetSurfaceOffset(Math.Clamp(_surface.Offset - delta * (touchpad ? PxPerUnit : Line * 3), 0, max));
             return;
         }
-        e.Handled = true;
         if (mode == "rate") Rate(delta, max);
         else if (mode == "wheel") Fly(delta);
         else Free(delta);
-    }
-
-    private bool AtOutwardEdge(double requestedDelta, double max)
-    {
-        var offset = _surface.Offset;
-        return requestedDelta < 0 && offset <= 0.5 || requestedDelta > 0 && offset >= max - 0.5;
-    }
-
-    private bool TryStartEdge(double requestedDelta, long now, double max)
-    {
-        var target = _surface.Offset + requestedDelta;
-        if (target >= 0 && target <= max) return false;
-        var boundary = target < 0 ? 0 : max;
-        StartEdge(boundary, target - boundary, wheel: false, now: now);
-        return true;
-    }
-
-    private void StartEdge(double boundary, double pull, bool wheel, long now)
-    {
-        StopMotionOnly();
-        _edgeBoundary = boundary;
-        _position = boundary;
-        SetSurfaceOffset(boundary);
-        _edge.Push(pull, Math.Max(1, _surface.Viewport), wheel, now);
-        Start();
-    }
-
-    private void PushEdgeInput(double delta, bool wheel, long now, double max)
-    {
-        var dimension = Math.Max(1, _surface.Viewport);
-        var currentPull = _edge.CurrentPull(dimension);
-        var target = _edgeBoundary + currentPull + delta;
-        if (target >= 0 && target <= max)
-        {
-            StopMotionOnly();
-            ClearEdge();
-            SetSurfaceOffset(target);
-            return;
-        }
-
-        var boundary = target < 0 ? 0 : max;
-        if (Math.Abs(boundary - _edgeBoundary) > 0.5)
-        {
-            _edge.Reset();
-            _edgeBoundary = boundary;
-            _edge.Push(target - boundary, dimension, wheel, now);
-        }
-        else _edge.Push(delta, dimension, wheel, now);
-        StopMotionOnly();
-        _position = boundary;
-        SetSurfaceOffset(boundary);
-        Start();
     }
 
     private void Lines(double delta, double max)
@@ -323,27 +185,7 @@ internal sealed class SmoothScroll
     }
 
     /// <summary>Stops motion and invalidates any frame queued before a content change.</summary>
-    public void Stop()
-    {
-        StopMotionOnly();
-        ClearEdge();
-    }
-
-    private void StopMotionOnly()
-    {
-        _running = false;
-        _motion = Motion.None;
-        _velocity = 0;
-        _target = double.NaN;
-        _generation++;
-    }
-
-    private void ClearEdge()
-    {
-        _edge.Reset();
-        _edgeBoundary = double.NaN;
-        _surface.SetPull(0);
-    }
+    public void Stop() { _running = false; _motion = Motion.None; _velocity = 0; _target = double.NaN; _generation++; }
 
     private void Frame()
     {
@@ -354,54 +196,33 @@ internal sealed class SmoothScroll
             if (!_running || generation != _generation) return;
             var dt = _last is { } last ? Math.Clamp((time - last).TotalSeconds, 0, 0.05) : 1 / 60.0;
             _last = time;
-            if (_motion == Motion.Glide ? GlideStep(dt) : PhysicsStep(dt)) Frame();
+            if (_motion == Motion.Glide ? GlideStep() : PhysicsStep(dt)) Frame();
         });
     }
 
-    /// <summary>Advances a line glide and carries its final outward step into the edge spring.</summary>
-    private bool GlideStep(double dt)
+    private bool GlideStep()
     {
         var now = _surface.Offset;
         var gap = _target - now;
-        if (Math.Abs(gap) < 0.5)
-        {
-            var speed = dt > 0 ? gap / dt : 0;
-            if (!Anim.Reduced && TryGetOutwardEdgeArrival(_target, speed, MotionTokens.VerticalSoftStopSpeed, Max, out var boundary))
-            {
-                CarryIntoEdge(boundary, speed);
-                return true;
-            }
-            SetSurfaceOffset(_target);
-            Stop();
-            return false;
-        }
+        if (Math.Abs(gap) < 0.5) { SetSurfaceOffset(_target); Stop(); return false; }
         // Exponential approach: quick start, soft landing, about 140 ms for a notch.
         SetSurfaceOffset(now + gap * 0.28);
         return true;
     }
 
-    /// <summary>Advances a vertical glide or physics animation and transfers outward momentum at an edge.</summary>
     private bool PhysicsStep(double dt)
     {
-        if (_edge.Active) return EdgeStep(dt);
-        _surface.SetPull(0);
         // Something else moved the view (typing, the scrollbar): let it win.
         if (Math.Abs(_surface.Offset - _position) > 2) { Stop(); return false; }
         var max = Max;
         switch (_motion)
         {
             case Motion.Coast:
-                var coastNext = _position + _velocity * dt;
+                _position = Math.Clamp(_position + _velocity * dt, 0, max);
                 _velocity *= Math.Exp(-_settings().FreeFriction * dt);
-                if (!Anim.Reduced && TryGetOutwardEdgeArrival(coastNext, _velocity, MotionTokens.VerticalCoastStopSpeed, max, out var coastBoundary))
-                {
-                    CarryIntoEdge(coastBoundary, _velocity);
-                    return true;
-                }
-                _position = Math.Clamp(coastNext, 0, max);
                 if (_position <= 0 || _position >= max) _velocity = 0;
                 SetSurfaceOffset(_position);
-                if (Math.Abs(_velocity) < MotionTokens.VerticalCoastStopSpeed) { Stop(); return false; }
+                if (Math.Abs(_velocity) < 15) { Stop(); return false; }
                 return true;
             case Motion.Spring:
                 {
@@ -409,78 +230,23 @@ internal sealed class SmoothScroll
                     var k = _omega * _omega; var c = 2 * _omega;
                     var n = Math.Max(1, (int)Math.Ceiling(dt / 0.004)); var h = dt / n;
                     for (var i = 0; i < n; i++) { _velocity += (k * (_target - _position) - c * _velocity) * h; _position += _velocity * h; }
-                    if (!Anim.Reduced && TryGetOutwardEdgeArrival(_position, _velocity, MotionTokens.VerticalSoftStopSpeed, max, out var springBoundary))
-                    {
-                        CarryIntoEdge(springBoundary, _velocity);
-                        return true;
-                    }
                     _position = Math.Clamp(_position, 0, max);
                     SetSurfaceOffset(_position);
-                    if (Math.Abs(_target - _position) < 0.3 && Math.Abs(_velocity) < MotionTokens.VerticalSoftStopSpeed) { SetSurfaceOffset(_target); _position = _target; Stop(); return false; }
+                    if (Math.Abs(_target - _position) < 0.3 && Math.Abs(_velocity) < 4) { SetSurfaceOffset(_target); _position = _target; Stop(); return false; }
                     return true;
                 }
             case Motion.Fly:
                 {
                     var holding = Environment.TickCount64 < _holdUntil;
                     _velocity = holding ? _velocity + (_flyGoal - _velocity) * (1 - Math.Exp(-25 * dt)) : _velocity * Math.Exp(-14 * dt);
-                    var flyNext = _position + _velocity * dt;
-                    if (!Anim.Reduced && TryGetOutwardEdgeArrival(flyNext, _velocity, MotionTokens.VerticalFlyStopSpeed, max, out var flyBoundary))
-                    {
-                        _holdUntil = 0;
-                        CarryIntoEdge(flyBoundary, _velocity);
-                        return true;
-                    }
-                    _position = flyNext;
+                    _position += _velocity * dt;
                     if (_position <= 0 || _position >= max) { _position = Math.Clamp(_position, 0, max); _velocity = 0; _holdUntil = 0; holding = false; }
                     SetSurfaceOffset(_position);
-                    if (!holding && Math.Abs(_velocity) < MotionTokens.VerticalFlyStopSpeed) { Stop(); return false; }
+                    if (!holding && Math.Abs(_velocity) < 5) { Stop(); return false; }
                     return true;
                 }
         }
         Stop();
-        return false;
-    }
-
-    /// <summary>Returns the crossed edge when a candidate position arrives there with enough outward speed.</summary>
-    internal static bool TryGetOutwardEdgeArrival(double position, double velocity, double stopSpeed, double max, out double boundary)
-    {
-        if (position <= 0 && velocity <= -stopSpeed) { boundary = 0; return true; }
-        if (position >= max && velocity >= stopSpeed) { boundary = max; return true; }
-        boundary = 0;
-        return false;
-    }
-
-    /// <summary>Replaces the active vertical motion with a zero-displacement edge return at the arriving speed.</summary>
-    private void CarryIntoEdge(double boundary, double velocity)
-    {
-        _motion = Motion.None;
-        _target = double.NaN;
-        _velocity = 0;
-        _holdUntil = 0;
-        _edgeBoundary = boundary;
-        _position = boundary;
-        SetSurfaceOffset(boundary);
-        _surface.SetPull(0);
-        _edge.StartMoving(velocity);
-    }
-
-    private bool EdgeStep(double dt)
-    {
-        var boundary = Math.Clamp(_edgeBoundary, 0, Max);
-        if (Math.Abs(_surface.Offset - boundary) > 2)
-        {
-            Stop();
-            return false;
-        }
-
-        _position = boundary;
-        SetSurfaceOffset(boundary);
-        var active = _edge.Step(Environment.TickCount64, dt, Math.Max(1, _surface.Viewport));
-        _surface.SetPull(-_edge.Shown);
-        if (active) return true;
-
-        ClearEdge();
-        StopMotionOnly();
         return false;
     }
 }

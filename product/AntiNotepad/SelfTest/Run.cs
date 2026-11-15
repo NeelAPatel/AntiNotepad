@@ -78,7 +78,6 @@ internal static partial class SelfTest
             && UI.PadWindow.SavedOffsets(0) == (0, 0), "saved label page direction");
         Check(Editor.TextCommands.SelfTest(out var textReport), "text commands: " + textReport);
         Check(HorizontalScrollFeelChecks(out var horizontalFeelReport), "horizontal scroll feel: " + horizontalFeelReport);
-        Check(VerticalOverscrollChecks(out var verticalFeelReport), "vertical overscroll: " + verticalFeelReport);
         Check(Modes.Detect("math\n1+1").Mode == NoteMode.Math, "detect math");
         Check(Modes.Detect("code: py\nx").Argument == "py", "detect code py");
         Check(Modes.Detect("Timer\n5m").Mode == NoteMode.Timer, "detect timer case-insensitive");

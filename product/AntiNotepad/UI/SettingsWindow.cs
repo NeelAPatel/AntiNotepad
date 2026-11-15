@@ -466,7 +466,7 @@ internal sealed partial class SettingsWindow : Window
 
         page.Children.Add(Group("Motion"));
         page.Children.Add(Card(
-            Row(() => Fl(0xf103), "Reduce motion", "No glides, coasts, slides or overscroll", () => Toggle(S.ReduceMotion, v => Set(() => S.ReduceMotion = v), "Reduce motion"))));
+            Row(() => Fl(0xf103), "Reduce motion", "No glides, coasts, slides or horizontal overscroll", () => Toggle(S.ReduceMotion, v => Set(() => S.ReduceMotion = v), "Reduce motion"))));
     }
 
     /// <summary>Presets for the chosen scroll style, shown under it.</summary>
