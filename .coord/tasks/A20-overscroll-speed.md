@@ -10,11 +10,11 @@ Branch: `feat/A20-overscroll-speed` in `.claude/worktrees/feat/A20-overscroll-sp
 
 ## Findings
 - **Now:** the edge `NoteSwipe.Fire()` clears the pull at once then a 7 px `Bump` runs (the snap). Switching has two feels (Detent, Progress), vertical `SmoothScroll` (`Editor/Motion.cs`) has no overscroll.
-- **Where / Risk:** `NoteSwipe` (pad and `MotionPreview`), `SmoothScroll` (pad editor, Settings page), Settings > Feel. Riskiest: vertical pull on TextEditor and ScrollViewer without breaking selection or caret scroll.
+- **Where / Risk:** `NoteSwipe` (pad and `MotionPreview`), `SmoothScroll` (pad editor, Settings page), Settings > Feel. Riskiest: edge pull in the pad.
 - **Source:** lab `tools/playground/a20-styles-lab.html`, `a20-compare.html`; locked values `docs/scroll-feel.md`.
 
 ## Plan
-- **After:** horizontal: one feel, "Follow-through" (replaces Detent and Progress), exactly the `docs/scroll-feel.md` horizontal table; edge pull holds then springs home, no snap. Vertical: all four styles keep their own glide but gain the same overscroll at the top and bottom (band, hold, spring). Settings > Feel: "Scroll style" is "Vertical Scroll Style"; new "Horizontal Scroll Style" with one option; defaults Rate-matched and Follow-through. Preview shows both.
+- **After:** horizontal: one feel, "Follow-through" (replaces Detent and Progress), exactly the `docs/scroll-feel.md` horizontal table; edge pull holds then springs home, no snap. Vertical: unchanged smooth glide, no overscroll (user call after hand test, 2026-11-15: "remove the vertical overscroll logic. let it stay as windows 11 style smooth scrolling vertically"). Settings > Feel: "Scroll style" is "Vertical Scroll Style"; new "Horizontal Scroll Style" with one option; defaults Rate-matched and Follow-through. Preview shows both.
 - **Must not change:** each vertical style's glide inside a note, caret and selection scrolling, Reduce motion (no glides or overscroll), the installed copy.
 - **Test plan:** selftests: horizontal commit by projection, no one-frame jump at an edge, `notchGain` scaling, vertical band and spring return, Reduce motion off-path. Hand: dev copy, wheel and touchpad, first and last note, top and bottom of a long note, Settings preview.
 - **Needs from you:** hand test.
@@ -42,7 +42,7 @@ Branch: `feat/A20-overscroll-speed` in `.claude/worktrees/feat/A20-overscroll-sp
 - `tools/playground/a20-compare.html`
 
 ## Contracts
-Add rows: edge pull never jumps in one frame; vertical overscroll holds then springs home.
+Row: `horizontal-edge-pull-no-jump`.
 
 ## Approve
 2026-11-15 (user): "proceed. Since we're setting rate-matched as default across the app, the overscroll logic should apply everywhere too".
@@ -57,7 +57,7 @@ Role: worker, because shared timing state across four surfaces. Never switch, me
 Report `.coord/reports/A20-overscroll-speed.md`, nine short sections per `.coord/templates/item.md`.
 
 ## Check
-2026-11-15, item chat: gate PASS at the branch tip (`tools/gate.ps1 -Offline`; build 0 warnings, SELFTEST PASS, 20 contract rows 19 pass 1 manual, tokens, format, scope all allowed; Size warn: PadView.cs 943->996). Bounds: within plan. Skimmed vertical edge code (`EdgeBand`, `SmoothScroll`): matches the spec, Reduce motion bypasses. Noticed: Settings key `Swipe` kept to store Follow-through (compat). Misses: none. Not run live; hand test next. r2 (user: momentum did not carry into overscroll): gate PASS, 21 rows 20 pass 1 manual.
+2026-11-15, item chat: gate PASS at the branch tip (`tools/gate.ps1 -Offline`; build 0 warnings, SELFTEST PASS, 20 contract rows 19 pass 1 manual, tokens, format, scope all allowed; Size warn: PadView.cs 943->996). Bounds: within plan. Skimmed vertical edge code (`EdgeBand`, `SmoothScroll`): matches the spec, Reduce motion bypasses. Noticed: Settings key `Swipe` kept to store Follow-through (compat). Misses: none. Not run live; hand test next. r2 added vertical carry-over; r3 removed all vertical overscroll (user call). r3: gate PASS at tip, 19 rows 18 pass 1 manual, Motion.cs equals dev apart from a comment.
 
 ## Hand test
 (after the build)
