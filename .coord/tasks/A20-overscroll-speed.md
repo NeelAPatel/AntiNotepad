@@ -1,7 +1,7 @@
 # A20-overscroll-speed: one smooth feel for swipe, scroll and overscroll
 
 Tier: Medium - ui-motion (replaces the Feel scroll and switch feels)
-State: approved
+State: hand test
 Branch: `feat/A20-overscroll-speed` in `.claude/worktrees/feat/A20-overscroll-speed` (created at Approve)
 
 ## Request
@@ -60,4 +60,4 @@ Report `.coord/reports/A20-overscroll-speed.md`, nine short sections per `.coord
 2026-11-15, item chat: gate PASS at the branch tip (`tools/gate.ps1 -Offline`; build 0 warnings, SELFTEST PASS, 20 contract rows 19 pass 1 manual, tokens, format, scope all allowed; Size warn: PadView.cs 943->996). Bounds: within plan. Skimmed vertical edge code (`EdgeBand`, `SmoothScroll`): matches the spec, Reduce motion bypasses. Noticed: Settings key `Swipe` kept to store Follow-through (compat). Misses: none. Not run live; hand test next. r2 added vertical carry-over; r3 removed all vertical overscroll (user call). r3: gate PASS at tip, 19 rows 18 pass 1 manual, Motion.cs equals dev apart from a comment.
 
 ## Hand test
-(after the build)
+2026-11-15, dev copy built from the branch tip (round 3), user, verbatim: "it's good, merge it". Earlier rounds: r2 "momentum ... does not smoothly carry over into the overscroll"; r3 "remove the vertical overscroll logic. let it stay as windows 11 style smooth scrolling vertically".
