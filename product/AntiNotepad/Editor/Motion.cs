@@ -354,20 +354,33 @@ internal sealed class SmoothScroll
             if (!_running || generation != _generation) return;
             var dt = _last is { } last ? Math.Clamp((time - last).TotalSeconds, 0, 0.05) : 1 / 60.0;
             _last = time;
-            if (_motion == Motion.Glide ? GlideStep() : PhysicsStep(dt)) Frame();
+            if (_motion == Motion.Glide ? GlideStep(dt) : PhysicsStep(dt)) Frame();
         });
     }
 
-    private bool GlideStep()
+    /// <summary>Advances a line glide and carries its final outward step into the edge spring.</summary>
+    private bool GlideStep(double dt)
     {
         var now = _surface.Offset;
         var gap = _target - now;
-        if (Math.Abs(gap) < 0.5) { SetSurfaceOffset(_target); Stop(); return false; }
+        if (Math.Abs(gap) < 0.5)
+        {
+            var speed = dt > 0 ? gap / dt : 0;
+            if (!Anim.Reduced && TryGetOutwardEdgeArrival(_target, speed, MotionTokens.VerticalSoftStopSpeed, Max, out var boundary))
+            {
+                CarryIntoEdge(boundary, speed);
+                return true;
+            }
+            SetSurfaceOffset(_target);
+            Stop();
+            return false;
+        }
         // Exponential approach: quick start, soft landing, about 140 ms for a notch.
         SetSurfaceOffset(now + gap * 0.28);
         return true;
     }
 
+    /// <summary>Advances a vertical glide or physics animation and transfers outward momentum at an edge.</summary>
     private bool PhysicsStep(double dt)
     {
         if (_edge.Active) return EdgeStep(dt);
@@ -378,11 +391,17 @@ internal sealed class SmoothScroll
         switch (_motion)
         {
             case Motion.Coast:
-                _position = Math.Clamp(_position + _velocity * dt, 0, max);
+                var coastNext = _position + _velocity * dt;
                 _velocity *= Math.Exp(-_settings().FreeFriction * dt);
+                if (!Anim.Reduced && TryGetOutwardEdgeArrival(coastNext, _velocity, MotionTokens.VerticalCoastStopSpeed, max, out var coastBoundary))
+                {
+                    CarryIntoEdge(coastBoundary, _velocity);
+                    return true;
+                }
+                _position = Math.Clamp(coastNext, 0, max);
                 if (_position <= 0 || _position >= max) _velocity = 0;
                 SetSurfaceOffset(_position);
-                if (Math.Abs(_velocity) < 15) { Stop(); return false; }
+                if (Math.Abs(_velocity) < MotionTokens.VerticalCoastStopSpeed) { Stop(); return false; }
                 return true;
             case Motion.Spring:
                 {
@@ -390,24 +409,59 @@ internal sealed class SmoothScroll
                     var k = _omega * _omega; var c = 2 * _omega;
                     var n = Math.Max(1, (int)Math.Ceiling(dt / 0.004)); var h = dt / n;
                     for (var i = 0; i < n; i++) { _velocity += (k * (_target - _position) - c * _velocity) * h; _position += _velocity * h; }
+                    if (!Anim.Reduced && TryGetOutwardEdgeArrival(_position, _velocity, MotionTokens.VerticalSoftStopSpeed, max, out var springBoundary))
+                    {
+                        CarryIntoEdge(springBoundary, _velocity);
+                        return true;
+                    }
                     _position = Math.Clamp(_position, 0, max);
                     SetSurfaceOffset(_position);
-                    if (Math.Abs(_target - _position) < 0.3 && Math.Abs(_velocity) < 4) { SetSurfaceOffset(_target); _position = _target; Stop(); return false; }
+                    if (Math.Abs(_target - _position) < 0.3 && Math.Abs(_velocity) < MotionTokens.VerticalSoftStopSpeed) { SetSurfaceOffset(_target); _position = _target; Stop(); return false; }
                     return true;
                 }
             case Motion.Fly:
                 {
                     var holding = Environment.TickCount64 < _holdUntil;
                     _velocity = holding ? _velocity + (_flyGoal - _velocity) * (1 - Math.Exp(-25 * dt)) : _velocity * Math.Exp(-14 * dt);
-                    _position += _velocity * dt;
+                    var flyNext = _position + _velocity * dt;
+                    if (!Anim.Reduced && TryGetOutwardEdgeArrival(flyNext, _velocity, MotionTokens.VerticalFlyStopSpeed, max, out var flyBoundary))
+                    {
+                        _holdUntil = 0;
+                        CarryIntoEdge(flyBoundary, _velocity);
+                        return true;
+                    }
+                    _position = flyNext;
                     if (_position <= 0 || _position >= max) { _position = Math.Clamp(_position, 0, max); _velocity = 0; _holdUntil = 0; holding = false; }
                     SetSurfaceOffset(_position);
-                    if (!holding && Math.Abs(_velocity) < 5) { Stop(); return false; }
+                    if (!holding && Math.Abs(_velocity) < MotionTokens.VerticalFlyStopSpeed) { Stop(); return false; }
                     return true;
                 }
         }
         Stop();
         return false;
+    }
+
+    /// <summary>Returns the crossed edge when a candidate position arrives there with enough outward speed.</summary>
+    internal static bool TryGetOutwardEdgeArrival(double position, double velocity, double stopSpeed, double max, out double boundary)
+    {
+        if (position <= 0 && velocity <= -stopSpeed) { boundary = 0; return true; }
+        if (position >= max && velocity >= stopSpeed) { boundary = max; return true; }
+        boundary = 0;
+        return false;
+    }
+
+    /// <summary>Replaces the active vertical motion with a zero-displacement edge return at the arriving speed.</summary>
+    private void CarryIntoEdge(double boundary, double velocity)
+    {
+        _motion = Motion.None;
+        _target = double.NaN;
+        _velocity = 0;
+        _holdUntil = 0;
+        _edgeBoundary = boundary;
+        _position = boundary;
+        SetSurfaceOffset(boundary);
+        _surface.SetPull(0);
+        _edge.StartMoving(velocity);
     }
 
     private bool EdgeStep(double dt)

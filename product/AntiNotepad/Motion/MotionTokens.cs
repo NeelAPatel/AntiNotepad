@@ -35,6 +35,8 @@ internal static class MotionTokens
     public const double HorizontalWheelLock = 260;
     public const double HorizontalSpentQuiet = 150, HorizontalWheelNudge = 192, HorizontalPageGap = 16;
     public const double VerticalWheelNudge = 96, TouchpadPixelsPerUnit = 50;
+    /// <summary>Existing arrival cutoffs for each vertical style; Lines and Rate-matched share the soft stop.</summary>
+    public const double VerticalCoastStopSpeed = 15, VerticalFlyStopSpeed = 5, VerticalSoftStopSpeed = 4;
 
     /// <summary>Programmatic note-arrival geometry.</summary>
     public const double NoteArrivalShift = 34, NoteArrivalOpacity = 0.25;

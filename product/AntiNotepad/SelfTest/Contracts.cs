@@ -128,6 +128,12 @@ internal static partial class SelfTest
                 () => RunExistingCheck(VerticalOverscrollChecks, "vertical overscroll: "),
                 "Dev copy: use wheel and touchpad at the top and bottom of a long note in Lines, Free, Rate-matched and Wheel-driven; each pull holds then returns smoothly. Repeat with Reduce motion on."),
             new(
+                "vertical-scroll-carries-momentum-to-edge",
+                "Lines, Free, Rate-matched and Wheel-driven transfer outward arrival speed into the edge return without a position or speed jump; arrivals below their stop speeds and Reduce motion do not carry.",
+                "A20-overscroll-speed-r2",
+                () => RunExistingCheck(VerticalCarryOverChecks, "vertical carry-over: "),
+                "Dev copy: at the top and bottom of a long note, reach the edge with a fast wheel roll in Lines, Free, Rate-matched and Wheel-driven; confirm the existing momentum flows into one overscroll and returns. Repeat with Reduce motion on."),
+            new(
                 "list-commands-preserved",
                 "Enter continuation and Tab/Shift+Tab renumber preserve the same text and one Undo step; caret position and scrolling remain a dev-copy check.",
                 "A42d-list-commands",

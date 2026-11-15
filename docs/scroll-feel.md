@@ -27,6 +27,8 @@ Locked by the user 2026-11-14/15 in the styles lab (macOS / iOS style), wheel in
   the last click).
 - Wheel clicks glide in over 70 ms (the lab's `notchMs`), smoothing for touchpad/drag is 0 ms.
 - Applies to all four vertical styles (Lines, Free, Rate-matched, Wheel-driven); Rate-matched is the default.
+- When an animated glide reaches the top or bottom with outward speed at or above that style's stop speed, it carries that speed into the edge spring from zero displacement. Lines use the final glide step's distance over its frame time.
+- Arrivals below the existing stop speed stop without overscroll; Reduce motion never carries momentum.
 - Not changed: each style's own distance and glide inside the note.
 
 ## Settings > Feel
