@@ -1,254 +1,290 @@
-// Horizontal gesture recognition and pull feedback shared by the pad and Settings preview.
+// Horizontal paging and edge-pull feedback shared by the pad and Settings preview.
 using Avalonia.Controls;
 using Avalonia.Media;
 using AntiNotepad.Editor;
-using AntiNotepad.Model;
 using AntiNotepad.Motion;
 
 namespace AntiNotepad.UI;
 
-/// <summary>
-/// Swiping between notes with horizontal input (touchpad, tilt or thumb wheel, Shift+wheel). Two feels, from Settings > Feel:
-/// detent: the note follows with rubber-band resistance and, when input stops, commits past a distance or speed, else springs back.
-/// progress: the swipe is measured in its own distance, not the window's, so the same movement moves
-/// the note the same share of the way at any width. Passing the trigger point changes the note at once and the rest of that
-/// gesture (touchpad inertia, more wheel clicks) is ignored. Wheel clicks are paid out smoothly, further when spun faster.
-/// The window uses one for its panes and the Settings preview another for its sample notes, so both feel the same.
-/// </summary>
-internal sealed class NoteSwipe(Control host, Func<Settings> settings, Func<Control> pane, Action<int> navigate)
+/// <summary>Tracks horizontal input, commits projected swipes, and springs edge pulls home.</summary>
+internal sealed class NoteSwipe(Control host, Func<Control> pane, Func<int, bool> canNavigate, Action<int> navigate)
 {
-    // detent
-    private const double SwipePxPerUnit = 48, SwipeCommitPx = 90, SwipeCommitSpeed = 0.9 /* px per ms */, SwipeFarPx = 200;
-    // progress: swipe length (px for a whole note) and the share where it changes come from Settings
-    private const double ProgressClickPx = 26, ProgressPxPerUnit = 100;
-    private const int ProgressQuietMs = 260, ProgressRearmMs = 110;
-    internal const int ProgressStallMs = 1000;
-
-    private readonly List<(DateTime At, double Dx)> _samples = [];
-    private double _swipe, _progress, _owed, _gap;
-    private DateTime _at;
-    private bool _fired, _draining;
-    private long _click, _frameAt, _owedChangedAt, _frameGeneration;
-    private TimeSpan? _last;
-    private Avalonia.Threading.DispatcherTimer? _detentSettle, _progressSettle;
-    private Anim.Handle? _springBack;
+    private readonly List<(long At, double Dx)> _events = [];
+    private readonly EdgeBand _edge = new();
+    private readonly NotchGainClock _notches = new();
+    private double _pull, _springVelocity;
+    private long _lastInputDelta, _lastWheelLock;
+    private double _lastDelta;
+    private bool _spent, _returning, _frameRunning;
+    private TimeSpan? _lastFrame;
+    private int _frameGeneration;
+    private Avalonia.Threading.DispatcherTimer? _quiet;
 
     /// <summary>How far the note is pulled, as a signed share of its width (for live traces).</summary>
     public event Action<double>? Moved;
 
-    internal bool HasRunningTimer => _detentSettle?.IsEnabled == true || _progressSettle?.IsEnabled == true;
-    internal bool HasPendingProgress => _progress != 0 || _owed != 0;
-    internal double OwedMotion => _owed;
+    internal bool HasRunningTimer => _quiet?.IsEnabled == true || _frameRunning;
+    internal bool HasPendingProgress => _pull != 0 || _edge.Active;
+    internal double OwedMotion => _edge.Pull;
 
     /// <summary>One horizontal wheel or touchpad event, in Avalonia's wheel units.</summary>
     public void Input(double units)
     {
-        var now = DateTime.Now;
-        if (settings().Swipe == "progress") Progress(units, now);
-        else Detent(units, now);
-    }
-
-    private void Detent(double units, DateTime now)
-    {
-        if ((now - _at).TotalMilliseconds > 350) { _swipe = 0; _fired = false; _samples.Clear(); }
-        _at = now;
-        if (_fired) return; // the rest of a committed gesture's inertia
-        var dx = units * SwipePxPerUnit;
-        _swipe += dx;
-        _samples.Add((now, dx));
-        _samples.RemoveAll(x => (now - x.At).TotalMilliseconds > 90);
-        if (Math.Abs(_swipe) >= SwipeFarPx) { Fire(); return; }
-        // Rubber band: the page follows less and less the further it is pulled.
-        var shown = _swipe / (1 + Math.Abs(_swipe) / 260);
-        Show(shown, 1 - Math.Abs(shown) / 420);
-        _detentSettle ??= DetentSettle();
-        _detentSettle.Stop(); _detentSettle.Start();
-    }
-
-    private Avalonia.Threading.DispatcherTimer DetentSettle()
-    {
-        var timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(130) };
-        timer.Tick += (_, _) =>
+        if (Math.Abs(units) < 0.001) return;
+        var now = Environment.TickCount64;
+        var dx = units * MotionTokens.TouchpadPixelsPerUnit;
+        if (IsWheelClick(units))
         {
-            timer.Stop();
-            if (_fired) return;
-            var span = _samples.Count > 1 ? Math.Max(16, (_samples[^1].At - _samples[0].At).TotalMilliseconds) : 90;
-            var speed = Math.Abs(_samples.Sum(x => x.Dx)) / span;
-            if (Math.Abs(_swipe) >= SwipeCommitPx || (speed >= SwipeCommitSpeed && Math.Abs(_swipe) >= SwipeCommitPx / 2)) { Fire(); return; }
-            SpringBack();
-        };
-        return timer;
-    }
-
-    private void Progress(double units, DateTime now)
-    {
-        // After a change, a short pause re-arms the next swipe; before one, slow wheel clicks keep adding up for longer.
-        if ((now - _at).TotalMilliseconds > (_fired ? ProgressRearmMs : ProgressQuietMs))
-        {
-            _progress = 0; _owed = 0; _fired = false;
-            StopFrames();
-        }
-        _at = now;
-        if (_fired) return;
-        var click = Math.Abs(units - Math.Round(units)) < 0.01;
-        if (!click) Advance(units * ProgressPxPerUnit);
-        else
-        {
-            var tick = Environment.TickCount64;
-            var gap = _click == 0 ? 1000 : tick - _click;
-            _click = tick;
-            _gap = gap >= 400 || _gap <= 0 ? Math.Min(gap, 400) : _gap * 0.4 + gap * 0.6;
-            var gain = 1 + 2 * Math.Clamp((1000 / _gap - 6) / 24, 0, 1);
-            _owed += units * ProgressClickPx * gain;
-            _owedChangedAt = tick;
-            // A hidden window gets no frames, so a pay-out cut off by hiding is restarted rather than trusted.
-            if (!_draining || tick - _frameAt > 150)
+            var gain = _notches.Next(now);
+            var direction = -Math.Sign(units);
+            if (canNavigate(direction))
             {
-                StopFrames();
-                _draining = true; _last = null; _frameAt = tick;
-                Frame();
+                if (now < _lastWheelLock) return;
+                _lastWheelLock = now + (long)MotionTokens.HorizontalWheelLock;
+                Commit(direction, 0);
+            }
+            else if (!Anim.Reduced)
+            {
+                _edge.Push(Math.Sign(dx) * MotionTokens.HorizontalWheelNudge * gain, Width, wheel: true, now);
+                _pull = _edge.Pull;
+                _returning = false;
+                Show(_edge.Shown);
+                RestartQuiet(MotionTokens.EdgeWheelHold);
+                StartFrame();
+            }
+            return;
+        }
+
+        if (_spent)
+        {
+            var fresh = Math.Abs(dx) > Math.Abs(_lastDelta) * 1.6 && Math.Abs(dx) > 4
+                || Math.Sign(dx) != Math.Sign(_lastDelta) && Math.Abs(dx) > 2;
+            var gap = now - _lastInputDelta;
+            _lastDelta = dx;
+            _lastInputDelta = now;
+            if (gap > MotionTokens.HorizontalSpentQuiet || fresh) _spent = false;
+            else return;
+        }
+        _lastDelta = dx;
+        _lastInputDelta = now;
+
+        if (_edge.Active)
+        {
+            var next = _edge.CurrentPull(Width) + dx;
+            if (Math.Abs(next) > 0.01 && canNavigate(-Math.Sign(next)))
+            {
+                _edge.Reset();
+                _pull = next;
+                Show(_pull);
+            }
+            else
+            {
+                _edge.Push(dx, Width, wheel: false, now);
+                _pull = _edge.Pull;
+                Show(_edge.Shown);
             }
         }
-        _progressSettle ??= ProgressSettle();
-        _progressSettle.Stop(); _progressSettle.Start();
+        else
+        {
+            _pull += dx;
+            if (Math.Abs(_pull) > 0.01 && !canNavigate(-Math.Sign(_pull)))
+            {
+                _edge.Push(_pull, Width, wheel: false, now);
+                _pull = _edge.Pull;
+                Show(_edge.Shown);
+            }
+            else Show(_pull);
+        }
+
+        _returning = false;
+        _events.Add((now, dx));
+        _events.RemoveAll(e => now - e.At > 200);
+        RestartQuiet(MotionTokens.HorizontalQuiet);
+        if (!_edge.Active && IsDecelerating() && ShouldCommit(_pull, ReleaseVelocity(now), Width))
+        {
+            var direction = -Math.Sign(_pull);
+            if (canNavigate(direction)) Commit(direction, ReleaseVelocity(now));
+        }
+    }
+
+    private double Width => Math.Max(1, pane().Bounds.Width);
+
+    private static bool IsWheelClick(double units) => Math.Abs(units - Math.Round(units)) < 0.01;
+
+    /// <summary>Applies the locked projection rule to the displayed position and release velocity.</summary>
+    internal static bool ShouldCommit(double x, double velocity, double width)
+    {
+        var projected = x + velocity * MotionTokens.HorizontalProjection;
+        return width > 0 && Math.Sign(projected) == Math.Sign(x)
+            && Math.Abs(projected) >= width * MotionTokens.HorizontalCommitShare;
+    }
+
+    /// <summary>Starts the quiet check after the last touchpad event.</summary>
+    private void RestartQuiet(double milliseconds)
+    {
+        _quiet ??= new Avalonia.Threading.DispatcherTimer();
+        _quiet.Interval = TimeSpan.FromMilliseconds(milliseconds);
+        _quiet.Tick -= OnQuiet;
+        _quiet.Tick += OnQuiet;
+        _quiet.Stop();
+        _quiet.Start();
+    }
+
+    private void OnQuiet(object? sender, EventArgs e)
+    {
+        _quiet?.Stop();
+        if (_edge.Active) { StartFrame(); return; }
+        if (_pull == 0) return;
+        var now = Environment.TickCount64;
+        var velocity = ReleaseVelocity(now);
+        var direction = -Math.Sign(_pull);
+        if (!Anim.Reduced && canNavigate(direction) && ShouldCommit(_pull, velocity, Width)) Commit(direction, velocity);
+        else StartReturn(Anim.Reduced ? 0 : velocity);
+    }
+
+    private bool IsDecelerating()
+    {
+        if (_events.Count < 6) return false;
+        var recent = _events.TakeLast(6).Select(e => Math.Abs(e.Dx)).ToArray();
+        var first = (recent[0] + recent[1] + recent[2]) / 3;
+        var last = (recent[3] + recent[4] + recent[5]) / 3;
+        var sign = Math.Sign(_events[^1].Dx);
+        return last < first * 0.92 && _events.TakeLast(6).All(e => Math.Sign(e.Dx) == sign);
+    }
+
+    private double ReleaseVelocity(long now)
+    {
+        if (_events.Count == 0 || now - _events[^1].At > MotionTokens.HorizontalVelocityStale) return 0;
+        var first = now - MotionTokens.HorizontalVelocityWindow;
+        var samples = _events.Where(e => e.At > first && e.At <= now).ToArray();
+        if (samples.Length == 0) return 0;
+        var start = samples.Min(e => e.At);
+        var span = Math.Max(MotionTokens.HorizontalVelocityMinimumSpan, samples[^1].At - start);
+        return samples.Sum(e => e.Dx) / span;
+    }
+
+    /// <summary>Schedules frames while an edge glide or spring is active.</summary>
+    private void StartFrame()
+    {
+        if (_frameRunning) return;
+        _frameRunning = true;
+        _lastFrame = null;
+        Frame();
     }
 
     private void Frame()
     {
-        if (!_draining || TopLevel.GetTopLevel(host) is not { } top) { _draining = false; _last = null; return; }
+        if (!_frameRunning || TopLevel.GetTopLevel(host) is not { } top) { _frameRunning = false; _lastFrame = null; return; }
         var generation = _frameGeneration;
         var weak = new WeakReference<NoteSwipe>(this);
-        // RequestAnimationFrame has no cancellation handle, so queued callbacks must not retain a released swipe.
         top.RequestAnimationFrame(time =>
         {
-            if (!weak.TryGetTarget(out var swipe) || generation != swipe._frameGeneration || !swipe._draining) return;
-            var dt = swipe._last is { } last ? Math.Clamp((time - last).TotalSeconds, 0, 0.05) : 1 / 60.0;
-            swipe._last = time;
-            swipe._frameAt = Environment.TickCount64;
-            if (swipe._fired || Math.Abs(swipe._owed) < 0.01) { swipe._owed = 0; swipe._draining = false; swipe._last = null; return; }
-            var part = swipe._owed * (1 - Math.Exp(-22 * dt));
-            if (Math.Abs(swipe._owed - part) < 0.5) part = swipe._owed;
-            swipe._owed -= part;
-            swipe._owedChangedAt = Environment.TickCount64;
-            swipe.Advance(part);
-            swipe.Frame();
+            if (!weak.TryGetTarget(out var swipe) || generation != swipe._frameGeneration || !swipe._frameRunning) return;
+            if (Anim.Reduced)
+            {
+                swipe._edge.Reset();
+                swipe._pull = 0;
+                swipe._returning = false;
+                swipe.Show(0);
+                swipe.StopFrames();
+                return;
+            }
+
+            var dt = swipe._lastFrame is { } last ? Math.Clamp((time - last).TotalSeconds, 0, 0.05) : 1 / 60.0;
+            swipe._lastFrame = time;
+            if (swipe._edge.Active)
+            {
+                swipe._edge.Step(Environment.TickCount64, dt, swipe.Width);
+                swipe._pull = swipe._edge.Active ? swipe._edge.Pull : 0;
+                swipe.Show(swipe._edge.Active ? swipe._edge.Shown : 0);
+                if (swipe._edge.Active) swipe.Frame(); else swipe.StopFrames();
+                return;
+            }
+
+            if (swipe._returning)
+            {
+                swipe._pull = EdgeBand.SpringStep(swipe._pull, ref swipe._springVelocity, 0, dt);
+                swipe.Show(swipe._pull);
+                if (Math.Abs(swipe._pull) < 0.3 && Math.Abs(swipe._springVelocity) < 10)
+                {
+                    swipe._pull = 0;
+                    swipe._returning = false;
+                    swipe.Show(0);
+                    swipe.StopFrames();
+                }
+                else swipe.Frame();
+                return;
+            }
+
+            swipe.StopFrames();
         });
     }
 
     private void StopFrames()
     {
         _frameGeneration++;
-        _draining = false;
-        _last = null;
+        _frameRunning = false;
+        _lastFrame = null;
     }
 
-    private void Advance(double px)
+    private void StartReturn(double velocity)
     {
-        if (_fired) return;
-        var s = settings();
-        _progress += px / Math.Max(60, s.SwipeLength);
-        if (Math.Abs(_progress) >= Math.Clamp(s.SwipeFiresAt, 0.1, 0.9)) { _swipe = _progress; _owed = 0; Fire(); return; }
-        // Nearly 1:1 for the first half note, then a rubber band (never reached before it fires at the defaults).
-        var a = Math.Abs(_progress);
-        var share = Math.Sign(_progress) * (a <= 0.5 ? a : 0.5 + (1 - 1 / ((a - 0.5) * 0.55 / 0.5 + 1)) * 0.5);
-        Show(share * pane().Bounds.Width, 1 - Math.Min(0.7, Math.Abs(share) * 1.2));
-    }
-
-    private Avalonia.Threading.DispatcherTimer ProgressSettle()
-    {
-        var timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(ProgressQuietMs) };
-        timer.Tick += (_, _) => ProgressSettleTick(Environment.TickCount64);
-        return timer;
-    }
-
-    internal bool ProgressSettleTick(long now)
-    {
-        if (Math.Abs(_owed) > 0.5)
+        if (Anim.Reduced)
         {
-            if (now - _owedChangedAt < ProgressStallMs) return false;
-            _owed = 0;
-            StopFrames();
+            _edge.Reset();
+            _pull = 0;
+            Show(0);
+            return;
         }
-        _progressSettle?.Stop();
-        if (_fired) return true;
-        _progress = 0;
-        SpringBack();
-        return true;
+        _returning = true;
+        _springVelocity = velocity * 1000;
+        StartFrame();
     }
 
     /// <summary>Gives the gesture ownership of the pane instead of competing with an earlier animation.</summary>
-    private void Show(double x, double opacity)
+    private void Show(double x)
     {
         var target = pane();
         if (target is PadView pad) pad.StopNoteMotion();
-        _springBack?.Cancel();
-        _springBack = null;
         if (target.RenderTransform is not TranslateTransform follow) target.RenderTransform = follow = new TranslateTransform();
         follow.X = x;
-        target.Opacity = opacity;
+        target.Opacity = 1;
         Moved?.Invoke(x / Math.Max(1, target.Bounds.Width));
     }
 
-    private void SpringBack()
+    /// <summary>Commits the current displayed pull and release speed to the note transition.</summary>
+    private void Commit(int direction, double velocity)
     {
-        var target = pane();
-        var from = (target.RenderTransform as TranslateTransform)?.X ?? 0;
-        var opacity = target.Opacity;
-        _swipe = 0;
-        _springBack?.Cancel();
-        var weakTarget = new WeakReference<Control>(target);
-        var weak = new WeakReference<NoteSwipe>(this);
-        var finished = false;
-        var springBack = Anim.Run(target, MotionTokens.SwipeSpringBack, t =>
-        {
-            if (!weakTarget.TryGetTarget(out var pane)) return;
-            if (pane.RenderTransform is TranslateTransform tt) tt.X = from * (1 - t);
-            pane.Opacity = opacity + (1 - opacity) * t;
-            if (weak.TryGetTarget(out var swipe)) swipe.Moved?.Invoke(from * (1 - t) / Math.Max(1, pane.Bounds.Width));
-        }, () =>
-        {
-            if (weakTarget.TryGetTarget(out var pane)) { pane.RenderTransform = null; pane.Opacity = 1; }
-            if (weak.TryGetTarget(out var swipe)) { swipe.Moved?.Invoke(0); swipe._springBack = null; }
-            finished = true;
-        }, decorative: false);
-        _springBack = finished ? null : springBack;
-    }
-
-    /// <summary>Commits once, passing the last displayed pull to the note transition.</summary>
-    private void Fire()
-    {
-        _fired = true;
-        _detentSettle?.Stop();
-        _progressSettle?.Stop();
+        if (!canNavigate(direction)) { StartReturn(0); return; }
+        _quiet?.Stop();
         StopFrames();
-        _owed = 0;
+        _spent = true;
+        _lastInputDelta = Environment.TickCount64;
+        _edge.Reset();
         var target = pane();
-        _springBack?.Cancel();
-        _springBack = null;
-        if (target is PadView pad)
-        {
-            var x = (target.RenderTransform as TranslateTransform)?.X ?? 0;
-            pad.PrepareSwipe(x, target.Opacity);
-        }
-        target.RenderTransform = null; target.Opacity = 1;
+        var x = (target.RenderTransform as TranslateTransform)?.X ?? 0;
+        if (target is PadView pad) pad.PrepareSwipe(x, 1, velocity);
+        target.RenderTransform = null;
+        target.Opacity = 1;
+        _pull = 0;
+        _events.Clear();
         Moved?.Invoke(0);
-        try { navigate(_swipe > 0 ? -1 : 1); }
+        try { navigate(direction); }
         finally { if (target is PadView prepared) prepared.DiscardSwipe(); }
     }
 
     /// <summary>Stops pending motion when its host is released and restores even a detached pane.</summary>
     public void Cancel()
     {
-        _detentSettle?.Stop();
-        _progressSettle?.Stop();
+        _quiet?.Stop();
         StopFrames();
-        _springBack?.Cancel();
-        _springBack = null;
-        _swipe = _progress = _owed = 0;
-        _samples.Clear();
-        _click = _frameAt = _owedChangedAt = 0;
-        _gap = 0;
-        _fired = false;
+        _edge.Reset();
+        _notches.Reset();
+        _pull = _springVelocity = 0;
+        _lastInputDelta = _lastWheelLock = 0;
+        _lastDelta = 0;
+        _events.Clear();
+        _spent = _returning = false;
 
         var target = pane();
         if (target is PadView pad) pad.StopNoteMotion();

@@ -183,9 +183,9 @@ internal static partial class SelfTest
         Welcome.SeedIfNew(occupied, new SettingsService(occupied.Settings));
         var secondCallNoOp = occupied.Slots.Select(note => note.Text).SequenceEqual(beforeSecondCall)
             && occupied.ViewSlot == viewBeforeSecondCall;
-        var defaults = new Settings() is { Scrolling: "rate", Swipe: "progress" };
+        var defaults = new Settings() is { Scrolling: "rate", HorizontalScrollStyle: "follow" };
 
-        report = "slots 1-5 seeded, 6-9 empty, stack empty, opens slot 5; occupied slot preserved; second call unchanged; five timers parse; rate/progress defaults";
+        report = "slots 1-5 seeded, 6-9 empty, stack empty, opens slot 5; occupied slot preserved; second call unchanged; five timers parse; rate/follow-through defaults";
         return seeded && timersParse && preserved && secondCallNoOp && defaults;
     }
 

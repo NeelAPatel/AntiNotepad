@@ -36,6 +36,7 @@ internal sealed class PadView : Grid
     private readonly TextBlock _hint;
     private readonly ResultRenderer _results;
     private readonly SmoothCaret _caret;
+    private readonly SmoothScroll _smoothScroll;
     private readonly NoteAnalysis _analysis = new();
     private FoldingManager? _folding;
     private PaperLayer _paper = null!;
@@ -55,7 +56,7 @@ internal sealed class PadView : Grid
     private Anim.Handle? _departure;
     private Image? _departureImage;
     private RenderTargetBitmap? _departureBitmap;
-    private (double X, double Opacity)? _swipeStart;
+    private (double X, double Opacity, double Velocity)? _swipeStart;
     private int _bindToken;
     private int _lastCaretLine;
     private int _observedLineCount;
@@ -114,7 +115,7 @@ internal sealed class PadView : Grid
         view.BackgroundRenderers.Add(new DividerRenderer(this));
         _caret = new SmoothCaret(this);
         view.BackgroundRenderers.Add(_caret);
-        _ = new SmoothScroll(Editor, () => Settings);
+        _smoothScroll = new SmoothScroll(Editor, () => Settings);
         view.LineTransformers.Add(new NoteColorizer(this));
         view.LineTransformers.Add(new MathColorizer(this));
         _fences = new FenceColorizer(this);
@@ -275,6 +276,7 @@ internal sealed class PadView : Grid
     {
         StopNoteMotion();
         if (ReferenceEquals(Note, note)) return;
+        _smoothScroll.Stop();
         Flush();
         _binding = true;
         if (Editor.Document is { } old) old.Changed -= OnDocumentChanged;
@@ -430,6 +432,7 @@ internal sealed class PadView : Grid
     public void Release()
     {
         StopNoteMotion();
+        _smoothScroll.Stop();
         if (Editor.Document is { } doc) doc.Changed -= OnDocumentChanged;
         if (_timerTick is { } tick) { _timers.Tick -= tick; _timerTick = null; }
         ClearEdgeFade();
@@ -449,10 +452,10 @@ internal sealed class PadView : Grid
     }
 
     /// <summary>Remembers the committed pull for the next bind, without delaying model navigation.</summary>
-    internal void PrepareSwipe(double x, double opacity)
+    internal void PrepareSwipe(double x, double opacity, double velocity)
     {
         StopNoteMotion();
-        _swipeStart = (x, opacity);
+        _swipeStart = (x, opacity, velocity);
     }
 
     /// <summary>A boundary bump may not bind a note, so never retain its pull for a later command.</summary>
@@ -489,7 +492,12 @@ internal sealed class PadView : Grid
         if (direction == 0) { bitmap?.Dispose(); return; }
 
         // transition
-        if (bitmap is null) { Arrive(direction); return; }
+        if (bitmap is null)
+        {
+            if (start is { } pending && !Anim.Reduced) SpringSwipe(direction, pending, null, null);
+            else Arrive(direction);
+            return;
+        }
         var pull = start!.Value;
         _departureBitmap = bitmap;
         var shift = new TranslateTransform(pull.X, 0);
@@ -503,13 +511,58 @@ internal sealed class PadView : Grid
         };
         _departureImage = image;
         Children.Add(image);
-        var end = -direction * Math.Max(Bounds.Width, Math.Abs(pull.X));
-        Arrive(direction);
-        _departure = Anim.Run(this, MotionTokens.NoteExit, t =>
+        SpringSwipe(direction, pull, image, shift);
+    }
+
+    /// <summary>Moves the departing and arriving pages with the same release-speed spring.</summary>
+    private void SpringSwipe(int direction, (double X, double Opacity, double Velocity) pull, Image? image, TranslateTransform? departure)
+    {
+        var width = Math.Max(1, Bounds.Width);
+        var leaving = pull.X;
+        var leavingVelocity = pull.Velocity * 1000;
+        var leavingTarget = -direction * (width + MotionTokens.HorizontalPageGap);
+        var arriving = direction * width;
+        var arrivingVelocity = pull.Velocity * 1000;
+        var shift = new TranslateTransform(arriving, 0);
+        MotionContent.RenderTransform = shift;
+        MotionContent.Opacity = 1;
+        if (image is not null) image.Opacity = pull.Opacity;
+
+        if (TopLevel.GetTopLevel(this) is not { } top)
         {
-            shift.X = pull.X + (end - pull.X) * t;
-            image.Opacity = pull.Opacity * (1 - t);
-        }, ClearDeparture);
+            if (departure is not null) departure.X = leavingTarget;
+            shift.X = 0;
+            MotionContent.RenderTransform = null;
+            ClearDeparture();
+            return;
+        }
+
+        var handle = new Anim.Handle();
+        _departure = _arrive = handle;
+        TimeSpan? last = null;
+        void Frame(TimeSpan time)
+        {
+            if (handle.Cancelled) return;
+            var dt = last is { } previous ? Math.Clamp((time - previous).TotalSeconds, 0, 0.05) : 1 / 60.0;
+            last = time;
+            leaving = EdgeBand.SpringStep(leaving, ref leavingVelocity, leavingTarget, dt);
+            arriving = EdgeBand.SpringStep(arriving, ref arrivingVelocity, 0, dt);
+            if (departure is not null) departure.X = leaving;
+            shift.X = arriving;
+            if (Math.Abs(leaving - leavingTarget) < 0.3 && Math.Abs(leavingVelocity) < 10
+                && Math.Abs(arriving) < 0.3 && Math.Abs(arrivingVelocity) < 10)
+            {
+                if (departure is not null) departure.X = leavingTarget;
+                shift.X = 0;
+                MotionContent.RenderTransform = null;
+                MotionContent.Opacity = 1;
+                _departure = _arrive = null;
+                ClearDeparture();
+                return;
+            }
+            top.RequestAnimationFrame(Frame);
+        }
+        top.RequestAnimationFrame(Frame);
     }
 
     /// <summary>Adds a stationary overlay surface for the departing page.</summary>

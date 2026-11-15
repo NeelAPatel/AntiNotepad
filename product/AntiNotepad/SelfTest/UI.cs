@@ -276,38 +276,26 @@ internal static partial class SelfTest
         CheckCase(UI.PadWindow.EdgeNotice(2, 2, false) == "New Note Created", "new note notice");
         CheckCase(UI.PadWindow.EdgeNotice(2, 2, true) == "Already at Latest", "latest note notice");
         CheckCase(UI.PadWindow.EdgeNotice(1, 2, false) is null, "normal move has no edge notice");
-        var settings = new Settings { Swipe = "progress" };
         var pane = new Avalonia.Controls.Control();
-        var cancelled = new UI.NoteSwipe(pane, () => settings, () => pane, _ => { });
-        var stalled = new UI.NoteSwipe(pane, () => settings, () => pane, _ => { });
+        var cancelled = new UI.NoteSwipe(pane, () => pane, _ => false, _ => { });
+        var committed = new UI.NoteSwipe(pane, () => pane, _ => true, _ => { });
         try
         {
             cancelled.Input(1);
-            CheckCase(cancelled.OwedMotion > 0.5 && cancelled.HasRunningTimer, "no-frame swipe leaves owed motion and starts settle timer");
+            CheckCase(cancelled.OwedMotion > 0.5 && cancelled.HasPendingProgress && cancelled.HasRunningTimer,
+                "edge click starts a held pull without navigating");
             cancelled.Cancel();
-            CheckCase(!cancelled.HasRunningTimer && !cancelled.HasPendingProgress && cancelled.OwedMotion == 0,
-                "cancel stops settle timer and clears pending progress");
-
-            stalled.Input(1);
-            var now = Environment.TickCount64;
-            var waits = !stalled.ProgressSettleTick(now) && stalled.HasRunningTimer && stalled.OwedMotion > 0.5;
-            CheckCase(waits, "settle waits while owed motion is recent");
-            var gaveUp = stalled.ProgressSettleTick(now + UI.NoteSwipe.ProgressStallMs)
-                && !stalled.HasRunningTimer && !stalled.HasPendingProgress && stalled.OwedMotion == 0;
-            CheckCase(gaveUp, "settle drops stalled owed motion after the bound");
+            CheckCase(!cancelled.HasRunningTimer && !cancelled.HasPendingProgress && cancelled.OwedMotion == 0
+                && pane.RenderTransform is null && pane.Opacity == 1, "cancel clears edge and restores the pane");
 
             var directions = new List<int>();
-            var fired = new UI.NoteSwipe(pane, () => settings, () => pane, directions.Add);
-            fired.Input(-1.5);
-            fired.Input(-1.5);
-            CheckCase(directions.SequenceEqual([1]), "one navigation per committed gesture");
-            typeof(UI.NoteSwipe).GetField("_at", BindingFlags.Instance | BindingFlags.NonPublic)!
-                .SetValue(fired, DateTime.Now.AddSeconds(-1));
-            fired.Input(1.5);
-            CheckCase(directions.SequenceEqual([1, -1]), "rearmed gesture navigates once in the opposite direction");
-            fired.Cancel();
+            committed = new UI.NoteSwipe(pane, () => pane, _ => true, directions.Add);
+            committed.Input(-1);
+            committed.Input(-1);
+            CheckCase(directions.SequenceEqual([1]), "one wheel click commits one page and locks repeats");
+            committed.Cancel();
 
-            report = failures.Count == 0 ? "no-frame cancel cleanup and deterministic stalled-settle timeout" : string.Join("; ", failures);
+            report = failures.Count == 0 ? "edge pull cleanup, one-page click, and repeat lock" : string.Join("; ", failures);
             return failures.Count == 0;
         }
         catch (Exception ex)
@@ -318,7 +306,7 @@ internal static partial class SelfTest
         finally
         {
             cancelled.Cancel();
-            stalled.Cancel();
+            committed.Cancel();
         }
     }
 
@@ -327,13 +315,13 @@ internal static partial class SelfTest
     {
         var failures = new List<string>();
         void Expect(bool ok, string name) { if (!ok) failures.Add(name); }
-        var settings = new Settings { Swipe = "progress" };
+        var settings = new Settings();
         var folder = Path.Combine(Path.GetTempPath(), "AntiNotepad-swipe-" + Guid.NewGuid().ToString("N"));
         var store = new Store(folder, createDirectories: false);
         var notes = new NotesSession(store, folder, folder, null, _ => { });
         var timers = new Timers();
         var pad = new PadView(Palette.All[0], settings, timers, notes) { Private = true };
-        pad.PrepareSwipe(0, 1);
+        pad.PrepareSwipe(0, 1, 0);
         pad.SwitchTo(new Note(), 1);
         var content = (Grid)pad.Children.Single();
         var first = new Note { Text = "first" };
@@ -347,7 +335,7 @@ internal static partial class SelfTest
             {
                 Anim.Reduced = reduce;
                 pad.Bind(first);
-                pad.PrepareSwipe(-80, 0.6);
+                pad.PrepareSwipe(-80, 0.6, 0);
                 pad.SwitchTo(second, 1);
                 Expect(ReferenceEquals(pad.Note, second) && pad.Editor.Text == "second" && Restored(),
                     $"reduced {reduce}: no-frame switch settles");
@@ -362,15 +350,15 @@ internal static partial class SelfTest
             typeof(PadView).GetField("_departureImage", fields)!.SetValue(pad, image);
             content.Opacity = 0;
             var calls = 0;
-            var swipe = new UI.NoteSwipe(pad, () => settings, () => pad, direction =>
+            var swipe = new UI.NoteSwipe(pad, () => pad, _ => true, direction =>
             {
                 calls++;
                 pad.SwitchTo(first, direction);
             });
-            swipe.Input(-1.5);
+            swipe.Input(-1);
             Expect(calls == 1 && departure.Cancelled && ReferenceEquals(pad.Note, first) && Restored(),
                 "second fire during departure preserves the bound selection and navigates once");
-            swipe.Input(-1.5);
+            swipe.Input(-1);
             Expect(calls == 1, "inertia does not double navigation");
             pad.RenderTransform = new TranslateTransform(80, 0);
             pad.Opacity = 0.6;

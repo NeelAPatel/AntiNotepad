@@ -13,7 +13,7 @@ using AntiNotepad.Theme;
 namespace AntiNotepad.Editor;
 
 /// <summary>
-/// Wheel and touchpad scrolling that glides instead of jumping. Four feels (Settings > Scrolling):
+/// Wheel and touchpad scrolling with four vertical styles (Settings > Feel):
 /// lines: each notch glides 3 lines; consecutive notches extend the same glide.
 /// free: each notch adds momentum that coasts and decays; a touchpad tracks 1:1 in pixels.
 /// rate: slow clicks glide a short way; faster spinning makes every click travel further and the glide tighter.
@@ -33,19 +33,23 @@ internal sealed class SmoothScroll
         double Viewport { get; }
         double Offset { get; set; }
         double LineHeight { get; }
+        void SetPull(double y);
     }
 
     internal sealed class EditorSurface(TextEditor editor) : ISurface
     {
+        private readonly VisualPull _pull = new();
         public Control Host => editor;
         public double Extent => editor.ExtentHeight;
         public double Viewport => editor.ViewportHeight;
         public double Offset { get => editor.VerticalOffset; set => SetOffset(editor, value); }
         public double LineHeight => editor.TextArea.TextView.DefaultLineHeight;
+        public void SetPull(double y) => _pull.Set(editor.TextArea, y);
     }
 
     internal sealed class ViewerSurface(ScrollViewer viewer, double lineHeight) : ISurface
     {
+        private readonly VisualPull _pull = new();
         public Control Host => viewer;
         public double Extent => viewer.Extent.Height;
         public double Viewport => viewer.Viewport.Height;
@@ -55,15 +59,67 @@ internal sealed class SmoothScroll
             set => viewer.Offset = new Vector(viewer.Offset.X, Math.Clamp(value, 0, Math.Max(0, Extent - Viewport)));
         }
         public double LineHeight => lineHeight;
+        public void SetPull(double y) => _pull.Set(viewer.Content as Control, y);
+    }
+
+    private sealed class VisualPull
+    {
+        private Control? _target;
+        private ITransform? _original;
+        private ITransform? _applied;
+        private readonly TranslateTransform _translate = new();
+
+        public void Set(Control? target, double y)
+        {
+            if (Math.Abs(y) < 0.01)
+            {
+                if (_target is not null) Restore();
+                return;
+            }
+
+            if (!ReferenceEquals(_target, target))
+            {
+                Restore();
+                _target = target;
+                if (target is null) return;
+                _original = target.RenderTransform;
+                if (_original is null) _applied = _translate;
+                else if (_original is Transform originalTransform)
+                {
+                    var group = new TransformGroup();
+                    group.Children.Add(originalTransform);
+                    group.Children.Add(_translate);
+                    _applied = group;
+                }
+                else
+                    _applied = _translate;
+                target.RenderTransform = _applied;
+            }
+
+            if (_target is null) return;
+            _translate.Y = y;
+        }
+
+        private void Restore()
+        {
+            if (_target is not null && ReferenceEquals(_target.RenderTransform, _applied))
+                _target.RenderTransform = _original;
+            _target = null;
+            _original = _applied = null;
+            _translate.Y = 0;
+        }
     }
 
     private readonly ISurface _surface;
     private readonly Func<Model.Settings> _settings;
+    private readonly EdgeBand _edge = new();
+    private readonly NotchGainClock _notches = new();
     private Motion _motion;
     private double _target = double.NaN;
     private double _velocity, _position, _omega, _flyGoal;
     private long _lastClick, _holdUntil;
     private double _gap;
+    private double _edgeBoundary = double.NaN;
     private TimeSpan? _last;
     private bool _running;
     private int _generation;
@@ -88,22 +144,104 @@ internal sealed class SmoothScroll
                 if (visual is ScrollViewer or TextEditor) return;
         if (e.KeyModifiers != KeyModifiers.None || Math.Abs(e.Delta.Y) < 0.001 || Math.Abs(e.Delta.X) > Math.Abs(e.Delta.Y)) return;
         var max = Max;
-        if (max <= 0) return;
-        e.Handled = true;
         var delta = e.Delta.Y;
         var mode = _settings().Scrolling;
-        if (mode == "lines") { Lines(delta, max); return; }
-        // Precision touchpads send fractions of a notch and already carry their own inertia: follow them exactly.
-        var touchpad = Math.Abs(delta - Math.Round(delta)) > 0.01;
-        if (touchpad || Anim.Reduced)
+        var now = Environment.TickCount64;
+        var notch = Math.Abs(delta - Math.Round(delta)) < 0.01;
+        var gain = notch ? _notches.Next(now) : 0;
+
+        if (_edge.Active && !Anim.Reduced)
         {
-            _velocity = 0; _motion = Motion.None; _target = double.NaN;
-            SetSurfaceOffset(Math.Clamp(_surface.Offset - delta * (touchpad ? PxPerUnit : Line * 3), 0, max));
+            e.Handled = true;
+            PushEdgeInput(notch ? -delta * MotionTokens.VerticalWheelNudge * gain : -delta * PxPerUnit,
+                notch, now, max);
             return;
         }
+        if (_edge.Active) ClearEdge();
+
+        if (!Anim.Reduced && notch && AtOutwardEdge(-delta, max))
+        {
+            e.Handled = true;
+            var boundary = -delta < 0 ? 0 : max;
+            StartEdge(boundary, -delta * MotionTokens.VerticalWheelNudge * gain, wheel: true, now: now);
+            return;
+        }
+
+        if (max <= 0 && Anim.Reduced) return;
+        if (mode == "lines")
+        {
+            if (!notch && !Anim.Reduced && TryStartEdge(-delta * PxPerUnit, now, max)) { e.Handled = true; return; }
+            e.Handled = true;
+            Lines(delta, max);
+            return;
+        }
+        // Precision touchpads send fractions of a notch and already carry their own inertia: follow them exactly.
+        var touchpad = !notch;
+        if (touchpad || Anim.Reduced)
+        {
+            var requested = -delta * (touchpad ? PxPerUnit : Line * 3);
+            if (touchpad && !Anim.Reduced && TryStartEdge(requested, now, max)) { e.Handled = true; return; }
+            e.Handled = true;
+            StopMotionOnly();
+            SetSurfaceOffset(Math.Clamp(_surface.Offset + requested, 0, max));
+            return;
+        }
+        e.Handled = true;
         if (mode == "rate") Rate(delta, max);
         else if (mode == "wheel") Fly(delta);
         else Free(delta);
+    }
+
+    private bool AtOutwardEdge(double requestedDelta, double max)
+    {
+        var offset = _surface.Offset;
+        return requestedDelta < 0 && offset <= 0.5 || requestedDelta > 0 && offset >= max - 0.5;
+    }
+
+    private bool TryStartEdge(double requestedDelta, long now, double max)
+    {
+        var target = _surface.Offset + requestedDelta;
+        if (target >= 0 && target <= max) return false;
+        var boundary = target < 0 ? 0 : max;
+        StartEdge(boundary, target - boundary, wheel: false, now: now);
+        return true;
+    }
+
+    private void StartEdge(double boundary, double pull, bool wheel, long now)
+    {
+        StopMotionOnly();
+        _edgeBoundary = boundary;
+        _position = boundary;
+        SetSurfaceOffset(boundary);
+        _edge.Push(pull, Math.Max(1, _surface.Viewport), wheel, now);
+        Start();
+    }
+
+    private void PushEdgeInput(double delta, bool wheel, long now, double max)
+    {
+        var dimension = Math.Max(1, _surface.Viewport);
+        var currentPull = _edge.CurrentPull(dimension);
+        var target = _edgeBoundary + currentPull + delta;
+        if (target >= 0 && target <= max)
+        {
+            StopMotionOnly();
+            ClearEdge();
+            SetSurfaceOffset(target);
+            return;
+        }
+
+        var boundary = target < 0 ? 0 : max;
+        if (Math.Abs(boundary - _edgeBoundary) > 0.5)
+        {
+            _edge.Reset();
+            _edgeBoundary = boundary;
+            _edge.Push(target - boundary, dimension, wheel, now);
+        }
+        else _edge.Push(delta, dimension, wheel, now);
+        StopMotionOnly();
+        _position = boundary;
+        SetSurfaceOffset(boundary);
+        Start();
     }
 
     private void Lines(double delta, double max)
@@ -185,7 +323,27 @@ internal sealed class SmoothScroll
     }
 
     /// <summary>Stops motion and invalidates any frame queued before a content change.</summary>
-    public void Stop() { _running = false; _motion = Motion.None; _velocity = 0; _target = double.NaN; _generation++; }
+    public void Stop()
+    {
+        StopMotionOnly();
+        ClearEdge();
+    }
+
+    private void StopMotionOnly()
+    {
+        _running = false;
+        _motion = Motion.None;
+        _velocity = 0;
+        _target = double.NaN;
+        _generation++;
+    }
+
+    private void ClearEdge()
+    {
+        _edge.Reset();
+        _edgeBoundary = double.NaN;
+        _surface.SetPull(0);
+    }
 
     private void Frame()
     {
@@ -212,6 +370,8 @@ internal sealed class SmoothScroll
 
     private bool PhysicsStep(double dt)
     {
+        if (_edge.Active) return EdgeStep(dt);
+        _surface.SetPull(0);
         // Something else moved the view (typing, the scrollbar): let it win.
         if (Math.Abs(_surface.Offset - _position) > 2) { Stop(); return false; }
         var max = Max;
@@ -247,6 +407,26 @@ internal sealed class SmoothScroll
                 }
         }
         Stop();
+        return false;
+    }
+
+    private bool EdgeStep(double dt)
+    {
+        var boundary = Math.Clamp(_edgeBoundary, 0, Max);
+        if (Math.Abs(_surface.Offset - boundary) > 2)
+        {
+            Stop();
+            return false;
+        }
+
+        _position = boundary;
+        SetSurfaceOffset(boundary);
+        var active = _edge.Step(Environment.TickCount64, dt, Math.Max(1, _surface.Viewport));
+        _surface.SetPull(-_edge.Shown);
+        if (active) return true;
+
+        ClearEdge();
+        StopMotionOnly();
         return false;
     }
 }

@@ -22,8 +22,9 @@ Locked by the user 2026-11-14/15 in the styles lab (macOS / iOS style), wheel in
 
 ## Vertical (scrolling inside a note): Rate-matched keeps its glide, gains the same overscroll
 - Overscroll at the top or bottom uses the same band formula (D = view height), the same hold (220 ms for a wheel
-  click), nudge scaling (`notchGain` on the vertical axis) and the same spring return (period 420 ms, damping 1.0).
-- Release after a pause of 80 ms or more starts from rest (never from the size of the last click).
+  click), a 96 px wheel nudge scaled by `notchGain`, and the same spring return (period 420 ms, damping 1.0).
+- Touchpad overscroll holds for 90 ms; release after a pause of 80 ms or more starts from rest (never from the size of
+  the last click).
 - Wheel clicks glide in over 70 ms (the lab's `notchMs`), smoothing for touchpad/drag is 0 ms.
 - Applies to all four vertical styles (Lines, Free, Rate-matched, Wheel-driven); Rate-matched is the default.
 - Not changed: each style's own distance and glide inside the note.
