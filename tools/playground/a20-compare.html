@@ -1,0 +1,50 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A20 side by side</title>
+<style>
+body{font:14px Segoe UI,sans-serif;background:#1c1c20;color:#ddd;margin:0;padding:12px}
+h1{font-size:17px;margin:0 0 4px}
+p{margin:4px 0;color:#aaa}
+.row{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap}
+button{background:#2d2d34;color:#ddd;border:1px solid #444;border-radius:6px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:#6b9bff}
+.cols{display:flex;gap:10px}
+.col{flex:1;min-width:0}
+.col h2{font-size:14px;margin:0 0 4px}
+.col.new h2{color:#7fe3a0}
+.col.old h2{color:#e8a33c}
+iframe{width:100%;height:640px;border:1px solid #333;border-radius:8px;background:#1c1c20;pointer-events:none}
+#hit{outline:1px dashed #555;border-radius:8px;padding:6px;margin-bottom:8px;color:#888;text-align:center;touch-action:none;user-select:none;cursor:grab}
+</style>
+<h1>Today's app vs the new feel (sideways only)</h1>
+<p>Both get exactly the same input at the same time. Use the gray box below (wheel, Shift+wheel, touchpad or drag), or the buttons.</p>
+<div id="hit">Move over here: wheel, Shift+wheel, touchpad swipe or drag. Both panes below receive it.</div>
+<div class="row" id="btns"></div>
+<div class="cols">
+ <div class="col old"><h2>Today's app</h2><iframe id="a" src="a20-styles-lab.html?embed&style=today"></iframe></div>
+ <div class="col new"><h2>New (macOS-style, locked)</h2><iframe id="b" src="a20-styles-lab.html?embed&style=mac"></iframe></div>
+</div>
+<script>
+const A=document.getElementById('a'),B=document.getElementById('b'),hit=document.getElementById('hit');
+const wins=()=>[A.contentWindow,B.contentWindow];
+const wheel=(dx,dy=0,mode=0)=>wins().forEach(w=>w.handleWheel({deltaX:dx,deltaY:dy,deltaMode:mode,shiftKey:false}));
+// Wheel and drag on the gray box go to both panes.
+hit.addEventListener('wheel',e=>{e.preventDefault();wins().forEach(w=>w.handleWheel({deltaX:e.deltaX,deltaY:e.deltaY,deltaMode:e.deltaMode,shiftKey:e.shiftKey}))},{passive:false});
+let drag=null;
+hit.addEventListener('pointerdown',e=>{drag=[e.clientX,e.clientY];hit.setPointerCapture(e.pointerId);wins().forEach(w=>w.eval('drag=[0,0];dragging=true'))});
+hit.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag[0],dy=e.clientY-drag[1];drag=[e.clientX,e.clientY];wins().forEach(w=>Math.abs(dx)>=Math.abs(dy)?w.inputH(dx,'drag'):w.inputV(-dy,'drag'))});
+hit.addEventListener('pointerup',()=>{drag=null;wins().forEach(w=>w.eval('drag=null;dragging=false;lastIn=0'))});
+// Scripted touchpad swipe: a push of `ms`, peak `peak` px per event, then the OS-style inertia tail.
+function swipe(dir,ms,peak,tail=700){const t0=performance.now();let v=0;
+  const id=setInterval(()=>{const t=performance.now()-t0;
+    if(t<ms){v=peak*Math.sin(Math.PI*Math.min(1,t/ms)*0.5+0.0)}else v*=0.93;
+    if(t>ms+tail||Math.abs(v)<.4&&t>ms){clearInterval(id);return}
+    wheel(dir*v)},8)}
+function notches(dir,n,gap){let i=0;const id=setInterval(()=>{wheel(dir*100);if(++i>=n)clearInterval(id)},gap)}
+const reset=n=>wins().forEach(w=>w.resetAll(n));
+const btns=document.getElementById('btns');
+[['Reset to note 3',()=>reset(2)],['Reset to first note (nothing before it)',()=>reset(0)],['Reset to last note',()=>reset(4)],
+ ['Fast flick to next note',()=>swipe(-1,90,60)],['Slow swipe to next note',()=>swipe(-1,500,14,500)],['Short swipe, should stay',()=>swipe(-1,120,6,200)],
+ ['Pull past first note (touchpad)',()=>swipe(1,900,22,600)],['Wheel: 1 click toward first note (at first note)',()=>notches(1,1,100)],['Wheel: 6 clicks toward next note',()=>notches(-1,6,90)]]
+ .forEach(([n,f])=>{const b=document.createElement('button');b.textContent=n;b.onclick=f;btns.appendChild(b)});
+</script>
