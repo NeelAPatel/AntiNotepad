@@ -57,7 +57,7 @@ Role: worker, because shared timing state across four surfaces. Never switch, me
 Report `.coord/reports/A20-overscroll-speed.md`, nine short sections per `.coord/templates/item.md`.
 
 ## Check
-2026-11-15, item chat: gate PASS at the branch tip (`tools/gate.ps1 -Offline`; build 0 warnings, SELFTEST PASS, 20 contract rows 19 pass 1 manual, tokens, format, scope all allowed; Size warn: PadView.cs 943->996). Bounds: within plan. Skimmed vertical edge code (`EdgeBand`, `SmoothScroll`): matches the spec, Reduce motion bypasses. Noticed: Settings key `Swipe` kept to store Follow-through (compat). Misses: none. Not run live; hand test next.
+2026-11-15, item chat: gate PASS at the branch tip (`tools/gate.ps1 -Offline`; build 0 warnings, SELFTEST PASS, 20 contract rows 19 pass 1 manual, tokens, format, scope all allowed; Size warn: PadView.cs 943->996). Bounds: within plan. Skimmed vertical edge code (`EdgeBand`, `SmoothScroll`): matches the spec, Reduce motion bypasses. Noticed: Settings key `Swipe` kept to store Follow-through (compat). Misses: none. Not run live; hand test next. r2 (user: momentum did not carry into overscroll): gate PASS, 21 rows 20 pass 1 manual.
 
 ## Hand test
 (after the build)
