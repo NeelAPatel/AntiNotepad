@@ -240,6 +240,26 @@ function Get-RoadmapAllRows {
     return [pscustomobject]@{ Rows = $all.ToArray(); Groups = $groups; TableRows = $tableRows }
 }
 
+function Set-RoadmapEntered {
+    param([string]$Repository, [object[]]$Rows)
+    # Walk additions once in chronological order. Match the first table cell exactly,
+    # so edits to a row or a similarly named item cannot change its entry time.
+    $wanted = @{}
+    foreach ($row in $Rows) { if ($row.item) { $wanted[[string]$row.item] = $true }; $row['entered'] = '' }
+    $found = @{}
+    $history = Invoke-RoadmapGit -Repository $Repository -Arguments @('log', '--reverse', '--format=ROADMAP-COMMIT:%cI', '-p', '--no-ext-diff', '--', '.coord/STATUS.md', '.coord/pending.md', '.coord/status-archive.md')
+    if (-not $history.Success) { return }
+    $date = ''
+    foreach ($line in $history.Lines) {
+        if ($line -match '^ROADMAP-COMMIT:(.+)$') { $date = $Matches[1]; continue }
+        if ($date -and $line -match '^\+\s*\|\s*([^|]+?)\s*\|') {
+            $key = $Matches[1].Trim()
+            if ($wanted.ContainsKey($key) -and -not $found.ContainsKey($key)) { $found[$key] = $date }
+        }
+    }
+    foreach ($row in $Rows) { if ($found.ContainsKey([string]$row.item)) { $row['entered'] = $found[[string]$row.item] } }
+}
+
 function Get-RoadmapNowItems {
     param([Parameter(Mandatory)][AllowEmptyString()][string]$Section)
 
@@ -996,6 +1016,7 @@ function Get-RoadmapData {
     }
 
     $plan = Get-RoadmapAllRows -Repository $repository -StatusLines $statusLines -Warnings $warnings
+    Set-RoadmapEntered -Repository $repository -Rows $plan.Rows
     $nowSection = Get-RoadmapSection -Lines $statusLines -Heading 'Now'
     $whereSection = Get-RoadmapSection -Lines $statusLines -Heading 'Where things are'
     if ($statusLoaded -and [string]::IsNullOrWhiteSpace($nowSection)) {

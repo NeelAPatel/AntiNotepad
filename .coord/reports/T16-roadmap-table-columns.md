@@ -1,5 +1,5 @@
 # T16-roadmap-table-columns — Codex report
 
-Implemented the approved Plan table changes in `tools/roadmap/index.html`: tier and type badges, type search, eight-column group/release rows, and a narrower branch/era cell with full branch and worktree in the tooltip. Updated the Plan legend; other tabs retain their branch badges.
+Implemented the expanded Plan table: collapsible remembered groups, release marker suppression, Entered timestamps from one chronological Git patch pass, per-column filters, a saved column picker, and saved resizable widths. ID and Name stay visible. Changes are limited to the two requested implementation files; this report is the requested delivery artifact.
 
-Checks: `tools/gate.ps1 -Task T16-roadmap-table-columns -Offline` passed (offline NuGet audit disabled for the build); extracted JavaScript passed `node --check`; `git diff --check` passed. The tracked diff is limited to the HTML file. Visual hand testing remains for the item chat on port 47821.
+Validation: offline task gate PASS (build, selftest, scope and other checks); roadmap-data.ps1 -Check PASS; extracted JavaScript passes node --check; git diff --check PASS. On this checkout, 145 of 151 data rows have matching committed entry timestamps. Browser hand testing remains for the item chat/user. The pre-existing deletion of .coord/reports/T16-roadmap-table-columns.terra.codex.md was left untouched.
