@@ -201,7 +201,7 @@ details.sx .txt{white-space:pre-wrap;font-size:12.5px;border-top:1px solid var(-
 .note{color:var(--muted);font-size:12px;margin-top:14px}
 .note code{overflow-wrap:anywhere}
 @media (max-width:640px){.tbl td.scope{max-width:none}.top h1{width:100%}.tbl.lanes td.msg{max-width:200px}.leg{position:fixed;left:16px;right:16px;top:64px;width:auto}}
-.plan-table{table-layout:fixed;min-width:900px}.plan-table th{position:relative}.plan-table .resize{position:absolute;right:-3px;top:0;width:8px;height:100%;cursor:col-resize;z-index:2;touch-action:none}.plan-table .column-filter{width:100%;min-width:0;box-sizing:border-box}.plan-table .grp button{background:none;border:0;color:inherit;font:inherit;cursor:pointer;text-align:left}.column-picker{position:relative}.column-picker>div{position:absolute;z-index:5;background:var(--panel);border:1px solid var(--line);padding:10px;min-width:150px;box-shadow:0 4px 12px #0003}.column-picker label{display:block;white-space:nowrap}.plan-table td{overflow:hidden}
+.plan-table{table-layout:fixed;min-width:900px}.plan-table th{position:relative}.plan-table .resize{position:absolute;right:-3px;top:0;width:8px;height:100%;cursor:col-resize;z-index:2;touch-action:none}.filter-button{background:none;border:0;color:var(--muted);cursor:pointer;padding:2px 4px;vertical-align:middle}.filter-button.active{color:var(--act)}.filter-button svg{width:13px;height:13px}.filter-popup{position:fixed;z-index:30;background:var(--panel);color:var(--fg);border:1px solid var(--line);padding:10px;box-shadow:0 4px 12px #0004;width:240px}.filter-popup input[type=search]{width:100%;box-sizing:border-box}.filter-popup .filter-actions{display:flex;gap:10px;margin:8px 0}.filter-popup button{cursor:pointer}.filter-values{max-height:220px;overflow:auto}.filter-values label{display:flex;gap:6px;align-items:baseline;padding:3px 0}.filter-values label span{overflow-wrap:anywhere}.filter-values small{margin-left:auto;color:var(--muted)}.plan-table .grp button{background:none;border:0;color:inherit;font:inherit;cursor:pointer;text-align:left}.column-picker{position:relative}.column-picker>div{position:absolute;z-index:5;background:var(--panel);border:1px solid var(--line);padding:10px;min-width:150px;box-shadow:0 4px 12px #0003}.column-picker label{display:block;white-space:nowrap}.plan-table td{overflow:hidden}
 </style>
 </head>
 <body>
@@ -255,8 +255,48 @@ function savePlan(key, value){ try { localStorage.setItem(key, JSON.stringify(va
 let planHidden = loadPlan('roadmap-plan-columns', []); if (!Array.isArray(planHidden)) planHidden = [];
 let planWidths = loadPlan('roadmap-plan-widths', {}); if (!planWidths || typeof planWidths !== 'object') planWidths = {};
 let planCollapsed = loadPlan('roadmap-plan-collapsed', []); if (!Array.isArray(planCollapsed)) planCollapsed = [];
-const planFilters = {}; let pickerOpen = false;
+const planFilters = {}; let pickerOpen = false, filterKey = '', filterSearch = '';
+const FUNNEL = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12L9.5 8v4l-3 1V8z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>';
 function enteredText(value){ if (!value) return ''; const d = new Date(value); if (isNaN(d)) return ''; const h = d.getHours(); return `${d.toLocaleString('en-US',{month:'short'})} ${d.getDate()} ${h%12||12}:${String(d.getMinutes()).padStart(2,'0')}${h<12?'a':'p'}`; }
+function planValues(r, era){
+  const full = itemOf(r.item), {id, name} = splitId(full || r.item), br = full ? branchOf(full) : '';
+  const kind = (r.item.match(/^(idea|step|Decision):/)||[])[1] || '';
+  const entered = enteredText(r.entered);
+  return {id, name:kind ? r.item.replace(/^(idea|step|Decision): ?/,'') : name,
+    entered:entered.replace(/ \d{1,2}:\d{2}[ap]$/, ''), type:kind ? '' : typeOf(id, br),
+    scope:plain(r.scope), tier:[r.tier,r.effort].filter(Boolean).join(' '), state:r.state || '', branch:[br,eraName(era)].filter(Boolean).join(' ')};
+}
+function filterCounts(key){
+  const counts = new Map();
+  DATA.rows.filter(r => r.item !== 'Release marker').forEach(r => {
+    const era = rowEra(r); if (!eraOk(era)) return;
+    const value = String(planValues(r, era)[key] || ''); counts.set(value, (counts.get(value) || 0) + 1);
+  });
+  return counts;
+}
+function closeFilter(){ document.getElementById('plan-filter-popup')?.remove(); filterKey = ''; filterSearch = ''; }
+function showFilter(focusSearch = false){
+  document.getElementById('plan-filter-popup')?.remove();
+  if (!filterKey || state.tab !== 'plan') return;
+  const button = document.querySelector(`[data-filter-button="${filterKey}"]`); if (!button) { closeFilter(); return; }
+  const counts = filterCounts(filterKey), selected = planFilters[filterKey];
+  const values = [...counts.keys()].sort((a,b) => a.localeCompare(b)).filter(v => (v || '(Blanks)').toLowerCase().includes(filterSearch.toLowerCase()));
+  const popup = document.createElement('div'); popup.id = 'plan-filter-popup'; popup.className = 'filter-popup'; popup.setAttribute('role','dialog'); popup.setAttribute('aria-label', `Filter ${button.dataset.label}`);
+  popup.innerHTML = `<input type="search" data-filter-search aria-label="Search filter values" placeholder="Search values" value="${esc(filterSearch)}"><div class="filter-actions"><button type="button" data-filter-select>Select all</button><button type="button" data-filter-none>Clear all</button></div><div class="filter-values">${values.map(v => `<label><input type="checkbox" data-filter-value="${esc(v)}" ${!selected || selected.has(v)?'checked':''}><span>${esc(v || '(Blanks)')}</span><small>${counts.get(v)}</small></label>`).join('') || '<span class="empty">No values</span>'}</div><div class="filter-actions"><button type="button" data-filter-reset>Clear filter</button></div>`;
+  document.body.appendChild(popup);
+  const rect = button.getBoundingClientRect(); popup.style.left = Math.max(0, Math.min(rect.left, innerWidth - popup.offsetWidth - 8)) + 'px'; popup.style.top = Math.max(0, Math.min(rect.bottom, innerHeight - popup.offsetHeight - 8)) + 'px';
+  if (focusSearch) { const input = popup.querySelector('[data-filter-search]'); input.focus(); input.setSelectionRange(input.value.length,input.value.length); }
+}
+function updateFilter(values, checked){
+  const active = document.activeElement, focusedValue = active?.matches('[data-filter-value]') ? active.dataset.filterValue : null;
+  const scroll = document.querySelector('.filter-values')?.scrollTop || 0;
+  const counts = filterCounts(filterKey), selected = planFilters[filterKey] ? new Set(planFilters[filterKey]) : new Set(counts.keys());
+  values.forEach(v => checked ? selected.add(v) : selected.delete(v));
+  if ([...counts.keys()].every(v => selected.has(v))) delete planFilters[filterKey]; else planFilters[filterKey] = selected;
+  render(); showFilter();
+  const list = document.querySelector('.filter-values'); if (list) list.scrollTop = scroll;
+  if (focusedValue !== null) [...document.querySelectorAll('[data-filter-value]')].find(el => el.dataset.filterValue === focusedValue)?.focus();
+}
 let lastETag = '';
 let eraItems = new Map();
 let localBranches = [];
@@ -413,11 +453,11 @@ function planView(){
     const nm = kind ? r.item.replace(/^(idea|step|Decision): ?/,'') : name;
     const type = kind ? '' : typeOf(id, br);
     const entered = enteredText(r.entered);
-    const values = {id, name:nm, entered, type, scope:plain(r.scope), tier:r.tier+' '+r.effort, state:r.state, branch:br+' '+eraName(era)};
+    const values = planValues(r, era);
     const text = [r.item, ...Object.values(values), r.group, wtByBranch[br]||''].join(' ');
-    if (!matches(text) || Object.entries(planFilters).some(([key, value]) => value && !String(values[key] || '').toLowerCase().includes(value.toLowerCase()))) return;
+    if (!matches(text) || Object.entries(planFilters).some(([key, value]) => value && !value.has(String(values[key] || '')))) return;
     const bk = bucketOf({r, k});
-    const searching = !!state.q.trim() || Object.values(planFilters).some(v => v.trim());
+    const searching = !!state.q.trim() || Object.keys(planFilters).length > 0;
     if (bk !== grp) { grp = bk; const gn = rows.filter(x => bucketOf(x) === grp).length;
       const expanded = searching || !planCollapsed.includes(grp);
       out.push({html:`<td colspan="${1+PLAN_COLS.filter(([key]) => !planHidden.includes(key) || key==='id' || key==='name').length}"><button data-group="${esc(grp)}" aria-expanded="${expanded}">${expanded?'▾':'▸'} ${BUCKETS.indexOf(grp)+1}. ${grp} <span>${gn} rows</span></button></td>`, cls:'grp'}); }
@@ -435,11 +475,10 @@ function planView(){
   // Filter order follows importance and phase: what moves now, what is agreed, what was suggested, what is only an idea.
   const opts = [['all','All',''],['active','Active','var(--act)'],['plan','Planned','var(--plan)'],['prop','Proposed','spark'],['unc','Ideas','var(--line2)'],['def','Deferred','var(--muted)'],['done','Done','var(--muted)']];
   const visible = PLAN_COLS.filter(([key]) => !planHidden.includes(key) || key==='id' || key==='name');
-  const picker = `<div class="column-picker"><button class="btn" data-columns aria-expanded="${pickerOpen}">Columns</button>${pickerOpen?`<div>${PLAN_COLS.map(([key,label]) => `<label><input type="checkbox" data-column="${key}" ${visible.some(([k])=>k===key)?'checked':''} ${['id','name'].includes(key)?'disabled':''}> ${label}</label>`).join('')}<button data-column-reset>Reset</button></div>`:''}</div><button class="btn" data-filter-clear>Clear filters</button>`;
-  const head = '<th></th>' + visible.map(([key,label]) => `<th data-plan-col="${key}">${label}<span class="resize" data-resize="${key}" title="Drag to resize; double-click to reset"></span></th>`).join('');
-  const filters = '<th></th>' + visible.map(([key,label]) => `<th><input class="column-filter" data-column-filter="${key}" aria-label="Filter ${label}" value="${esc(planFilters[key]||'')}"></th>`).join('');
+  const picker = `<div class="column-picker"><button class="btn" data-columns aria-expanded="${pickerOpen}">Columns</button>${pickerOpen?`<div>${PLAN_COLS.map(([key,label]) => `<label><input type="checkbox" data-column="${key}" ${visible.some(([k])=>k===key)?'checked':''} ${['id','name'].includes(key)?'disabled':''}> ${label}</label>`).join('')}<button data-column-reset>Reset</button></div>`:''}</div>${Object.keys(planFilters).length?'<button class="btn" data-filter-clear>Clear all filters</button>':''}`;
+  const head = '<th></th>' + visible.map(([key,label]) => `<th data-plan-col="${key}">${label}<button type="button" class="filter-button ${planFilters[key]?'active':''}" data-filter-button="${key}" data-label="${label}" aria-label="Filter ${label}" aria-expanded="${filterKey===key}">${FUNNEL}</button><span class="resize" data-resize="${key}" title="Drag to resize; double-click to reset"></span></th>`).join('');
   const widths = '<col style="width:6px">' + visible.map(([key]) => `<col ${Number(planWidths[key])>=40 ? `style="width:${Number(planWidths[key])}px"` : ''}>`).join('');
-  const planTable = table(head, out, visible.length+1).replace('<table class="tbl">', `<table class="tbl plan-table"><colgroup>${widths}</colgroup>`).replace('</thead>', `<tr>${filters}</tr></thead>`);
+  const planTable = table(head, out, visible.length+1).replace('<table class="tbl">', `<table class="tbl plan-table"><colgroup>${widths}</colgroup>`);
   return {what:'Plan: everything to do. Groups and rows run top to bottom in your order from the STATUS Plan (set 2026-10-29, newer groups added on top). An ID is given only once you confirm an idea.',
     filters: opts.map(([v,l,c]) => `<button class="fchip" data-f="${v}" aria-pressed="${state.filter===v}" style="--dot:${c&&c!=='spark'?c:'var(--fg2)'}">${c==='spark'?SPARK:'<i></i>'}${l}<span class="n">${v==='all'?`${cnt(v)}${hiddenCount?` · <svg viewBox=\"0 0 16 16\" aria-label=\"hidden\" style=\"width:12px;height:12px;vertical-align:-2px\"><path d=\"M2 2l12 12M6.6 6.6a2 2 0 0 0 2.8 2.8M4 4.5C2.7 5.3 1.8 6.4 1 8c1.5 2.8 3.8 4.2 7 4.2 1 0 1.9-.2 2.7-.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg> ${hiddenCount}`:''}`:cnt(v)}</span></button>`).join('') + picker,
     html: planTable, count: n};
@@ -781,21 +820,31 @@ function openItem(id){
 }
 function closeItem(){ state.drawerId = ''; $('dr').classList.remove('open'); }
 function goTab(tab){ state.tab = tab; document.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab===tab)); render(); renderLegend(); }
-document.addEventListener('input', e => { const el = e.target.closest?.('[data-column-filter]'); if (el) { planFilters[el.dataset.columnFilter] = el.value; render(); } });
+document.addEventListener('input', e => { if (e.target.matches?.('[data-filter-search]')) { filterSearch = e.target.value; showFilter(true); } });
+document.addEventListener('change', e => { if (e.target.matches?.('[data-filter-value]')) updateFilter([e.target.dataset.filterValue], e.target.checked); });
 document.addEventListener('change', e => { const el = e.target.closest?.('[data-column]'); if (!el) return; const key=el.dataset.column; planHidden = planHidden.filter(k=>k!==key); if (!el.checked) planHidden.push(key); savePlan('roadmap-plan-columns',planHidden); render(); });
 document.addEventListener('pointerdown', e => { const h=e.target.closest?.('[data-resize]'); if (!h) return; e.preventDefault(); const key=h.dataset.resize, th=h.parentElement, start=e.clientX, width=th.getBoundingClientRect().width, col=th.closest('table').querySelectorAll('col')[th.cellIndex]; const move=ev=>{ col.style.width=Math.max(40,width+ev.clientX-start)+'px'; }; const up=()=>{ planWidths[key]=parseFloat(col.style.width)||width; savePlan('roadmap-plan-widths',planWidths); document.removeEventListener('pointermove',move); document.removeEventListener('pointerup',up); }; document.addEventListener('pointermove',move); document.addEventListener('pointerup',up); });
 document.addEventListener('dblclick', e => { const h=e.target.closest?.('[data-resize]'); if (h) { delete planWidths[h.dataset.resize]; savePlan('roadmap-plan-widths',planWidths); render(); } });
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && filterKey) { const key = filterKey; closeFilter(); render(); document.querySelector(`[data-filter-button="${key}"]`)?.focus(); e.preventDefault(); return; }
   if (e.key === 'Escape') { closeItem(); state.legendOpen = false; $('leg').classList.remove('open'); $('legBtn').setAttribute('aria-expanded', false); }
   if (e.key === '/' && document.activeElement !== $('q') && !e.target.closest('input,textarea,select')) { e.preventDefault(); $('q').focus(); }
 });
 document.addEventListener('click', e => {
   const target = e.target instanceof Element ? e.target : null;
   if (!target) return;
+  const filterButton = target.closest('[data-filter-button]');
+  if (filterButton) { const key = filterButton.dataset.filterButton; const wasOpen = filterKey === key; closeFilter(); if (!wasOpen) { filterKey = key; pickerOpen = false; } render(); if (filterKey) showFilter(true); return; }
+  if (target.closest('#plan-filter-popup')) {
+    if (target.closest('[data-filter-select], [data-filter-none]')) { const values = [...document.querySelectorAll('[data-filter-value]')].map(el => el.dataset.filterValue); updateFilter(values, !!target.closest('[data-filter-select]')); }
+    if (target.closest('[data-filter-reset]')) { delete planFilters[filterKey]; render(); showFilter(); }
+    return;
+  }
+  if (filterKey) { closeFilter(); render(); }
   const group=target.closest('[data-group]'); if (group) { const key=group.dataset.group; planCollapsed=planCollapsed.includes(key)?planCollapsed.filter(x=>x!==key):[...planCollapsed,key]; savePlan('roadmap-plan-collapsed',planCollapsed); render(); return; }
   if (target.closest('[data-columns]')) { pickerOpen=!pickerOpen; render(); return; }
   if (target.closest('[data-column-reset]')) { planHidden=[]; savePlan('roadmap-plan-columns',planHidden); render(); return; }
-  if (target.closest('[data-filter-clear]')) { Object.keys(planFilters).forEach(k=>delete planFilters[k]); state.q=''; $('q').value=''; render(); return; }
+  if (target.closest('[data-filter-clear]')) { Object.keys(planFilters).forEach(k=>delete planFilters[k]); render(); return; }
   const legendButton = target.closest('#legBtn');
   if (legendButton) {
     state.legendOpen = !state.legendOpen;

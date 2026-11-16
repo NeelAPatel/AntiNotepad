@@ -1,5 +1,5 @@
-# T16-roadmap-table-columns — Codex report
+# T16-roadmap-table-columns — rework 3
 
-Implemented the expanded Plan table: collapsible remembered groups, release marker suppression, Entered timestamps from one chronological Git patch pass, per-column filters, a saved column picker, and saved resizable widths. ID and Name stay visible. Changes are limited to the two requested implementation files; this report is the requested delivery artifact.
+Replaced Plan column text inputs with searchable, live checkbox filters in header popups. Distinct values show counts and blanks; selections combine with search and state chips. Entered filters use the date label. Column widths and visibility remain available; filters are session-only.
 
-Validation: offline task gate PASS (build, selftest, scope and other checks); roadmap-data.ps1 -Check PASS; extracted JavaScript passes node --check; git diff --check PASS. On this checkout, 145 of 151 data rows have matching committed entry timestamps. Browser hand testing remains for the item chat/user. The pre-existing deletion of .coord/reports/T16-roadmap-table-columns.terra.codex.md was left untouched.
+Checks: offline gate PASS (loop budget warnings); extracted JavaScript `node --check` PASS; `git diff --check` PASS. Hand test remains for the item chat/user. The pre-existing deletion of `.coord/reports/T16-roadmap-table-columns.terra.codex.md` was left untouched.
