@@ -28,3 +28,11 @@ pstack 0.15.42 (cursor/plugins, MIT) installed for Claude Code at **local scope*
 - Trial skills read-only (poteto-help, how, blast-radius on A20-overscroll-speed, correct report-only), then one Low-tier item in poteto-mode.
 - Adoption of loop changes: `pstack-migration-plan.md`, decisions in `pstack-agreements.md`.
 - Later items: verification skill (dev copy only, after T15-ffmpeg-frame-capture-trial); trim `.claude/output-styles/antinotepad.md` for better adherence.
+
+## Confirmed by the user (2026-11-16)
+- Directors run on Sonnet with the advisor on Opus by default; sub-chats run on Sonnet or Haiku; Fable only on the user's word.
+- The advisor is the only escalation path; pstack roles stay `inherit-parent`.
+- Switching a chat to Opus mid-way breaks nothing; its helpers and new sub-chats inherit Opus, so switch back after.
+- Offload split "Claude decides, Codex digs" adopted, target 50-60% of all work on Codex (read-only, reviews and tests included). House rules updated. Needs a Loop Hub 4 item: read-only Codex scout role, brief template carrying a pstack skill's text, short report format, usage measure.
+- Trial results: `pstack-trial-log.md` (all 4 steps passed).
+- Mirror copies with history: `.coord/research/pstack-user-files/` (refresh after any change to the live files).
