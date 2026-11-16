@@ -88,3 +88,19 @@ Build on the committed work. Files now: `tools/roadmap/index.html`, `tools/roadm
    Reset link. Hidden columns also drop their header, cells and colspan. ID and Name cannot be hidden.
 Done means (offline): gate passes; JS parses; `roadmap-data.ps1` still outputs valid JSON via its own check mode if one exists
 (see its header); diff limited to the two files. Update `.coord/reports/T16-roadmap-table-columns.md`.
+
+## Rework 3 (user, 2026-11-16): Excel-style column filters - Brief 3 for Codex (role: terra, `tools/roadmap/index.html` only)
+The per-column text boxes are rejected ("really poor"). Replace them with Excel-style header filters:
+- Remove the filter-input row. Each filterable column header gets a small filter button (funnel icon) beside its title; it shows
+  an active state (dot or accent) when that column has a filter. Columns: Name, Entered, Type, Scope, Tier, State, Branch/era
+  (ID too if easy). Keep resize handles and the Columns picker working.
+- Click opens a popup anchored under the button (closes on outside click or Esc; keyboard reachable; one popup at a time):
+  a search box at top (filters the value list as you type), then "(Select all)" / "Clear all" actions (acting on the visible,
+  searched values), then a scrollable checkbox list of the column's distinct values with row counts, then OK/Cancel or apply-live
+  (live is fine) and a "Clear filter" link. Blank values appear as "(Blanks)". Sorting A-Z/Z-A inside the popup is a bonus
+  (state kept simple: one active sort).
+- Filter model: per column a Set of selected values (null = no filter). Rows show if every active column filter matches, ANDed
+  with the global search and state chips. Value lists reflect the other active filters only if simple; otherwise all values.
+- Entered column filters by date label text (e.g. "Nov 12"), not the time.
+- Save filters in memory only (not localStorage). Show a "Clear all filters" button near the Columns picker when any is active.
+- Done means: gate offline passes; JS parses; diff limited to `tools/roadmap/index.html`; update the report.
