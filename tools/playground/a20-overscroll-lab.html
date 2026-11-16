@@ -1,0 +1,118 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A20 overscroll lab</title>
+<style>
+body{font:15px Segoe UI,sans-serif;background:#1c1c20;color:#ddd;margin:0;padding:20px;max-width:800px}
+h1{font-size:18px;margin:0 0 6px}
+h2{font-size:12px;margin:14px 0 0;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+p{margin:6px 0;color:#aaa}
+.row{display:flex;gap:8px;margin:6px 0;flex-wrap:wrap}
+button{background:#2d2d34;color:#ddd;border:1px solid #444;border-radius:6px;padding:7px 12px;cursor:pointer}
+button.on{background:#3a5f9e;border-color:#6b9bff}
+#stage{position:relative;height:150px;background:#111;border:1px solid #333;border-radius:8px;overflow:hidden;touch-action:none;user-select:none;cursor:grab}
+#note{position:absolute;inset:14px 60px;background:#2b2b33;border-radius:8px;padding:14px;box-sizing:border-box;color:#bbb}
+canvas{display:block;width:100%;height:230px;background:#111;border:1px solid #333;border-radius:8px;margin-top:10px}
+#stat{font-family:Consolas,monospace;color:#9fd;white-space:pre;margin-top:6px;min-height:3.6em}
+</style>
+<h1>A20 overscroll lab</h1>
+<p>Pretend this is the first note: nothing further to swipe to. Keep pulling sideways (two-finger swipe, Shift+wheel, or drag). It resists more and more, stays held while you swipe, and eases home only when input has really stopped. The graph is live: it scrolls every frame, 4 seconds wide.</p>
+<h2>Pull curve (how it resists)</h2><div class="row" id="shapes"></div>
+<h2>Frame smoothing (event to event)</h2><div class="row" id="smooths"></div>
+<h2>Letting go (how it returns)</h2><div class="row" id="rets"></div>
+<h2>Test without hands</h2><div class="row" id="sims"></div>
+<p id="info"></p>
+<div id="stage"><div id="note">First note. Pull me sideways.</div></div>
+<canvas id="g"></canvas>
+<div id="stat"></div>
+<script>
+const SHAPES=[
+ {n:'Phone band',d:'Phone rubber band, ceiling about 260 px.',f:p=>260*(1-1/(p*0.55/260+1))},
+ {n:'Soft wall',d:'Moves freely, then a firm wall near 120 px.',f:p=>120*(1-Math.exp(-p/120))},
+ {n:'Slow creep',d:'Logarithmic: never fully stops, longest travel.',f:p=>70*Math.log(1+p/70)},
+ {n:'Tight band',d:'Phone band, ceiling 130 px: less to unwind.',f:p=>130*(1-1/(p*0.55/130+1))},
+];
+const SMOOTHS=[
+ {n:'Direct',d:'The note jumps to each event\'s position. A touchpad sends many small events (looks smooth); a mouse wheel sends big steps (looks steppy).',tau:0},
+ {n:'Smooth 35 ms',d:'Every display frame the note eases toward the target (time constant 35 ms), so wheel steps blend without adding much lag.',tau:35},
+ {n:'Smooth 70 ms',d:'Softer, with a little more lag.',tau:70},
+];
+const RETS=[
+ {n:'Glide 167 ms',d:'After 120 ms of silence, eases home in 167 ms (Windows 11 Fast, same as page swipe).',ms:167,quiet:120,kind:'bez'},
+ {n:'Glide 250 ms',d:'After 120 ms of silence, a softer 250 ms glide.',ms:250,quiet:120,kind:'bez'},
+ {n:'Spring',d:'After 120 ms of silence, a damped spring, about 300 ms.',quiet:120,kind:'spring'},
+ {n:'Wait longer',d:'Waits 220 ms of silence so a flick\'s pause never triggers it, then 167 ms.',ms:167,quiet:220,kind:'bez'},
+];
+const bez=(x1,y1,x2,y2)=>t=>{if(t<=0)return 0;if(t>=1)return 1;let lo=0,hi=1,u=t;for(let i=0;i<40;i++){const x=3*(1-u)*(1-u)*u*x1+3*(1-u)*u*u*x2+u*u*u;if(Math.abs(x-t)<1e-7)break;x<t?lo=u:hi=u;u=(lo+hi)/2}return 3*(1-u)*(1-u)*u*y1+3*(1-u)*u*u*y2+u*u*u};
+const enter=bez(0,0,0,1);
+let si=0,mi=0,ri=0;
+const note=document.getElementById('note'),cv=document.getElementById('g'),g=cv.getContext('2d'),stat=document.getElementById('stat'),st=document.getElementById('stage');
+function mk(id,arr,set){const box=document.getElementById(id);arr.forEach((o,i)=>{const b=document.createElement('button');b.textContent=o.n;b.onclick=()=>{set(i);[...box.children].forEach((c,j)=>c.classList.toggle('on',j==i));info()};box.appendChild(b)});box.children[0].classList.add('on')}
+mk('shapes',SHAPES,i=>si=i);mk('smooths',SMOOTHS,i=>mi=i);mk('rets',RETS,i=>ri=i);
+function info(){document.getElementById('info').textContent=[SHAPES[si].d,SMOOTHS[mi].d,RETS[ri].d].join('  ')}info();
+
+// state: 'idle' | 'held' | 'return'
+let mode='idle',pull=0,x=0,dir=1,lastInput=0,dragging=false,rs=0,from=0,sv=0;
+const samples=[],events=[],WINDOW=4000;
+const now=()=>performance.now();
+function inv(target){let lo=0,hi=1e5;for(let i=0;i<50;i++){const m=(lo+hi)/2;SHAPES[si].f(m)<target?lo=m:hi=m}return(lo+hi)/2}
+function input(d){
+  const t=now();lastInput=t;events.push([t,Math.abs(d)]);
+  if(mode==='return'){pull=inv(x)}
+  if(mode==='idle')pull=0;
+  mode='held';
+  pull=Math.max(0,pull+d);
+}
+function move(d){if(!d)return;if(mode==='idle')dir=d>0?1:-1;input(d*dir)}
+st.addEventListener('wheel',e=>{e.preventDefault();const u=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;move(-u*0.6)},{passive:false});
+let drag=null;
+st.addEventListener('pointerdown',e=>{drag=e.clientX;dragging=true;st.setPointerCapture(e.pointerId)});
+st.addEventListener('pointermove',e=>{if(drag==null)return;const d=e.clientX-drag;drag=e.clientX;move(d)});
+st.addEventListener('pointerup',()=>{drag=null;dragging=false;lastInput=0});
+
+let lastFrame=now(),maxJump=0,prevX=0;
+function frame(t){
+  const dt=Math.min(.05,(t-lastFrame)/1000);lastFrame=t;
+  const r=RETS[ri];
+  if(mode==='held'){
+    const target=SHAPES[si].f(pull),tau=SMOOTHS[mi].tau;
+    x=tau?x+(target-x)*(1-Math.exp(-dt*1000/tau)):target;
+    if(!dragging&&t-lastInput>r.quiet){mode='return';rs=t;from=x;sv=0}
+  }else if(mode==='return'){
+    if(r.kind==='bez'){const u=Math.min(1,(t-rs)/r.ms);x=from*(1-enter(u));if(u>=1){x=0;mode='idle';pull=0}}
+    else{const w=20;sv+=(-w*w*x-2*w*0.85*sv)*dt;x+=sv*dt;if(x<0)x=0;if(Math.abs(x)<.3&&Math.abs(sv)<4){x=0;mode='idle';pull=0}}
+  }
+  note.style.transform=`translateX(${x*dir}px)`;
+  samples.push([t,x,mode==='idle'?0:SHAPES[si].f(pull)]);
+  while(samples.length&&t-samples[0][0]>WINDOW)samples.shift();
+  while(events.length&&t-events[0][0]>WINDOW)events.shift();
+  draw(t,dt);
+  requestAnimationFrame(frame);
+}
+function draw(t,dt){
+  const dpr=devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;
+  if(cv.width!==W*dpr){cv.width=W*dpr;cv.height=H*dpr}
+  g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
+  const base=H-22,scale=(H-50)/280,X=ms=>W-(t-ms)/WINDOW*(W-8)-4,Y=v=>base-v*scale;
+  g.strokeStyle='#2a2a30';g.fillStyle='#666';g.font='11px Segoe UI';
+  for(const v of[0,100,200]){g.beginPath();g.moveTo(0,Y(v));g.lineTo(W,Y(v));g.stroke();g.fillText(v+' px',4,Y(v)-3)}
+  // target curve (where the pull wants the note) in grey; actual note position in blue
+  g.strokeStyle='#666';g.beginPath();samples.forEach(([ms,,tg],i)=>{i?g.lineTo(X(ms),Y(tg)):g.moveTo(X(ms),Y(tg))});g.stroke();
+  g.strokeStyle='#6b9bff';g.lineWidth=2;g.beginPath();samples.forEach(([ms,v],i)=>{i?g.lineTo(X(ms),Y(v)):g.moveTo(X(ms),Y(v))});g.stroke();g.lineWidth=1;
+  // every input event as a tick along the bottom, height = size of that event
+  g.strokeStyle='#e8a33c';events.forEach(([ms,m])=>{const h=Math.min(18,2+m*0.5);g.beginPath();g.moveTo(X(ms),H-2);g.lineTo(X(ms),H-2-h);g.stroke()});
+  // per-frame dots (shows the real frame rate)
+  g.fillStyle='#9fd';
+  const jump=Math.abs(x-prevX);prevX=x;
+  if(samples.length>1&&t-samples[0][0]>0){maxJump=Math.max(maxJump*0.985,jump)}
+  const recent=events.filter(e=>t-e[0]<500).length*2;
+  stat.textContent=`now: ${x.toFixed(1)} px   mode: ${mode}   fps: ${(1/Math.max(dt,.001)).toFixed(0)}   input events/s: ${recent}\nbiggest recent one-frame jump: ${maxJump.toFixed(1)} px   blue = note, grey = where the pull wants it, orange = input events`;
+}
+requestAnimationFrame(frame);
+
+// Hands-free tests: a steady touchpad-like stream and a mouse wheel with notches.
+const sims=document.getElementById('sims');
+function sim(name,fn){const b=document.createElement('button');b.textContent=name;b.onclick=fn;sims.appendChild(b)}
+sim('Touchpad swipe (3 s)',()=>{const s=now();const id=setInterval(()=>{const u=(now()-s)/3000;if(u>1){clearInterval(id);return}move(Math.sin(u*Math.PI)*9)},8)});
+sim('Mouse wheel (6 notches)',()=>{let n=0;const id=setInterval(()=>{move(60);if(++n>=6)clearInterval(id)},90)});
+sim('Flick with pause',()=>{move(120);setTimeout(()=>move(120),160)});
+</script>

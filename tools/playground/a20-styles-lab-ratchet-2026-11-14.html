@@ -1,0 +1,307 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A20 styles lab</title>
+<style>
+body{font:15px Segoe UI,sans-serif;background:#1c1c20;color:#ddd;margin:0;padding:20px;max-width:900px}
+h1{font-size:18px;margin:0 0 6px}
+h2{font-size:12px;margin:14px 0 0;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+p{margin:6px 0;color:#aaa}
+.row{display:flex;gap:8px;margin:6px 0;flex-wrap:wrap;align-items:center}
+button{background:#2d2d34;color:#ddd;border:1px solid #444;border-radius:6px;padding:7px 12px;cursor:pointer}
+button.on{background:#3a5f9e;border-color:#6b9bff}
+button.rec{background:#7a2b2b;border-color:#e06c6c}
+#view{position:relative;height:250px;background:#111;border:1px solid #333;border-radius:8px;overflow:hidden;touch-action:none;user-select:none;cursor:grab}
+.page{position:absolute;top:10px;bottom:10px;left:40px;right:40px;background:#2b2b33;border-radius:8px;overflow:hidden;color:#bbb;box-sizing:border-box}
+.page .inner{padding:12px 16px;line-height:22px;will-change:transform}
+.page b{color:#7fb0ff;font-size:16px}
+canvas.g{display:block;width:100%;height:430px;background:#111;border:1px solid #333;border-radius:8px;margin-top:10px}
+#stat{font-family:Consolas,monospace;color:#9fd;white-space:pre;margin-top:6px;min-height:3.6em;font-size:13px}
+#sliders{display:grid;grid-template-columns:repeat(2,1fr);gap:4px 24px;margin:6px 0}
+.sl{display:grid;grid-template-columns:150px 1fr 60px;align-items:center;gap:8px;font-size:13px;color:#bbb}
+.sl input[type=range]{width:100%}.sl output{color:#9fd;font-family:Consolas,monospace;text-align:right}
+.curve{background:#15151a;border:1px solid #333;border-radius:8px;padding:8px;min-width:320px;flex:1}
+.curve canvas{height:100px;width:100px;float:right;margin-left:8px}
+.chips{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0}.chips button{padding:3px 8px;font-size:12px}
+.note{background:#15151a;border:1px solid #333;border-radius:8px;padding:8px 12px;font-size:13px;color:#bbb;margin:8px 0}
+.note b{color:#e8a33c}
+table{border-collapse:collapse;font-size:13px;margin-top:8px;width:100%}
+td,th{border:1px solid #333;padding:5px 8px;text-align:left}th{background:#24242b;color:#aaa}
+td.bad{color:#ff8a8a}td.good{color:#8fe3a3}
+select{background:#2d2d34;color:#ddd;border:1px solid #444;border-radius:6px;padding:5px}
+</style>
+<h1>A20 styles lab: pick a feel for swipe, overscroll and scroll</h1>
+<p>Five notes. Swipe sideways between them, scroll inside a note, and pull past the first or last note or the top or bottom of a note. Choose a style, then fine-tune with the sliders. <b style="color:#e8a33c">Record my swipe</b> captures your real touchpad or wheel events, and <b>Replay on every style</b> runs that same recording through each style so you can compare without re-swiping.</p>
+<h2>Style</h2><div class="row" id="styles"></div>
+<div class="note" id="stylenote"></div>
+<h2>Test without hands</h2><div class="row" id="sims"></div>
+<h2>Record and replay</h2><div class="row" id="rr"></div>
+<div id="results"></div>
+<div id="view"></div>
+<canvas class="g" id="g"></canvas>
+<div id="stat"></div>
+<h2>Fine-tune (live, applies to the current style)</h2>
+<div id="sliders"></div>
+<div class="row" id="selects"></div>
+<div class="row" id="curvebox"></div>
+<div class="row"><button id="copyP">Copy these values</button><span id="copied" style="color:#9fd"></span></div>
+<script>
+const GAP=16,N=5;
+const bez=(x1,y1,x2,y2)=>t=>{if(t<=0)return 0;if(t>=1)return 1;let lo=0,hi=1,u=t;for(let i=0;i<40;i++){const x=3*(1-u)*(1-u)*u*x1+3*(1-u)*u*u*x2+u*u*u;if(Math.abs(x-t)<1e-7)break;x<t?lo=u:hi=u;u=(lo+hi)/2}return 3*(1-u)*(1-u)*u*y1+3*(1-u)*u*u*y2+u*u*u};
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const now=()=>performance.now();
+const view=document.getElementById('view'),cv=document.getElementById('g'),g=cv.getContext('2d'),stat=document.getElementById('stat');
+
+// ===== styles. Every number is tagged: D = documented by the vendor, A = approximated or inferred. =====
+// band: pull ceiling in px (-1 = the view's own size, like iOS); midBand: resist from the first pixel even when a neighbor note exists
+const STYLES={
+ today:{label:"Today's app",note:"A port of what the app does now. Band resists from the first pixel (<b>midBand</b>), commits only on distance (90 px), plain ease-out slide, no velocity. This is the reference that felt jarring.",
+  p:{band:260,midBand:true,smooth:0,quiet:130,commitMode:'distance',distPx:90,flickV:0,projMs:0,frac:.5,settleKind:'curve',curve:[.33,1,.68,1],curveMs:200,period:300,zeta:1,vFollow:50,vBand:0,holdMs:220,notchMs:50,notchPx:72}},
+ win11:{label:'Windows 11 (documented timing)',note:"<b>D</b> 167 ms, curve (0,0,0,1) from Microsoft Learn. <b>A</b> everything else: Microsoft publishes no pager or overscroll curve, so the band, commit rule and projection are inferred. This curve ignores your flick speed, which is the sharp moment you noticed.",
+  p:{band:260,midBand:false,smooth:35,quiet:120,commitMode:'project',distPx:90,flickV:0,projMs:150,frac:.4,settleKind:'curve',curve:[0,0,0,1],curveMs:167,period:300,zeta:1,vFollow:35,vBand:260,holdMs:220,notchMs:60,notchPx:96}},
+ win11v:{label:'Windows 11 + velocity carry',note:"Same Windows tokens, but the slide is a critically damped spring that starts with your release speed (<b>A</b>, inferred: Windows has no documented spring). Period about 300 ms so it lands near the 167 to 250 ms Windows range.",
+  p:{band:260,midBand:false,smooth:35,quiet:120,commitMode:'project',distPx:90,flickV:0,projMs:200,frac:.4,settleKind:'spring',curve:[0,0,0,1],curveMs:167,period:300,zeta:1,vFollow:35,vBand:260,holdMs:220,notchMs:60,notchPx:96}},
+ mac:{label:'macOS / iOS',note:"<b>D (community-documented)</b> rubber band b = (1 - 1/(x*0.55/d + 1)) * d with d = the view size; projection with deceleration rate 0.998 (about 499 ms of coasting). <b>A</b> spring period 420 ms, critically damped, like an iOS smooth spring. Pager follows 1:1 and switches on where it would come to rest.",
+  p:{band:-1,midBand:false,smooth:0,quiet:90,commitMode:'project',distPx:90,flickV:0,projMs:499,frac:.5,settleKind:'spring',curve:[.2,0,0,1],curveMs:350,period:420,zeta:1,vFollow:0,vBand:-1,holdMs:220,notchMs:70,notchPx:96}},
+ android:{label:'Android (Material 3)',note:"<b>A</b> Android 12+ stretches content at the edge instead of sliding it, approximated here as a short firm band (100 px). Spring damping 0.9, stiffness 700 (period about 237 ms) as in Material 3 spatial motion. Pager switches on a fling or past half a page. I could not confirm ViewPager2's exact velocity threshold.",
+  p:{band:100,midBand:false,smooth:0,quiet:100,commitMode:'project',distPx:90,flickV:.4,projMs:120,frac:.5,settleKind:'spring',curve:[.2,0,0,1],curveMs:300,period:237,zeta:.9,vFollow:0,vBand:120,holdMs:220,notchMs:60,notchPx:96}},
+ embla:{label:'shadcn Carousel (Embla)',note:"shadcn's Carousel is Embla. <b>D</b> Embla defaults: drag is 1:1, snaps to the nearest slide (dragFree off). <b>A</b> its physics are mapped to a critically damped spring (about 500 ms) and a small edge band; the exact mapping is mine.",
+  p:{band:50,midBand:false,smooth:0,quiet:100,commitMode:'project',distPx:90,flickV:.6,projMs:250,frac:.5,settleKind:'spring',curve:[.2,0,0,1],curveMs:400,period:500,zeta:1,vFollow:0,vBand:0,holdMs:220,notchMs:80,notchPx:96}},
+ framer:{label:'Framer Motion',note:"<b>D</b> inertia power 0.8 (about 800 ms projection), bounce spring stiffness 500 and damping 10, which is a bouncy spring (period about 280 ms, damping ratio about 0.22; I use 0.35 so it is less wobbly). Values vary by library version, so treat as <b>A</b>.",
+  p:{band:120,midBand:false,smooth:0,quiet:100,commitMode:'project',distPx:90,flickV:0,projMs:800,frac:.5,settleKind:'spring',curve:[.2,0,0,1],curveMs:350,period:280,zeta:.35,vFollow:0,vBand:120,holdMs:220,notchMs:70,notchPx:96}},
+};
+let styleKey='win11v',P=JSON.parse(JSON.stringify(STYLES[styleKey].p)),curveC=bez(...P.curve);
+
+// ===== pages =====
+const WORDS='The quick brown fox jumps over the lazy dog while the notes keep scrolling past the edge of the window.'.split(' ');
+const pages=[];
+for(let i=0;i<N;i++){const el=document.createElement('div');el.className='page';const inner=document.createElement('div');inner.className='inner';
+  let h='<b>Note '+(i+1)+' of '+N+'</b><br>';for(let l=1;l<=36;l++)h+='Line '+l+': '+WORDS.slice((l*3+i)%6,(l*3+i)%6+7).join(' ')+'<br>';
+  inner.innerHTML=h;el.appendChild(inner);view.appendChild(el);pages.push({el,inner,sy:0})}
+let cur=2,W=600,VH=230,maxY=0;
+function measure(){W=view.clientWidth-80;VH=view.clientHeight-20;maxY=Math.max(0,pages[0].inner.scrollHeight-VH)}measure();addEventListener('resize',measure);
+
+// ===== resistance band (phone rubber band) =====
+const bandF=(a,D)=>D<=0?0:D*(1-1/(a*0.55/D+1));
+const bandInvF=(v,D)=>D<=0?0:(1/(1-Math.min(v,D*0.995)/D)-1)*D/0.55;
+const Dh=()=>P.band<0?W:P.band, Dv=()=>P.vBand<0?VH:P.vBand;
+
+// ===== engine state =====
+let dragging=false,lastIn=0,sy=0,hx=0,cut=false;
+const H={mode:'idle',pull:0,x:0,v:0,from:0,T:0,t0:0,ev:[],kind:'pad',lockUntil:0,hold:0,spent:false,lastDx:0,lastT:0};
+const Vs={mode:'idle',ty:0,shown:0,v:0,from:0,T:0,t0:0,ev:[],lastKind:'pad'};
+const marks=[];                        // commit start times (for the graph and the replay table)
+let peakEdgeX=0,peakEdgeY=0,rec=null,recording=false,recStart=0,lastRecording=null;
+
+function velAt(ev,tRef){let sum=0,first=tRef;for(const [t,d] of ev)if(t>tRef-60&&t<=tRef){sum+=d;first=Math.min(first,t)}const span=Math.max(16,tRef-first);return sum/span}   // px per ms
+
+function gotoPage(n){pages[cur].sy=sy;cur=n;sy=pages[cur].sy;Vs.ty=Vs.shown=sy;Vs.mode='idle'}
+function invResistH(x){const s=Math.sign(x),a=Math.abs(x),nb=cur-s;const has=nb>=0&&nb<N;return has&&!P.midBand?x:s*bandInvF(a,Dh())}
+function resistH(pull){const s=Math.sign(pull),a=Math.abs(pull),nb=cur-s;const has=nb>=0&&nb<N;return has&&!P.midBand?s*Math.min(a,W+GAP):s*bandF(a,Dh())}
+
+const clicks={h:{last:0,gap:0},v:{last:0,gap:0}};
+// How hard the wheel is being rolled: a single slow click gives a small share of the pull, a quick roll gives all of it.
+function notchGain(ax){const c=clicks[ax],t=now(),g0=c.last?t-c.last:1000;c.last=t;c.gap=g0>=400||c.gap<=0?Math.min(g0,400):c.gap*.4+g0*.6;return .2+.8*clamp((1000/c.gap-2.5)/9,0,1)}
+function inputH(dx,kind){
+  const t=now();lastIn=t;graphEv(t,dx,'h');
+  if(kind==='notch'){
+    const dir=dx>0?1:-1,nb=cur-dir;
+    if(nb>=0&&nb<N){if(t<H.lockUntil)return;H.lockUntil=t+260}   // one click = one page; extra clicks during the slide are ignored
+    if(H.mode==='settle'||H.mode==='idle')H.x=H.x||0;
+    if(nb>=0&&nb<N)startCommit(dir,0);else{const add=dir*Math.max(160,P.notchPx*2)*notchGain('h');H.pull=H.mode==='track'&&H.kind==='notch'&&Math.sign(H.pull)===dir?H.pull+add:add;H.mode='track';H.hold=P.holdMs;H.ev=[];H.kind='notch'}   // nothing further: a small nudge that eases back
+    return;
+  }
+  // The rest of a committed gesture (touchpad inertia) belongs to it: ignore it until the input goes quiet or a fresh push starts.
+  if(H.spent){const fresh=Math.abs(dx)>Math.abs(H.lastDx)*1.6&&Math.abs(dx)>4||Math.sign(dx)!==Math.sign(H.lastDx)&&Math.abs(dx)>2;const gap=t-H.lastT;H.lastDx=dx;H.lastT=t;if(gap>150||fresh)H.spent=false;else return}
+  H.lastDx=dx;H.lastT=t;
+  if(H.mode==='settle'){H.pull=invResistH(H.x);H.mode='track'}
+  else if(H.mode==='idle'){H.pull=0;H.mode='track'}
+  H.hold=0;H.kind=kind;H.pull+=dx;H.ev.push([t,dx]);H.ev=H.ev.filter(e=>t-e[0]<200);
+  if(P.commitMode==='project'&&decelerating(H.ev))tryCommit(t,true);
+}
+function decelerating(ev){if(ev.length<6)return false;const m=ev.slice(-6).map(e=>Math.abs(e[1]));const a=(m[3]+m[4]+m[5])/3,b=(m[0]+m[1]+m[2])/3;const s0=Math.sign(ev[ev.length-1][1]);return a<b*0.92&&ev.slice(-6).every(e=>Math.sign(e[1])===s0)}
+function tryCommit(t,early){
+  const x=H.x,v=H.ev.length?velAt(H.ev,H.ev[H.ev.length-1][0]):0;
+  const gap=H.ev.length?t-H.ev[H.ev.length-1][0]:0,vv=gap>80?0:v;
+  let dir=Math.sign(x||H.pull),commit=false;
+  if(P.commitMode==='project'){const proj=x+vv*P.projMs;if(Math.sign(proj)===dir&&Math.abs(proj)>=W*P.frac)commit=true;if(P.flickV>0&&Math.sign(vv)===dir&&Math.abs(vv)>=P.flickV&&Math.abs(x)>=20)commit=true}
+  else if(!early&&Math.abs(H.pull)>=P.distPx)commit=true;
+  const nb=cur-dir;if(commit&&nb>=0&&nb<N){startCommit(dir,vv);return true}
+  return false;
+}
+function startCommit(dir,v0){            // page index flips now; the slide continues from where the note is, with the release speed
+  const T=dir*(W+GAP);marks.push(now());
+  H.spent=true;H.lastT=now();gotoPage(cur-dir);H.x=H.x-T;H.v=v0;H.from=H.x;H.T=0;H.t0=now();H.mode='settle';H.pull=0;H.ev=[];cut=true;
+}
+function startReturn(v0){H.v=v0;H.from=H.x;H.T=0;H.t0=now();H.mode='settle';H.pull=0}
+function stepH(t,dt){
+  if(H.mode==='track'){
+    const target=resistH(H.pull);
+    const tau=H.kind==='notch'?Math.max(P.notchMs,60):P.smooth;   // a wheel click arrives as one big step, so it glides in
+    H.x=tau>0?H.x+(target-H.x)*(1-Math.exp(-dt*1000/tau)):target;
+    if(!dragging&&t-lastIn>(H.hold||P.quiet)){const last=H.ev.length?H.ev[H.ev.length-1][0]:t;H.hold=0;rels.push([t,'h']);if(!tryCommit(last,false))startReturn(H.ev.length?velAt(H.ev,last):0)}
+  }else if(H.mode==='settle'){
+    if(P.settleKind==='curve'){const u=Math.min(1,(t-H.t0)/P.curveMs);H.x=H.from+(H.T-H.from)*curveC(u);if(u>=1){H.x=H.T;H.mode='idle'}}
+    else{
+      const w=2*Math.PI/(P.period/1000),n=Math.max(1,Math.ceil(dt/0.002)),h=dt/n;let v=H.v*1000;
+      for(let i=0;i<n;i++){v+=(-w*w*(H.x-H.T)-2*P.zeta*w*v)*h;H.x+=v*h}H.v=v/1000;
+      if(Math.abs(H.x-H.T)<0.3&&Math.abs(v)<10){H.x=H.T;H.v=0;H.mode='idle'}
+    }
+  }
+  hx=H.x;
+}
+function inputV(d,kind){
+  const t=now();lastIn=t;graphEv(t,d,'v');Vs.lastKind=kind;
+  if(Vs.mode==='settle'){const c=clamp(Vs.ty,0,maxY);Vs.ty=c+Math.sign(Vs.shown-c)*bandInvF(Math.abs(Vs.shown-c),Dv());Vs.mode='track'}
+  Vs.mode='track';
+  if(kind==='notch'){const o0=Vs.ty-clamp(Vs.ty,0,maxY),t1=Vs.ty+d,o1=t1-clamp(t1,0,maxY),gain=notchGain('v');Vs.ty=clamp(t1,0,maxY)+o0+(o1-o0)*(o1!==o0?gain:1)}else Vs.ty+=d;Vs.ev.push([t,d]);Vs.ev=Vs.ev.filter(e=>t-e[0]<200);
+  if(Dv()<=0)Vs.ty=clamp(Vs.ty,0,maxY);
+}
+function stepV(t,dt){
+  if(Vs.mode==='track'){
+    const c=clamp(Vs.ty,0,maxY),o=Vs.ty-c,target=c+Math.sign(o)*bandF(Math.abs(o),Dv());
+    const tau=Vs.lastKind==='notch'?P.notchMs:P.vFollow;
+    Vs.shown=tau>0?Vs.shown+(target-Vs.shown)*(1-Math.exp(-dt*1000/tau)):target;
+    // Coming back from a pause starts from rest, not from the size of the last click.
+    if(o!==0&&!dragging&&t-lastIn>(Vs.lastKind==='notch'?P.holdMs:P.quiet)){const last=Vs.ev.length?Vs.ev[Vs.ev.length-1][0]:t;Vs.v=Vs.ev.length&&t-last<80?velAt(Vs.ev,last):0;Vs.from=Vs.shown;Vs.T=c;Vs.t0=t;Vs.mode='settle';rels.push([t,'v'])}
+  }else if(Vs.mode==='settle'){
+    if(P.settleKind==='curve'){const u=Math.min(1,(t-Vs.t0)/P.curveMs);Vs.shown=Vs.from+(Vs.T-Vs.from)*curveC(u);if(u>=1){Vs.shown=Vs.ty=Vs.T;Vs.mode='track'}}
+    else{const w=2*Math.PI/(P.period/1000),n=Math.max(1,Math.ceil(dt/0.002)),h=dt/n;let v=Vs.v*1000;
+      for(let i=0;i<n;i++){v+=(-w*w*(Vs.shown-Vs.T)-2*P.zeta*w*v)*h;Vs.shown+=v*h}Vs.v=v/1000;
+      if(Math.abs(Vs.shown-Vs.T)<0.3&&Math.abs(v)<10){Vs.shown=Vs.ty=Vs.T;Vs.v=0;Vs.mode='track'}}
+  }
+  sy=Vs.shown;
+}
+function resetAll(startPage=2){
+  pages.forEach(p=>p.sy=0);cur=startPage;sy=0;hx=0;
+  Object.assign(H,{mode:'idle',pull:0,x:0,v:0,ev:[],lockUntil:0});Object.assign(Vs,{mode:'idle',ty:0,shown:0,v:0,ev:[]});cut=false;
+}
+
+// ===== wheel / drag =====
+function handleWheel(e){
+  const horiz=Math.abs(e.deltaX)>Math.abs(e.deltaY)||e.shiftKey;
+  const d=horiz?(Math.abs(e.deltaX)>0?e.deltaX:e.deltaY):e.deltaY;
+  const notch=e.deltaMode===1||(Math.abs(d)>=100&&Math.abs(d)%100===0&&e.deltaMode===0)?'notch':'pad';
+  if(horiz)inputH(notch==='notch'?(d>0?-1:1):-d,notch);
+  else inputV(notch==='notch'?Math.sign(d)*P.notchPx*Math.max(1,Math.abs(d)/100):d,notch);
+}
+view.addEventListener('wheel',e=>{e.preventDefault();const ev={deltaX:e.deltaX,deltaY:e.deltaY,deltaMode:e.deltaMode,shiftKey:e.shiftKey};
+  if(recording)rec.push({t:now()-recStart,...ev});handleWheel(ev)},{passive:false});
+let drag=null;
+view.addEventListener('pointerdown',e=>{drag=[e.clientX,e.clientY];dragging=true;view.setPointerCapture(e.pointerId)});
+view.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag[0],dy=e.clientY-drag[1];drag=[e.clientX,e.clientY];if(Math.abs(dx)>=Math.abs(dy))inputH(dx,'drag');else inputV(-dy,'drag')});
+view.addEventListener('pointerup',()=>{drag=null;dragging=false;lastIn=0});
+
+// ===== frame loop, trace, graph =====
+const trace=[],events=[];let last=now(),prevA=0;
+const rels=[];                      // moments the engine decided you had let go: [time, 'h' or 'v']
+const graphEv=(t,m,ax)=>events.push([t,m,ax]);
+function frame(t){
+  const dt=Math.min(.05,(t-last)/1000);last=t;
+  stepH(t,dt);stepV(t,dt);render();
+  const nbX=cur-Math.sign(hx);if(H.mode!=='idle'&&(nbX<0||nbX>=N))peakEdgeX=Math.max(peakEdgeX,Math.abs(hx));peakEdgeY=Math.max(peakEdgeY,sy<0?-sy:sy>maxY?sy-maxY:0);const A=-cur*(W+GAP)+hx;trace.push([t,A,sy,cut]);cut=false;prevA=A;
+  while(trace.length&&t-trace[0][0]>14000)trace.shift();
+  while(events.length&&t-events[0][0]>4000)events.shift();while(rels.length&&t-rels[0][0]>4000)rels.shift();
+  draw(t,dt);requestAnimationFrame(frame);
+}
+function render(){pages.forEach((p,i)=>{p.el.style.transform=`translateX(${(i-cur)*(W+GAP)+hx}px)`;p.inner.style.transform=`translateY(${-(i===cur?sy:p.sy)}px)`})}
+function speedOf(ts,vals){const out=[];let j=0;for(let i=1;i<ts.length;i++){while(j<i-1&&ts[i]-ts[j+1]>=20)j++;const dtm=ts[i]-ts[j];out.push([ts[i],dtm>0?(vals[i]-vals[j])/dtm:0])}return out}   // over at least 20 ms, so frame-timing jitter does not draw fake spikes
+function velSeries(){return speedOf(trace.map(s=>s[0]),trace.map(s=>s[1]))}
+function draw(t,dt){
+  // Two charts on one shared 4 second time axis: SIDEWAYS (swiping between notes) on top, UP AND DOWN (scrolling) below.
+  // Each line is scaled to its own recent range; the range is printed at the left.
+  const dpr=devicePixelRatio||1,Wd=cv.clientWidth,Hd=cv.clientHeight;if(cv.width!==Wd*dpr){cv.width=Wd*dpr;cv.height=Hd*dpr}
+  g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,Wd,Hd);g.font='11px Segoe UI';
+  const WIN=4000,L=150,R=Wd-8,X=ms=>R-(t-ms)/WIN*(R-L);
+  const win=trace.filter(s=>t-s[0]<=WIN),vel=velSeries().filter(s=>t-s[0]<=WIN);
+  const rng=(arr,minSpan,sym)=>{if(!arr.length)return[0,1];let lo=Math.min(...arr),hi=Math.max(...arr);if(sym){const m=Math.max(Math.abs(lo),Math.abs(hi),minSpan/2);return[-m,m]}if(hi-lo<minSpan){const c=(hi+lo)/2;lo=c-minSpan/2;hi=c+minSpan/2}const pad=(hi-lo)*.08;return[lo-pad,hi+pad]};
+  function chart(top,bot,title,axis,lines,markStart){
+    g.fillStyle='#1a1a20';g.fillRect(L,top,R-L,bot-top);
+    g.strokeStyle='#2a2a32';for(let i=1;i<4;i++){const y=top+(bot-top)*i/4;g.beginPath();g.moveTo(L,y);g.lineTo(R,y);g.stroke()}
+    g.fillStyle='#ddd';g.font='bold 12px Segoe UI';g.fillText(title,4,top+13);g.font='11px Segoe UI';
+    lines.forEach((ln,k)=>{
+      const [lo,hi]=ln.r,Y=v=>bot-14-(v-lo)/(hi-lo)*(bot-top-24);
+      g.strokeStyle=ln.color;g.lineWidth=ln.w;g.beginPath();ln.vals.forEach((v,i)=>{const x=X(ln.ts[i]),y=Y(v);i?g.lineTo(x,y):g.moveTo(x,y)});g.stroke();g.lineWidth=1;
+      g.fillStyle=ln.color;g.fillText('■ '+ln.name,4,top+30+k*30);g.fillStyle='#888';g.fillText(`from ${lo.toFixed(ln.dec)} to ${hi.toFixed(ln.dec)}`,16,top+42+k*30);
+    });
+    // scroll / swipe input events for this axis: ticks along the bottom, taller = bigger event, up = one direction, down = the other
+    g.lineWidth=1;events.filter(e=>e[2]===axis).forEach(([ms,m])=>{const h=Math.min(9,1.5+Math.abs(m)*.25),y=bot-6;g.strokeStyle=m>0?'#e6e6e6':'#9aa0b4';g.beginPath();g.moveTo(X(ms),y-(m>0?h:0));g.lineTo(X(ms),y+(m>0?0:h));g.stroke()});
+    g.setLineDash([4,3]);g.strokeStyle='#ff5c5c';rels.filter(r=>r[1]===axis&&t-r[0]<=WIN).forEach(([ms])=>{g.beginPath();g.moveTo(X(ms),top);g.lineTo(X(ms),bot);g.stroke()});
+    if(markStart){g.strokeStyle='#38e07b';marks.filter(m=>t-m<=WIN).forEach(m=>{g.beginPath();g.moveTo(X(m),top);g.lineTo(X(m),bot);g.stroke()})}
+    g.setLineDash([]);
+  }
+  const A0=win.length?win[0][1]:0,hts=win.map(s=>s[0]),pos=win.map(s=>s[1]-A0),hv=vel.map(s=>s[1]);
+  chart(6,188,'SIDEWAYS (swiping between notes)','h',[
+    {name:'Blue: where the note is sideways',color:'#4da3ff',vals:pos,ts:hts,r:rng(pos,60,false),w:2.4,dec:0},
+    {name:'Orange: sideways speed (px/ms)',color:'#ffb347',vals:hv,ts:vel.map(s=>s[0]),r:rng(hv,2,true),w:1.4,dec:1}],true);
+  const scr=win.map(s=>s[2]),sv=speedOf(win.map(s=>s[0]),scr).map(s=>s[1]);
+  chart(198,380,'UP AND DOWN (scrolling inside a note)','v',[
+    {name:'Green: how far scrolled down',color:'#4cd96b',vals:scr,ts:hts,r:rng(scr,60,false),w:2.4,dec:0},
+    {name:'Pink: scroll speed (px/ms)',color:'#ff6ec7',vals:sv,ts:win.slice(1).map(s=>s[0]),r:rng(sv,2,true),w:1.4,dec:1}],false);
+  g.fillStyle='#999';g.fillText('Key: white/grey ticks at the bottom of each chart = your input events (white one way, grey the other, taller = bigger). Red dashed = engine decided you let go. Green dashed = page slide started.',4,Hd-24);
+  for(let sec=0;sec<=4;sec++){const x=R-(R-L)*sec/4;g.fillStyle='#777';g.fillText(sec?`${sec}s ago`:'now',x-14,Hd-6)}
+  const ev=events.filter(e=>t-e[0]<500).length*2;
+  stat.textContent=`style: ${STYLES[styleKey].label}   note ${cur+1}/${N}   sideways ${hx.toFixed(1)} px   scroll ${sy.toFixed(1)} px   fps ${(1/Math.max(dt,.001)).toFixed(0)}   events/s ${ev}
+mode: sideways ${H.mode}, vertical ${Vs.mode}   furthest overscroll so far: sideways ${peakEdgeX.toFixed(0)} px, up/down ${peakEdgeY.toFixed(0)} px (click a style to reset)`;
+}
+requestAnimationFrame(frame);
+
+// ===== style buttons, sliders =====
+const styleBox=document.getElementById('styles');
+function applyStyle(k){styleKey=k;P=JSON.parse(JSON.stringify(STYLES[k].p));curveC=bez(...P.curve);[...styleBox.children].forEach(c=>c.classList.toggle('on',c.dataset.k===k));document.getElementById('stylenote').innerHTML=STYLES[k].note;syncUI()}
+Object.entries(STYLES).forEach(([k,s])=>{const b=document.createElement('button');b.textContent=s.label;b.dataset.k=k;b.onclick=()=>{applyStyle(k);resetAll(cur);peakEdgeX=peakEdgeY=0};styleBox.appendChild(b)});
+const SL=[['band','Edge pull ceiling (px, -1 = view size)',-1,500,1],['smooth','Sideways follow smoothing (ms)',0,150,1],['quiet','Wait before release (ms)',40,400,5],['projMs','Flick projection (ms)',0,900,10],['flickV','Fling speed that always commits (px/ms, 0 = off)',0,3,.05],['frac','Commit past (share of page)',.1,.9,.05],['distPx','Commit distance (distance mode, px)',20,200,5],['period','Spring period (ms)',100,800,5],['zeta','Spring damping ratio',.1,1.5,.05],['curveMs','Curve slide time (ms)',60,700,1],['vFollow','Scroll follow smoothing (ms)',0,150,1],['vBand','Scroll edge ceiling (px, -1 = view)',-1,400,1],['notchMs','Wheel-notch glide (ms)',0,200,1],['holdMs','Wheel overscroll hold (ms)',60,600,10]];
+const sBox=document.getElementById('sliders'),sIn={};
+SL.forEach(([k,label,min,max,step])=>{const d=document.createElement('div');d.className='sl';d.innerHTML=`<span>${label}</span><input type=range min=${min} max=${max} step=${step}><output></output>`;const inp=d.querySelector('input'),out=d.querySelector('output');inp.oninput=()=>{P[k]=+inp.value;out.textContent=inp.value};sBox.appendChild(d);sIn[k]=[inp,out]});
+const selBox=document.getElementById('selects');
+selBox.innerHTML='<label>Edge resistance: <select id="mid"><option value="0">only at the edge (pager follows 1:1)</option><option value="1">from the first pixel (today)</option></select></label><label>Commit rule: <select id="cm"><option value="project">where the flick would land</option><option value="distance">pulled far enough</option></select></label><label>Slide: <select id="sk"><option value="spring">spring (carries release speed)</option><option value="curve">fixed curve</option></select></label>';
+document.getElementById('mid').onchange=e=>P.midBand=e.target.value==='1';document.getElementById('cm').onchange=e=>P.commitMode=e.target.value;document.getElementById('sk').onchange=e=>P.settleKind=e.target.value;
+const PRESET_CURVES=[['Win11 enter',[0,0,0,1]],['Soft in and out',[.4,0,.2,1]],['Gentle',[.3,0,.2,1]],['Ease out',[.33,1,.68,1]],['Linear',[0,0,1,1]]];
+const cbox=document.getElementById('curvebox');
+cbox.innerHTML='<div class="curve"><canvas width=200 height=200></canvas><div style="font-size:12px;color:#888">CURVE (used when Slide is "fixed curve")</div><div class="chips" id="cchips"></div><div id="csl"></div></div>';
+const cc=cbox.querySelector('canvas').getContext('2d'),cIn=[];
+PRESET_CURVES.forEach(([n,v])=>{const b=document.createElement('button');b.textContent=n;b.onclick=()=>{P.curve=[...v];syncCurve()};document.getElementById('cchips').appendChild(b)});
+['x1','y1','x2','y2'].forEach((n,i)=>{const r=document.createElement('div');r.className='sl';r.style.gridTemplateColumns='40px 1fr 50px';r.innerHTML=`<span>${n}</span><input type=range min=${i%2?-.5:0} max=${i%2?1.5:1} step=.01><output></output>`;const inp=r.querySelector('input'),out=r.querySelector('output');inp.oninput=()=>{P.curve[i]=+inp.value;syncCurve()};cIn.push([inp,out]);document.getElementById('csl').appendChild(r)});
+function syncCurve(){cIn.forEach(([inp,out],i)=>{inp.value=P.curve[i];out.textContent=(+P.curve[i]).toFixed(2)});curveC=bez(...P.curve);cc.clearRect(0,0,200,200);cc.strokeStyle='#333';cc.strokeRect(8,8,184,184);cc.strokeStyle='#6b9bff';cc.lineWidth=2;cc.beginPath();for(let i=0;i<=60;i++){const t=i/60;i?cc.lineTo(8+t*184,192-curveC(t)*184):cc.moveTo(8,192)}cc.stroke()}
+function syncUI(){SL.forEach(([k])=>{sIn[k][0].value=P[k];sIn[k][1].textContent=P[k]});document.getElementById('mid').value=P.midBand?'1':'0';document.getElementById('cm').value=P.commitMode;document.getElementById('sk').value=P.settleKind;syncCurve()}
+document.getElementById('copyP').onclick=()=>{const t=styleKey+' '+JSON.stringify(P);navigator.clipboard&&navigator.clipboard.writeText(t).catch(()=>{});document.getElementById('copied').textContent=t};
+
+// ===== hands-free tests with a realistic inertia tail =====
+function flick(axis,sign,strength=1){            // fingers move ~170 ms, then the OS keeps sending decaying events (inertia)
+  const ev=[];let t=0;const n=18;for(let i=0;i<n;i++){const d=(2+12*strength*(i/(n-1)))*sign;ev.push(axis==='x'?{t,deltaX:-d,deltaY:0,deltaMode:0,shiftKey:false}:{t,deltaX:0,deltaY:d,deltaMode:0,shiftKey:false});t+=10}
+  let d=12*strength;while(d>0.4){d*=0.95;ev.push(axis==='x'?{t,deltaX:-d*sign,deltaY:0,deltaMode:0,shiftKey:false}:{t,deltaX:0,deltaY:d*sign,deltaMode:0,shiftKey:false});t+=10}return ev}
+function slowDrag(sign){const ev=[];for(let t=0;t<700;t+=10)ev.push({t,deltaX:-3*sign,deltaY:0,deltaMode:0,shiftKey:false});return ev}
+function notches(axis,sign,n){const ev=[];for(let i=0;i<n;i++)ev.push(axis==='x'?{t:i*90,deltaX:-100*sign,deltaY:0,deltaMode:0,shiftKey:false}:{t:i*90,deltaX:0,deltaY:100*sign,deltaMode:0,shiftKey:false});return ev}
+function play(evs,done){const s=now();let i=0;(function tick(){while(i<evs.length&&now()-s>=evs[i].t)handleWheel(evs[i++]);if(i<evs.length)requestAnimationFrame(tick);else done&&done()})()}
+const sims=document.getElementById('sims');
+function sim(name,f){const b=document.createElement('button');b.textContent=name;b.onclick=()=>play(f());sims.appendChild(b)}
+sim('Flick to next note',()=>flick('x',-1,1));sim('Flick back',()=>flick('x',1,1));sim('Small flick (should return)',()=>flick('x',-1,.3));
+sim('Slow drag then stop',()=>slowDrag(-1));sim('Flick past the last note',()=>{resetAll(N-1);return flick('x',-1,1)});
+sim('Flick down',()=>flick('y',1,1.2));sim('Flick up',()=>flick('y',-1,1.2));
+sim('Wheel notch to next',()=>notches('x',-1,1));sim('Wheel x5 down',()=>notches('y',1,5));
+const rr=document.getElementById('rr');
+const bRec=document.createElement('button'),bStop=document.createElement('button'),bPlay=document.createElement('button'),bAll=document.createElement('button'),info=document.createElement('span');
+bRec.textContent='Record my swipe';bStop.textContent='Stop';bPlay.textContent='Replay on current style';bAll.textContent='Replay on every style';info.style.color='#9fd';
+rr.append(bRec,bStop,bPlay,bAll,info);
+bRec.onclick=()=>{rec=[];recording=true;recStart=now();bRec.className='rec';bRec.textContent='Recording... swipe on the note';info.textContent=''};
+bStop.onclick=()=>{if(!recording)return;recording=false;bRec.className='';bRec.textContent='Record my swipe';lastRecording=rec;info.textContent=rec.length?`recorded ${rec.length} events over ${(rec[rec.length-1].t/1000).toFixed(1)} s`:'nothing recorded'};
+function recorded(){return lastRecording&&lastRecording.length?lastRecording:null}
+bPlay.onclick=()=>{const r=recorded()||flick('x',-1,1);resetAll(2);play(r)};
+bAll.onclick=async()=>{
+  const r=recorded()||flick('x',-1,1),out=[],keep=styleKey;
+  for(const k of Object.keys(STYLES)){
+    applyStyle(k);resetAll(2);marks.length=0;await new Promise(res=>setTimeout(res,150));
+    const t0=now(),i0=trace.length,startPage=cur;let endAt=0;
+    await new Promise(res=>play(r,()=>{endAt=now();res()}));
+    for(let w=0;w<40&&(H.mode!=='idle'||Vs.mode==='settle'||now()-endAt<500);w++)await new Promise(res=>setTimeout(res,100));
+    const tr=trace.filter(s=>s[0]>=t0);let jump=0,dvmax=0,pv=0,handoff=0;const vs=[];
+    for(let i=1;i<tr.length;i++){const dtm=tr[i][0]-tr[i-1][0];if(dtm<=0)continue;const v=(tr[i][1]-tr[i-1][1])/dtm;jump=Math.max(jump,Math.abs(tr[i][1]-tr[i-1][1]));if(i>1)dvmax=Math.max(dvmax,Math.abs(v-pv));vs.push([tr[i][0],v]);pv=v}
+    const m=marks.find(x=>x>=t0);if(m){for(let i=1;i<vs.length;i++)if(vs[i][0]>=m){handoff=Math.max(Math.abs(vs[i][1]-(vs[i-1]?vs[i-1][1]:0)),i+1<vs.length?Math.abs(vs[i+1][1]-vs[i][1]):0);break}}
+    out.push({k,label:STYLES[k].label,moved:cur-startPage,jump,dvmax,handoff:m?handoff:null,lag:m?(m-t0):null,endAt:endAt-t0});
+  }
+  applyStyle(keep);resetAll(2);
+  const worst=Math.max(...out.map(o=>o.dvmax));
+  document.getElementById('results').innerHTML='<table><tr><th>Style</th><th>Notes moved</th><th>Biggest one-frame jump (px)</th><th>Biggest speed step (px/ms)</th><th>Speed step at the switch</th><th>Switch started (ms after you began)</th></tr>'+
+   out.map(o=>`<tr><td>${o.label}</td><td>${o.moved>0?'+':''}${o.moved}</td><td>${o.jump.toFixed(1)}</td><td class="${o.dvmax>=worst*0.8&&worst>1?'bad':'good'}">${o.dvmax.toFixed(2)}</td><td>${o.handoff==null?'-':o.handoff.toFixed(2)}</td><td>${o.lag==null?'-':o.lag.toFixed(0)}</td></tr>`).join('')+'</table><p>Lower speed steps = smoother. "Speed step at the switch" is the jolt when the page slide takes over. A slide that starts while you are still moving (small number) follows your motion; one that starts long after the last event is the "sharp moment".</p>';
+};
+applyStyle(styleKey);
+</script>

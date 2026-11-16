@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>A17 settings toggle lab</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#1b1c1f;--fg:#e6e6e6;--mut:#9a9a9a;--card:#26282c;--line:#3a3d42;--acc:#4fa3ff}
+body{margin:0;font:14px/1.4 "Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+header{padding:14px 20px;border-bottom:1px solid var(--line)}h1{margin:0;font-size:17px}
+header p{margin:4px 0 0;color:var(--mut);max-width:860px}
+.bar{display:flex;flex-wrap:wrap;gap:18px;padding:12px 20px;background:var(--card);border-bottom:1px solid var(--line)}
+.grp b{display:block;font-size:11px;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
+button.c{font:inherit;color:var(--fg);background:transparent;border:1px solid var(--line);padding:4px 10px;cursor:pointer}
+button.c.on{background:#0090ff;border-color:#0090ff;color:#fff}
+i{font-style:normal;color:#6cb4ff}input[type=range]{width:150px}
+main{padding:24px 20px;display:grid;gap:14px;max-width:640px}
+.opt{background:var(--card);border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.opt h3{margin:0;font-size:14px}.opt p{margin:2px 0 0;color:var(--mut);font-size:12px;max-width:380px}
+.tg{display:flex;align-items:center;gap:12px;padding:4px 8px;background:none;border:0;color:var(--mut);font:inherit;cursor:pointer;border-radius:8px}
+.tg:hover{background:#ffffff10}
+.word{position:relative;display:inline-block;width:24px;height:18px}
+.word span{position:absolute;left:0;top:0}
+.track{position:relative;width:40px;height:20px;border-radius:10px;box-sizing:border-box;border:1px solid #6a6d72;background:transparent}
+.track .fill{position:absolute;inset:-1px;border-radius:10px;background:var(--acc);opacity:0}
+.knob{position:absolute;top:50%;margin-top:-6px;left:3px;width:12px;height:12px;border-radius:7px;background:#9a9a9a}
+.knob.w{margin-top:0;transform:translateY(-50%)}
+.on .fill{opacity:1}
+</style></head><body>
+<header><h1>A17 settings toggle motion lab</h1>
+<p>Mock of the Settings On/Off switch (40 x 20 track, 12 px knob). Defaults are the Windows 11 values already in the app: 167 ms with the enter curve for the move, 83 ms for fades. Click each switch. Tell me the option you like; I use the numbers shown.</p></header>
+<div class="bar">
+<div class="grp"><b>Move ms <i id="vm">167</i></b><input type="range" id="mv" min="0" max="400" value="167"></div>
+<div class="grp"><b>Color ms <i id="vc">167</i></b><input type="range" id="co" min="0" max="400" value="167"></div>
+<div class="grp"><b>Word fade ms <i id="vw">83</i></b><input type="range" id="wd" min="0" max="300" value="83"></div>
+<div class="grp"><b>Stretch px <i id="vs">6</i></b><input type="range" id="st" min="0" max="12" value="6"></div>
+<div class="grp"><b>Curve</b><button class="c on" data-c="win">Win11 enter</button><button class="c" data-c="ease">ease-in-out</button><button class="c" data-c="lin">linear</button></div>
+<div class="grp"><b>Reduced motion</b><button class="c" id="rm">Off</button></div>
+</div>
+<main id="list"></main>
+<script>
+const opts=[
+["A. Snap (today)","No transition.",{move:0,color:0,word:0,stretch:0}],
+["B. Slide knob + color fade","The knob glides across while the track fills with the accent.",{move:1,color:1,word:0,stretch:0}],
+["C. B + knob stretch","Like B, and the knob stretches while it travels, then settles (Windows 11 feel).",{move:1,color:1,word:0,stretch:1}],
+["D. C + word cross-fade","Like C, and the On/Off word fades out (83 ms) then the new word fades in.",{move:1,color:1,word:1,stretch:1}],
+["E. Windows 11 Settings toggle","Taken from Microsoft's WinUI ToggleSwitch template: knob 12 px at rest, 14 px on hover, 17x14 px while pressed (each resize 83 ms, enter curve); on release the knob glides across and the track fill and outline cross-fade in 83 ms. Hover and press it to feel it.",{move:1,color:1,word:0,stretch:0,w11:1}]];
+const $=id=>document.getElementById(id);
+let curve="win",rm=false;
+const curves={win:"cubic-bezier(0,0,0,1)",ease:"ease-in-out",lin:"linear"};
+const out="cubic-bezier(1,0,1,1)";
+for(const [t,d,o] of opts){
+ const el=document.createElement("div");el.className="opt";
+ el.innerHTML=`<div><h3>${t}</h3><p>${d}</p></div><button class="tg"><span class="word"><span>Off</span></span><span class="track"><span class="fill"></span><span class="knob"></span></span></button>`;
+ $("list").appendChild(el);
+ const btn=el.querySelector(".tg"),track=el.querySelector(".track"),knob=el.querySelector(".knob"),fill=el.querySelector(".fill"),w=el.querySelector(".word");
+ let on=false,hov=false,down=false;
+ if(o.w11){knob.classList.add("w");
+  const ap=()=>{const w=rm?12:down?17:hov?14:12,h=rm?12:(down||hov)?14:12,d=rm?0:83,m=rm?0:+$("mv").value,e=curves[curve];
+   knob.style.transition=`width ${d}ms ${e},height ${d}ms ${e},left ${m}ms ${e}`;
+   knob.style.width=w+"px";knob.style.height=h+"px";knob.style.left=(on?36-w:3)+"px"};
+  btn.onpointerenter=()=>{hov=true;ap()};btn.onpointerleave=()=>{hov=false;down=false;ap()};
+  btn.onpointerdown=()=>{down=true;ap()};btn.onpointerup=()=>{down=false};
+  btn.onclick=()=>{on=!on;down=false;knob.style.background=on?"#fff":"#9a9a9a";ap();
+   const d=rm?0:83,e=curves[curve];fill.style.transition=`opacity ${d}ms ${e}`;track.style.transition=`border-color ${d}ms ${e}`;
+   fill.style.opacity=on?1:0;track.style.borderColor=on?"transparent":"#6a6d72";w.textContent=on?"On":"Off"};
+  continue}
+ btn.onclick=()=>{on=!on;
+  const mv=rm?0:+$("mv").value*o.move,co=rm?0:+$("co").value*o.color,wd=rm?0:+$("wd").value*o.word,st=rm?0:+$("st").value*o.stretch,e=curves[curve];
+  const x=on?24:3,x0=on?3:24;
+  const opt={fill:"forwards",easing:e};
+  knob.getAnimations().forEach(a=>a.cancel());
+  knob.style.left=x+"px";knob.style.background=on?"#fff":"#9a9a9a";
+  if(mv>0){knob.animate([{left:x0+"px",width:"12px"},{left:(on?x-st:x)+"px",width:(12+st)+"px",offset:.5},{left:x+"px",width:"12px"}].map(f=>f),{duration:mv,...opt})}
+  fill.getAnimations().forEach(a=>a.cancel());
+  fill.style.opacity=on?1:0;
+  if(co>0)fill.animate([{opacity:on?0:1},{opacity:on?1:0}],{duration:co,...opt});
+  track.style.borderColor=on?"transparent":"#6a6d72";
+  const old=w.firstElementChild;const nu=document.createElement("span");nu.textContent=on?"On":"Off";
+  if(wd>0){nu.style.opacity=0;w.appendChild(nu);
+   old.animate([{opacity:1},{opacity:0}],{duration:wd,easing:out,fill:"forwards"});
+   setTimeout(()=>{nu.animate([{opacity:0},{opacity:1}],{duration:wd*2,easing:e,fill:"forwards"}).onfinish=()=>{old.remove();nu.style.opacity=1}},wd);
+  }else{w.textContent="";w.appendChild(nu)}
+ };
+}
+["mv","co","wd","st"].forEach((k,x)=>$(k).oninput=()=>$(["vm","vc","vw","vs"][x]).textContent=$(k).value);
+document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{curve=b.dataset.c;document.querySelectorAll("[data-c]").forEach(x=>x.classList.toggle("on",x===b))});
+$("rm").onclick=()=>{rm=!rm;$("rm").textContent=rm?"On":"Off";$("rm").classList.toggle("on",rm)};
+</script></body></html>
