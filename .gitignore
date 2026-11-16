@@ -1,18 +1,23 @@
-.coord/scratch/
-.coord/logs/
-.coord/directors/
-build/
-product/**/bin/
-product/**/obj/
 .claude/atlas/
 .claude/worktrees/
 .claude/settings.local.json
-.vs/
-*.user
 
+.coord/scratch/
+.coord/logs/
+.coord/directors/
 # Gate reports are regenerated on every run; results live in the task report
 .coord/reports/*.gate.md
-
 # Old generated roadmap page (tools/roadmap.ps1, retired by T1-roadmap-overview)
 .coord/roadmap.html
+
+.vs/
+
+build/
+
+product/**/bin/
+product/**/obj/
+
+*.user
+
+
 
