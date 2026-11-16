@@ -120,7 +120,9 @@ mark{background:var(--hl);color:inherit;border-radius:2px}
 
 /* badges */
 .b{display:inline-block;font-size:11px;line-height:1.55;padding:0 7px;border-radius:6px;background:var(--sunk);color:var(--fg2);white-space:nowrap;font-family:var(--sans);border:1px solid transparent}
-.b.id{font-family:var(--mono);font-weight:600}
+.b.id,.b.tier{font-family:var(--mono);font-weight:600}
+.b.t-low{background:var(--act-bg);color:var(--act)}.b.t-med{background:var(--plan-bg);color:var(--plan)}.b.t-high{background:var(--you-bg);color:var(--you)}
+.plan-branch{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:160px}.plan-branch .br{box-sizing:border-box;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .f-app{background:var(--app-bg);color:var(--app)}.f-loop{background:var(--loop-bg);color:var(--loop)}.f-tool{background:var(--tool-bg);color:var(--tool)}
 .f-old{background:var(--old-bg);color:var(--old)}.f-doc{background:var(--doc-bg);color:var(--doc)}
 .b.br{font-family:var(--mono);background:transparent;border-color:var(--line2);color:var(--fg2)}
@@ -343,6 +345,27 @@ const wtName = wt => wt.includes('/.claude/') ? '.claude/' + wt.split('/.claude/
 function badgeBr(br){ if(!br) return ''; const wt = wtByBranch[br]; const live = localBranches.some(b=>b.name===br);
   return `<span class="b br" title="${live?'branch exists':'merged and deleted'}">${esc(br)}${live?'':' ✓'}</span>` + (wt?` <span class="b wt">${esc(wtName(wt))}</span>`:''); }
 
+function typeOf(id, br){
+  if (!id) return '';
+  const prefix = (br || '').split('/')[0];
+  if (br && br.includes('/') && ['feat','fix','docs','chore','refactor','perf','test'].includes(prefix)) return prefix;
+  if (/^A\d/.test(id)) return 'feat';
+  if (/^(?:Loop|L|T|C)\d/.test(id)) return 'chore';
+  if (/^D\d/.test(id)) return 'docs';
+  return '';
+}
+function badgeTier(tier){
+  const word = String(tier || '').trim().split(/\s+/)[0];
+  const cls = {low:'t-low',medium:'t-med',high:'t-high'}[word.toLowerCase()] || '';
+  return word ? `<span class="b tier ${cls}">${esc(word)}</span>` : '';
+}
+function badgePlanBr(br){
+  if (!br) return '';
+  const wt = wtByBranch[br], live = localBranches.some(b => b.name === br);
+  const title = [br, wt, live ? 'branch exists' : 'merged and deleted'].filter(Boolean).join(' · ');
+  return `<span class="b br" title="${esc(title)}">${esc(br.replace(/^[^/]+\//,''))}${live?'':' ✓'}</span>`;
+}
+
 // ---- tab views: each returns {what, filters, html, count} ----
 function table(head, rows, cols){
   const body = rows.map(r => `<tr class="${r.cls||''}" ${r.open?`data-open="${esc(r.open)}"`:''}>${hl(r.html)}</tr>`).join('') || `<tr><td class="empty" colspan="${cols}">Nothing matches.</td></tr>`;
@@ -376,15 +399,16 @@ function planView(){
   rows = [...rows].sort((a, b) => BUCKETS.indexOf(bucketOf(a)) - BUCKETS.indexOf(bucketOf(b)));
   const out = []; let grp = null, n = 0;
   rows.forEach(({r, era, k}) => {
-    if (r.item === 'Release marker') { if (!state.q && state.filter==='all') out.push({cls:'rel', html:`<td colspan="7"><div>⚑ Release point<span>plan a release once the rows above are done · ${esc(r.state)}</span></div></td>`}); return; }
+    if (r.item === 'Release marker') { if (!state.q && state.filter==='all') out.push({cls:'rel', html:`<td colspan="8"><div>⚑ Release point<span>plan a release once the rows above are done · ${esc(r.state)}</span></div></td>`}); return; }
     const full = itemOf(r.item), {id, name} = splitId(full || r.item), br = full ? branchOf(full) : '';
     const kind = (r.item.match(/^(idea|step|Decision):/)||[])[1] || '';
     const nm = kind ? r.item.replace(/^(idea|step|Decision): ?/,'') : name;
-    const text = [r.item, id, nm, r.scope, r.tier, r.effort, r.state, r.group, br, wtByBranch[br]||'', 'era '+era].join(' ');
+    const type = kind ? '' : typeOf(id, br);
+    const text = [r.item, id, nm, r.scope, r.tier, r.effort, r.state, r.group, br, type, wtByBranch[br]||'', 'era '+era].join(' ');
     if (!matches(text)) return;
     const bk = bucketOf({r, k});
     if (bk !== grp && !state.q) { grp = bk; const gn = rows.filter(x => bucketOf(x) === grp && x.r.item !== 'Release marker').length;
-      out.push({html:`<td colspan="7">${BUCKETS.indexOf(grp)+1}. ${grp}<span>${gn} rows</span></td>`, cls:'grp'}); }
+      out.push({html:`<td colspan="8">${BUCKETS.indexOf(grp)+1}. ${grp}<span>${gn} rows</span></td>`, cls:'grp'}); }
     n++;
     const canHide = eligible.get(r.item) === true;
     const hideLabel = state.filter === 'all' ? 'Hide from All' : 'Show in All';
@@ -392,13 +416,13 @@ function planView(){
     const idCell = id ? badgeId(id) : `<span class="empty">${kind==='step'?'':'—'}</span>`;
     const nmCell = (kind==='step' ? '<span class="step">↳</span>' : '') + esc(nm) + (kind==='idea' ? ' <span class="b">idea</span>' : '');
     out.push({cls:(k==='done'?'done ':'') + 'st-'+k, open: full || r.item, text,
-      html:`<td class="hidecell">${action}</td><td>${idCell}</td><td class="nm">${nmCell}</td><td class="scope"><div>${md(r.scope)}</div></td><td class="num">${esc(r.tier)} · ${esc(r.effort)}</td><td>${badgeSt(r.state)}</td><td><div class="cell-b">${badgeBr(br)}<span class="b era">${esc(eraName(era))}</span></div></td>`});
+      html:`<td class="hidecell">${action}</td><td>${idCell}</td><td class="nm">${nmCell}</td><td>${type?`<span class="b type">${esc(type)}</span>`:''}</td><td class="scope"><div>${md(r.scope)}</div></td><td class="num">${badgeTier(r.tier)} <span class="empty">${esc(r.effort)}</span></td><td>${badgeSt(r.state)}</td><td><div class="plan-branch">${badgePlanBr(br)}<span class="b era">${esc(eraName(era))}</span></div></td>`});
   });
   // Filter order follows importance and phase: what moves now, what is agreed, what was suggested, what is only an idea.
   const opts = [['all','All',''],['active','Active','var(--act)'],['plan','Planned','var(--plan)'],['prop','Proposed','spark'],['unc','Ideas','var(--line2)'],['def','Deferred','var(--muted)'],['done','Done','var(--muted)']];
   return {what:'Plan: everything to do. Groups and rows run top to bottom in your order from the STATUS Plan (set 2026-10-29, newer groups added on top). An ID is given only once you confirm an idea.',
     filters: opts.map(([v,l,c]) => `<button class="fchip" data-f="${v}" aria-pressed="${state.filter===v}" style="--dot:${c&&c!=='spark'?c:'var(--fg2)'}">${c==='spark'?SPARK:'<i></i>'}${l}<span class="n">${v==='all'?`${cnt(v)}${hiddenCount?` · <svg viewBox=\"0 0 16 16\" aria-label=\"hidden\" style=\"width:12px;height:12px;vertical-align:-2px\"><path d=\"M2 2l12 12M6.6 6.6a2 2 0 0 0 2.8 2.8M4 4.5C2.7 5.3 1.8 6.4 1 8c1.5 2.8 3.8 4.2 7 4.2 1 0 1.9-.2 2.7-.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg> ${hiddenCount}`:''}`:cnt(v)}</span></button>`).join(''),
-    html: table('<th></th><th>ID</th><th>Name</th><th>Scope</th><th>Tier · size</th><th>State</th><th>Branch · worktree · era</th>', out, 7), count: n};
+    html: table('<th></th><th>ID</th><th>Name</th><th>Type</th><th>Scope</th><th>Tier · size</th><th>State</th><th>Branch · era</th>', out, 8), count: n};
 }
 function logView(){
   // One row per item run: consecutive commits for the same item fold together; expand to see each commit.
@@ -687,7 +711,8 @@ const LEG = {
   plan: () => `<h4>Row stripe and state</h4>${st('var(--you)','Your turn: approve, answer, hand test')}${st('var(--act)','Active: moving without you')}${st('var(--plan)','Planned: agreed, not started')}${st('var(--line2)','Proposed by a chat, or an idea')}` +
     `${row(badgeSt('proposed'),'Suggested by Claude, not yet agreed')}${row(badgeSt('needs you'),'An idea you have not confirmed (no ID yet)')}${row('<span class="step">↳</span>','A step under the idea above it')}` +
     `${row('<span class="b" style="background:var(--rel-bg);color:var(--rel);font-weight:600">⚑ Release point</span>','Plan a release once the rows above are done')}` +
-    `<h4>Branch column</h4>${row('<span class="b br">feat/A1-x</span>','Branch still exists')}${row('<span class="b br">feat/A1-x ✓</span>','Merged into dev and deleted')}${row('<span class="b wt">.claude/…</span>','Has a worktree folder')}${LEG_COMMON()}`,
+    `<h4>Tier and type</h4>${row(badgeTier('Low'),'Item tier; size follows beside it')}${row('<span class="b type">feat</span>','Branch type, or inferred from the item family')}` +
+    `<h4>Branch column</h4>${row('<span class="b br">A1-x</span>','Branch still exists; hover for full name and worktree')}${row('<span class="b br">A1-x ✓</span>','Merged into dev and deleted')}${LEG_COMMON()}`,
   log: () => `${row('<span class="linkish">▸ 12 commits</span>','One item, several commits; click to list them')}${row('<span class="b br">x ✓</span>','The branch it came from, merged and deleted')}${row(`<span class="b era">${esc(eraName((DATA.eras || []).length - 1))}</span>`,'The newest configured era')}${LEG_COMMON()}`,
   branches: () => `<h4>Lanes</h4>${row('<span class="b lane" style="--lc:var(--act)">main</span>','Lane 1, always main')}${row('<span class="b lane" style="--lc:var(--app)">dev</span>','Lane 2, always dev')}${row('<span class="b lane" style="--lc:var(--loop)">other</span>','Then every other local branch, latest commit first')}` +
     `${row(dotS(''),'Commit is in this branch')}${row(dotS('hd'),'Branch head (its latest commit)')}${row(dotS('out'),'Branch exists, but not at this commit')}` +
