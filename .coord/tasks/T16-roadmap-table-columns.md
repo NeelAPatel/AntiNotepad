@@ -47,7 +47,8 @@ Gate: `tools/gate.ps1 -Task T16-roadmap-table-columns -Offline`.
 - `tools/roadmap-data.ps1` (only if Type needs data)
 
 ## Approve
-(user, in the item chat)
+Approved by the user in the item chat, 2026-11-16 ("Approve"): Tier badge, Type column, narrower last column; no picker.
+Build may start.
 
 ## Brief (for Codex)
 Role: terra, a one-file UI change across a few functions in `tools/roadmap/index.html`.
