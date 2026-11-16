@@ -48,3 +48,21 @@ Gate: `tools/gate.ps1 -Task T16-roadmap-table-columns -Offline`.
 
 ## Approve
 (user, in the item chat)
+
+## Brief (for Codex)
+Role: terra, a one-file UI change across a few functions in `tools/roadmap/index.html`.
+Implement the Plan above, Plan tab only (`planView()`, legend, CSS). Details:
+- Tier cell: badge `<span class="b tier t-low|t-med|t-high">` from `r.tier` first word (Low/Medium/High; unknown gets plain `.b`),
+  mono font like `.b.id`, using existing color tokens; size (`r.effort`) stays as muted text after it.
+- New `typeOf(id, br)`: branch prefix before `/` if known (feat, fix, docs, chore, refactor, perf, test); else by ID family
+  (A feat, Loop/L/T/C chore, D docs); else ''. New Type column after Name, header `Type`, a `.b type` badge; empty for steps/ideas
+  and rows with no id. Add the type to the row search `text`.
+- `colspan="7"` becomes 8 (release row, group row, `table(..., 8)`).
+- Last column: header `Branch · era`; branch badge with the `prefix/` stripped (full name plus worktree path in `title`), no
+  worktree badge in the Plan table, era badge kept; `max-width` plus ellipsis so the column is narrow. Do not change `badgeBr()`
+  for the Log/Branches tabs (add a Plan-only variant).
+- Legend (`LEG.plan`): add Tier badge and Type badge rows.
+- Do not touch other files, port 47811, or the installed copy.
+Done means (offline only): `tools/gate.ps1 -Task T16-roadmap-table-columns -Offline` passes; the file parses (no JS syntax error,
+e.g. `node --check` on the extracted script if node exists); diff limited to `tools/roadmap/index.html`.
+Write a short report to `.coord/reports/T16-roadmap-table-columns.md`.
