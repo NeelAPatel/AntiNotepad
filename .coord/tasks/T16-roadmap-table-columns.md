@@ -67,3 +67,24 @@ Implement the Plan above, Plan tab only (`planView()`, legend, CSS). Details:
 Done means (offline only): `tools/gate.ps1 -Task T16-roadmap-table-columns -Offline` passes; the file parses (no JS syntax error,
 e.g. `node --check` on the extracted script if node exists); diff limited to `tools/roadmap/index.html`.
 Write a short report to `.coord/reports/T16-roadmap-table-columns.md`.
+
+## Scope up (user, in the item chat, 2026-11-16) - Brief 2 for Codex (role: terra, same files plus the data script)
+Build on the committed work. Files now: `tools/roadmap/index.html`, `tools/roadmap-data.ps1`.
+1. **Collapsible group headers** (Plan tab): the "1. Current / 2. Next / 3. Backlog / 4. Done N rows" header rows toggle their rows
+   (chevron, click or Enter/Space, aria-expanded). Default: all expanded; remember per header in localStorage (try/catch like
+   `roadmap-hidden`). While searching, show everything.
+2. **Remove release points**: Release marker rows (two in `.coord/pending.md`, plus the legend line and the release row code in
+   `planView`) no longer show anywhere in the Plan tab or count. Do NOT edit `.coord/*.md` (director owns them); skip rows whose
+   item is 'Release marker' in the page and remove the "Release point" legend row. Releases tab stays.
+3. **Entered timestamp**: new column right after Name, header "Entered", format `Nov 16 2:35p` (month day, 12-hour, a/p, local
+   time). Source: `tools/roadmap-data.ps1` adds `entered` (ISO or epoch, per row) = commit time when the row's item text first
+   appeared in `.coord/STATUS.md`, `.coord/pending.md` or `.coord/status-archive.md`, found with ONE `git log --reverse -p` pass
+   over those files (not a git call per row), matched on the row's item key. Blank when not found. Keep data build fast (cache by HEAD
+   if needed). Colspan becomes 9 (header rows span all visible columns, compute it).
+4. **Column tools for the Plan table**: (a) resizable columns: drag handle on each header's right edge, widths saved in
+   localStorage, double-click resets; (b) a filter per column: a small text box row under the header (or per-header popover) that
+   narrows rows by that column's text (State, Tier, Type, Branch, Name, Scope, Entered); combined with the global search; a clear
+   button; (c) a Columns picker button (near the filter chips) with checkboxes to show/hide each column, saved in localStorage,
+   Reset link. Hidden columns also drop their header, cells and colspan. ID and Name cannot be hidden.
+Done means (offline): gate passes; JS parses; `roadmap-data.ps1` still outputs valid JSON via its own check mode if one exists
+(see its header); diff limited to the two files. Update `.coord/reports/T16-roadmap-table-columns.md`.
