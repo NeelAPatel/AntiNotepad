@@ -45,9 +45,9 @@ A textual conflict leaves the rebase open in the item checkout and prints confli
 
 ### Hand tests take turns
 
-There is one dev copy at a time. Accepted items hand test oldest first; there is no separate queue service in the shipped rules. The tester runs `tools/dev.ps1` immediately before the checks, gives the expected badge, and verifies EXE, DATA and log paths. A later launcher can replace the current dev copy, which is why parallel implementation does not imply parallel screen testing (`docs/loop.md`, "Branches, worktrees and commits"; `.claude/skills/review-task/SKILL.md`, step 5; `docs/dev-loop.md`, "Dev copy").
+Each worktree runs its own dev copy in a color slot (up to six at once, `tools/dev-list.ps1` shows them). The tester runs `tools/dev.ps1` immediately before the checks, gives the expected badge and hotkey, and verifies EXE, DATA and log paths. A relaunch replaces only that worktree's own slot copy (`docs/loop.md`, "Branches, worktrees and commits"; `.claude/skills/review-task/SKILL.md`, step 5; `docs/dev-loop.md`, "Dev copy").
 
-`tools/dev.ps1` uses a shared launcher mutex and a verified dev-instance handoff. The installed copy is excluded. Do not use an unscoped quit command as a substitute for the launcher (`docs/dev-loop.md`, "Installed and dev copies" and "Dev copy").
+`tools/dev.ps1` uses a shared launcher mutex, picks a free color slot for the worktree and replaces only that slot's copy. The installed copy is excluded. Do not use an unscoped quit command as a substitute for the launcher (`docs/dev-loop.md`, "Installed and dev copies" and "Dev copy").
 
 ### Refuse a stale handoff to dev
 
@@ -106,6 +106,6 @@ The rehearsal reports eight checks overall (some have subchecks). A live `/scan-
 - `tools/catch-up.ps1` — local-dev rebase, Git-failure checks, incoming paths, RETEST and conflicts.
 - `tools/merge-preflight.ps1`, `tools/gate.ps1` — card/ancestry checks, scope and exact revision evidence.
 - `tools/scan-delta.ps1`, `tools/loop-lint.ps1` — research freshness and rule consistency.
-- `tools/dev.ps1`, `docs/dev-loop.md` — one dev copy, handoff and installed-copy boundary.
+- `tools/dev.ps1`, `docs/dev-loop.md` — dev slots, handoff and installed-copy boundary.
 - `.coord/tasks/Loop2-loop-v3-1.md` — authorized one-branch run and step-history exception.
 - `.coord/reports/Loop2-loop-v3-1-rehearsal.md` — check results and limits.

@@ -15,8 +15,8 @@ Read by /merge-task for branch, worktree, commit and catch-up detail.
   on dev. The item chat starts in the main checkout (`use_worktree: false`), then works only inside its worktree path, with absolute
   paths; Codex runs from the worktree's own `.coord/tools/codex-run.sh`. **At most 3 items** past Approve at once, and
   only if their Files lists do not overlap. After Check accepts, the item chat runs `tools/dev.ps1`
-  from the worktree immediately before the hand checks; it verifies the dev badge and EXE/DATA/log paths. One dev copy
-  runs at a time, so up to 3 items can build in parallel but hand tests take turns, oldest accepted item first.
+  from the worktree immediately before the hand checks; it verifies the slot's badge and EXE/DATA/log paths. Each worktree runs its own colored slot copy (up to six), so up to
+  3 items can build and hand test at the same time.
   Without worktrees there is no parallel work at all (user, 2026-10-30).
 - **No worktree** (only when the user says so; never suggested for docs or tooling items): the branch is checked out in
   the main checkout (`tools/approve.ps1 -NoWorktree`) and nothing else runs until it merges.

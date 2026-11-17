@@ -4,13 +4,13 @@
 | | Installed user's copy | Repo dev copy |
 |---|---|---|
 | Build | `%LOCALAPPDATA%\Programs\AntiNotepad` (Release publish) | `build/dev` (Debug) |
-| Instance id | `AntiNotepad` | `AntiNotepad-dev` |
+| Instance id | `AntiNotepad` | `AntiNotepad-dev-<color>` (slot); `AntiNotepad-dev` only when no slot is set |
 | Display name | `AntiNotepad` | `AntiNotepad (dev)` |
 | Icon | Primary AntiNotepad icon | Distinct dev icon |
 | App home | `%LOCALAPPDATA%\AntiNotepad` (log and `location.json`) | `build/testdata` (throwaway log and pointer) |
 | Notes folder | `Documents\AntiNotepad` by default; selected path is recorded in app home's `location.json` | `build/testdata` initially; after an in-app move, the folder selected by `build/testdata/location.json` (`ANTINOTEPAD_DATA` bypasses Documents and first-run migration, and follows its own pointer) |
-| Hotkey | Ctrl+Alt+Shift+S (default; configurable in Settings) | Ctrl+Alt+Shift+D |
-| Badge in the top bar | None | dev |
+| Hotkey | Ctrl+Alt+Shift+S (default; configurable in Settings) | Slot show/hide Ctrl+Alt+Shift+1 to 6; new note Ctrl+Alt+Shift+F1 to F6 |
+| Badge in the top bar | None | `A22-3:14` in the slot color; hover shows `A22 - name - 3:14 PM` |
 
 The installed copy is the user's working copy. Never type into or stop it during development. Upgrade it only when the user
 asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below. There are no prod or Claude badges.
@@ -52,7 +52,7 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
 ## Dev copy
 - `pwsh -NoProfile -File tools/dev.ps1 [-Fresh]` or `bash tools/dev.sh [--fresh]` builds Debug into `build/dev` with the
   compile-time property `AntiNotepadDev=true`, then launches that executable with `ANTINOTEPAD_DATA=build/testdata`
-  (absolute path), `ANTINOTEPAD_HOTKEY=Ctrl+Alt+Shift+D`, `ANTINOTEPAD_DEV=1` and `ANTINOTEPAD_SHOTS=build/shots`.
+  (absolute path), `ANTINOTEPAD_SLOT=<Color>`, `ANTINOTEPAD_HOTKEY`, `ANTINOTEPAD_NEWNOTE_HOTKEY`, `ANTINOTEPAD_DEV=1` and `ANTINOTEPAD_SHOTS=build/shots`.
   Both routes share the same implementation. The dev build displays as `AntiNotepad (dev)` and uses its distinct dev icon.
 - The compile-time dev identity is separate from the runtime dev badge and dev-only UI. `AppInfo.IsDevBuild`,
   `AppInfo.DisplayName` and the selected `AppInfo.IconUri` follow the compile-time identity; stable `AppInfo.Name` remains
@@ -60,13 +60,19 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
   of the runtime `ANTINOTEPAD_DEV=1` marker, which works with a custom data path to gate the dev badge and dev-only UI.
 - The dev script sets `AntiNotepadDev=true`; ordinary Debug/Release builds and the installed Release publish leave it unset
   and retain the default `AntiNotepad` identity.
-- Running the launcher from any checkout replaces the current dev copy with that checkout's build, leaving exactly one
-  dev primary in the current Windows user/logon session. All worktrees share a launcher mutex for the entire transaction
-  (120-second acquisition limit, released in finally). A later launcher may replace it again; manual/older launchers do
-  not participate in this lock, so conflicting ownership fails verification instead of reporting success.
+- **Slots.** Each worktree's dev copy takes a color slot in the order Blue, Red, Green, Purple, Orange, Silver (instance id
+  `AntiNotepad-dev-<color>`, hotkeys Ctrl+Alt+Shift+1 to 6 and F1 to F6). The launcher keeps its worktree's color if free,
+  else the color it remembered (`build/dev-slots.json` in the main checkout, pruned against `git worktree list`), else the
+  first free one. A slot is free when no process holds its instance mutex. A seventh launch refuses before building and names
+  who holds each color. Relaunching replaces only this worktree's own slot copy, and per-slot records are `build/dev-<color>.pid`.
+  `ANTINOTEPAD_SLOT` counts only with `ANTINOTEPAD_DATA`; the installed copy can never take a slot id. `tools/dev-list.ps1`
+  shows the slots; `pwsh tools/dev.ps1 -SelfTest` checks the allocator offline.
+- All worktrees share one launcher mutex for the entire transaction (120-second acquisition limit, released in finally).
+  Manual/older launchers do not participate in this lock, so conflicting ownership fails verification instead of reporting
+  success. A pre-slot dev copy (`AntiNotepad-dev`) from this checkout is upgraded in place; one from another worktree is left alone.
 - Before replacing `build/dev`, the launcher builds a quit helper in `build/dev-handoff-helper` with the same dev identity.
   It runs exactly `--quit` with explicit `ANTINOTEPAD_DEV=1` and absolute, nonempty checkout `ANTINOTEPAD_DATA`.
-  Exit 0 must be followed by a vacant `AntiNotepad-dev` mutex. The helper's normal graceful-quit timeout is about 5 seconds;
+  Exit 0 must be followed by a vacant mutex for the selected slot. The helper's normal graceful-quit timeout is about 5 seconds;
   a nonzero exit triggers force-close of only the published dev owner after verifying its process handle, start time,
   image, repository identity and unchanged singleton owner. Allowed images are this repository's main checkout or a
   `.claude/worktrees/<prefix>/<ID-slug>` (or direct `.claude/worktrees/*`) checkout's `build/dev/AntiNotepad.exe`; installed images are explicitly rejected. Ambiguous owners,
@@ -79,7 +85,7 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
   followed by the canonical Debug build and launch. Fresh never follows `location.json` or clears another checkout's data.
   Build/helper paths and their ancestors/children are checked for reparse points before build; PID paths are also guarded.
 - The launcher waits up to 5 seconds for its PID to be published as owner, then another 750 ms and checks owner, exact
-  executable path and survival again before writing `build/dev.pid` last. Success prints PID, EXE, DATA and HOTKEY.
+  executable path and survival again before writing `build/dev.pid` last. Success prints PID, EXE, DATA, COLOR, HOTKEY and NEWNOTE.
   Legacy, stale and mismatched local PID records are ignored for discovery and removed after shutdown; they never authorize
   termination. Failed launch verification leaves the process for inspection and writes no new record. Helper output and
   bookkeeping stay under `build`; the installed copy is never targeted by dev quit or force-close.
@@ -91,7 +97,7 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
 - The explicit dev marker plus a custom data path enables the dev badge and dev-only UI. A custom data path alone still uses
   the separate instance and bypasses real-data/registry migration, but has no badge. Merely inheriting `CLAUDECODE` does nothing.
 - Headless Codex must not run these launch scripts; build to `build/<task>-check` and use `--selftest` only.
-- `pwsh tools/press-hotkey.ps1 -Key D` presses the dev hotkey (the first press after launch may only prewarm).
+- `pwsh tools/press-hotkey.ps1 -Slot blue [-NewNote]` presses that slot's hotkey (the first press after launch may only prewarm); `-Key S` is the installed copy's.
 - Dev-only switches: `ANTINOTEPAD_DEBUG_SETTINGS_CYCLES=n` opens/closes Settings n times and logs memory; F12 / Shift+F12 /
   Ctrl+F12 write captures to `ANTINOTEPAD_SHOTS` (captures miss the Acrylic backdrop).
 - App log: `<app home>/antinotepad.log` (hotkey timings, memory lines, crashes as `crash ...`).

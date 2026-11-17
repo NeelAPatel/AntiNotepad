@@ -79,7 +79,7 @@ them to `.coord/lessons.md` at Merge.
 ## 5. Hand over
 A catch-up after acceptance printing `RETEST: yes` repeats the hand test before Merge; `RETEST: no` keeps the result.
 With UI checks: run `tools/dev.ps1` from the worktree just before the hand checks, verify the printed EXE and DATA paths
-and the app log, and report not-ready if any fails. Give the user the dev badge text to expect, the Plan's UI checks and the
+and the app log, and report not-ready if any fails. Give the user your slot's dev badge text to expect, the Plan's UI checks and the
 report's new ones; record their result verbatim under `## Hand test`, commit it, tell the director. A failed check is
 triaged (4a) with a "Misses" line. Not visible: say no hand test is needed. Never launch during review or rework.
 

@@ -88,6 +88,6 @@ Continue in this chat; no new chat. Show the user the status card, role `builder
   when it exits, relaunch rework yourself, commit each round on the item branch.
 - Ask the user, with the card, whatever the bounds check marks "ask the user". Never touch dev or other STATUS rows;
   never mint IDs; never start a chat.
-- After Check accepts: run `tools/dev.ps1` from the worktree, verify the dev badge, EXE, DATA and log paths, give the user
+- After Check accepts: run `tools/dev.ps1` from the worktree, verify your slot's dev badge, EXE, DATA and log paths, give the user
   the Plan's UI checks, record their result under `## Hand test`, tell the director it is ready to merge.
 STATUS: `building`.

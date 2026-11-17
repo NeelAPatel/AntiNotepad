@@ -51,8 +51,8 @@ defines the standard applied to touched files. Slash-command instructions live i
   (`.coord/reports/Loop2-loop-v3-1-rehearsal.md`, "Surprises," 2).
 - **CI is manual.** The GitHub gate uses `workflow_dispatch`; a push alone does not trigger it
   (`.github/workflows/gate.yml`; `docs/loop.md`, "Triggers in practice").
-- **Hand tests take turns.** Only one dev copy runs, oldest accepted item first, even when up to three items are being
-  built in parallel (`docs/loop.md`, "Branches, worktrees and commits").
+- **Hand tests run side by side.** Each worktree runs its own colored slot copy (up to six), so up to three items can be
+  hand tested at once (`docs/loop.md`, "Branches, worktrees and commits").
 
 ## Sources
 
