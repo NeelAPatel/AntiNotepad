@@ -19,6 +19,12 @@ User's words: launch several AntiNotepads from their worktrees' own code, each p
 3. **App side (A):** instance id and badge color from the slot (env or flag), hotkey from env, selftest for two ids not colliding. Badge and tray color lab first.
 4. **Docs and rules:** `docs/dev-loop.md`, the AGENTS rule, item-chat briefs ("dev copy" becomes "your slot").
 
+## Update (user, 2026-11-17, after the roadmap talk)
+- Wants this tooling item soon so three worktree items can run at once with a hand test each.
+- Colors: keeps the soft yellow and blue already in use (look of the current dev and installed badges); the rest of the order is still the user's list. Item chat reads today's badge and tray colors first and picks matching soft tones.
+- Shortcuts: only the global ones matter: **show/hide** (conflicts today) and, if it can be done cleanly, **create a new note** (the shortcut launches or shows the app and makes a note). In-app shortcuts are not a concern.
+- Each slot gets its own show/hide hotkey; the installed copy keeps its own, untouched.
+
 ## Open questions for the user
 - Hotkeys per slot: digits 1-6, or another scheme?
 - Cap: is six enough, and what should a seventh launch do (refuse, or reuse the oldest)?
