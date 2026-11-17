@@ -51,4 +51,11 @@ Role: terra (`docs/agents.md`), because one script plus a few lines in two files
 Report `.coord/reports/Loop12-chat-title-scheme-r2.md`, short: 1 Summary; 2 Change list; 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 6 Contracts; 7 Lens review (skip); 8 Checks run; 9 Hand checks for the user.
 
 ## Check
+- Gate: PASS (offline) at the round tip; `chat-title.ps1 -Check` PASS (STATUS-first phase, worktree card, round name, registry, bad session id, sync and ambiguous sync on a fixture); loop-lint PASS (budget warnings only).
+- Live (mine): hook run with A22's real session id after `-Sync` printed `SET TITLE: <mark> A22-wrap-hanging-indent · hand test`; `-Sync` registered 63 chats (stale or archived ones too; harmless, a registry entry only acts when that chat sends a prompt).
+- Bounds: within plan, 3 files. Codex review skipped, tooling only.
+- Misses: found at the user's sidebar after the one-time retitle; cause plan (item from branch assumed, phase from a card that moves); caught by user; should have caught in the spike by running from a main-checkout chat; lesson: test hooks from the chat's real cwd, not from the worktree.
+- Noticed: stores hold the last printed title, so any manual test run must be followed by setting the real title (I did this for A22, A23). The old hook in the main checkout keeps running until this round merges.
+
 ## Hand test
+User, 2026-11-17: pending. Live proof only exists after merge: reply in the A22 chat; its hook should print a SET TITLE line.
