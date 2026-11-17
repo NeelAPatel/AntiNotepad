@@ -2,9 +2,9 @@
 
 ## Changed
 - Settings and the dropdown share the token-backed delay choices; labels retain invariant formatting.
-- Store tracks queued or unacknowledged writes on each note, clears removed notes at the next snapshot and clears matching acknowledgements; the static hook and revision set are removed.
+- Store sets a per-note `BodyWriteInFlight` flag when a body is queued and clears it at the matching-revision acknowledgement; the static hook and revision set are removed. The flag lives on the note, so a deleted note leaves no store state (it keeps its own flag, unused).
 - Save callbacks carry the note only; logging uses the current setting. Added save callback and pane transition comments.
-- Added a queued-body deletion check to the existing storage selftest.
+- Added a queued-body deletion check to the existing storage selftest (checks the body file is gone).
 
 ## Tests run
 - Baseline: offline local-cache restore, Debug build and selftest passed before changes (0 warnings, `SELFTEST PASS`).
@@ -44,5 +44,5 @@ Nonblank lines, PowerShell `Measure-Object -Line`.
 | SelfTest/Store.cs | 567 | 579 |
 
 ## Risks
-- The store retains the previous snapshot's note references until the next snapshot to clear removed notes, including writes already removed from the pending queue. Revision-matched acknowledgements clear the flag as before. Concurrent save behavior remains review-sensitive.
+- A note removed from the store keeps its flag set; only a window still holding that note could observe it. Concurrent save behavior remains review-sensitive.
 - Codex review and design review remain for the item chat; the quick dev-copy hand test remains pending. No dev or installed copy was launched.
