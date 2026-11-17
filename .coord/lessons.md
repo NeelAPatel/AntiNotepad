@@ -47,4 +47,5 @@ One row per merged item: what each check found. Empty rows on items that later h
 
 | 2026-11-12 | Loop11-one-chat-flow | Low | 0 (user asked to fix then merge: card intro typo and lost sentence fixed on branch) | 0 | - | - | 0 | - |
 | 2026-11-13 | T14-dirty-allowlist-codex-wake | Low | 0 (A16/A17 launched Codex detached with & or nohup, so no exit wake-up; Hand test section was missing at preflight) | 0 | - | - | 0 | - |
+| 2026-11-16 | T16-roadmap-table-columns | Low | 0 (scope grew twice at the user's word: groups/filters, Excel-style filters; Check and Hand test sections missing and gate stale after the card commit at preflight) | 0 | - | - | 0 | - |
 Older rows: `.coord/lessons-archive.md` (budget: 3 KB here).

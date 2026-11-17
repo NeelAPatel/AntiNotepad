@@ -24,7 +24,6 @@ Rows not in work now: proposed, needs you, planned, paused and deferred (user or
 | step: scale-apply | After the lab is approved: tokens become scale > role > control tiers and the app adopts the scale; new DESIGN hash | High | Medium | needs you |
 | step: design-plugins-review | After design-questions (user, 2026-11-02): install the Design (Anthropic) and design-skills plugins, run them end to end on the project, compare with our findings; then decide whether a top-level Design Master chat reviews the design independently | Low | Small | needs you |
 | step: timer-names | Fuzziest: named behavior timers (save, debounces, toast hold, caret blink, bar sleep; about 40 values) at today's values, owned where they are used (user, 2026-11-01: timers included) Trimmed from design-tokens (user, 2026-11-02: "Shape, then trim"); revive with design-unify if those values need changing | High | Medium | deferred |
-| Release marker | dev -> main after the look-identical work, on your go | - | - | planned |
 | idea: code-ownership | Every responsibility has one owner and no copies; behavior unchanged | - | - | needs you |
 | step: notes-path-dedupe | One same-or-nested path rule in `Platform/` replacing the copies in `NotesSession`, `NotesLocation`, `SettingsWindow` and `KeepOldCopy`; CONTRACTS row | High | Small | needs you |
 | step: ui-kit-merge | One control kit: Settings' private controls merge into `Kit`; `Material()` and `Ago()` move to their owners | Medium | Medium | needs you |
@@ -33,7 +32,6 @@ Rows not in work now: proposed, needs you, planned, paused and deferred (user or
 | **Cleanup** | | | | |
 | idea: archive-finished-sessions | Archive finished Claude sessions (era-0 C16 retired); no code (user, 2026-11-06: tidy) | Low | Small | needs you |
 | idea: release-checklist | A dev -> main release checklist that re-checks gate rules; doc only. Tag names were settled by loop v3 (era-0 C18 retired) (user, 2026-11-06: tidy) | Low | Small | needs you |
-| Release marker | dev -> main with a tag, on your go | - | - | planned |
 | **Performance** | | | | |
 | A11-settings-thread-count | Find why the Settings window runs about 90 threads; report, fix only if cheap (was A74); scope confirmed by user 2026-11-09. Report done on `fix/A11-settings-thread-count` (no change needed: about 71 of 81 threads are GPU driver and ANGLE threads, Settings adds 1-2, no leak). Paused by the user 2026-11-12, not merged | Low | Small | paused |
 | idea: large-note-perf | Measure then reduce typing lag in a 6,000-line note; one change at a time (ideas in Backlog; era-0 A49 retired) (user, 2026-11-06: tidy) | Medium | Large | needs you |
@@ -62,7 +60,8 @@ Rows not in work now: proposed, needs you, planned, paused and deferred (user or
 | idea: settings-tab-motion | Settings tab switching animates at the wrong speed and style; match Windows 11 / WinUI 3 | - | - | needs you |
 | D2-ui-motion-research | Deep research report (no product code): app design, UI, motion and consistency principles; WinUI 3 / Fluent motion; Avalonia's animation tools; skills and plugins for design and motion; how AI can implement and evolve a design consistently. Ends in a short recommendation for this app's motion rules (purpose, easing, timing) and a way for the user to judge motion by seeing it, not numbers. Asked by the user 2026-11-12 after A14's lab values; Haiku sub-chat + Codex Sol. Paused by the user 2026-11-12 (sub-chat stopped, nothing written yet that matters) | Low | Medium | paused |
 | idea: split-view-modes | After the items above: left pane stays Standard Notes; Split View click offers Permanent stack or Regular notes for the right pane. Pill bars: Standard right pane = bar 1 normal, bar 2 pagination only; Permanent right pane = bar 1 normal, bar 2 permanent selector. Related: two old someday notes in the Backlog section (split text overlap, divider height) | - | - | needs you |
-| idea: save-delay-setting | Settings choice for save delay: fixed 0.4 s after last edit today; user (2026-11-12) wants 5 s, 10 s, 30 s options, default unchanged; needs Settings lab and save-on-quit/hide hand test. Split off A16-saved-label-fade | - | - | needs you |
+| idea: page-edge-stuck-after-hide | Bug in A20-overscroll-speed (merged): the page-edge pull can stay stuck after the pad hides. `StartFrame` returns early while `_frameRunning` is true; only the frame callback or `StopFrames` clears it, and nothing resets it on hide. Found by the pstack trial blast-radius step, confirmed in code by PStack Manager (`.coord/research/pstack-trial-log.md` step 3, risk 3). User via Master 6, 2026-11-16 | Medium | Small | proposed |
+| idea: save-delay-choices | One list of allowed save delays in Model (setter and dropdown share it); NoteSaved as Action<Note>; comments for UI-thread and BindPanes save rules. From A21 design review | Low | Small | proposal |
 
 ## Backlog (someday)
 Moved from STATUS by Loop10c-status-shape. IDs A53 and later are dissolved (user, 2026-10-29); the table above holds those as unnumbered ideas.

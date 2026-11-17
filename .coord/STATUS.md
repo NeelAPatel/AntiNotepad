@@ -1,10 +1,10 @@
 # STATUS
 
-Updated: 2026-11-12 · Product: AntiNotepad (`product/AntiNotepad`) · installed `v0.7.0-rc1`
+Updated: 2026-11-16 · Product: AntiNotepad (`product/AntiNotepad`) · installed `v0.7.0-rc1`
 - Only active work lives here. Pending: `.coord/pending.md`. Finished: `.coord/status-archive.md`. Detail: item card in `.coord/tasks/`.
 
 ## Working rules right now
-- Directors (top-level chats): Master 4 (app, design), Loop Hub 3 (Loop, T, L), Roadmap Hub 1 (roadmap). Notes in `.coord/directors/`.
+- Directors (top-level chats): Master 6 (app, design), Loop Hub 4 (Loop, T, L), Roadmap Hub 1 (roadmap), PStack Manager (pstack). Notes in `.coord/directors/`.
 - Directors route work; they do not do it. Default: Sonnet-or-lower sub-chat per item.
 - Updates between directors: need-to-know only; tell after finishing, or ask the user.
 - Codex allowed; role by job (`docs/agents.md`); checks offline; no run caps.
@@ -21,7 +21,9 @@ Updated: 2026-11-12 · Product: AntiNotepad (`product/AntiNotepad`) · installed
 - Roadmap page: http://localhost:47811 (`/roadmap`); reads STATUS + pending + archive.
 
 ## Now
-- Nothing in work. Last finished: T14-dirty-allowlist-codex-wake, Loop11-one-chat-flow, A19-settings-scroll-feel, A18-settings-segment-animation, A17-settings-toggle-animation, A16-saved-label-fade, A15-notes-edge-pills, A14-search-open-fade-up, A13-search-toggle-off (dev 2026-11-12).
+- A21-save-delay-setting: hand test failed 2026-11-16; back to design with the item chat (High).
+- T15-ffmpeg-frame-capture-trial: test 1 done; awaiting more tests.
+- Last finished: T16-roadmap-table-columns (dev 2026-11-16), T14-dirty-allowlist-codex-wake, Loop11-one-chat-flow, A19-settings-scroll-feel, A18-settings-segment-animation, A17-settings-toggle-animation.
 
 ## Plan
 Active rows only (the roadmap script parses this table; same 5 columns as `.coord/pending.md`).
@@ -29,6 +31,8 @@ Active rows only (the roadmap script parses this table; same 5 columns as `.coor
 ### Pending work
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
+| T15-ffmpeg-frame-capture-trial | Trial: record the dev window with ffmpeg, tile frames into one sheet so Claude can judge motion. Card in `.coord/tasks/` | Low | Small | test 1 done; awaiting more tests |
+| A21-save-delay-setting | Settings dropdown for save delay (0.4 default, 5, 10, 30 s); note switches save at once; Saved label shows real save time. Card in `.coord/tasks/` | High | Medium | accepted; hand test next |
 
 ## Open (needs the user)
 - Live check: A30 restart/sign-out saves an edit typed just before.
