@@ -2,10 +2,11 @@
 # is exceeded. Its output is added to Claude's context. Reads STATUS from the main checkout even when run from a worktree.
 param([string]$Root = (Split-Path $PSScriptRoot -Parent))
 $ErrorActionPreference = 'Stop'
-try { [void][Console]::In.ReadToEnd() } catch { }
+$sessionId = ''
+try { $hookInput = [Console]::In.ReadToEnd() | ConvertFrom-Json -ErrorAction Stop; $sessionId = [string]$hookInput.session_id } catch { }
 try {
     $titleScript = Join-Path $PSScriptRoot 'chat-title.ps1'
-    if (Test-Path -LiteralPath $titleScript) { & $titleScript -State working }
+    if (Test-Path -LiteralPath $titleScript) { & $titleScript -State working -SessionId $sessionId }
 } catch { }
 try {
     $common = (& git -C $Root rev-parse --path-format=absolute --git-common-dir 2>$null)
