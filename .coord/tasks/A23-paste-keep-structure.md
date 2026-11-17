@@ -48,6 +48,7 @@ Goal: a small paste engine that upgrades what lands in the note when the clipboa
 - `.coord/tasks/A23-paste-keep-structure.md`
 - `.coord/reports/A23-paste-keep-structure.md`
 - `.coord/reports/A23-paste-keep-structure.terra.codex.md`
+- `tools/playground/a23-paste-pill-lab.html`
 
 ## Contracts
 Engine: `string? Upgrade(ClipSnapshot s)` returns note text or null (null = plain paste). Pure; never throws on bad HTML. Reader = `Func<ClipSnapshot,string?>` in an ordered list.

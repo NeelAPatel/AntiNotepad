@@ -927,12 +927,16 @@ internal sealed class PadView : Grid
         ShowMenu?.Invoke(Editor, items);
     }
 
+    private const string PasteFormattingFound = "Paste Formatting Found";
+    private const string PasteFormattingFallback = "Paste Formatting Fallback";
+
     private async Task PasteAsync()
     {
         var document = Editor.Document;
         var selection = Editor.TextArea.Selection;
         var caret = Editor.CaretOffset;
-        string? upgraded = null;
+        var outcome = new PasteOutcome(null, false);
+        var preformatted = false;
         try
         {
             if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
@@ -944,13 +948,22 @@ internal sealed class PadView : Grid
                 var files = await clipboard.TryGetFilesAsync();
                 var snapshot = new ClipSnapshot(plain, html, formats.Select(f => f.Identifier).ToArray(),
                     formats.Contains(DataFormat.Bitmap), files?.Select(f => f.Path.LocalPath).ToArray() ?? []);
-                upgraded = PasteEngine.Upgrade(snapshot);
+                outcome = PasteEngine.Analyze(snapshot);
+                preformatted = PasteEngine.IsPreformatted(snapshot);
             }
         }
         catch (Exception) { }
         if (Editor.Document != document || Editor.TextArea.Selection != selection || Editor.CaretOffset != caret) return;
-        if (upgraded is null) Editor.Paste();
-        else Editor.TextArea.Selection.ReplaceSelectionWithText(upgraded);
+        if (outcome.Text is null)
+        {
+            Editor.Paste();
+            if (outcome.StructureSeen && !preformatted) RaiseToast(PasteFormattingFallback);
+        }
+        else
+        {
+            Editor.TextArea.Selection.ReplaceSelectionWithText(outcome.Text);
+            RaiseToast(PasteFormattingFound);
+        }
     }
 
     private void Insert(string text)

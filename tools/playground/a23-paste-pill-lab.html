@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>A23 paste pill lab</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#1b1c1f;--fg:#e6e6e6;--mut:#9a9a9a;--card:#26282c;--line:#3a3d42}
+body{margin:0;font:14px/1.4 "Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+header{padding:14px 20px;border-bottom:1px solid var(--line)}h1{margin:0;font-size:17px}
+header p{margin:4px 0 0;color:var(--mut);max-width:860px}
+.bar{display:flex;flex-wrap:wrap;gap:18px;padding:12px 20px;background:var(--card);border-bottom:1px solid var(--line)}
+.grp b{display:block;font-size:11px;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
+button{font:inherit;color:var(--fg);background:transparent;border:1px solid var(--line);padding:4px 10px;cursor:pointer;margin-right:-1px}
+button.on,button.go{background:#0090ff;border-color:#0090ff;color:#fff}
+main{padding:24px 20px}
+.stage{display:inline-block;padding:30px;border-radius:8px;background:linear-gradient(135deg,#3b6ea5,#8a5ea8 60%,#c9794f)}
+.win{position:relative;width:420px;height:250px;border-radius:8px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.08);background:#1c1c1ce6;color:#ddd;font:13px/1.5 Consolas,monospace}
+.top{height:36px;display:flex;align-items:center;gap:8px;padding:0 12px;font:12px "Segoe UI"}
+.chip{background:#4fa3ff33;color:#6cb4ff;border-radius:4px;padding:1px 6px;font-weight:600;font-size:11px}
+.sv{color:#9a9a9a}
+.body{padding:8px 14px;white-space:pre-wrap}
+.pill{position:absolute;display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;font:12px "Segoe UI",sans-serif;white-space:nowrap;pointer-events:none;opacity:0;background:#2b2d31f2;color:#e6e6e6;box-shadow:0 2px 10px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.1)}
+.pill .dot{width:8px;height:8px;border-radius:50%}
+.pill.found .dot{background:#4cc38a}.pill.fb .dot{background:#9a9a9a}
+.pill small{color:#9a9a9a;margin-left:2px}
+.pos-bc{left:50%;bottom:14px;margin-left:var(--hw)}.pos-br{right:12px;bottom:14px}.pos-tr{right:12px;top:6px}.pos-tl{left:130px;top:7px}
+.note{margin-top:14px;color:var(--mut);max-width:620px}i{font-style:normal;color:#6cb4ff}
+table.r{border-collapse:collapse;margin-top:10px;color:var(--mut);font-size:12px}table.r td,table.r th{border:1px solid var(--line);padding:3px 8px;text-align:left}
+</style></head><body>
+<header><h1>A23 paste pill lab</h1>
+<p>Mock of a small pill that tells you what a paste did. Wording is yours (Paste Formatting Found / Fallback); the lab compares where it sits, when it shows, how long, and how loud. Motion uses the app's Windows 11 tokens (in 167 ms, out 83 ms, rise 16 px). Press a paste button to see it.</p></header>
+<div class="bar">
+<div class="grp"><b>Simulate paste</b>
+<button id="p1" class="go">Rich list/table (converted)</button>
+<button id="p2">Rich copy, not convertible</button>
+<button id="p3">Plain copy (no HTML)</button></div>
+<div class="grp"><b>Position</b>
+<button data-pos="bc" class="on">Bottom center</button><button data-pos="br">Bottom right</button><button data-pos="tr">Top right</button><button data-pos="tl">Top bar, after Saved</button></div>
+<div class="grp"><b>Show when</b>
+<button data-rule="rich" class="on">Found, and fallback only for rich copies</button><button data-rule="always">Found and every fallback</button><button data-rule="found">Found only</button></div>
+</div>
+<div class="bar">
+<div class="grp"><b>Found wording</b>
+<button data-fw="Paste Formatting Found" class="on">Paste Formatting Found</button><button data-fw="Formatting kept">Formatting kept</button></div>
+<div class="grp"><b>Fallback wording</b>
+<button data-bw="Paste Formatting Fallback" class="on">Paste Formatting Fallback</button><button data-bw="Paste Formatting Not Found">Paste Formatting Not Found</button><button data-bw="Pasted as plain text">Pasted as plain text</button></div>
+<div class="grp"><b>Detail</b>
+<button data-d="off" class="on">None</button><button data-d="on">What was kept (list, table...)</button></div>
+<div class="grp"><b>Hold ms <i id="vh">2200</i></b><input type="range" id="hold" min="800" max="5000" step="100" value="2200"></div>
+</div>
+<main><div class="stage"><div class="win" id="win">
+<div class="top"><span class="chip">slot 2</span><span class="sv">Saved 3m ago</span></div>
+<div class="body" id="body">Groceries: milk, eggs</div>
+<div class="pill" id="pill"><span class="dot"></span><span id="t"></span><small id="s"></small></div>
+</div></div>
+<table class="r"><tr><th>Paste outcome</th><th>Clipboard</th><th>Shows (rule 1: default)</th></tr>
+<tr><td>Converted</td><td>HTML with lists, tables, marks</td><td>Found</td></tr>
+<tr><td>Not converted</td><td>HTML present, nothing to convert (web text, code)</td><td>Fallback</td></tr>
+<tr><td>Not converted</td><td>Plain only (copied from a text editor or a multi-message selection)</td><td>Nothing</td></tr></table>
+<p class="note">The default rule keeps plain Ctrl+V from flashing a message on every paste: Fallback only appears when the clipboard had rich content that could not be converted. Switch to "every fallback" to see the noisy version.</p>
+</main>
+<script>
+const $=id=>document.getElementById(id),pill=$("pill"),win=$("win");
+let pos="bc",rule="rich",fw="Paste Formatting Found",bw="Paste Formatting Fallback",det="off",timer,anim;
+const kept=["2 lists, 1 table","bold, code","3 lists","heading, list"];let k=0;
+function place(){pill.className="pill pos-"+pos+" "+pill.dataset.k;if(pos==="bc"){pill.style.setProperty("--hw",-(pill.offsetWidth/2)+"px")}}
+function show(kind,rich){
+ if(kind==="fb"&&rule==="found")return;
+ if(kind==="fb"&&rule==="rich"&&!rich)return;
+ pill.dataset.k=kind;$("t").textContent=kind==="found"?fw:bw;
+ $("s").textContent=(kind==="found"&&det==="on")?"· "+kept[k++%kept.length]:"";
+ place();
+ clearTimeout(timer);anim&&anim.cancel();
+ const rise=pos[0]==="t"?-16:16;
+ anim=pill.animate([{opacity:0,transform:`translateY(${rise}px)`},{opacity:1,transform:"none"}],{duration:167,easing:"cubic-bezier(0,0,0,1)",fill:"forwards"});
+ timer=setTimeout(()=>{anim=pill.animate([{opacity:1},{opacity:0}],{duration:83,easing:"cubic-bezier(1,0,1,1)",fill:"forwards"})},+$("hold").value);
+}
+$("p1").onclick=()=>show("found",true);$("p2").onclick=()=>show("fb",true);$("p3").onclick=()=>show("fb",false);
+$("hold").oninput=()=>$("vh").textContent=$("hold").value;
+function grp(a,f){document.querySelectorAll(`[data-${a}]`).forEach(b=>b.onclick=()=>{f(b.dataset[a]);document.querySelectorAll(`[data-${a}]`).forEach(x=>x.classList.toggle("on",x===b))})}
+grp("pos",v=>pos=v);grp("rule",v=>rule=v);grp("fw",v=>fw=v);grp("bw",v=>bw=v);grp("d",v=>det=v);
+</script></body></html>

@@ -6,27 +6,37 @@ namespace AntiNotepad.Editor;
 
 internal sealed record ClipSnapshot(string? Plain, string? Html, string[] Formats, bool HasImage, string[] Files);
 
+internal readonly record struct PasteOutcome(string? Text, bool StructureSeen);
+
 internal static class PasteEngine
 {
     private static readonly Func<ClipSnapshot, string?>[] Readers = [ImageReader, FilesReader, HtmlReader];
-    internal static string? Upgrade(ClipSnapshot snapshot)
+    internal static string? Upgrade(ClipSnapshot snapshot) => Analyze(snapshot).Text;
+
+    internal static PasteOutcome Analyze(ClipSnapshot snapshot)
     {
+        var structureSeen = snapshot.Html is { } html &&
+            Regex.IsMatch(html, @"<\s*(?:li|table)(?=[\s/>])", RegexOptions.IgnoreCase);
         try
         {
             foreach (var reader in Readers)
-                if (reader(snapshot) is { } text) return text;
+                if (reader(snapshot) is { } text) return new(text, structureSeen);
         }
         catch (Exception) { }
-        return null;
+        return new(null, structureSeen);
     }
+
+    internal static bool IsPreformatted(ClipSnapshot snapshot) =>
+        (snapshot.Plain is { } plain && Regex.IsMatch(plain, @"(?m)^[ \t]+\S|^\s*(?:[-*+•]|\d+[.)])\s+")) ||
+        (snapshot.Html is { } html && Regex.IsMatch(html, @"<\s*pre\b|white-space\s*:\s*pre", RegexOptions.IgnoreCase));
+
     private static string? ImageReader(ClipSnapshot snapshot) => null;
     private static string? FilesReader(ClipSnapshot snapshot) => null;
     private static string? HtmlReader(ClipSnapshot snapshot)
     {
         if (string.IsNullOrEmpty(snapshot.Plain) || string.IsNullOrEmpty(snapshot.Html)) return null;
-        if (Regex.IsMatch(snapshot.Plain, @"(?m)^[ \t]+\S|^\s*(?:[-*+•]|\d+[.)])\s+")) return null;
+        if (IsPreformatted(snapshot)) return null;
         var html = snapshot.Html;
-        if (Regex.IsMatch(html, @"<\s*pre\b|white-space\s*:\s*pre", RegexOptions.IgnoreCase)) return null;
         var start = Regex.Match(html, @"StartFragment:(\d+)");
         var end = Regex.Match(html, @"EndFragment:(\d+)");
         if (start.Success && end.Success && int.TryParse(start.Groups[1].Value, out var a) && int.TryParse(end.Groups[1].Value, out var b))
