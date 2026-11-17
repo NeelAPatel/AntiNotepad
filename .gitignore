@@ -4,6 +4,7 @@
 
 .coord/scratch/
 .coord/logs/
+.coord/titles/
 .coord/directors/
 # Gate reports are regenerated on every run; results live in the task report
 .coord/reports/*.gate.md
