@@ -359,7 +359,7 @@ internal static partial class SelfTest
         UI.PadWindow? pad = null;
         SettingsService? service = null;
         Store? store = null;
-        Action<Note, int>? savedHandler = null;
+        Action<Note>? savedHandler = null;
         try
         {
             store = new Store(root);
@@ -584,7 +584,7 @@ internal static partial class SelfTest
 
             var returning = left.Note!;
             var noteSaveCount = 0;
-            savedHandler = (note, _) => { if (ReferenceEquals(note, returning)) noteSaveCount++; };
+            savedHandler = note => { if (ReferenceEquals(note, returning)) noteSaveCount++; };
             store.NoteSaved += savedHandler;
             Edit(left, "switch away and back");
             pad.NewNote();

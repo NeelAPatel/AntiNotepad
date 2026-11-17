@@ -1,6 +1,7 @@
 // User preferences persisted in the store's index.
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using AntiNotepad.Theme;
 
 namespace AntiNotepad.Model;
 
@@ -22,11 +23,15 @@ public sealed class Settings
     public string? Hotkey { get; set; }
     public string? NewNoteHotkey { get; set; }            // opens straight to a new note; null = off
     public int FreshNoteAfterMinutes { get; set; } = 30;   // 0 = never
-    private int _saveDelayMs = 400;
+    internal static readonly IReadOnlyList<int> SaveDelayChoicesMs = Array.AsReadOnly<int>([
+        ChromeTokens.SaveDelayDefaultMs, ChromeTokens.SaveDelayFiveSecondsMs,
+        ChromeTokens.SaveDelayTenSecondsMs, ChromeTokens.SaveDelayThirtySecondsMs]);
+
+    private int _saveDelayMs = ChromeTokens.SaveDelayDefaultMs;
     public int SaveDelayMs
     {
         get => _saveDelayMs;
-        set => _saveDelayMs = value is 400 or 5000 or 10000 or 30000 ? value : 400;
+        set => _saveDelayMs = SaveDelayChoicesMs.Contains(value) ? value : ChromeTokens.SaveDelayDefaultMs;
     }
     public bool HideOnBlur { get; set; }
     public bool DimWhenPinned { get; set; } = true;     // a pinned pad fades back while you work elsewhere

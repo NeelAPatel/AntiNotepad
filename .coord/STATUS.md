@@ -21,8 +21,8 @@ Updated: 2026-11-16 · Product: AntiNotepad (`product/AntiNotepad`) · installed
 - Roadmap page: http://localhost:47811 (`/roadmap`); reads STATUS + pending + archive.
 
 ## Now
-- T15-ffmpeg-frame-capture-trial: test 1 done; awaiting more tests.
-- Last finished: A23-paste-keep-structure, A22-wrap-hanging-indent, Loop12-chat-title-scheme-r2, Loop12-chat-title-scheme, A21-save-delay-setting, T16-roadmap-table-columns (dev 2026-11-17), T14-dirty-allowlist-codex-wake, Loop11-one-chat-flow, A19-settings-scroll-feel, A18-settings-segment-animation, A17-settings-toggle-animation.
+- Nothing in flight (T15-ffmpeg-frame-capture-trial paused by the user, 2026-11-17).
+- Last finished: A24-save-delay-cleanup, A23-paste-keep-structure, A22-wrap-hanging-indent, Loop12-chat-title-scheme-r2, Loop12-chat-title-scheme, A21-save-delay-setting, T16-roadmap-table-columns (dev 2026-11-17), T14-dirty-allowlist-codex-wake, Loop11-one-chat-flow, A19-settings-scroll-feel, A18-settings-segment-animation, A17-settings-toggle-animation.
 
 ## Plan
 Active rows only (the roadmap script parses this table; same 5 columns as `.coord/pending.md`).
@@ -30,7 +30,7 @@ Active rows only (the roadmap script parses this table; same 5 columns as `.coor
 ### Pending work
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
-| T15-ffmpeg-frame-capture-trial | Trial: record the dev window with ffmpeg, tile frames into one sheet so Claude can judge motion. Card in `.coord/tasks/` | Low | Small | test 1 done; awaiting more tests |
+| T17-multi-dev-instances | Run several dev copies at once, one per worktree, each with a color picked in the fixed order Blue > Red > Green > Purple > Orange > Silver (own instance id, hotkey, badge and tray color); a launcher... card: `.coord/tasks/T17-multi-dev-instances.md` | High | Medium | hand-tested (chore/T17-multi-dev-instances) |
 
 ## Open (needs the user)
 - Live check: A30 restart/sign-out saves an edit typed just before.
@@ -39,8 +39,7 @@ Active rows only (the roadmap script parses this table; same 5 columns as `.coor
 - Hold: A44b-interop-guards leftover hand checks (Explorer restart, tray right-click menu).
 
 ## Next up (user, 2026-11-16: these outrank the rest; rows in `.coord/pending.md`)
-- idea: wrap-hanging-indent: wrapped lines of nested bullets lose their indent (possible regression).
-- idea: paste-keep-structure: paste bulleted/indented text with its structure.
+- idea: tab-at-text-start: Word's Tab rule for list items.
 - idea: list-default-type: Settings default for `list` plus checklist, bullet, numberlist keywords.
 - idea: selection-convert-menu: right-click > Convert to list.
 

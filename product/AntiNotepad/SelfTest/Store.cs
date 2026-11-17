@@ -594,8 +594,21 @@ internal static partial class SelfTest
             CheckCase(latestSaved && !staleNote.Dirty && staleNote.SavedAt is not null && staleNote.Modified == newerModified,
                 $"matching completion timestamps the latest revision without changing Modified (saved={latestSaved}, dirty={staleNote.Dirty}, savedAt={staleNote.SavedAt:O}, modified={staleNote.Modified:O}, expected={newerModified:O}, revision={staleNote.SearchRevision})");
 
+            var deletedStore = new Store(Path.Combine(root, "deleted"));
+            deletedStore.Load();
+            var deletedNote = deletedStore.Data.Stack[0];
+            deletedNote.Text = "body to delete";
+            var deletedWrite = deletedStore.QueueSave();
+            var wasQueued = deletedNote.BodyWriteInFlight;
+            deletedStore.Data.Stack.Remove(deletedNote);
+            var deletionSaved = deletedStore.Save();
+            var deletedWriteFinished = deletedWrite.GetAwaiter().GetResult();
+            CheckCase(wasQueued && deletionSaved && deletedWriteFinished
+                && !File.Exists(Path.Combine(deletedStore.Folder, "notes", deletedNote.Id + ".md")),
+                "deleting a queued note leaves no body file; the pending flag lives on the note, so no store state remains");
+
             report = failures.Count == 0
-                ? $"default, invalid values, delay round trips, durable load times, saved-empty body, failed-write label retention, stale acknowledgements, unchanged Modified, background large-body sample {largeTimingSample}, no SavedAt serialization"
+                ? $"deleted queued note cleanup, default, invalid values, delay round trips, durable load times, saved-empty body, failed-write label retention, stale acknowledgements, unchanged Modified, background large-body sample {largeTimingSample}, no SavedAt serialization"
                 : string.Join("; ", failures);
             return failures.Count == 0;
         }

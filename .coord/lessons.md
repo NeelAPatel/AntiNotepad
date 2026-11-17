@@ -19,6 +19,7 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 | 2026-11-09 | A9-pinned-accent-ring | Build r1 (gate) | test | gate | brief | the new ring selftest hung the whole selftest (it set up Avalonia differently from the Design dump and stalled a later contract); a PadWindow selftest must install the Fluent theme, use a loaded seeded store and run last among contracts | - |
 | 2026-11-06 | A7-version-rc2 | Merge | plan | master | review | merge preflight "stale Head" again (third time: A2, A5, A7); master re-ran the gate in the worktree | - |
 | 2026-11-06 | Loop8-merge-policy | Build (scratch test) | code | builder | brief | per-commit selftest always failed: the app is a GUI-subsystem exe, so `& $exe` returns no output; copy the gate's process runner whenever a script launches the app | - |
+| 2026-11-17 | A24-save-delay-cleanup | Build | plan | item chat | codex-review | plan step "clear the flag when a note is dropped" not implemented (a deleted note keeps its own unused flag, no store state left); card edit silently missed on CRLF line endings, so preflight failed on empty Check | - |
 
 ## Scores
 One row per merged item: what each check found. Empty rows on items that later had misses mean the reviewer is not earning its run.
@@ -56,4 +57,5 @@ One row per merged item: what each check found. Empty rows on items that later h
 | 2026-11-17 | Loop12-chat-title-scheme-r2 | Medium | 0 (rework of a merged item) | 0 | - | - | 0 | - |
 | 2026-11-17 | A22-wrap-hanging-indent | High | 1 (r2: format gate, result chips on wrapped lines) | 1 (Scope: directory Files entry; Check and Hand test sections missing and branch behind dev at preflight) | - | - | 0 | - |
 | 2026-11-17 | A23-paste-keep-structure | Medium | 4 (r2-r5; scope grew to tables, marks, emoji, toast) | 0 | 3 (2 major, 1 minor, fixed r5) | - | 0 (1 emoji drawing gap logged, not a paste fault) | - |
+| 2026-11-17 | A24-save-delay-cleanup | High | 0 | 0 | 0 | 0 | 0 | -
 Older rows: `.coord/lessons-archive.md` (budget: 3 KB here).

@@ -27,6 +27,7 @@ internal sealed partial class PadWindow
             || Settings.Split && !ReferenceEquals(_right.Note, RightNote));
         if (transition)
         {
+            // Save departing edits before rebinding so switching notes cannot defer their write.
             SaveImmediately();
         }
         _bindingPanes = true;

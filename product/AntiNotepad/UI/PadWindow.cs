@@ -422,7 +422,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     {
         if (blank && note.SavedAt is null)
         {
-            if (!_store.HasPendingBodyWrite(note))
+            if (!note.BodyWriteInFlight)
             {
                 note.DiscardUnpersistedEmptyEdit(blank);
                 _saveSchedules.Remove(note);
@@ -455,7 +455,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         {
             if (note.IsEmpty && note.SavedAt is null)
             {
-                if (!_store.HasPendingBodyWrite(note))
+                if (!note.BodyWriteInFlight)
                 {
                     note.DiscardUnpersistedEmptyEdit(blank: true);
                     _saveSchedules.Remove(note);
@@ -582,11 +582,11 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     }
 
     /// <summary>Refreshes the active save label and logs the elapsed time after a durable body write.</summary>
-    private void OnNoteSaved(Note note, int delayMs)
+    private void OnNoteSaved(Note note)
     {
         if (note.SavedAt is not { } savedAt) return;
         var actualMs = Math.Max(0, (savedAt - note.Modified).TotalMilliseconds);
-        _log.Write($"save delay={delayMs}ms actual={actualMs:F1}ms");
+        _log.Write($"save delay={Settings.SaveDelayMs}ms actual={actualMs:F1}ms");
         if (!note.Dirty) _saveSchedules.Remove(note);
         if (CanTouchPadUi && ReferenceEquals(_active?.Note, note))
         {
