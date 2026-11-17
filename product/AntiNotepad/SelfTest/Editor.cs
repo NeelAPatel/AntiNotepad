@@ -192,66 +192,101 @@ internal static partial class SelfTest
                 ("top bullet", "- "), ("nested level 1", "  - "),
                 ("nested level 2", "    - "), ("nested level 3", "      - "),
                 ("checkbox", "  - [ ] "), ("numbered", "   12. "),
-                ("plain indented", "    "), ("plain unindented", "")
+                ("plain indented", "    "), ("tab prefix", "\t- "), ("plain unindented", "")
             ];
             var failures = new List<string>();
             if (helperFailures.Count > 0) failures.Add($"text offsets: {helperFailures.Count}");
 
             foreach (var font in new[] { "Segoe UI", "Consolas" })
-            foreach (var fontSize in new[] { 14d, 20d }) foreach (var width in new[] { 180d, 240d, 310d }) foreach (var test in cases)
             {
-                var content = test.Prefix + tail;
-                editor.FontFamily = new FontFamily(font);
-                editor.FontSize = fontSize;
-                editor.Text = content;
-                view.Redraw();
-                view.Measure(new Size(width, 2000));
-                view.Arrange(new Rect(0, 0, width, 2000));
-                view.EnsureVisualLines();
-
-                var visualLine = view.GetOrConstructVisualLine(editor.Document.GetLineByNumber(1));
-                var textOffset = Editor.WrapIndent.TextOffset(content);
-                var anchorColumn = visualLine.GetVisualColumn(textOffset);
-                var firstTextLine = visualLine.TextLines[0];
-                var expectedX = visualLine.GetTextLineVisualXPosition(firstTextLine, anchorColumn);
-                var wrapped = visualLine.TextLines.Count > 1;
-                var aligned = wrapped && visualLine.TextLines.Skip(1).All(textLine =>
-                    Math.Abs(visualLine.GetTextLineVisualXPosition(textLine,
-                        visualLine.GetTextLineVisualStartColumn(textLine)) - expectedX) < 0.5);
-
-                if (!wrapped || !aligned || editor.Text != content)
+                foreach (var fontSize in new[] { 14d, 20d })
                 {
-                    failures.Add($"{test.Kind}/{font}/{fontSize}/{width}: wrapped={wrapped}, aligned={aligned}, textSame={editor.Text == content}");
-                    continue;
+                    foreach (var width in new[] { 180d, 240d, 310d })
+                    {
+                        foreach (var test in cases)
+                        {
+                            var content = test.Prefix + tail;
+                            editor.FontFamily = new FontFamily(font);
+                            editor.FontSize = fontSize;
+                            editor.Text = content;
+                            view.Redraw();
+                            view.Measure(new Size(width, 2000));
+                            view.Arrange(new Rect(0, 0, width, 2000));
+                            view.EnsureVisualLines();
+
+                            var visualLine = view.GetOrConstructVisualLine(editor.Document.GetLineByNumber(1));
+                            var textOffset = Editor.WrapIndent.TextOffset(content);
+                            var anchorColumn = visualLine.GetVisualColumn(textOffset);
+                            var firstTextLine = visualLine.TextLines[0];
+                            var expectedX = visualLine.GetTextLineVisualXPosition(firstTextLine, anchorColumn);
+                            var wrapped = visualLine.TextLines.Count > 1;
+                            var lastRow = visualLine.TextLines[^1];
+                            var chipEnd = Editor.ResultRenderer.TextEnd(visualLine);
+                            var expectedEnd = visualLine.GetTextLineVisualXPosition(lastRow, visualLine.VisualLength);
+                            if (wrapped && (Math.Abs(chipEnd - expectedEnd) > 0.01 || (expectedX > 0 && chipEnd <= lastRow.WidthIncludingTrailingWhitespace)))
+                                failures.Add($"{test.Kind}: chip end excludes continuation indent");
+                            var aligned = wrapped && visualLine.TextLines.Skip(1).All(textLine =>
+                                Math.Abs(visualLine.GetTextLineVisualXPosition(textLine,
+                                    visualLine.GetTextLineVisualStartColumn(textLine)) - expectedX) < 0.5);
+
+                            if (!wrapped || !aligned || editor.Text != content)
+                            {
+                                failures.Add($"{test.Kind}/{font}/{fontSize}/{width}: wrapped={wrapped}, aligned={aligned}, textSame={editor.Text == content}");
+                                continue;
+                            }
+
+                            var continuation = visualLine.TextLines[1];
+                            var startColumn = visualLine.GetTextLineVisualStartColumn(continuation);
+                            var position = visualLine.GetTextViewPosition(startColumn);
+                            var endPosition = visualLine.GetTextViewPosition(startColumn + 1);
+                            var startOffset = editor.Document.GetOffset(position.Location); var endOffset = editor.Document.GetOffset(endPosition.Location);
+                            var x0 = visualLine.GetTextLineVisualXPosition(continuation, startColumn);
+                            var point = new Point(x0 + Math.Max(0.1, (visualLine.GetTextLineVisualXPosition(continuation, startColumn + 1) - x0) * 0.1),
+                                visualLine.GetTextLineVisualYPosition(continuation, VisualYPosition.LineMiddle));
+                            var floorHit = view.GetPositionFloor(point); var roundedHit = view.GetPosition(point);
+
+                            editor.TextArea.Caret.Position = position;
+                            var caretX = editor.TextArea.Caret.CalculateCaretRectangle().X;
+
+                            var selection = Selection.Create(editor.TextArea, startOffset, endOffset);
+                            var selectedSegment = selection.Segments.First();
+                            var selectionRect = BackgroundGeometryBuilder.GetRectsForSegment(view, selectedSegment).First();
+                            var hitsRoundTrip = floorHit is { } floor
+                                && roundedHit is { } rounded
+                                && editor.Document.GetOffset(floor.Location) == startOffset
+                                && editor.Document.GetOffset(rounded.Location) == startOffset;
+                            var geometryMatches = Math.Abs(caretX - x0) < 0.5 && Math.Abs(selectionRect.Left - x0) < 0.5;
+                            if (!hitsRoundTrip || !geometryMatches)
+                                failures.Add($"{test.Kind}/{font}/{fontSize}/{width}: hit={hitsRoundTrip}, caret/selection={geometryMatches}");
+                        }
+                    }
                 }
-
-                var continuation = visualLine.TextLines[1];
-                var startColumn = visualLine.GetTextLineVisualStartColumn(continuation);
-                var position = visualLine.GetTextViewPosition(startColumn);
-                var endPosition = visualLine.GetTextViewPosition(startColumn + 1);
-                var startOffset = editor.Document.GetOffset(position.Location); var endOffset = editor.Document.GetOffset(endPosition.Location);
-                var x0 = visualLine.GetTextLineVisualXPosition(continuation, startColumn);
-                var point = new Point(x0 + Math.Max(0.1, (visualLine.GetTextLineVisualXPosition(continuation, startColumn + 1) - x0) * 0.1),
-                    visualLine.GetTextLineVisualYPosition(continuation, VisualYPosition.LineMiddle));
-                var floorHit = view.GetPositionFloor(point); var roundedHit = view.GetPosition(point);
-
-                editor.TextArea.Caret.Position = position;
-                var caretX = editor.TextArea.Caret.CalculateCaretRectangle().X;
-
-                var selection = Selection.Create(editor.TextArea, startOffset, endOffset);
-                var selectedSegment = selection.Segments.First();
-                var selectionRect = BackgroundGeometryBuilder.GetRectsForSegment(view, selectedSegment).First();
-                var hitsRoundTrip = floorHit is { } floor
-                    && roundedHit is { } rounded
-                    && editor.Document.GetOffset(floor.Location) == startOffset
-                    && editor.Document.GetOffset(rounded.Location) == startOffset;
-                var geometryMatches = Math.Abs(caretX - x0) < 0.5 && Math.Abs(selectionRect.Left - x0) < 0.5;
-                if (!hitsRoundTrip || !geometryMatches)
-                    failures.Add($"{test.Kind}/{font}/{fontSize}/{width}: hit={hitsRoundTrip}, caret/selection={geometryMatches}");
-
             }
 
-            report = $"helper cases={helperCases.Length - helperFailures.Count}/{helperCases.Length}; layouts=8 types x 2 fonts x 2 sizes x 3 widths; failures={string.Join("; ", failures.Take(8))}";
+            editor.FontFamily = new FontFamily("Consolas");
+            editor.FontSize = 20;
+            editor.Text = new string(' ', 16) + tail;
+            view.Redraw();
+            view.Measure(new Size(240, 2000));
+            view.Arrange(new Rect(0, 0, 240, 2000));
+            view.EnsureVisualLines();
+            var wideIndent = view.GetOrConstructVisualLine(editor.Document.GetLineByNumber(1));
+            if (wideIndent.TextLines.Count < 2 || Math.Abs(wideIndent.GetTextLineVisualXPosition(wideIndent.TextLines[1], wideIndent.GetTextLineVisualStartColumn(wideIndent.TextLines[1]))) > 0.5)
+                failures.Add("over-half-width indent did not fall back to zero");
+
+            editor.Text = "  - " + tail + "\nhidden folded text\nend";
+            var folding = AvaloniaEdit.Folding.FoldingManager.Install(editor.TextArea);
+            folding.CreateFolding(editor.Document.GetLineByNumber(1).EndOffset - 5, editor.Document.GetLineByNumber(2).EndOffset).IsFolded = true;
+            view.Redraw();
+            view.Measure(new Size(240, 2000));
+            view.Arrange(new Rect(0, 0, 240, 2000));
+            view.EnsureVisualLines();
+            var folded = view.GetOrConstructVisualLine(editor.Document.GetLineByNumber(1));
+            if (folded.LastDocumentLine.LineNumber != 2 || folded.TextLines.Count < 2)
+                failures.Add("folded wrapped line was not laid out");
+            AvaloniaEdit.Folding.FoldingManager.Uninstall(folding);
+
+            report = $"helper cases={helperCases.Length - helperFailures.Count}/{helperCases.Length}; layouts=9 types x 2 fonts x 2 sizes x 3 widths; folded and wide indent checked; failures={string.Join("; ", failures.Take(8))}";
             Console.WriteLine("WRAP INDENT " + report);
             return failures.Count == 0;
         }

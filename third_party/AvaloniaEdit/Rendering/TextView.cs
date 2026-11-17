@@ -1099,15 +1099,6 @@ namespace AvaloniaEdit.Rendering
 
             visualLine.RunTransformers(textSource, lineTransformersArray);
 
-            // AntiNotepad patch A22: resolve the text anchor after generators have mapped source text to visual columns.
-            var wrapIndentVisualColumn = 0;
-            if (paragraphProperties.textWrapping == TextWrapping.Wrap && WrapIndentationProvider != null)
-            {
-                var indentTextOffset = WrapIndentationProvider(visualLine);
-                if (indentTextOffset > 0 && indentTextOffset <= visualLine.FirstDocumentLine.Length)
-                    wrapIndentVisualColumn = visualLine.GetVisualColumn(indentTextOffset);
-            }
-
             // now construct textLines:
             TextLineBreak lastLineBreak = null;
             var textOffset = 0;
@@ -1134,13 +1125,20 @@ namespace AvaloniaEdit.Rendering
                     break;
 
                 // AntiNotepad patch A22: reserve measured prefix width before formatting each continuation.
-                if (textLines.Count == 1 && wrapIndentVisualColumn > 0 && wrapIndentVisualColumn < textOffset)
+                if (textLines.Count == 1 && paragraphProperties.textWrapping == TextWrapping.Wrap && WrapIndentationProvider != null)
                 {
-                    var indentation = textLine.GetDistanceFromCharacterHit(new CharacterHit(wrapIndentVisualColumn, 0));
-                    if (indentation > 0 && indentation * 2 < availableSize.Width)
+                    // AntiNotepad patch A22: resolve the text anchor after generators have mapped source text to visual columns.
+                    var indentTextOffset = WrapIndentationProvider(visualLine);
+                    var wrapIndentVisualColumn = indentTextOffset > 0 && indentTextOffset <= visualLine.FirstDocumentLine.Length
+                        ? visualLine.GetVisualColumn(indentTextOffset) : 0;
+                    if (wrapIndentVisualColumn > 0 && wrapIndentVisualColumn < textOffset)
                     {
-                        continuationIndentation = indentation;
-                        visualLine.WrapIndentation = indentation;
+                        var indentation = textLine.GetDistanceFromCharacterHit(new CharacterHit(wrapIndentVisualColumn, 0));
+                        if (indentation > 0 && indentation * 2 < availableSize.Width)
+                        {
+                            continuationIndentation = indentation;
+                            visualLine.WrapIndentation = indentation;
+                        }
                     }
                 }
 
@@ -1244,7 +1242,8 @@ namespace AvaloniaEdit.Rendering
                                 Debug.Assert(_inlineObjects.Contains(inline));
 
                                 var desiredSize = inline.Element.DesiredSize;
-                                var x = pos.X + textLine.GetDistanceFromCharacterHit(new CharacterHit(offset));
+                                // AntiNotepad patch A22: arrange inline objects at the translated continuation origin.
+                                var x = pos.X + textLine.GetDistanceFromCharacterHit(new CharacterHit(offset)) + visualLine.GetTextLineIndentation(textLine);
                                 var y = pos.Y;
                                 var width = desiredSize.Width;
                                 var height = Math.Max(desiredSize.Height, defaultLineHeight);

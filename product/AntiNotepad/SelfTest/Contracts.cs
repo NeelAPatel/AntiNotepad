@@ -154,6 +154,12 @@ internal static partial class SelfTest
                 () => RunExistingCheck(WrapIndentChecks, "wrap indent: "),
                 "Dev copy: check nested levels 1–3, top-level bullets, numbered items, checkboxes, plain indented and unindented lines at several widths and fonts; confirm the supplied example, caret movement, selection, and click-to-caret behavior."),
             new(
+                "wrapped-result-chip-text-end",
+                "Result chips use the indented visual end of a wrapped line.",
+                "A22-wrap-hanging-indent-r2",
+                () => RunExistingCheck(WrapIndentChecks, "wrap indent: "),
+                "Dev copy: check result chips on wrapped indented lines do not overlap text."),
+            new(
                 "avaloniaedit-fork-documented",
                 "PATCHES.md lists every AntiNotepad patch A22 source marker and the pinned AvaloniaEdit version; the app references the vendored project.",
                 "A22-wrap-hanging-indent",
