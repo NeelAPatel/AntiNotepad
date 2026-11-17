@@ -148,6 +148,18 @@ internal static partial class SelfTest
                 saveDelayUi,
                 "Dev copy: new blank note, type at 5 s, nonstop typing, split notes, switch/hide/minimize, then check that a save leaves both bars still. Keep sign-out and Windows shutdown as the open A30 live check."),
             new(
+                "wrap-indent-text-column",
+                "Wrapped continuation lines begin at the measured first text column for list markers and indented text; unindented text, document contents, caret, selection, and hit-testing stay aligned.",
+                "A22-wrap-hanging-indent",
+                () => RunExistingCheck(WrapIndentChecks, "wrap indent: "),
+                "Dev copy: check nested levels 1–3, top-level bullets, numbered items, checkboxes, plain indented and unindented lines at several widths and fonts; confirm the supplied example, caret movement, selection, and click-to-caret behavior."),
+            new(
+                "avaloniaedit-fork-documented",
+                "PATCHES.md lists every AntiNotepad patch A22 source marker and the pinned AvaloniaEdit version; the app references the vendored project.",
+                "A22-wrap-hanging-indent",
+                () => RunExistingCheck(AvaloniaEditForkChecks, "AvaloniaEdit fork: "),
+                null),
+            new(
                 "checkbox-indent-preserved",
                 "Checkbox toggle and Tab/Shift+Tab indentation apply the same text edit and one Undo restores it; checkbox regex groups remain stable.",
                 "A42c-checkbox-indent",
@@ -211,6 +223,61 @@ internal static partial class SelfTest
         }
 
         Console.WriteLine($"CONTRACTS: {rows.Length} rows, {passed} pass, {manual} manual");
+    }
+
+    /// <summary>Checks the vendored source markers and documented upstream pin.</summary>
+    private static bool AvaloniaEditForkChecks(out string report)
+    {
+        const string expectedVersion = "12.0.0";
+        const string markerPrefix = "// AntiNotepad patch A22:";
+
+        string? FindRoot(string start)
+        {
+            var directory = new DirectoryInfo(start);
+            while (directory is not null)
+            {
+                var sourceRoot = Path.Combine(directory.FullName, "third_party", "AvaloniaEdit");
+                if (File.Exists(Path.Combine(sourceRoot, "UPSTREAM.txt")) && File.Exists(Path.Combine(sourceRoot, "PATCHES.md")))
+                    return directory.FullName;
+                directory = directory.Parent;
+            }
+            return null;
+        }
+
+        var root = FindRoot(AppContext.BaseDirectory) ?? FindRoot(Environment.CurrentDirectory);
+        if (root is null)
+        {
+            report = "repository source files were not found";
+            return false;
+        }
+
+        var sourceRoot = Path.Combine(root, "third_party", "AvaloniaEdit");
+        var sourceMarkers = Directory.EnumerateFiles(sourceRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !Path.GetRelativePath(sourceRoot, path)
+                .Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries)
+                .Any(part => part is "bin" or "obj"))
+            .SelectMany(File.ReadLines)
+            .Select(line => line.Trim())
+            .Where(line => line.StartsWith(markerPrefix, StringComparison.Ordinal))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        var patchDoc = File.ReadAllText(Path.Combine(sourceRoot, "PATCHES.md"));
+        var documentedMarkers = patchDoc.Split('\n')
+            .Select(line => line.Trim())
+            .Where(line => line.StartsWith(markerPrefix, StringComparison.Ordinal))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        var upstream = File.ReadAllText(Path.Combine(sourceRoot, "UPSTREAM.txt"));
+        var upstreamVersion = System.Text.RegularExpressions.Regex.Match(upstream, @"AvaloniaEdit ([0-9]+\.[0-9]+\.[0-9]+),").Groups[1].Value;
+        var appProject = File.ReadAllText(Path.Combine(root, "product", "AntiNotepad", "AntiNotepad.csproj"));
+        var markerPass = sourceMarkers.Length > 0 && sourceMarkers.SequenceEqual(documentedMarkers, StringComparer.Ordinal);
+        var versionPass = upstreamVersion == expectedVersion && patchDoc.Contains($"Upstream version: {expectedVersion}", StringComparison.Ordinal);
+        var referencePass = appProject.Contains("../../third_party/AvaloniaEdit/AvaloniaEdit.csproj", StringComparison.Ordinal)
+            && !appProject.Contains("PackageReference Include=\"Avalonia.AvaloniaEdit\"", StringComparison.Ordinal);
+        var licensePass = appProject.Contains("AvaloniaEdit-LICENSE.txt", StringComparison.Ordinal)
+            && File.Exists(Path.Combine(sourceRoot, "LICENSE"));
+        report = $"markers={sourceMarkers.Length}/{documentedMarkers.Length}; pin={upstreamVersion}; reference={referencePass}; license={licensePass}";
+        return markerPass && versionPass && referencePass && licensePass;
     }
 
     private static ContractResult RunExistingCheck(ExistingCheck check, string checkName)

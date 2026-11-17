@@ -1,34 +1,32 @@
 # A22-wrap-hanging-indent
 
 ## Summary
-A22a probe stopped: AvaloniaEdit 12.0.0 and Avalonia 12.1.4 expose no bounded product-only hook that can apply hanging indentation to wrapping and keep drawing, caret, selection, and hit-testing geometry together. The approved plan requires stopping if a dependency patch is the only route, so A22b was not built.
+Wrapped continuation lines now start at the measured text column after list markers or leading whitespace. The editor history audit found no prior fix or change that undid one.
 
 ## Change list
-- Added this probe report.
-- No product code changed. The temporary `build/A22-check` probe was removed.
+- Vendored AvaloniaEdit 12.0.0 and replaced the package reference with the local project.
+- Added a `TextView` callback backed by `ListEditing`; applied its measured offset to wrap width, drawing, hit testing, caret, and selection geometry.
+- Added wrap and fork-documentation contracts, upstream patch notes, dependency upgrade steps, and shipped the MIT license with the app.
 
 ## Behavior changes
-None. The existing wrap behavior remains.
+Bullets at levels 1–3, top-level bullets, numbered items, checkboxes, and plain indented lines wrap under their first text character. Unindented lines keep their left edge. Document text is unchanged.
 
 ## Out-of-scope files
-No product files, `PadWindow*`, Settings, Store, STATUS, or item card files were changed.
+No files outside the item card's listed directories and files were changed. No `PadWindow*`, Settings, Store, STATUS, or item card files were touched. The gate's exact-file scope check flagged the vendored files under the approved `third_party/AvaloniaEdit/` directory.
 
 ## Plan deviations
-A22b implementation, selftests, CONTRACTS row, product build, selftest run, and task gate were skipped because the A22a integration gate did not pass. No dependency patch was attempted.
+The vendored project targets `net10.0`, pins Avalonia to the app's existing 12.1.4, and disables signing. These local build settings make the source project match the app runtime. Added a local ignore for its generated `bin/obj` folders.
 
 ## Contracts
-No new contract row: no behavior change shipped. The requested `wrap-indent-text-column` contract remains unverified.
+- `wrap-indent-text-column`: passed across 96 layout combinations; validates text-column alignment, unchanged text, caret, selection, and hit testing.
+- `avaloniaedit-fork-documented`: passed; checks the 12.0.0 pin, every source marker, project reference, and shipped license.
+- All existing checks passed. `CONTRACTS`: 21 rows, 20 automated passes, 1 existing manual row.
 
 ## Checks run
-- Built and ran a temporary reflection probe under `build/A22-check` with `AVALONIA_TELEMETRY_OPTOUT=1`: 0 warnings, 0 errors. It loaded AvaloniaEdit 12.0.0 against Avalonia 12.1.4.
-- Confirmed `TextView.CreateParagraphProperties` is private and nonvirtual; `VisualLine` is sealed and its position methods are nonvirtual; `VisualLineTextParagraphProperties` is internal and sealed. `TextView.GetPosition` and `GetVisualPosition` are nonvirtual.
-- No app launch, screenshot, product build, selftest, or task gate was run.
-
-## Probe result (options tried)
-- Existing `WordWrapIndentation`/`InheritWordWrapIndentation` configuration cannot fix this: the audit shows AvaloniaEdit never enables its internal calculation, and Avalonia's formatter ignores paragraph `Indent`.
-- A `TextView` drawing override or background renderer can only shift painted pixels; it cannot change the sealed `VisualLine` layout/position mapping used by caret, selection, and hit-testing.
-- Existing line transformers and element generators can alter text runs, but provide no paragraph-formatting hook for continuation width and shared geometry.
-- The remaining coordinated route crosses AvaloniaEdit's private paragraph construction and Avalonia's formatter. That is a dependency patch, outside the approved probe gate.
+- Offline Debug build to `build/A22-check`: 0 warnings, 0 errors.
+- `build/A22-check/AntiNotepad.exe --selftest`: `SELFTEST PASS`; 6/6 pure offset cases and 96 layouts (8 line types, 2 fonts, 2 sizes, 3 widths).
+- `tools/gate.ps1 -Task A22-wrap-hanging-indent -Offline`: build, selftest, platform seam, tokens, format, and size passed. Scope failed only because the gate compares the listed directory as an exact file path; it flagged 249 paths within the vendored tree. The gate was not changed.
+- `dotnet clean` completed, but the copied files remain in `build/A22-check`; workspace policy rejected recursive deletion, so that temporary output could not be removed.
 
 ## Hand checks for the user
-Pending an accepted integration and dev build. Compare before/after screenshots of the supplied nested-bullet example at a narrow width; then check levels 1–3, top-level bullets, numbered items, checkboxes, plain indented and unindented lines, multiple widths and fonts, plus caret movement, selection, and click-to-caret hit-testing. No screenshot was produced because no app build was made or launched.
+No app was launched and no screenshot was captured, per the Codex run constraints. After A21 merges and a dev build is available, compare the supplied nested-bullet example at a narrow width. Check levels 1–3, top-level bullets, numbered items, checkboxes, plain indented and unindented text across widths and fonts; move the caret, select wrapped text, and click to place the caret.
