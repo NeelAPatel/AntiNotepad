@@ -7,6 +7,8 @@ namespace AntiNotepad.Editor;
 
 internal static class PasteHtml
 {
+    private static readonly Regex Tag = new(@"\G<\s*(/?)\s*([a-zA-Z][a-zA-Z0-9-]*)(?:\s+((?:[^>""']|""[^""]*""|'[^']*')*))?\s*(/?)>");
+
     internal sealed class Node(string name, string text = "")
     {
         internal string Name = name;
@@ -37,7 +39,7 @@ internal static class PasteHtml
                 pos = end + 3;
                 continue;
             }
-            var match = Regex.Match(html[pos..], "^<\\s*(/?)\\s*([a-zA-Z][a-zA-Z0-9-]*)(?:\\s+((?:[^>\"']|\"[^\"]*\"|'[^']*')*))?\\s*(/?)>");
+            var match = Tag.Match(html, pos);
             if (!match.Success) return null;
             pos += match.Length;
             var name = match.Groups[2].Value.ToLowerInvariant();
@@ -54,7 +56,11 @@ internal static class PasteHtml
             foreach (Match attr in Regex.Matches(match.Groups[3].Value, "([a-zA-Z_:][a-zA-Z0-9_:.-]*)\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)'|([^\\s/>]+))"))
                 node.Attributes[attr.Groups[1].Value.ToLowerInvariant()] = WebUtility.HtmlDecode(attr.Groups[2].Success ? attr.Groups[2].Value : attr.Groups[3].Success ? attr.Groups[3].Value : attr.Groups[4].Value);
             stack[^1].Children.Add(node);
-            if (name is not ("br" or "hr" or "img" or "meta" or "link" or "input" or "wbr") && match.Groups[4].Length == 0) stack.Add(node);
+            if (name is not ("br" or "hr" or "img" or "meta" or "link" or "input" or "wbr") && match.Groups[4].Length == 0)
+            {
+                if (stack.Count > 64) return null;
+                stack.Add(node);
+            }
         }
         return stack.Count == 1 ? root : null;
     }
@@ -140,5 +146,3 @@ internal static class PasteHtml
     }
     internal static IEnumerable<Node> Descendants(Node node) => node.Children.SelectMany(x => new[] { x }.Concat(Descendants(x)));
 }
-
-

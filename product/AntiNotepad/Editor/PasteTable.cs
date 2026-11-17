@@ -26,23 +26,24 @@ internal static class PasteTable
         var words = string.Join(" ", cells.SelectMany(row => row.Select(cell => PasteHtml.Clean(PasteHtml.Inline(cell, false)))));
         return (string.Join("\n", output), words);
     }
-    private static int Width(string value)
+    internal static int Width(string value)
     {
         var width = 0;
-        var joined = false;
-        foreach (var rune in value.EnumerateRunes())
+        var elements = StringInfo.GetTextElementEnumerator(value);
+        while (elements.MoveNext())
         {
-            var v = rune.Value;
-            if (v == 0x200d) { joined = true; continue; }
-            var category = Rune.GetUnicodeCategory(rune);
-            if (category is UnicodeCategory.NonSpacingMark or UnicodeCategory.EnclosingMark or UnicodeCategory.Format || v is >= 0xfe00 and <= 0xfe0f || v is >= 0xe0100 and <= 0xe01ef) continue;
-            var wide = v is >= 0x1f000 and <= 0x1faff || v is >= 0x1100 and <= 0x115f || v is >= 0x2e80 and <= 0xa4cf || v is >= 0xac00 and <= 0xd7a3 || v is >= 0xf900 and <= 0xfaff || v is >= 0xfe10 and <= 0xfe6f || v is >= 0xff01 and <= 0xff60 || v is >= 0xffe0 and <= 0xffe6 || v is >= 0x20000 and <= 0x3fffd;
-            if (!joined) width += wide ? 2 : 1;
-            joined = false;
+            var runes = elements.GetTextElement().EnumerateRunes().ToArray();
+            var emoji = runes.Any(r => r.Value is 0xfe0f or 0x200d or 0x20e3 or >= 0x1f000 and <= 0x1faff);
+            if (emoji) { width += 2; continue; }
+            foreach (var rune in runes)
+            {
+                var v = rune.Value;
+                var category = Rune.GetUnicodeCategory(rune);
+                if (category is UnicodeCategory.NonSpacingMark or UnicodeCategory.EnclosingMark or UnicodeCategory.Format || v is >= 0xfe00 and <= 0xfe0f || v is >= 0xe0100 and <= 0xe01ef) continue;
+                var wide = v is >= 0x1100 and <= 0x115f || v is >= 0x2e80 and <= 0xa4cf || v is >= 0xac00 and <= 0xd7a3 || v is >= 0xf900 and <= 0xfaff || v is >= 0xfe10 and <= 0xfe6f || v is >= 0xff01 and <= 0xff60 || v is >= 0xffe0 and <= 0xffe6 || v is >= 0x20000 and <= 0x3fffd;
+                width += wide ? 2 : 1;
+            }
         }
         return width;
     }
 }
-
-
-

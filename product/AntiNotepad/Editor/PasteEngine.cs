@@ -34,7 +34,7 @@ internal static class PasteEngine
     private static string? FilesReader(ClipSnapshot snapshot) => null;
     private static string? HtmlReader(ClipSnapshot snapshot)
     {
-        if (string.IsNullOrEmpty(snapshot.Plain) || string.IsNullOrEmpty(snapshot.Html)) return null;
+        if (string.IsNullOrEmpty(snapshot.Plain) || string.IsNullOrEmpty(snapshot.Html) || snapshot.Html.Length > 1_000_000) return null;
         if (IsPreformatted(snapshot)) return null;
         var html = snapshot.Html;
         var start = Regex.Match(html, @"StartFragment:(\d+)");

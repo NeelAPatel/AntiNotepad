@@ -930,7 +930,16 @@ internal sealed class PadView : Grid
     private const string PasteFormattingFound = "Paste Formatting Found";
     private const string PasteFormattingFallback = "Paste Formatting Fallback";
 
+    private readonly SemaphoreSlim _pasteLock = new(1, 1);
+
     private async Task PasteAsync()
+    {
+        await _pasteLock.WaitAsync();
+        try { await PasteCoreAsync(); }
+        finally { _pasteLock.Release(); }
+    }
+
+    private async Task PasteCoreAsync()
     {
         var document = Editor.Document;
         var selection = Editor.TextArea.Selection;

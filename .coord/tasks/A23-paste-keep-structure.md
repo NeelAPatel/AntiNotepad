@@ -41,6 +41,8 @@ Goal: a small paste engine that upgrades what lands in the note when the clipboa
 
 ## Files
 - `product/AntiNotepad/Editor/PasteEngine.cs`
+- `product/AntiNotepad/Editor/PasteHtml.cs`
+- `product/AntiNotepad/Editor/PasteTable.cs`
 - `product/AntiNotepad/Editor/PadView.cs`
 - `product/AntiNotepad/SelfTest/Paste.cs`
 - `product/AntiNotepad/SelfTest/Contracts.cs`
@@ -74,3 +76,16 @@ Fixtures for selftests (real captures):
 Also add `tools/clip-dump.ps1` (formats, sizes, text, HTML of the current clipboard; STA; read only) and a hand-test line in `SelfTest/Contracts.cs`.
 Done means: `dotnet build` clean; `--selftest` passes including the new paste checks; `tools/gate.ps1 -Offline` passes; `git status` shows only the files in `## Files`.
 Report at `.coord/reports/A23-paste-keep-structure.md`: files changed, Avalonia call used, checks run with results, anything not verified.
+
+## Check
+Round r5 (final). Scope grew at the user's word: tables, marks, emoji, toast.
+- Gate r5: PASS (build, selftest, seam, tokens, format, scope, lint). Warn: file size.
+- Codex review r4: rework, 3 major (deep-nesting stack overflow, quadratic parse, dropped overlapping Ctrl+V) plus emoji cluster width; all fixed in r5, **within plan** (user said "fix all 4").
+- Image and file readers remain stubs, **within plan** (user, 2026-11-17).
+- Lab html kept on purpose (pill lab, tied to `idea: status-pill-redesign`), **justified**.
+- Noticed, in `.coord/pending.md`: `idea: table-horizontal-scroll`, `idea: emoji-render-gaps`, `idea: status-pill-redesign`.
+- Misses: found at review; cause `code`; caught by Codex review; should have caught by a stress selftest (deep nesting, big input, overlapping calls); lesson: paste and parse code needs size and depth checks in the first brief.
+- Tidy-up: 19 commits folded to 6, one per meaningful change.
+
+## Hand test
+User, 2026-11-17, verbatim: "all of them passed except this one" (table with flag, skin-tone and family emoji: flags drawn as letters, ZWJ family split, pipes drift). Then: "accept and finish". Accepted as the editor's emoji drawing limit (`idea: emoji-render-gaps`), not a paste fault. Passed: bullets, numbered, mixed, table, marks, heading, code, plain, merged cells, deep nesting, 3,000-row table, double paste.
