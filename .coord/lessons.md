@@ -14,6 +14,7 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 | Date | Item | Found at | Cause | Caught by | Should have caught | Lesson (one line) | Rule change |
 |---|---|---|---|---|---|---|---|
 | 2026-11-17 | A21-save-delay-setting (merge) | Merge | judgment | user-later | brief | the director staged A22/A23 cards and launch.json into the A21 merge commit; approve.ps1 then refused the next item (card must be untracked). At merge, `git add` only STATUS, lessons, pending, archive and the item's own files | - |
+| 2026-11-17 | A23-paste-keep-structure | Review r4 | code | codex-review | brief | deep-nesting stack overflow, quadratic parse and dropped overlapping Ctrl+V found at review; a stress selftest (deep nesting, big input, overlapping calls) should have caught them; paste and parse briefs need size and depth checks up front | - |
 | 2026-11-17 | A21-save-delay-setting | Build r1, r3 | env | gate, hand-test | brief | r1 ended without a green selftest and r3 hit the 45-minute limit with no report; ask Codex for a draft report after the first green selftest (done from r4). Preflight stale Head again (T16, A21): item chat edits the card after the gate | - |
 | 2026-11-09 | A9-pinned-accent-ring | Build r1 (gate) | test | gate | brief | the new ring selftest hung the whole selftest (it set up Avalonia differently from the Design dump and stalled a later contract); a PadWindow selftest must install the Fluent theme, use a loaded seeded store and run last among contracts | - |
 | 2026-11-06 | A7-version-rc2 | Merge | plan | master | review | merge preflight "stale Head" again (third time: A2, A5, A7); master re-ran the gate in the worktree | - |
@@ -54,4 +55,5 @@ One row per merged item: what each check found. Empty rows on items that later h
 | 2026-11-17 | Loop12-chat-title-scheme | Medium | 0 (gate stale after the hand-test card commit at preflight) | 0 | - | - | 0 | - |
 | 2026-11-17 | Loop12-chat-title-scheme-r2 | Medium | 0 (rework of a merged item) | 0 | - | - | 0 | - |
 | 2026-11-17 | A22-wrap-hanging-indent | High | 1 (r2: format gate, result chips on wrapped lines) | 1 (Scope: directory Files entry; Check and Hand test sections missing and branch behind dev at preflight) | - | - | 0 | - |
+| 2026-11-17 | A23-paste-keep-structure | Medium | 4 (r2-r5; scope grew to tables, marks, emoji, toast) | 0 | 3 (2 major, 1 minor, fixed r5) | - | 0 (1 emoji drawing gap logged, not a paste fault) | - |
 Older rows: `.coord/lessons-archive.md` (budget: 3 KB here).

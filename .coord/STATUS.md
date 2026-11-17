@@ -21,9 +21,8 @@ Updated: 2026-11-16 · Product: AntiNotepad (`product/AntiNotepad`) · installed
 - Roadmap page: http://localhost:47811 (`/roadmap`); reads STATUS + pending + archive.
 
 ## Now
-- A23-paste-keep-structure: rework r4 (Codex terra); merges after catch-up to dev.
 - T15-ffmpeg-frame-capture-trial: test 1 done; awaiting more tests.
-- Last finished: A22-wrap-hanging-indent, Loop12-chat-title-scheme-r2, Loop12-chat-title-scheme, A21-save-delay-setting, T16-roadmap-table-columns (dev 2026-11-17), T14-dirty-allowlist-codex-wake, Loop11-one-chat-flow, A19-settings-scroll-feel, A18-settings-segment-animation, A17-settings-toggle-animation.
+- Last finished: A23-paste-keep-structure, A22-wrap-hanging-indent, Loop12-chat-title-scheme-r2, Loop12-chat-title-scheme, A21-save-delay-setting, T16-roadmap-table-columns (dev 2026-11-17), T14-dirty-allowlist-codex-wake, Loop11-one-chat-flow, A19-settings-scroll-feel, A18-settings-segment-animation, A17-settings-toggle-animation.
 
 ## Plan
 Active rows only (the roadmap script parses this table; same 5 columns as `.coord/pending.md`).
@@ -32,7 +31,6 @@ Active rows only (the roadmap script parses this table; same 5 columns as `.coor
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
 | T15-ffmpeg-frame-capture-trial | Trial: record the dev window with ffmpeg, tile frames into one sheet so Claude can judge motion. Card in `.coord/tasks/` | Low | Small | test 1 done; awaiting more tests |
-| A23-paste-keep-structure | Paste engine: pasting rendered bulleted/numbered lists (AI chat, web) keeps nesting as note bullets; reader table, image/file stubs. Card in `.coord/tasks/` | Medium | Medium | rework r4 (Codex terra; paste notice in toast) |
 
 ## Open (needs the user)
 - Live check: A30 restart/sign-out saves an edit typed just before.
