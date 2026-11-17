@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`). Claude fills Request to Approve before any build; Codex reads the whole card, follows "For Codex", never edits it. Budget: 4 KB (logs go in reports).
 
 Tier: High · save paths (Store/save writes; raised from Low in Findings, item chat 2026-11-17)
-State: plan ready
+State: hand-tested
 Branch: `refactor/A24-save-delay-cleanup` in `.claude/worktrees/refactor/A24-save-delay-cleanup` (created at Approve, from dev's tip)
 
 ## Request
