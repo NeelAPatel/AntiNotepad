@@ -104,3 +104,20 @@ The per-column text boxes are rejected ("really poor"). Replace them with Excel-
 - Entered column filters by date label text (e.g. "Nov 12"), not the time.
 - Save filters in memory only (not localStorage). Show a "Clear all filters" button near the Columns picker when any is active.
 - Done means: gate offline passes; JS parses; diff limited to `tools/roadmap/index.html`; update the report.
+
+## Check
+Item chat, 2026-11-16. Tier Low (side tool, does not ship).
+- Gate: `tools/gate.ps1 -Task T16-roadmap-table-columns -Offline` PASS after each Codex run (last on head 0db7c29): build 0 warnings, selftest, seam, tokens, scope (only `tools/roadmap/index.html` and `tools/roadmap-data.ps1` allowed). Offline NuGet audit WARN is the sandbox, expected.
+- Bounds check, request vs plan vs done:
+  - Request (Tier badge, Type column between Name and Scope, narrower branch/worktree/era column, or a picker): done as planned (badge + Type + narrow column); picker was also delivered later at the user's word.
+  - Scope growth, all asked by the user in this chat on 2026-11-16: collapsible group headers; Release marker rows hidden in the page (the two rows remain in `.coord/pending.md`, director-owned); Entered timestamp column (from the first git commit that carries the row, 145 of 151 rows filled, rest blank); resizable columns; Columns show/hide picker; per-column filters, reworked once to Excel-style popups (search, select all, clear all, value counts) after the first text-box version was rejected.
+  - Nothing beyond that: no installed copy, live server 47811 or product code touched; `roadmap-data.ps1` only adds the `entered` field.
+- Behavior checked on a test page (port 47821, now stopped): no console errors; collapse 117 to 50 rows and back; State popup opens by real click, unticking "done" 117 to 51 rows, Esc closes, Clear all filters restores 117. Not clicked through: every other column's popup.
+- Known cosmetic: State filter values come straight from STATUS text and can be long.
+- Step-0 commit review: 8 commits, each docs/tools only so each builds; card, brief and scope commits are separate from the code commits (3 code commits). Left as is, no rewrite.
+- Verdict: accepted.
+
+## Hand test
+User, 2026-11-16, on the test page (http://localhost:47821/, label dev-worktree-roadmap-table-columns):
+- After the first build: "yes test page looks right, but still do these new scope values".
+- After the Excel-style filters: "Looks good".
