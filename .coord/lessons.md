@@ -53,4 +53,5 @@ One row per merged item: what each check found. Empty rows on items that later h
 | 2026-11-17 | A21-save-delay-setting | High | 5 (r2, r4, r5, r6 plus r3 timed out) | 1 (Scope: Design.cs missing from Files) | 3 (2 major, 1 minor, fixed r5) | accept-with-followup (3, in pending) | 2 | - |
 | 2026-11-17 | Loop12-chat-title-scheme | Medium | 0 (gate stale after the hand-test card commit at preflight) | 0 | - | - | 0 | - |
 | 2026-11-17 | Loop12-chat-title-scheme-r2 | Medium | 0 (rework of a merged item) | 0 | - | - | 0 | - |
+| 2026-11-17 | A22-wrap-hanging-indent | High | 1 (r2: format gate, result chips on wrapped lines) | 1 (Scope: directory Files entry; Check and Hand test sections missing and branch behind dev at preflight) | - | - | 0 | - |
 Older rows: `.coord/lessons-archive.md` (budget: 3 KB here).

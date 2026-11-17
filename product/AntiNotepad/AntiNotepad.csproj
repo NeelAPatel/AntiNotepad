@@ -33,6 +33,7 @@
   <ItemGroup>
     <AvaloniaResource Include="antinotepad.ico" />
     <AvaloniaResource Include="antinotepad-dev.ico" />
+    <None Include="../../third_party/AvaloniaEdit/LICENSE" CopyToOutputDirectory="PreserveNewest" Link="Licenses/AvaloniaEdit-LICENSE.txt" />
     <!-- Microsoft's Fluent UI System Icons (MIT): named icons that look the same on every PC. Its licence ships beside the app. -->
     <AvaloniaResource Include="Assets/Fonts/FluentSystemIcons-Regular.ttf" />
     <None Include="Assets/Fonts/FluentSystemIcons-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" Link="Licenses/FluentSystemIcons-LICENSE.txt" />
@@ -40,6 +41,6 @@
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
-    <PackageReference Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
+    <ProjectReference Include="../../third_party/AvaloniaEdit/AvaloniaEdit.csproj" />
   </ItemGroup>
 </Project>

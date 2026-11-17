@@ -262,10 +262,9 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
             var n = visual.LastDocumentLine.LineNumber;
             if (pad.ChipFor(n) is not { } chip) continue;
             var ft = FormatChip(chip.Text, chip.Color, font, culture, typeface, size, scale);
-            var row = visual.TextLines[^1];
             // The editor's own baseline for the line's last row: line spacing makes row arithmetic drift.
             var baseline = visual.GetVisualPosition(visual.VisualLength, VisualYPosition.Baseline).Y - view.VerticalOffset;
-            items.Add((n, chip.Text, chip.Kind, chip.Color, chip.Value, ft, row.WidthIncludingTrailingWhitespace, baseline));
+            items.Add((n, chip.Text, chip.Kind, chip.Color, chip.Value, ft, TextEnd(visual), baseline));
         }
         // Pass 2: every answer shares one column, just past the longest line that still leaves room for its chip.
         // A line too long for that falls back to sitting right after its own text.
@@ -280,6 +279,9 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
         var edge = pad.Settings.Bubbles == "edge";
         foreach (var item in items) DrawChip(view, dc, item, edge ? double.PositiveInfinity : column, scale);
     }
+
+    /// <summary>Returns the visual end of the last row, including its continuation indent.</summary>
+    internal static double TextEnd(VisualLine visual) => visual.GetTextLineVisualXPosition(visual.TextLines[^1], visual.VisualLength);
 
     private void DrawChip(TextView view, DrawingContext dc, (int Line, string Text, string Kind, Color Color, string Value, FormattedText Ft, double TextEnd, double Baseline) c, double column, double scale)
     {

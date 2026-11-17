@@ -233,6 +233,7 @@ Done and dropped Plan rows moved out of STATUS by Loop10b-pending-list (2026-11-
 
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
+| A22-wrap-hanging-indent | Wrapped lines of bullets, checkboxes, numbered and indented lines start under their text. Vendors AvaloniaEdit 12.0.0 into `third_party/AvaloniaEdit` (patches marked, listed in `PATCHES.md`, upgrade recipe in `docs/dependencies.md`) because the library ignores wrap indent. Hand test: "Looks good" (user, 2026-11-17). Merged to dev 2026-11-17 | High | Medium | done |
 | Loop12-chat-title-scheme-r2 | Rework of Loop12: the title script finds the item from the session registry and the phase from STATUS first; `-Sync` registers chats. Hand test provable only after merge (reply in a chat and see a SET TITLE line). Merged to dev 2026-11-17 | Medium | Small | done |
 | Loop12-chat-title-scheme | Chat titles show state and Codex badge, set by hooks and `tools/chat-title.ps1`, no AI tokens; skills, docs, roadmap legend updated. Hand test passed (user, 2026-11-17). Merged to dev 2026-11-17 | Medium | Medium | done |
 | A21-save-delay-setting | Settings > Saving: save after you stop typing 0.4 s (default), 5, 10 or 30 s; note switches save at once; Saved label shows the real save time. Hand test: all passed (user, 2026-11-17). Merged to dev 2026-11-17 | High | Medium | done |

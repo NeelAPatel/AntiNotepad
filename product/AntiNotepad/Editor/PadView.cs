@@ -108,6 +108,7 @@ internal sealed class PadView : Grid
         Editor.Options.CutCopyWholeLine = true;
         Avalonia.Automation.AutomationProperties.SetName(Editor, "Note text");
         var view = Editor.TextArea.TextView;
+        WrapIndent.Configure(view);
         view.BackgroundRenderers.Add(new IndentGuideRenderer(this));
         _results = new ResultRenderer(this);
         view.BackgroundRenderers.Add(_results);
