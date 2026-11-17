@@ -46,6 +46,7 @@ function Test-CommitBuilds([string]$Root, [string]$Branch, [string]$Task) {
     $oldTelemetry = $env:AVALONIA_TELEMETRY_OPTOUT
     $oldData = $env:ANTINOTEPAD_DATA
     $oldDev = $env:ANTINOTEPAD_DEV
+    $oldSlot = $env:ANTINOTEPAD_SLOT
     try {
         foreach ($commit in $commits) {
             $short = (Invoke-Git $Root @('rev-parse', '--short', $commit)) -join ''
@@ -82,7 +83,7 @@ function Test-CommitBuilds([string]$Root, [string]$Branch, [string]$Task) {
             $out = Join-Path $temp 'out'
             $data = Join-Path $temp 'data'
             $env:AVALONIA_TELEMETRY_OPTOUT = '1'
-            Remove-Item Env:ANTINOTEPAD_DEV, Env:ANTINOTEPAD_DATA -ErrorAction SilentlyContinue
+            Remove-Item Env:ANTINOTEPAD_DEV, Env:ANTINOTEPAD_DATA, Env:ANTINOTEPAD_SLOT -ErrorAction SilentlyContinue
             $arguments = @('build', (Join-Path $scratch 'product/AntiNotepad/AntiNotepad.csproj'), '-c', 'Debug', '-o', $out, '-nodeReuse:false', '-p:UseSharedCompilation=false')
             if ($Offline) { $arguments += '-p:NuGetAudit=false' }
             Push-Location $scratch
@@ -111,6 +112,7 @@ function Test-CommitBuilds([string]$Root, [string]$Branch, [string]$Task) {
         $env:AVALONIA_TELEMETRY_OPTOUT = $oldTelemetry
         $env:ANTINOTEPAD_DATA = $oldData
         $env:ANTINOTEPAD_DEV = $oldDev
+        $env:ANTINOTEPAD_SLOT = $oldSlot
         if ($created) {
             # Git cannot always delete the build output on Windows; fall back to a plain delete, then prune.
             & git -C $Root worktree remove --force $scratch 2>$null
