@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`). Budget: 4 KB.
 
 Tier: Medium · tooling-hooks (spike result unknown; hooks run in every chat)
-State: approved
+State: hand test
 Branch: `chore/Loop12-chat-title-scheme` in `.claude/worktrees/chore/Loop12-chat-title-scheme` (created at Approve by `tools/approve.ps1`, cut from the dev tip)
 
 ## Request
@@ -63,4 +63,11 @@ Role: terra (`docs/agents.md`), because one new PowerShell script plus small edi
 Report `.coord/reports/Loop12-chat-title-scheme.md`, short: 1 Summary; 2 Change list (`file:lines | what | Plan line`); 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 6 Contracts; 7 Lens review (skip, not a director run); 8 Checks run; 9 Hand checks for the user.
 
 ## Check
+- Gate: PASS (offline; selftest PASS, scope 10 files allowed, loop-lint PASS). Warnings: card 7994 B over its 4096 B budget, `loop.md` and `lessons.md` over budget (lessons is not this item's).
+- Codex review: skipped, no product code; I read the 79-line script, all callers and the doc diffs myself. `chat-title.ps1 -Check` PASS, `bash -n codex-run.sh` OK, live hook run printed `SET TITLE:` in UTF-8 once and nothing on repeat.
+- Bounds: within plan. Dropped as planned: sweeper and Stop/Notification hooks. Report notes the gate and live caller tests were not run in Codex's sandbox; I ran the gate and one live hook call.
+- Code gaps noticed: the phase comes from the card's `State:` line, so the chat must keep it current (documented). The store records what was printed, not what the app accepted.
+- Misses: none.
+- Noticed (proposals): a sweeper for 🧊 would need an app API we have not found; the `[Merged]` step is untested until a real merge.
+
 ## Hand test
