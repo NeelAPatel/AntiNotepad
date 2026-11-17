@@ -40,7 +40,14 @@ Goal: a small paste engine that upgrades what lands in the note when the clipboa
 - **Codex:** one run, offline checks only. Hand test in the dev copy: web page list, AI box list, markdown source, plain text, code from an editor, Undo, checklist and numbered notes.
 
 ## Files
-`Editor/PasteEngine.cs` (new), `Editor/PadView.cs` (paste hook), `tools/clip-dump.ps1` (new), `SelfTest/Paste.cs` (new), `SelfTest/Contracts.cs` (hand test text). Avoids `PadWindow*`, Settings, Store (A21).
+- `product/AntiNotepad/Editor/PasteEngine.cs`
+- `product/AntiNotepad/Editor/PadView.cs`
+- `product/AntiNotepad/SelfTest/Paste.cs`
+- `product/AntiNotepad/SelfTest/Contracts.cs`
+- `tools/clip-dump.ps1`
+- `.coord/tasks/A23-paste-keep-structure.md`
+- `.coord/reports/A23-paste-keep-structure.md`
+- `.coord/reports/A23-paste-keep-structure.terra.codex.md`
 
 ## Contracts
 Engine: `string? Upgrade(ClipSnapshot s)` returns note text or null (null = plain paste). Pure; never throws on bad HTML. Reader = `Func<ClipSnapshot,string?>` in an ordered list.

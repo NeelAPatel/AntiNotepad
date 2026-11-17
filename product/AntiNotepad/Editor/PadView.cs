@@ -829,6 +829,12 @@ internal sealed class PadView : Grid
 
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
+        if (e.Key == Key.V && e.KeyModifiers == KeyModifiers.Control)
+        {
+            e.Handled = true;
+            _ = PasteAsync();
+            return;
+        }
         var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
         var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
         if (ctrl && shift && e.Key is Key.OemOpenBrackets or Key.OemCloseBrackets)
@@ -910,7 +916,7 @@ internal sealed class PadView : Grid
             MenuEntry.Separator,
             new("Cut", "Ctrl+X", MenuGlyphs.Cut, () => Editor.Cut(), hasSelection),
             new("Copy", "Ctrl+C", MenuGlyphs.Copy, () => Editor.Copy(), hasSelection),
-            new("Paste", "Ctrl+V", MenuGlyphs.Paste, () => Editor.Paste()),
+            new("Paste", "Ctrl+V", MenuGlyphs.Paste, () => _ = PasteAsync()),
             new("Delete", "Delete", MenuGlyphs.Delete, () => area.Selection.ReplaceSelectionWithText(string.Empty), hasSelection),
         };
         if (AppMenu?.Invoke() is { } extra)
@@ -919,6 +925,32 @@ internal sealed class PadView : Grid
             items.AddRange(extra);
         }
         ShowMenu?.Invoke(Editor, items);
+    }
+
+    private async Task PasteAsync()
+    {
+        var document = Editor.Document;
+        var selection = Editor.TextArea.Selection;
+        var caret = Editor.CaretOffset;
+        string? upgraded = null;
+        try
+        {
+            if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
+            {
+                var formats = (await clipboard.GetDataFormatsAsync()).ToArray();
+                var plain = await clipboard.TryGetTextAsync();
+                var htmlBytes = await clipboard.TryGetValueAsync(DataFormat.CreateBytesPlatformFormat("HTML Format"));
+                var html = htmlBytes is null ? null : System.Text.Encoding.UTF8.GetString(htmlBytes).TrimEnd('\0');
+                var files = await clipboard.TryGetFilesAsync();
+                var snapshot = new ClipSnapshot(plain, html, formats.Select(f => f.Identifier).ToArray(),
+                    formats.Contains(DataFormat.Bitmap), files?.Select(f => f.Path.LocalPath).ToArray() ?? []);
+                upgraded = PasteEngine.Upgrade(snapshot);
+            }
+        }
+        catch (Exception) { }
+        if (Editor.Document != document || Editor.TextArea.Selection != selection || Editor.CaretOffset != caret) return;
+        if (upgraded is null) Editor.Paste();
+        else Editor.TextArea.Selection.ReplaceSelectionWithText(upgraded);
     }
 
     private void Insert(string text)

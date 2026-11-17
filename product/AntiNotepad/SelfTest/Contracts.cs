@@ -22,6 +22,12 @@ internal static partial class SelfTest
         ContractRow[] rows =
         [
             new(
+                "paste-list-structure",
+                "Structured HTML lists upgrade plain clipboard text without changing already structured text.",
+                "A23-paste-keep-structure",
+                () => RunExistingCheck(PasteChecks, "paste: "),
+                "Dev copy: paste three-level browser and AI lists, markdown, plain text and editor code; check one Undo and paste in checklist and numbered notes."),
+            new(
                 "hotkey-recorder-escape-routing",
                 "Settings defers Escape only for event sources inside an active hotkey recorder; idle and outside sources keep the existing Settings command.",
                 "A10-hotkey-recorder",
