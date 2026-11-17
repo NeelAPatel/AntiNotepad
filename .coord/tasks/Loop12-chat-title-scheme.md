@@ -45,9 +45,22 @@ Dropped: 🧊 sweeper (nothing can set it without the tool); `Stop`/`Notificatio
 - `docs/wiki/Who-Does-What.md`
 - `tools/roadmap/index.html`
 - `.gitignore`
+- `.coord/research/loop12-title-spike.md`
 ## Contracts
+None (no product code; tooling and docs only).
 ## Approve
 Approved by the user, 2026-11-17: fallback plan above (script computes title, chat makes one rename call).
 ## For Codex
+Role: terra (`docs/agents.md`), because one new PowerShell script plus small edits across a few scripts and docs. The branch is checked out: never switch, merge or commit. Read `AGENTS.md`, then the Files; re-read before editing. Read `.coord/research/chat-title-scheme.md` (4, 4b, 4c) and `.coord/research/loop12-title-spike.md` first.
+- Build exactly the Plan above for the Files above; no drive-by changes.
+- `tools/chat-title.ps1` contract: params `-Item <ID-slug>` (default: derived from the current git branch `prefix/ID-slug`; none found: print nothing, exit 0), `-State blocked|needs-you|waiting|working|parked|standby`, `-Codex` (adds the robot badge), `-Phase` (default: from the card's `State:` line mapped to request, findings, plan, build, check, hand test; rework round adds ` · r2`), `-Merged`, `-Closed -Name <text>`, `-Check`. Glyphs per research 4b: blocked U+26D4, needs-you U+2753, waiting U+23F3, working U+1F528, parked U+1F17F U+FE0F, standby U+1F4A4, Codex U+1F916. Title `<state><badge> <ID-slug> · <phase>`; `[Merged] <ID-slug>`; `[Closed] <name>`. It stores the last title in `<main checkout>/.coord/titles/<ID-slug>.txt` (add `.coord/titles/` to `.gitignore`) and prints one line `SET TITLE: <title>` only when it differs from the stored one (it then updates the store), otherwise prints nothing. Set `[Console]::OutputEncoding` to UTF-8 without BOM before printing so emoji survive a hook pipe (the spike showed `??` otherwise). `-Check` runs fully offline on a temp store: every state, the badge, no-change prints nothing, merged and closed forms, bad state fails, UTF-8 bytes round-trip.
+- Callers: `tools/loop-card.ps1` runs it with `-State working` after reading hook stdin; `codex-run.sh` prints the line at launch (`-State waiting -Codex`) and at exit (success: `-State working`; failure or usage limit: `-State blocked`); `tools/gate.ps1` prints `-State blocked` when the gate fails (only when it runs in an item branch; never changes its pass/fail logic); `.claude/skills/merge-task/SKILL.md` gains a final step: after cleanup run `-Merged` and have the director rename the item chat with the printed title. All callers are best effort: a missing script or error must never change an exit code.
+- Docs (text rules, short): replace R1/R2/R4/R5/R6 title rules in `docs/loop.md:55`, `docs/loop-sessions.md`, `next-task/SKILL.md:85`, `docs/wiki/Who-Does-What.md` with the legend and the rule "when a hook or script prints `SET TITLE: ...`, call `set_session_title` with `self` once; at asking the user set needs-you before the reply, after a report set parked". Roadmap legend: collapsible block in `tools/roadmap/index.html`. Say in the docs that hooks cannot retitle (spike), so the chat makes the call.
+- Build checks: no product code changes, so no app build is needed; run `pwsh -NoProfile -File tools/chat-title.ps1 -Check`, `pwsh -NoProfile -File tools/loop-lint.ps1`, and `pwsh -NoProfile -File tools/gate.ps1 -Task Loop12-chat-title-scheme -Offline`.
+- Never launch or kill AntiNotepad, never run `--quit`, never edit `.coord/STATUS.md` or this card. Offline checks only (no ports, servers, browser).
+- Done means: `chat-title.ps1 -Check` passes; loop-lint and gate pass offline; all edited callers still exit as before.
+
+Report `.coord/reports/Loop12-chat-title-scheme.md`, short: 1 Summary; 2 Change list (`file:lines | what | Plan line`); 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 6 Contracts; 7 Lens review (skip, not a director run); 8 Checks run; 9 Hand checks for the user.
+
 ## Check
 ## Hand test
