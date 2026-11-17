@@ -228,9 +228,11 @@ namespace AvaloniaEdit.Rendering
 					lastRect = new Rect(pos, y, textView.EmptyLineSelectionWidth, lineHeight);
 				} else {
 					if (segmentStartVcInLine <= visualEndCol) {
+						// AntiNotepad patch A22: selection bounds use unshifted TextLine coordinates.
+						double continuationIndentation = visualLine.GetTextLineIndentation(line);
 						foreach (var b in line.GetTextBounds(segmentStartVcInLine, segmentEndVcInLine - segmentStartVcInLine)) {
-							double left = b.Rectangle.Left - scrollOffset.X;
-							double right = b.Rectangle.Right - scrollOffset.X;
+							double left = b.Rectangle.Left + continuationIndentation - scrollOffset.X;
+							double right = b.Rectangle.Right + continuationIndentation - scrollOffset.X;
 							if (lastRect != default)
 								yield return lastRect;
 							// left>right is possible in RTL languages
@@ -252,7 +254,9 @@ namespace AvaloniaEdit.Rendering
 						// For word-wrapped lines, visualEndCol doesn't include the whitespace hidden by the wrap,
 						// so we'll need to include it here.
 						// For the last line, visualEndCol already includes the whitespace.
-						left = (line == lastTextLine ? line.WidthIncludingTrailingWhitespace : line.Width);
+						// AntiNotepad patch A22: include continuation origin when a selection extends past wrapped text.
+						left = (line == lastTextLine ? line.WidthIncludingTrailingWhitespace : line.Width)
+							+ visualLine.GetTextLineIndentation(line);
 					}
 					if (line != lastTextLine || segmentEndVc == int.MaxValue) {
 						// If word-wrap is enabled and the segment continues into the next line,

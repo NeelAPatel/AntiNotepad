@@ -199,6 +199,22 @@ namespace AvaloniaEdit.Rendering
             set => SetValue(OptionsProperty, value);
         }
 
+        // AntiNotepad patch A22: provide the source text offset that continuation lines should align with.
+        private Func<VisualLine, int> _wrapIndentationProvider;
+
+        /// <summary>Gets or sets a callback that returns the visual text anchor for a line.</summary>
+        public Func<VisualLine, int> WrapIndentationProvider
+        {
+            get => _wrapIndentationProvider;
+            set
+            {
+                if (_wrapIndentationProvider == value)
+                    return;
+                _wrapIndentationProvider = value;
+                Redraw();
+            }
+        }
+
         /// <summary>
         /// Occurs when a text editor option has changed.
         /// </summary>
@@ -986,8 +1002,10 @@ namespace AvaloniaEdit.Rendering
 
                 foreach (var textLine in visualLine.TextLines)
                 {
-                    if (textLine.WidthIncludingTrailingWhitespace > maxWidth)
-                        maxWidth = textLine.WidthIncludingTrailingWhitespace;
+                    // AntiNotepad patch A22: include the continuation offset in the measured line width.
+                    var lineWidth = textLine.WidthIncludingTrailingWhitespace + visualLine.GetTextLineIndentation(textLine);
+                    if (lineWidth > maxWidth)
+                        maxWidth = lineWidth;
                 }
 
                 _newVisualLines.Add(visualLine);
@@ -1081,17 +1099,29 @@ namespace AvaloniaEdit.Rendering
 
             visualLine.RunTransformers(textSource, lineTransformersArray);
 
+            // AntiNotepad patch A22: resolve the text anchor after generators have mapped source text to visual columns.
+            var wrapIndentVisualColumn = 0;
+            if (paragraphProperties.textWrapping == TextWrapping.Wrap && WrapIndentationProvider != null)
+            {
+                var indentTextOffset = WrapIndentationProvider(visualLine);
+                if (indentTextOffset > 0 && indentTextOffset <= visualLine.FirstDocumentLine.Length)
+                    wrapIndentVisualColumn = visualLine.GetVisualColumn(indentTextOffset);
+            }
+
             // now construct textLines:
             TextLineBreak lastLineBreak = null;
             var textOffset = 0;
             var textLines = new List<TextLine>();
+            var continuationIndentation = 0d;
 
             while (textOffset <= visualLine.VisualLengthWithEndOfLineMarker)
             {
                 var textLine = _formatter.FormatLine(
                     textSource,
                     textOffset,
-                    availableSize.Width,
+                    textOffset > 0 && continuationIndentation > 0
+                        ? availableSize.Width - continuationIndentation
+                        : availableSize.Width,
                     paragraphProperties,
                     lastLineBreak
                 );
@@ -1102,6 +1132,17 @@ namespace AvaloniaEdit.Rendering
                 // exit loop so that we don't do the indentation calculation if there's only a single line
                 if (textOffset >= visualLine.VisualLengthWithEndOfLineMarker)
                     break;
+
+                // AntiNotepad patch A22: reserve measured prefix width before formatting each continuation.
+                if (textLines.Count == 1 && wrapIndentVisualColumn > 0 && wrapIndentVisualColumn < textOffset)
+                {
+                    var indentation = textLine.GetDistanceFromCharacterHit(new CharacterHit(wrapIndentVisualColumn, 0));
+                    if (indentation > 0 && indentation * 2 < availableSize.Width)
+                    {
+                        continuationIndentation = indentation;
+                        visualLine.WrapIndentation = indentation;
+                    }
+                }
 
                 if (paragraphProperties.firstLineInParagraph)
                 {

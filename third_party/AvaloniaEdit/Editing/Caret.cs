@@ -419,6 +419,8 @@ namespace AvaloniaEdit.Editing
 				// This is necessary to ensure the rectangle is calculated correctly in bidirectional text.
 				var textBounds = textLine.GetTextBounds(currentPos, nextPos - currentPos)[0];
 				r = textBounds.Rectangle;
+                // AntiNotepad patch A22: overstrike bounds come from unshifted TextLine coordinates.
+                r = r.WithX(r.X + visualLine.GetTextLineIndentation(textLine));
 				var y = r.Y + visualLine.GetTextLineVisualYPosition(textLine, VisualYPosition.LineTop);
 				r = r.WithY(y);
 			} else {

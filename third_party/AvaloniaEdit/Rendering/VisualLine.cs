@@ -82,6 +82,12 @@ namespace AvaloniaEdit.Rendering
 
         private ReadOnlyCollection<TextLine> _textLines;
 
+        // AntiNotepad patch A22: keep continuation layout and coordinate mapping on the same measured offset.
+        internal double WrapIndentation { get; set; }
+
+        internal double GetTextLineIndentation(TextLine textLine) =>
+            textLine.FirstTextSourceIndex > 0 ? WrapIndentation : 0;
+
         /// <summary>
         /// Gets a read-only collection of text lines.
         /// </summary>
@@ -494,7 +500,8 @@ namespace AvaloniaEdit.Rendering
                 xPos += (visualColumn - VisualLengthWithEndOfLineMarker) * TextView.WideSpaceWidth;
             }
 
-            return xPos;
+            // AntiNotepad patch A22: translate caret, selection and renderer positions with drawn text.
+            return xPos + GetTextLineIndentation(textLine);
         }
 
         /// <summary>
@@ -529,6 +536,8 @@ namespace AvaloniaEdit.Rendering
         /// </summary>
         public int GetVisualColumn(TextLine textLine, double xPos, bool allowVirtualSpace)
         {
+            // AntiNotepad patch A22: undo the continuation translation before resolving a hit.
+            xPos -= GetTextLineIndentation(textLine);
             if (xPos > textLine.WidthIncludingTrailingWhitespace)
             {
                 if (allowVirtualSpace && textLine == TextLines[TextLines.Count - 1])
@@ -595,13 +604,15 @@ namespace AvaloniaEdit.Rendering
         internal int GetVisualColumnFloor(Point point, bool allowVirtualSpace, out bool isAtEndOfLine)
         {
             var textLine = GetTextLineByVisualYPosition(point.Y);
-            if (point.X > textLine.WidthIncludingTrailingWhitespace)
+            // AntiNotepad patch A22: floor hit testing uses the same translated origin as drawing.
+            var xPos = point.X - GetTextLineIndentation(textLine);
+            if (xPos > textLine.WidthIncludingTrailingWhitespace)
             {
                 isAtEndOfLine = true;
                 if (allowVirtualSpace && textLine == TextLines[TextLines.Count - 1])
                 {
                     // clicking virtual space in the last line
-                    var virtualX = (int)((point.X - textLine.WidthIncludingTrailingWhitespace) / TextView.WideSpaceWidth);
+                    var virtualX = (int)((xPos - textLine.WidthIncludingTrailingWhitespace) / TextView.WideSpaceWidth);
                     return VisualLengthWithEndOfLineMarker + virtualX;
                 }
 
@@ -613,7 +624,7 @@ namespace AvaloniaEdit.Rendering
 
             isAtEndOfLine = false;
 
-            var ch = textLine.GetCharacterHitFromDistance(point.X);
+            var ch = textLine.GetCharacterHitFromDistance(xPos);
 
             return ch.FirstCharacterIndex;
         }
@@ -832,7 +843,8 @@ namespace AvaloniaEdit.Rendering
                 double textHeight = textLine.Height;
                 double lineHeight = Math.Max(textHeight, defaultLineHeight);
                 double textOffset = (lineHeight - textHeight) / 2;
-                textLine.Draw(context, new Point(0, pos + textOffset));
+                // AntiNotepad patch A22: draw wrapped lines at the measured text anchor.
+                textLine.Draw(context, new Point(VisualLine.GetTextLineIndentation(textLine), pos + textOffset));
                 pos += lineHeight;
             }
         }
