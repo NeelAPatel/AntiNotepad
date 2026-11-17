@@ -1,3 +1,4 @@
+// Note metadata and the live or cached body exposed to editors and storage.
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -19,6 +20,8 @@ public sealed class Note
 
     /// <summary>Set by Store so search-only body cache entries expire immediately on edits and saves.</summary>
     internal static Action<string>? InvalidateSearchBody;
+    /// <summary>Set by Store so blank edits preserve any body that may already reach disk.</summary>
+    internal static Func<string, bool>? HasPendingBodyWrite;
 
     public string Id { get; set; } = Guid.NewGuid().ToString("N")[..12];
     public DateTime Created { get; set; } = DateTime.Now;
@@ -33,6 +36,7 @@ public sealed class Note
     public NoteMode ModeCache { get; set; }
 
     [JsonIgnore] public bool Dirty { get; set; }
+    [JsonIgnore] public DateTime? SavedAt { get; internal set; }
     [JsonIgnore] public bool BodyUnavailable { get; private set; }
 
     [JsonIgnore]
@@ -108,12 +112,28 @@ public sealed class Note
         _text = value; _live = null; Dirty = true; Blank = string.IsNullOrWhiteSpace(value); ModeCache = Modes.Detect(value).Mode; TitleCache = null;
     }
 
-    /// <summary>Called by the editor on every edit, with cheap facts about the document.</summary>
+    /// <summary>Records editor changes so note metadata and save state follow the latest body.</summary>
     public void Touched(bool blank, NoteMode mode)
     {
         if (BodyUnavailable) return;
         InvalidateSearchCache();
-        Dirty = true; Blank = blank; ModeCache = mode; Modified = DateTime.Now; TitleCache = null;
+        // A blank first edit stays clean only while no older snapshot can still reach disk.
+        var bodyWriteMayReachDisk = blank && SavedAt is null && HasPendingBodyWrite?.Invoke(Id) == true;
+        Dirty = !(blank && SavedAt is null && !bodyWriteMayReachDisk);
+        Blank = blank; ModeCache = mode; Modified = DateTime.Now; TitleCache = null;
+    }
+
+    /// <summary>Keeps an empty revision dirty when an older body write can still reach disk.</summary>
+    internal void KeepEmptyEditDirty()
+    {
+        Blank = true;
+        Dirty = true;
+    }
+
+    /// <summary>Clears a blank edit that has never had a durable body to preserve.</summary>
+    internal void DiscardUnpersistedEmptyEdit(bool blank)
+    {
+        if (SavedAt is null && blank) { Blank = true; Dirty = false; }
     }
 
     /// <summary>The editor released this note: keep nothing in memory unless it still needs saving.</summary>

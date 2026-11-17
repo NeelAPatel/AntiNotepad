@@ -17,6 +17,8 @@ internal static partial class SelfTest
     private static void ContractsChecks(List<string> failures)
     {
         var saveAndLog = Memoize(() => RunExistingCheck(BackgroundSaveAndLogChecks, "background save and log: "));
+        var saveDelayUi = Memoize(() => RunExistingCheck(SaveDelayChecks, "save delay UI: "));
+        var savedLabelClock = Memoize(() => RunExistingCheck(SavedLabelChecks, "saved label clock: "));
         ContractRow[] rows =
         [
             new(
@@ -74,6 +76,30 @@ internal static partial class SelfTest
                 () => RunExistingCheck(SettingsChangedChecks, "settings Changed: "),
                 null),
             new(
+                "save-delay-settings-persist",
+                "Fresh and invalid settings use 400 ms; all four delays survive a store restart; saved labels come from durable body times and stale or failed writes keep the prior time.",
+                "A21-save-delay-setting",
+                () => RunExistingCheck(SaveDelayStorageChecks, "save delay storage: "),
+                null),
+            new(
+                "save-delay-state-machine",
+                "The 400 ms default keeps its trailing-edge debounce; longer delays wait for a one-second idle gate, enforce per-note safety deadlines, and retry on a steady clock.",
+                "A21-save-delay-setting-r3",
+                () => RunExistingCheck(SaveTimingChecks, "save timing state: "),
+                null),
+            new(
+                "saved-label-age-and-clock",
+                "The saved label distinguishes never-saved notes, uses the requested age table and never goes negative; its clock aligns to saved-time seconds and runs whenever the pad is visible and not minimized, independent of bar visibility.",
+                "A21-save-delay-setting-r3",
+                savedLabelClock,
+                null),
+            new(
+                "saved-label-future-clock-cadence",
+                "A future durable timestamp refreshes the just-now label every second so a backward clock change cannot suspend the label clock.",
+                "A21-save-delay-setting-r5",
+                savedLabelClock,
+                null),
+            new(
                 "notes-move-renames-old-folder",
                 "Moving notes from a non-app-home folder renames the old folder even with trailing separators; if retention fails, the move succeeds and reports that the old path remains.",
                 "A52-move-old-folder-rename-warning",
@@ -103,6 +129,24 @@ internal static partial class SelfTest
                 "A54-link-hover-click",
                 () => RunExistingCheck(ShortenedLinkChecks, "shortened link: "),
                 "In the dev copy, test short, shortened, caret-line and Shorten links off URLs: Ctrl+left opens once, plain click places the caret; plain text shows Hand only with Control, shortened glyphs always show Hand. Check wrapped/scrolled links and unchanged checkboxes/result chips."),
+            new(
+                "save-delay-empty-first-write",
+                "Clearing a new note during its first queued or stale body write keeps the empty revision dirty until it reaches disk.",
+                "A21-save-delay-setting-r5",
+                saveDelayUi,
+                null),
+            new(
+                "save-delay-split-active-switch",
+                "Switching active notes by Ctrl+slot or pane focus saves the departing split note immediately.",
+                "A21-save-delay-setting-r5",
+                saveDelayUi,
+                null),
+            new(
+                "save-delay-timer-and-boundaries",
+                "Per-note deadlines save all dirty notes without exceeding their delay; pending settings changes save immediately; save completion changes only label text; note transitions, hide, minimize and quit save immediately.",
+                "A21-save-delay-setting-r3",
+                saveDelayUi,
+                "Dev copy: new blank note, type at 5 s, nonstop typing, split notes, switch/hide/minimize, then check that a save leaves both bars still. Keep sign-out and Windows shutdown as the open A30 live check."),
             new(
                 "checkbox-indent-preserved",
                 "Checkbox toggle and Tab/Shift+Tab indentation apply the same text edit and one Undo restores it; checkbox regex groups remain stable.",

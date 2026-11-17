@@ -1,0 +1,16 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "roadmap",
+      "port": 47811,
+      "url": "http://localhost:47811"
+    },
+    {
+      "name": "playground",
+      "runtimeExecutable": "pwsh",
+      "runtimeArgs": ["-NoProfile", "-File", "tools/playground-serve.ps1"],
+      "port": 47812
+    }
+  ]
+}

@@ -1,9 +1,17 @@
-// Measurements and paint values shared by the pad's window chrome.
+// Shared chrome measurements and the save timer's default interval.
 namespace AntiNotepad.Theme;
 
-/// <summary>Shared measurements for the pad's top bar and pager.</summary>
+/// <summary>Shared values for the pad's chrome and save timer.</summary>
 internal static class ChromeTokens
 {
+    public const int SaveDelayDefaultMs = 400;
+    public const int SaveDelayFiveSecondsMs = 5_000;
+    public const int SaveDelayTenSecondsMs = 10_000;
+    public const int SaveDelayThirtySecondsMs = 30_000;
+    public const int SaveIdleGateMs = 1_000;
+    public const int SavedLabelRefreshMs = SaveIdleGateMs;
+    public const int SavedLabelMinuteMs = 60_000;
+    public const int SavedLabelTimestampMs = 300_000;
     // Named exception to the Stroke scale: the pinned window ring is 4 px.
     public const double PinRingThickness = 4;
     public const double DockedRowHeight = 40;

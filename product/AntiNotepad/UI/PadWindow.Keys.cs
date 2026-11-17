@@ -326,9 +326,11 @@ internal sealed partial class PadWindow
         if ((flags & SettingsChangeFlags.Appearance) != 0) ApplyAppearance();
         if ((flags & SettingsChangeFlags.Persistence) != 0)
         {
-            if ((flags & SettingsChangeFlags.Appearance) != 0)
+            if (change.Properties.Contains(nameof(Settings.SaveDelayMs)))
+                SaveImmediately();
+            else if ((flags & SettingsChangeFlags.Appearance) != 0)
                 Edited(sleepChrome: !change.Properties.All(name => name is nameof(Settings.Pinned) or nameof(Settings.DimWhenPinned)));
-            else ScheduleSave();
+            else ScheduleDataSave();
         }
     }
 }

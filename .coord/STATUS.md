@@ -21,9 +21,9 @@ Updated: 2026-11-16 · Product: AntiNotepad (`product/AntiNotepad`) · installed
 - Roadmap page: http://localhost:47811 (`/roadmap`); reads STATUS + pending + archive.
 
 ## Now
-- A21-save-delay-setting: hand test failed 2026-11-16; back to design with the item chat (High).
+- A22-wrap-hanging-indent: approved; Codex probe and build. A23-paste-keep-structure: findings (needs the user's clipboard copies). Both merge after A21 (catch up to dev).
 - T15-ffmpeg-frame-capture-trial: test 1 done; awaiting more tests.
-- Last finished: T16-roadmap-table-columns (dev 2026-11-16), T14-dirty-allowlist-codex-wake, Loop11-one-chat-flow, A19-settings-scroll-feel, A18-settings-segment-animation, A17-settings-toggle-animation.
+- Last finished: A21-save-delay-setting, T16-roadmap-table-columns (dev 2026-11-17), T14-dirty-allowlist-codex-wake, Loop11-one-chat-flow, A19-settings-scroll-feel, A18-settings-segment-animation, A17-settings-toggle-animation.
 
 ## Plan
 Active rows only (the roadmap script parses this table; same 5 columns as `.coord/pending.md`).
@@ -32,7 +32,7 @@ Active rows only (the roadmap script parses this table; same 5 columns as `.coor
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
 | T15-ffmpeg-frame-capture-trial | Trial: record the dev window with ffmpeg, tile frames into one sheet so Claude can judge motion. Card in `.coord/tasks/` | Low | Small | test 1 done; awaiting more tests |
-| A21-save-delay-setting | Settings dropdown for save delay (0.4 default, 5, 10, 30 s); note switches save at once; Saved label shows real save time. Card in `.coord/tasks/` | High | Medium | accepted; hand test next |
+| A22-wrap-hanging-indent | Wrapped lines of bullets, checkboxes, numbered and indented lines start under their text (library ignores wrap indent; probe then build). Card in `.coord/tasks/` | Medium | Medium | approved; Codex probe+build |
 
 ## Open (needs the user)
 - Live check: A30 restart/sign-out saves an edit typed just before.
@@ -40,9 +40,11 @@ Active rows only (the roadmap script parses this table; same 5 columns as `.coor
 - D1-ui-region-names: paused (user, 2026-11-01); branch d96a11f; name review left.
 - Hold: A44b-interop-guards leftover hand checks (Explorer restart, tray right-click menu).
 
-## Next up (user order; rest in `.coord/pending.md`)
-- A5-search-bar-overlap: overlay search covers top bar.
-- A6-note-switch-instant-swap: swap text before arrive animation.
+## Next up (user, 2026-11-16: these outrank the rest; rows in `.coord/pending.md`)
+- idea: wrap-hanging-indent: wrapped lines of nested bullets lose their indent (possible regression).
+- idea: paste-keep-structure: paste bulleted/indented text with its structure.
+- idea: list-default-type: Settings default for `list` plus checklist, bullet, numberlist keywords.
+- idea: selection-convert-menu: right-click > Convert to list.
 
 ## Keep
 - STATUS stays under ~7 KB (budget WARN at 8 KB). One line per row; short bullets, no full sentences.

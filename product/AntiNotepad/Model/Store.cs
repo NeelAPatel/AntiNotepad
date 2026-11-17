@@ -1,3 +1,4 @@
+// Coordinates note metadata, body files, and acknowledged background saves.
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -36,7 +37,9 @@ public sealed partial class Store
     private bool _forcedUnavailable;
     private bool _indexReadUnavailable;
     private readonly object _saveGate = new();
+    private readonly object _completionGate = new();
     private readonly Dictionary<string, PendingBody> _pendingBodies = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, HashSet<long>> _unsupersededBodyWrites = new(StringComparer.Ordinal);
     private readonly Queue<SaveCompletion> _completedSaves = new();
     private PendingSaveBatch? _pendingSave;
     private Task? _writerTask;
@@ -46,6 +49,17 @@ public sealed partial class Store
     public string? LastError { get; private set; }
     public bool IsAvailable { get; private set; } = true;
     public string Folder => _folder;
+    internal event Action<Note, int>? NoteSaved;
+
+    /// <summary>Reports whether a body is queued, writing, or needs a newer durable revision to replace it.</summary>
+    internal bool HasPendingBodyWrite(Note note) => HasPendingBodyWriteById(note.Id);
+
+    private bool HasPendingBodyWriteById(string id)
+    {
+        lock (_saveGate)
+            return _pendingBodies.ContainsKey(id)
+                || _unsupersededBodyWrites.TryGetValue(id, out var revisions) && revisions.Count > 0;
+    }
 
     public Store(string directory, bool createDirectories = true)
     {
@@ -60,6 +74,7 @@ public sealed partial class Store
         IsAvailable = createDirectories || Directory.Exists(_folder);
         Note.LoadBody = ReadBody;
         Note.InvalidateSearchBody = InvalidateSearchBody;
+        Note.HasPendingBodyWrite = HasPendingBodyWriteById;
     }
 
     private string BodyPath(string id)
@@ -131,11 +146,28 @@ public sealed partial class Store
         }
         _preserveBackupOnce = _recoveryMode;
         var expired = Normalize();
+        LoadSavedTimes();
         _knownIds = Data.All.Select(note => note.Id).ToHashSet(StringComparer.Ordinal);
         if (!_recoveryMode) foreach (var id in expired) DeleteOwnBody(id);
         RemoveOrphans();
         _recoveryMode = false;
         if (migratedLegacy) _ = Save();
+    }
+
+    /// <summary>Seeds in-memory saved labels from the durable body files without changing the index format.</summary>
+    private void LoadSavedTimes()
+    {
+        foreach (var note in Data.All)
+        {
+            try
+            {
+                var path = BodyPath(note.Id);
+                if (File.Exists(path)) note.SavedAt = File.GetLastWriteTime(path);
+            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+            catch (System.Security.SecurityException) { }
+        }
     }
 
     private static bool IsComplete(StoreData data) => data.Settings is not null && data.Stack is not null && data.Slots is not null && data.Trash is not null
@@ -362,8 +394,13 @@ public sealed partial class Store
             lock (_saveGate)
             {
                 foreach (var body in result.DurableBodies)
+                {
+                    if (!_unsupersededBodyWrites.TryGetValue(body.Id, out var revisions))
+                        _unsupersededBodyWrites[body.Id] = revisions = [];
+                    revisions.Add(body.Revision);
                     if (_pendingBodies.TryGetValue(body.Id, out var pending) && pending.Revision == body.Revision)
                         _pendingBodies.Remove(body.Id);
+                }
                 _completedSaves.Enqueue(completion);
                 _lastSaveSucceeded = result.Success;
             }
@@ -425,6 +462,7 @@ public sealed partial class Store
         ModeCache = note.ModeCache
     };
 
+    /// <summary>Writes a detached store snapshot and records the time each body reaches its durable file.</summary>
     private SaveResult WriteSnapshot(SaveSnapshot snapshot)
     {
         if (!snapshot.IsAvailable || !IsAvailable || !Directory.Exists(snapshot.Folder))
@@ -436,6 +474,7 @@ public sealed partial class Store
         try
         {
             if (snapshot.Bodies.Length > 0) Directory.CreateDirectory(snapshot.BodiesFolder);
+            var durableBodies = new List<SaveBodySnapshot>(snapshot.Bodies.Length);
             foreach (var body in snapshot.Bodies)
             {
                 var note = snapshot.Data.All.FirstOrDefault(candidate => candidate.Id == body.Id);
@@ -445,6 +484,7 @@ public sealed partial class Store
                     note.ModeCache = Modes.Detect(body.Text).Mode;
                 }
                 Atomic(SearchBodyPath(snapshot.BodiesFolder, body.Id), body.Text, backup: false);
+                durableBodies.Add(body with { SavedAt = DateTime.Now });
             }
 
             Atomic(snapshot.Index, JsonSerializer.Serialize(snapshot.Data, Json), backup: !_preserveBackupOnce);
@@ -459,9 +499,9 @@ public sealed partial class Store
             _knownIds.UnionWith(failedDeletes);
 
             if (failedDeletes.Count > 0)
-                return new SaveResult(false, snapshot.Bodies);
+                return new SaveResult(false, durableBodies.ToArray());
             LastError = null;
-            return new SaveResult(true, snapshot.Bodies);
+            return new SaveResult(true, durableBodies.ToArray());
         }
         catch (Exception ex)
         {
@@ -470,24 +510,34 @@ public sealed partial class Store
         }
     }
 
+    /// <summary>Serializes acknowledgements so save callers see revision state before completion returns.</summary>
     private void ApplyCompletedSaves()
     {
-        SaveCompletion[] completions;
-        lock (_saveGate)
+        lock (_completionGate)
         {
-            completions = _completedSaves.ToArray();
-            _completedSaves.Clear();
+            SaveCompletion[] completions;
+            lock (_saveGate)
+            {
+                completions = _completedSaves.ToArray();
+                _completedSaves.Clear();
+            }
+            foreach (var completion in completions)
+                foreach (var body in completion.Result.DurableBodies)
+                    if (completion.Acknowledgements.TryGetValue(body.Id, out var acknowledgement)
+                        && acknowledgement.Note.SearchRevision == acknowledgement.Revision)
+                    {
+                        if (body.SavedAt is { } savedAt && acknowledgement.Note.Dirty)
+                        {
+                            var metadata = completion.Data.All.First(note => note.Id == body.Id);
+                            acknowledgement.Note.TitleCache = metadata.TitleCache;
+                            acknowledgement.Note.ModeCache = metadata.ModeCache;
+                            acknowledgement.Note.SavedAt = savedAt;
+                            acknowledgement.Note.Dirty = false;
+                            NoteSaved?.Invoke(acknowledgement.Note, completion.Data.Settings.SaveDelayMs);
+                        }
+                        lock (_saveGate) _unsupersededBodyWrites.Remove(body.Id);
+                    }
         }
-        foreach (var completion in completions)
-            foreach (var body in completion.Result.DurableBodies)
-                if (completion.Acknowledgements.TryGetValue(body.Id, out var acknowledgement) &&
-                    acknowledgement.Note.Dirty && acknowledgement.Note.SearchRevision == acknowledgement.Revision)
-                {
-                    var metadata = completion.Data.All.First(note => note.Id == body.Id);
-                    acknowledgement.Note.TitleCache = metadata.TitleCache;
-                    acknowledgement.Note.ModeCache = metadata.ModeCache;
-                    acknowledgement.Note.Dirty = false;
-                }
     }
 
     private bool DeleteOwnBody(string id)
@@ -503,7 +553,7 @@ public sealed partial class Store
     }
 
     private sealed record PendingBody(string Text, long Revision);
-    private sealed record SaveBodySnapshot(string Id, string Text, long Revision);
+    private sealed record SaveBodySnapshot(string Id, string Text, long Revision, DateTime? SavedAt = null);
     private sealed record SaveAcknowledgement(Note Note, long Revision);
     private sealed record SaveSnapshot(string Folder, string Index, string BodiesFolder, bool IsAvailable, StoreData Data,
         SaveBodySnapshot[] Bodies, IReadOnlyDictionary<string, SaveAcknowledgement> Acknowledgements);
@@ -535,6 +585,7 @@ public sealed partial class Store
         LastError = IsAvailable ? null : $"Notes folder is unavailable: {_folder}";
         Note.LoadBody = ReadBody;
         Note.InvalidateSearchBody = InvalidateSearchBody;
+        Note.HasPendingBodyWrite = HasPendingBodyWriteById;
         ClearSearchBodyCache();
     }
 

@@ -27,7 +27,10 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     private readonly bool _isDev;
     private readonly bool _softwareRendering;
     private readonly TaskbarTrace _trace;
-    private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(400) };
+    private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(ChromeTokens.SaveDelayDefaultMs) };
+    private readonly DispatcherTimer _savedLabelTimer = new() { Interval = TimeSpan.FromMilliseconds(ChromeTokens.SavedLabelRefreshMs) };
+    private readonly Dictionary<Note, SaveTiming.State> _saveSchedules = [];
+    private long? _dataSaveDeadline;
     private Palette _palette;
     private bool _quitting;
     private DateTime _hiddenAt = DateTime.Now;
@@ -36,6 +39,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     private TaskbarProxy? _taskbarProxy;
     private PadView _left = null!, _right = null!;
     private PadView _active = null!;
+    private bool _panesBound, _panesWereSplit;
 
     public Action? QuitRequested { get; set; }
     public string HotkeyStatus => _hotkeys.HotkeyStatus;
@@ -68,6 +72,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         Title = AppInfo.DisplayName;
         Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new Uri(AppInfo.IconUri)));
         Anim.Reduced = Settings.ReduceMotion;
+        _saveTimer.Interval = SaveDelayInterval(Settings);
         _palette = ResolvePalette();
         Width = Math.Max(320, Settings.Width) * (Settings.Split ? 2 : 1); Height = Math.Max(260, Settings.Height);
         MinWidth = 320; MinHeight = 260;
@@ -85,7 +90,15 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         BuildLayout();
         ApplyAppearance();
         BindPanes(arrive: 0);
-        _saveTimer.Tick += (_, _) => { _saveTimer.Stop(); QueueSave(); };
+        _store.NoteSaved += OnNoteSaved;
+        Closed += (_, _) =>
+        {
+            _saveTimer.Stop();
+            _savedLabelTimer.Stop();
+            _store.NoteSaved -= OnNoteSaved;
+        };
+        _saveTimer.Tick += (_, _) => SaveTimerTick();
+        _savedLabelTimer.Tick += (_, _) => RefreshSaved();
         _trim.Tick += (_, _) => TrimWhileHidden();
         _timers.Finished += OnTimerFinished;
         Completion.OcrRequested += pad => _ = RunOcr(pad);
@@ -97,13 +110,18 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         {
             if (SessionEnd.IsEnding) return;
             if (_isDev) _trace.Write($"pad Avalonia.Deactivated visible={IsVisible} active={IsActive} {_trace.PadActionContext()}");
-            QueueSave();
+            SaveImmediately();
             if (_saveFailureOverlay is { } prompt && IsOverlay(prompt)) CloseOverlay();
             var taskbarTransfer = _taskbarProxy?.ConsumePadDeactivationToProxy() ?? false;
             // Moving into the Settings window is not "clicking away": the pad stays up, undimmed, to show each change.
             if (_settingsWindow is not null) return;
             if (Settings.HideOnBlur && !Topmost && !_overlayOpen && IsVisible && !taskbarTransfer) QueueHideOnBlur();
             else if (Topmost && Settings.DimWhenPinned) FadeWindow(0.72);
+        };
+        PropertyChanged += (_, change) =>
+        {
+            if (change.Property.Name != nameof(WindowState)) return;
+            HandleWindowStateChanged(WindowState);
         };
         Activated += (_, _) =>
         {
@@ -161,6 +179,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         ApplyTaskbarSetting();
         Activate();
         FocusActive();
+        RefreshSaved();
         // sync = keyboard focus set inside this call; ms = when the dispatcher next confirms it after the first frames.
         var sync = hotkeyPressed == 0 ? 0 : System.Diagnostics.Stopwatch.GetElapsedTime(hotkeyPressed).TotalMilliseconds;
         Dispatcher.UIThread.Post(() =>
@@ -229,6 +248,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         ShowActivated = false;
         Show();
         ShowActivated = true;
+        RefreshSaved();
         ApplyTaskbarSetting();
         _trace.TracePadAction("timer-quiet-show", "show-end", IsVisible);
     }
@@ -241,9 +261,10 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         _trace.TracePadAction(cause, "hide-begin", IsVisible);
         CancelQueuedHideOnBlur();
         CloseOverlay(); FinishOverlayClose();   // the window hides now, so a fade would never finish
-        QueueSave();
+        SaveImmediately();
         _hiddenAt = DateTime.Now;
         Hide();
+        _savedLabelTimer.Stop();
         _trim.Stop(); _trim.Start();
         ApplyTaskbarSetting();
         _trace.TracePadAction(cause, "hide-end", IsVisible);
@@ -270,6 +291,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         try
         {
             _saveTimer.Stop();
+            _savedLabelTimer.Stop();
             _trim.Stop();
             CancelQueuedHideOnBlur();
             _left.Flush();
@@ -297,6 +319,8 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     private void CompleteQuit()
     {
         // Even Quit anyway must let an in-flight write finish before the process exits.
+        _saveTimer.Stop();
+        _savedLabelTimer.Stop();
         _store.Flush();
         _log.Flush();
         _quitting = true;
@@ -376,34 +400,219 @@ internal sealed partial class PadWindow : Window, ISettingsHost
 
     // ---------- persistence ----------
 
-    private void Edited(bool sleepChrome = true)
+    private void Edited(Note? note = null, bool sleepChrome = true)
     {
-        ScheduleSave();
+        if (note is null) ScheduleDataSave();
+        else ScheduleNoteSave(note, note.IsEmpty);
         UpdateChrome();
         if (sleepChrome) SleepChrome(soon: false);
     }
 
-    private void ScheduleSave()
+    private void ScheduleDataSave()
     {
-        _saveTimer.Stop(); _saveTimer.Start();
+        _dataSaveDeadline = Environment.TickCount64 + ChromeTokens.SaveDelayDefaultMs;
+        ArmSaveTimer();
+    }
+
+    /// <summary>Maps the selected save delay to its duration.</summary>
+    internal static TimeSpan SaveDelayInterval(Settings settings) => TimeSpan.FromMilliseconds(settings.SaveDelayMs);
+
+    /// <summary>Schedules one note from its most recent edit using a monotonic clock.</summary>
+    private void ScheduleNoteSave(Note note, bool blank)
+    {
+        if (blank && note.SavedAt is null)
+        {
+            if (!_store.HasPendingBodyWrite(note))
+            {
+                note.DiscardUnpersistedEmptyEdit(blank);
+                _saveSchedules.Remove(note);
+                ArmSaveTimer();
+                return;
+            }
+            note.KeepEmptyEditDirty();
+        }
+
+        var now = Environment.TickCount64;
+        var previous = _saveSchedules.TryGetValue(note, out var state) ? state : (SaveTiming.State?)null;
+        var next = SaveTiming.Edit(previous, now, Settings.SaveDelayMs, ChromeTokens.SaveIdleGateMs);
+        _saveSchedules[note] = next.State;
+        ArmSaveTimer();
+    }
+
+    /// <summary>Removes a note's delayed deadline after it leaves the editable store.</summary>
+    private void CancelNoteSave(Note note)
+    {
+        _saveSchedules.Remove(note);
+        ArmSaveTimer();
+    }
+
+    /// <summary>Saves the current store snapshot now and leaves failed notes scheduled for a retry.</summary>
+    internal void SaveImmediately()
+    {
+        var now = Environment.TickCount64;
+        _dataSaveDeadline = null;
+        foreach (var note in Data.All.Where(note => note.Dirty).ToArray())
+        {
+            if (note.IsEmpty && note.SavedAt is null)
+            {
+                if (!_store.HasPendingBodyWrite(note))
+                {
+                    note.DiscardUnpersistedEmptyEdit(blank: true);
+                    _saveSchedules.Remove(note);
+                    continue;
+                }
+                note.KeepEmptyEditDirty();
+            }
+
+            if (!_saveSchedules.TryGetValue(note, out var state))
+                state = SaveTiming.Edit(null, now, Settings.SaveDelayMs, ChromeTokens.SaveIdleGateMs).State;
+            _saveSchedules[note] = SaveTiming.RetryAfterAttempt(state, now, resetBurstOnEdit: true);
+        }
+        ArmSaveTimer();
+        var allowUi = CanTouchPadUi;
+        QueueSave(showFailureToast: true, flushPanes: allowUi, allowUiAtStart: allowUi);
+    }
+
+    /// <summary>Runs due note deadlines together so one Store snapshot can save every dirty note.</summary>
+    internal void SaveTimerTick()
+    {
+        _saveTimer.Stop();
+        var now = Environment.TickCount64;
+        var save = false;
+        foreach (var (note, state) in _saveSchedules.ToArray())
+        {
+            if (!Data.All.Contains(note) || !note.Dirty)
+            {
+                _saveSchedules.Remove(note);
+                continue;
+            }
+
+            var next = SaveTiming.Tick(state, now, ChromeTokens.SaveIdleGateMs);
+            _saveSchedules[note] = next.State;
+            save |= next.SaveNow;
+        }
+
+        if (_dataSaveDeadline is { } deadline && now >= deadline)
+        {
+            _dataSaveDeadline = null;
+            save = true;
+        }
+        ArmSaveTimer();
+        // The writer reads the live document; a safety tick never moves the caret or touches IME state.
+        if (save) QueueSave(showFailureToast: true, flushPanes: false, allowUiAtStart: CanTouchPadUi);
+    }
+
+    /// <summary>Arms the shared dispatcher timer for the nearest note or store-data deadline.</summary>
+    private void ArmSaveTimer()
+    {
+        _saveTimer.Stop();
+        var now = Environment.TickCount64;
+        var deadline = _dataSaveDeadline;
+        foreach (var state in _saveSchedules.Values)
+        {
+            var next = SaveTiming.NextDeadline(state, now, ChromeTokens.SaveIdleGateMs);
+            if (deadline is null || next < deadline) deadline = next;
+        }
+        if (deadline is not { } due) return;
+        _saveTimer.Interval = TimeSpan.FromMilliseconds(Math.Max(1, due - now));
+        _saveTimer.Start();
+    }
+
+    private bool CanTouchPadUi => IsVisible && WindowState != WindowState.Minimized;
+
+    /// <summary>Saves pending edits as soon as the window is minimized and refreshes labels when restored.</summary>
+    internal void HandleWindowStateChanged(WindowState state)
+    {
+        if (state == WindowState.Minimized)
+        {
+            SaveImmediately();
+            _savedLabelTimer.Stop();
+        }
+        else if (IsVisible) RefreshSaved();
+    }
+
+    /// <summary>Tracks the quiet period, idle deadline and repeating safety-write deadline for one note.</summary>
+    internal static class SaveTiming
+    {
+        internal readonly record struct State(long FirstEditMs, long LastEditMs, long NextSafetyMs, int DelayMs, long? RetryAtMs,
+            bool ResetBurstOnEdit = false);
+        internal readonly record struct Step(State State, long DeadlineMs, bool SaveNow);
+
+        /// <summary>Starts a new typing run or moves its trailing edge without losing its safety deadline.</summary>
+        internal static Step Edit(State? current, long now, int delayMs, int idleGateMs)
+        {
+            var state = current is not { } prior || now - prior.LastEditMs >= idleGateMs || prior.DelayMs != delayMs || prior.ResetBurstOnEdit
+                ? new State(now, now, now + delayMs, delayMs, null)
+                : prior with { LastEditMs = now, RetryAtMs = null, ResetBurstOnEdit = false };
+            return new(state, NextDeadline(state, now, idleGateMs), false);
+        }
+
+        /// <summary>Returns the next idle or save deadline and advances failed or repeating writes.</summary>
+        internal static Step Tick(State state, long now, int idleGateMs)
+        {
+            var deadline = NextDeadline(state, now, idleGateMs);
+            var idleDeadline = state.LastEditMs + idleGateMs;
+            var idleOnly = state.DelayMs > ChromeTokens.SaveDelayDefaultMs
+                && state.RetryAtMs is null && deadline == idleDeadline && state.NextSafetyMs > idleDeadline;
+            if (now < deadline || idleOnly) return new(state, idleOnly ? NextAfterIdle(state, idleGateMs) : deadline, false);
+            var retry = RetryAfterAttempt(state, now);
+            return new(retry, retry.RetryAtMs!.Value, true);
+        }
+
+        /// <summary>Schedules the next attempt after a failed write or an immediate save boundary.</summary>
+        internal static State RetryAfterAttempt(State state, long now, bool? resetBurstOnEdit = null) => state with
+        {
+            NextSafetyMs = now + state.DelayMs,
+            RetryAtMs = now + state.DelayMs,
+            ResetBurstOnEdit = resetBurstOnEdit ?? state.ResetBurstOnEdit
+        };
+
+        /// <summary>Finds the earliest deadline without consulting wall-clock time.</summary>
+        internal static long NextDeadline(State state, long now, int idleGateMs)
+        {
+            if (state.RetryAtMs is { } retry) return retry;
+            if (state.DelayMs <= ChromeTokens.SaveDelayDefaultMs) return state.LastEditMs + state.DelayMs;
+            var idleDeadline = state.LastEditMs + idleGateMs;
+            if (now < idleDeadline) return Math.Min(idleDeadline, state.NextSafetyMs);
+            return state.NextSafetyMs <= idleDeadline ? state.NextSafetyMs : state.LastEditMs + state.DelayMs;
+        }
+
+        private static long NextAfterIdle(State state, int idleGateMs) =>
+            state.NextSafetyMs <= state.LastEditMs + idleGateMs ? state.NextSafetyMs : state.LastEditMs + state.DelayMs;
+    }
+
+    /// <summary>Refreshes the active save label and logs the elapsed time after a durable body write.</summary>
+    private void OnNoteSaved(Note note, int delayMs)
+    {
+        if (note.SavedAt is not { } savedAt) return;
+        var actualMs = Math.Max(0, (savedAt - note.Modified).TotalMilliseconds);
+        _log.Write($"save delay={delayMs}ms actual={actualMs:F1}ms");
+        if (!note.Dirty) _saveSchedules.Remove(note);
+        if (CanTouchPadUi && ReferenceEquals(_active?.Note, note))
+        {
+            SetSavedText(SavedText(note, DateTime.Now), 0);
+            UpdateSavedLabelTimer();
+        }
+        ArmSaveTimer();
     }
 
     internal bool Save() => Save(showFailureToast: true);
 
-    private async void QueueSave()
+    private async void QueueSave(bool showFailureToast = true, bool flushPanes = true, bool? allowUiAtStart = null)
     {
         if (SessionEnd.IsEnding || _quitting) return;
-        _left.Flush(); _right.Flush();
+        var allowUi = allowUiAtStart ?? CanTouchPadUi;
+        if (flushPanes) { _left.Flush(); _right.Flush(); }
         try
         {
             var saved = await _store.QueueSave();
             if (SessionEnd.IsEnding || _quitting) return;
-            if (!saved) Toast("Couldn't save · " + _store.LastError);
-            else PadView.Evict(KeepDocuments, [_left.Note, _right.Note]);
+            if (!saved && showFailureToast && allowUi && CanTouchPadUi) Toast("Couldn't save · " + _store.LastError);
+            else if (saved && allowUi && CanTouchPadUi) PadView.Evict(KeepDocuments, [_left.Note, _right.Note]);
         }
         catch (Exception ex)
         {
-            if (!SessionEnd.IsEnding && !_quitting) Toast("Couldn't save · " + ex.Message);
+            if (!SessionEnd.IsEnding && !_quitting && showFailureToast && allowUi && CanTouchPadUi) Toast("Couldn't save · " + ex.Message);
         }
     }
 
@@ -413,6 +622,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         // or repeat disk work on that path, even if the single shutdown save failed.
         if (SessionEnd.IsEnding) return true;
         _left.Flush(); _right.Flush();
+        _dataSaveDeadline = null;
         if (!_store.Save())
         {
             if (showFailureToast) Toast("Couldn't save · " + _store.LastError);
