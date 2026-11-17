@@ -58,5 +58,10 @@ Done means (offline only): build into `build/A24-save-delay-cleanup-check`, run 
 Report `.coord/reports/A24-save-delay-cleanup.md`: Changed, Tests run (output tails), before/after line counts of the touched files, Risks.
 
 ## Check
+2026-11-17. Gate PASS (offline) and `--selftest` PASS, 0 warnings, incl. the new queued-note deletion check. Reviewer: accepted (flag set where `_pendingBodies` is set, cleared at the old removal point; thread safety ok). Design review: accepted.
+- Bounds: request, plan and result match. ChromeTokens.cs dropped from Files (T17 overlap); the list uses the existing token constants.
+- Misses: plan step "clear the flag when a note is dropped" not implemented; a deleted note keeps its own unused flag, so no store state is left (build report corrected). Log line shows the current delay, not the snapshot's.
+- Notes: first Model-to-Theme `using` (deliberate). Store.cs 560 to 552 lines. Card is over its 4 KB budget.
 
 ## Hand test
+User, 2026-11-17: "Works" (type, wait, switch in the dev copy).
