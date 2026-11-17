@@ -1,0 +1,4 @@
+AvaloniaEdit 12.0.0, verbatim copy of src/AvaloniaEdit (MIT, see LICENSE).
+Source: https://github.com/AvaloniaUI/AvaloniaEdit  commit 86fdebec4cff7affb0e14c7885df71d28edce777 (tag 12.0.0)
+Copied 2026-11-17 for A22-wrap-hanging-indent. The first commit that adds this folder is unmodified upstream;
+every later change is ours and is listed in PATCHES.md. upstream/*.txt are the upstream build props, for reference only.
