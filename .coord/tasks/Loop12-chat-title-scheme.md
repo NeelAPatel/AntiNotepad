@@ -71,3 +71,5 @@ Report `.coord/reports/Loop12-chat-title-scheme.md`, short: 1 Summary; 2 Change 
 - Noticed (proposals): a sweeper for 🧊 would need an app API we have not found; the `[Merged]` step is untested until a real merge.
 
 ## Hand test
+User, 2026-11-17: "flipped" (sidebar showed the 🔨 title after the script line and one rename call; the live hook firing in the main checkout is proven only after merge).
+Tidy-up: 5 commits, each a tooling or doc step, no lab or debug code; nothing to fold.
