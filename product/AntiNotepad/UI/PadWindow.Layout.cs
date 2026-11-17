@@ -206,7 +206,7 @@ internal sealed partial class PadWindow
     private PadView NewPane()
     {
         var pane = new PadView(_palette, Settings, _timers, _notes);
-        pane.Edited += () => { _undoArmed = false; Edited(); };
+        pane.Edited += () => OnPaneEdited(pane);
         pane.ModeChanged += UpdateChrome;
         pane.Toast += t => Toast(t);
         pane.Copy += text => _ = CopyText(text);
@@ -221,8 +221,39 @@ internal sealed partial class PadWindow
             new("Settings", "Ctrl+OemComma", MenuGlyphs.Settings, OpenSettings),
             new($"Hide {AppInfo.Name}", "Escape", null, HideResident),
         ];
-        pane.FocusedPane += () => { if (_active != pane) { _active = pane; UpdateChrome(); } };
+        pane.FocusedPane += () => HandlePaneFocused(pane);
         return pane;
+    }
+
+    internal void HandlePaneFocused(PadView pane)
+    {
+        if (_active == pane) return;
+        ActivatePane(pane);
+        UpdateChrome();
+    }
+
+    /// <summary>Changes the active editor and saves the note that loses active status.</summary>
+    private void ActivatePane(PadView pane, bool saveDeparting = true)
+    {
+        if (_active == pane) return;
+        if (saveDeparting && _active?.Note is { } departing && !ReferenceEquals(departing, pane.Note)) SaveImmediately();
+        _active = pane;
+    }
+
+    /// <summary>Schedules the changed note using the document state before the model's text event catches up.</summary>
+    private void OnPaneEdited(PadView pane)
+    {
+        _undoArmed = false;
+        if (pane.Note is { } note) ScheduleNoteSave(note, IsBlankDocument(pane.Editor.Document));
+        UpdateChrome();
+        SleepChrome(soon: false);
+    }
+
+    /// <summary>Matches the editor's blank-note rule without copying long document text.</summary>
+    private static bool IsBlankDocument(AvaloniaEdit.Document.TextDocument document)
+    {
+        var length = document.TextLength;
+        return length == 0 || length < 256 && string.IsNullOrWhiteSpace(document.GetText(0, length));
     }
 
     /// <summary>Recreates chrome controls (palette changes), then refreshes their content.</summary>
@@ -266,13 +297,40 @@ internal sealed partial class PadWindow
         _saved ??= Kit.Text("", p.Muted, ChromeTokens.SavedLabelFontSize);
         _saved.Foreground = new SolidColorBrush(p.Muted);
         _meta.Children.Add(_saved);
-        SetSavedText(SavedText(note), ReferenceEquals(_savedNote, note) ? 0 : direction);
+        SetSavedText(SavedText(note, DateTime.Now), ReferenceEquals(_savedNote, note) ? 0 : direction);
         _savedNote = note;
         if (_timers.AnyRunning && _active.Mode != NoteMode.Timer) _meta.Children.Add(Kit.Text("● timer running", p.Number, ChromeTokens.RunningTimerFontSize));
         BuildPill();
+        UpdateSavedLabelTimer();
     }
 
-    private static string SavedText(Note note) => "Saved " + Kit.Ago(note.Modified);
+    /// <summary>Formats the last durable save time, keeping unsaved notes visibly unsaved.</summary>
+    internal static string SavedText(Note note, DateTime now)
+    {
+        if (note.SavedAt is not { } savedAt) return "-";
+        var age = now - savedAt;
+        if (age.TotalMilliseconds < ChromeTokens.SaveIdleGateMs) return "Saved just now";
+        if (age.TotalMilliseconds < ChromeTokens.SavedLabelMinuteMs) return $"Saved {(int)age.TotalSeconds}s ago";
+        if (age.TotalMilliseconds < ChromeTokens.SavedLabelTimestampMs) return $"Saved {(int)age.TotalMinutes}m ago";
+        if (savedAt.Date == now.Date) return $"Saved {savedAt.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture)}";
+        var format = savedAt.Year == now.Year ? "MMM d, HH:mm" : "MMM d, yyyy HH:mm";
+        return $"Saved {savedAt.ToString(format, System.Globalization.CultureInfo.InvariantCulture)}";
+    }
+
+    /// <summary>Aligns the next label refresh with a whole second after the saved time.</summary>
+    internal static TimeSpan SavedLabelRefreshInterval(DateTime savedAt, DateTime now)
+    {
+        if (savedAt > now) return TimeSpan.FromMilliseconds(ChromeTokens.SavedLabelRefreshMs);
+        var elapsedTicks = now.Ticks - savedAt.Ticks;
+        var elapsedWholeSeconds = elapsedTicks < 0 ? 0 : elapsedTicks / TimeSpan.TicksPerSecond;
+        var nextBoundary = savedAt.AddSeconds(elapsedWholeSeconds + 1);
+        var interval = nextBoundary - now;
+        return interval > TimeSpan.Zero ? interval : TimeSpan.FromMilliseconds(ChromeTokens.SavedLabelRefreshMs);
+    }
+
+    /// <summary>Allows the saved-time clock while the pad is visible and not minimized.</summary>
+    internal static bool ShouldRunSavedLabelClock(bool isVisible, bool isMinimized) =>
+        isVisible && !isMinimized;
 
     /// <summary>Maps the page direction to the departure and arrival offsets.</summary>
     internal static (double Exit, double Enter) SavedOffsets(int direction)
@@ -315,7 +373,18 @@ internal sealed partial class PadWindow
     /// <summary>Keeps "Saved 3m ago" true when the bar comes back after a while without edits.</summary>
     private void RefreshSaved()
     {
-        if (_active?.Note is { } note) SetSavedText(SavedText(note), 0);
+        if (_active?.Note is { } note) SetSavedText(SavedText(note, DateTime.Now), 0);
+        UpdateSavedLabelTimer();
+    }
+
+    /// <summary>Runs the age clock while the visible pad can show its label.</summary>
+    private void UpdateSavedLabelTimer()
+    {
+        _savedLabelTimer.Stop();
+        if (!ShouldRunSavedLabelClock(IsVisible, WindowState == WindowState.Minimized)
+            || _active?.Note?.SavedAt is not { } savedAt) return;
+        _savedLabelTimer.Interval = SavedLabelRefreshInterval(savedAt, DateTime.Now);
+        _savedLabelTimer.Start();
     }
 
     private Border Chip(string text, Color color) => new()
@@ -498,7 +567,7 @@ internal sealed partial class PadWindow
     {
         if ((top ? _topShown : _bottomShown) == show && !instant) return;
         if (top) _topShown = show; else _bottomShown = show;
-        if (top && show) RefreshSaved();
+        if (top && show && _active?.Note is { } note) SetSavedText(SavedText(note, DateTime.Now), 0);
         if (!top && Settings.Bars == "float") { FloatPager(show, instant); return; }
         var layer = top ? _topLayer : _bottomLayer;
         var shift = (TranslateTransform)layer.RenderTransform!;

@@ -1,3 +1,4 @@
+// User preferences persisted in the store's index.
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -21,6 +22,12 @@ public sealed class Settings
     public string? Hotkey { get; set; }
     public string? NewNoteHotkey { get; set; }            // opens straight to a new note; null = off
     public int FreshNoteAfterMinutes { get; set; } = 30;   // 0 = never
+    private int _saveDelayMs = 400;
+    public int SaveDelayMs
+    {
+        get => _saveDelayMs;
+        set => _saveDelayMs = value is 400 or 5000 or 10000 or 30000 ? value : 400;
+    }
     public bool HideOnBlur { get; set; }
     public bool DimWhenPinned { get; set; } = true;     // a pinned pad fades back while you work elsewhere
     public string? Accent { get; set; }                   // theme maker: null = palette default

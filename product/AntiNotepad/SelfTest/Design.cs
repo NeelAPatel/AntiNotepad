@@ -19,7 +19,7 @@ namespace AntiNotepad;
 
 internal static partial class SelfTest
 {
-    private const string DesignHash = "183c64c8a607288e0dcd12e0d2d24584bccbee4d38efab50df283d9295bc46e2";
+    private const string DesignHash = "7c2c76482fc04e6e4e3c933b72e6d5e42774f6a702844eb41cbf66db181ce607";
     private static readonly string[] DesignProperties = ["FontSize", "FontWeight", "FontFamily", "FontStyle", "CornerRadius", "Opacity", "Background", "Foreground", "BorderBrush", "BorderThickness", "BoxShadow", "Margin", "Padding"];
 
     /// <summary>Writes the same design snapshot used by the selftest.</summary>
@@ -40,7 +40,8 @@ internal static partial class SelfTest
             var secondHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(second))).ToLowerInvariant();
             report = $"{hash} {first.Count(c => c == '\n')}";
             Console.WriteLine($"DESIGN dump {report}");
-            if (first.Length > 0 && first == second && hash == DesignHash && SegmentBoundsChecks() && SegmentStartChecks()) return true;
+            if (first.Length > 0 && first == second && hash == DesignHash && SegmentBoundsChecks() && SegmentStartChecks()
+                && SavedLabelChecks(out _)) return true;
             report += $" FAIL expected {DesignHash}, second {secondHash}; run --design-dump <file> for a diff";
             Console.WriteLine("DESIGN " + report);
             return false;
@@ -74,6 +75,61 @@ internal static partial class SelfTest
         var origin = second.TranslatePoint(default, row);
         return origin is { } point && SettingsWindow.SegmentTarget(point, second.Bounds.Size) == new Rect(0, 20, 70, 20)
             && SettingsWindow.SegmentTarget(new Point(42, 0), new Size(70, 20)) == new Rect(42, 0, 70, 20);
+    }
+
+    /// <summary>Checks saved-label thresholds, future times, clock alignment and window visibility gating.</summary>
+    private static bool SavedLabelChecks(out string report)
+    {
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+        var now = new DateTime(2026, 11, 16, 14, 2, 0, DateTimeKind.Local);
+        var note = new Note();
+        CheckCase(PadWindow.SavedText(note, now) == "-", "never-saved note");
+        note.SavedAt = now.AddMilliseconds(-999);
+        CheckCase(PadWindow.SavedText(note, now) == "Saved just now", "under one second");
+        note.SavedAt = now.AddSeconds(-1);
+        CheckCase(PadWindow.SavedText(note, now) == "Saved 1s ago", "one second");
+        note.SavedAt = now.AddSeconds(-59);
+        CheckCase(PadWindow.SavedText(note, now) == "Saved 59s ago", "fifty-nine seconds");
+        note.SavedAt = now.AddMinutes(-1);
+        CheckCase(PadWindow.SavedText(note, now) == "Saved 1m ago", "one minute");
+        note.SavedAt = now.AddMinutes(-4).AddSeconds(-59);
+        CheckCase(PadWindow.SavedText(note, now) == "Saved 4m ago", "four minutes");
+        note.SavedAt = now.AddMinutes(-5);
+        CheckCase(PadWindow.SavedText(note, now) == "Saved 13:57", "five-minute timestamp");
+        note.SavedAt = now;
+        CheckCase(PadWindow.SavedText(note, now.AddMinutes(5)) == "Saved 14:02", "timestamp uses the save time");
+        note.SavedAt = now.AddDays(-1);
+        CheckCase(PadWindow.SavedText(note, now) == "Saved Nov 15, 14:02", "date on a prior day");
+        note.SavedAt = now.AddYears(-1).AddDays(-1);
+        CheckCase(PadWindow.SavedText(note, now) == "Saved Nov 15, 2025 14:02", "date on a prior year");
+        note.SavedAt = now.AddSeconds(5);
+        CheckCase(PadWindow.SavedText(note, now) == "Saved just now", "future timestamp");
+        note.SavedAt = now.AddMinutes(-2);
+        var previousLabel = PadWindow.SavedText(note, now);
+        note.Modified = now;
+        CheckCase(PadWindow.SavedText(note, now) == previousLabel, "pending or failed edit keeps the previous save time");
+
+        var savedAt = now;
+        CheckCase(PadWindow.SavedLabelRefreshInterval(savedAt, now.AddMilliseconds(250))
+            == TimeSpan.FromMilliseconds(ChromeTokens.SavedLabelRefreshMs - 250),
+            "clock aligns to the next saved-time second");
+        CheckCase(PadWindow.SavedLabelRefreshInterval(savedAt, now.AddMilliseconds(999)) == TimeSpan.FromTicks(TimeSpan.TicksPerMillisecond),
+            "clock handles a nearly reached second");
+        var futureRefresh = PadWindow.SavedLabelRefreshInterval(savedAt.AddHours(1), now);
+        Console.WriteLine($"SAVE DELAY REGRESSION future label refresh: savedAtInFuture=True intervalMs={futureRefresh.TotalMilliseconds:F0}");
+        CheckCase(futureRefresh == TimeSpan.FromMilliseconds(ChromeTokens.SavedLabelRefreshMs),
+            "future timestamps refresh just now labels every second");
+        note.SavedAt = now.AddSeconds(-3);
+        CheckCase(PadWindow.ShouldRunSavedLabelClock(true, false)
+            && PadWindow.SavedText(note, now) == "Saved 3s ago", "visible fade or hidden-bar label counts without a bar event");
+        CheckCase(!PadWindow.ShouldRunSavedLabelClock(false, false)
+            && !PadWindow.ShouldRunSavedLabelClock(true, true), "clock stops while hidden or minimized");
+
+        report = failures.Count == 0
+            ? "saved label table, prior dates, future time, aligned clock and window visibility pass"
+            : string.Join("; ", failures);
+        return failures.Count == 0;
     }
 
     /// <summary>Builds the hidden controls with isolated data and snapshots each palette.</summary>

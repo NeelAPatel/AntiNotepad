@@ -22,6 +22,13 @@ internal sealed partial class PadWindow
     private void BindPanes(int arrive, bool focus = true, int rightArrive = 0)
     {
         var previous = _savedNote;
+        var transition = _panesBound && (Settings.Split != _panesWereSplit
+            || !ReferenceEquals(_left.Note, LeftNote)
+            || Settings.Split && !ReferenceEquals(_right.Note, RightNote));
+        if (transition)
+        {
+            SaveImmediately();
+        }
         _bindingPanes = true;
         try
         {
@@ -36,7 +43,9 @@ internal sealed partial class PadWindow
         }
         finally { _bindingPanes = false; }
         ApplyPaneSplit(_panes, _leftHost, _divider, _rightHost, _right, Settings.Split);
-        if (!Settings.Split && _active == _right) _active = _left;
+        if (!Settings.Split && _active == _right) ActivatePane(_left, saveDeparting: false);
+        _panesBound = true;
+        _panesWereSplit = Settings.Split;
         var direction = _active == _left ? arrive : rightArrive;
         UpdateChrome(ReferenceEquals(previous, _active.Note) ? 0 : direction);
         if (focus) FocusActive();
@@ -49,6 +58,8 @@ internal sealed partial class PadWindow
         var index = Data.Stack.IndexOf(leaving);
         if (index < 0) return false;
         Data.Stack.RemoveAt(index);
+        CancelNoteSave(leaving);
+        leaving.DiscardUnpersistedEmptyEdit(leaving.IsEmpty);
         PadView.Forget(leaving);
         if (Data.Current > index) Data.Current--;
         Data.Current = Math.Clamp(Data.Current, 0, Data.Stack.Count - 1);
@@ -81,7 +92,7 @@ internal sealed partial class PadWindow
         // Small confirmations for the two things that happen implicitly while swiping.
         if (notice is not null) Toast(notice, brief: true);
         else if (dropped) Toast("Empty note removed", brief: true);
-        Edited();
+        SleepChrome(soon: false);
     }
 
     internal void NewNote()
@@ -94,9 +105,9 @@ internal sealed partial class PadWindow
         var arriving = Data.Stack[Data.Current];
         if (!ReferenceEquals(leaving, arriving)) DropIfAbandoned(leaving);
         Data.Current = Data.Stack.IndexOf(arriving);
-        _active = _left;
+        ActivatePane(_left, saveDeparting: false);
         BindPanes(1);
-        Edited();
+        SleepChrome(soon: false);
     }
 
     /// <summary>After a long absence the hotkey opens on a blank page; the old note is one swipe back.</summary>
@@ -105,7 +116,7 @@ internal sealed partial class PadWindow
         if (Data.ViewSlot != 0 || Data.Stack[Data.Current].IsEmpty) return;
         if (Data.Stack[^1].IsEmpty) Data.Current = Data.Stack.Count - 1;
         else { Data.Stack.Add(new Note()); Data.Current = Data.Stack.Count - 1; }
-        _active = _left;
+        ActivatePane(_left, saveDeparting: false);
         BindPanes(0, focus: false);
     }
 
@@ -114,23 +125,23 @@ internal sealed partial class PadWindow
         if (Data.ViewSlot == 0) return;
         _left.Flush();
         Data.ViewSlot = 0;
-        _active = _left;
+        ActivatePane(_left, saveDeparting: false);
         BindPanes(-1);
-        Edited();
+        SleepChrome(soon: false);
     }
 
     internal void OpenSlot(int slot)
     {
         if (slot < 1 || slot > 9) return;
-        if (Settings.Split && Settings.SplitSlot == slot) { _active = _right; BindPanes(0); return; }
+        if (Settings.Split && Settings.SplitSlot == slot) { ActivatePane(_right); BindPanes(0); return; }
         if (Data.ViewSlot == slot) { ShowStack(); return; }
         _left.Flush();
         var leaving = LeftNote;
         Data.ViewSlot = slot;
-        _active = _left;
+        ActivatePane(_left, saveDeparting: false);
         DropIfAbandoned(leaving);
         BindPanes(1);
-        Edited();
+        SleepChrome(soon: false);
     }
 
     /// <summary>Moves the current stack note into a slot. The slot's old content (if any) takes its place in the stack.</summary>
@@ -147,9 +158,13 @@ internal sealed partial class PadWindow
         else { old.Slot = 0; Data.Stack[Data.Current] = old; }
         Data.Current = Math.Clamp(Data.Current, 0, Data.Stack.Count - 1);
         Data.ViewSlot = slot;
+        var savedByBinding = Settings.Split != _panesWereSplit
+            || !ReferenceEquals(_left.Note, LeftNote)
+            || Settings.Split && !ReferenceEquals(_right.Note, RightNote);
         BindPanes(0);
+        if (!savedByBinding) SaveImmediately();
         Toast($"Kept in slot {slot} · Ctrl+{slot} opens it");
-        Edited();
+        SleepChrome(soon: false);
     }
 
     internal void ToggleSplit()
@@ -173,12 +188,12 @@ internal sealed partial class PadWindow
             var scale = screen?.Scaling ?? 1;
             Width = Math.Min(single * 2, (screen?.WorkingArea.Width ?? 4000) / scale - 24);
             if (screen?.WorkingArea is { } a && Position.X + Width * scale > a.Right) Position = new PixelPoint(Math.Max(a.X, (int)(a.Right - Width * scale - 12)), Position.Y);
-            _active = _right;
+            ActivatePane(_right, saveDeparting: false);
         }
-        else { Width = single; _active = _left; }
+        else { Width = single; ActivatePane(_left, saveDeparting: false); }
         _sizingForSplit = false;
         BindPanes(0);
-        Edited();
+        SleepChrome(soon: false);
     }
 
     private void CycleSplitSlot(int direction)
@@ -208,13 +223,16 @@ internal sealed partial class PadWindow
             var copy = new Note { Text = note.Text, Created = note.Created, Modified = note.Modified, Deleted = DateTime.Now };
             Data.Trash.Insert(0, copy);
             PadView.DocumentFor(note).Text = "";
-            Toast($"Slot {note.Slot} cleared", "Undo", () => { Data.Trash.Remove(copy); PadView.DocumentFor(note).Text = copy.Text; Edited(); });
-            Edited();
+            CancelNoteSave(note);
+            Toast($"Slot {note.Slot} cleared", "Undo", () => { Data.Trash.Remove(copy); PadView.DocumentFor(note).Text = copy.Text; Edited(note); });
+            SaveImmediately();
             return;
         }
+        CancelNoteSave(note);
         var index = Data.Stack.IndexOf(note);
         Data.Stack.RemoveAt(index);
         PadView.Forget(note);
+        note.DiscardUnpersistedEmptyEdit(note.IsEmpty);
         if (!note.IsEmpty) { note.Deleted = DateTime.Now; Data.Trash.Insert(0, note); }
         if (Data.Stack.Count == 0) Data.Stack.Add(new Note());
         Data.Current = Math.Clamp(index - 1 < 0 ? 0 : index - 1, 0, Data.Stack.Count - 1);
@@ -222,7 +240,7 @@ internal sealed partial class PadWindow
         BindPanes(-1);
         if (!note.IsEmpty)
             Toast("Moved to trash", "Undo", () => RestoreFromTrash(note, index));
-        Edited();
+        SleepChrome(soon: false);
     }
 
     internal void RestoreFromTrash(Note note, int index = -1)
@@ -237,9 +255,9 @@ internal sealed partial class PadWindow
         Data.Current = index;
         DropIfAbandoned(leaving);
         Data.Current = Data.Stack.IndexOf(note);
-        _active = _left;
+        ActivatePane(_left, saveDeparting: false);
         BindPanes(0);
-        Edited();
+        SleepChrome(soon: false);
     }
 
     /// <summary>Alt+Up/Down style reordering inside the stack.</summary>
@@ -257,8 +275,19 @@ internal sealed partial class PadWindow
     /// <summary>Search removed or restored notes behind the panes' backs: rebind without animation.</summary>
     internal void SearchChangedData()
     {
-        if (Data.ViewSlot == 0 && !Data.Stack.Contains(_left.Note!)) BindPanes(0, focus: false);
-        Edited();
+        var scheduledRemoved = _saveSchedules.Keys.Where(note => !Data.All.Contains(note)).ToArray();
+        var scheduledTrashed = _saveSchedules.Keys.Where(note => note.Deleted is not null).ToArray();
+        foreach (var note in scheduledRemoved.Concat(scheduledTrashed).Distinct()) CancelNoteSave(note);
+
+        var rebind = Data.ViewSlot == 0 && !Data.Stack.Contains(_left.Note!);
+        if (rebind)
+        {
+            BindPanes(0, focus: false);
+            SleepChrome(soon: false);
+        }
+        else if (scheduledRemoved.Length > 0 || scheduledTrashed.Length > 0 || Data.Trash.Any(note => note.Dirty))
+            SaveImmediately();
+        else Edited();
     }
 
     internal void JumpTo(Note note)
@@ -271,10 +300,10 @@ internal sealed partial class PadWindow
         Data.Current = Data.Stack.IndexOf(note);
         if (!ReferenceEquals(leaving, note)) DropIfAbandoned(leaving);
         Data.Current = Data.Stack.IndexOf(note);
-        _active = _left;
+        ActivatePane(_left, saveDeparting: false);
         CloseOverlay();
         BindPanes(direction == 0 ? 1 : direction);
-        Edited();
+        SleepChrome(soon: false);
     }
 
     /// <summary>Two-finger horizontal swipe (touchpad), tilt or thumb wheel, or Shift+wheel pages through the stack (see NoteSwipe).</summary>
@@ -328,7 +357,7 @@ internal sealed partial class PadWindow
         var doc = PadView.DocumentFor(target);
         doc.Insert(doc.TextLength, ClipboardCapturePolicy.FormatAppend(text!, doc.Text.EndsWith('\n')));
         if (!IsVisible) _hiddenAt = DateTime.Now;
-        Edited();
+        Edited(target);
     }
 
     // ---------- timers ----------
@@ -401,7 +430,7 @@ internal sealed partial class PadWindow
             document.Insert(document.TextLength, separator + recognized);
             note.Text = document.Text;
             note.Attach(() => document.Text);
-            Edited();
+            Edited(note);
             Toast($"Text added to {title}");
             return;
         }
@@ -409,7 +438,7 @@ internal sealed partial class PadWindow
         var offset = Math.Clamp(target.CaretOffset, 0, target.Document.TextLength);
         target.Document.Insert(offset, recognized);
         pane.Editor.CaretOffset = Math.Clamp(offset + recognized.Length, 0, target.Document.TextLength);
-        _active = pane;
+        ActivatePane(pane);
         UpdateChrome();
         Toast($"Read {text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length} words from the image");
         pane.FocusText();

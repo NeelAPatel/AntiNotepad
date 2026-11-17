@@ -1,3 +1,4 @@
+// Builds the grouped Settings pages and their live controls.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Chrome;
@@ -531,6 +532,16 @@ internal sealed partial class SettingsWindow : Window
                 bool startup = false; try { startup = Startup.IsEnabled; } catch { }
                 return Toggle(startup, v => { try { Startup.SetEnabled(v); } catch (Exception ex) { _host.Toast(ex.Message); } }, "Start with Windows");
             })));
+
+        page.Children.Add(Group("Saving"));
+        page.Children.Add(Card(Row(null, "Save after I stop typing",
+            "Your note is also saved when you hide, switch notes, or quit.",
+            () => Dropdown(
+                [(ChromeTokens.SaveDelayDefaultMs.ToString(), "0.4 s"),
+                 (ChromeTokens.SaveDelayFiveSecondsMs.ToString(), "5 s"),
+                 (ChromeTokens.SaveDelayTenSecondsMs.ToString(), "10 s"),
+                 (ChromeTokens.SaveDelayThirtySecondsMs.ToString(), "30 s")],
+                S.SaveDelayMs.ToString(), v => Set(() => S.SaveDelayMs = int.Parse(v))))));
     }
 
     private static string OpenAtName(string id) => id switch

@@ -1,3 +1,4 @@
+// Owns live preference changes and classifies their effects for subscribers.
 using System.Reflection;
 
 namespace AntiNotepad.Model;
@@ -90,6 +91,7 @@ internal sealed class SettingsService
         new(nameof(Settings.Hotkey), Appearance | SettingsChangeFlags.Hotkeys | Persistence, s => s.Hotkey),
         new(nameof(Settings.NewNoteHotkey), Appearance | SettingsChangeFlags.Hotkeys | Persistence, s => s.NewNoteHotkey),
         new(nameof(Settings.FreshNoteAfterMinutes), Appearance | SettingsChangeFlags.WindowPolicy | Persistence, s => s.FreshNoteAfterMinutes),
+        new(nameof(Settings.SaveDelayMs), Persistence, s => s.SaveDelayMs),
         new(nameof(Settings.HideOnBlur), Appearance | SettingsChangeFlags.WindowPolicy | Persistence, s => s.HideOnBlur),
         new(nameof(Settings.DimWhenPinned), Appearance | SettingsChangeFlags.WindowPolicy | Persistence, s => s.DimWhenPinned),
         new(nameof(Settings.OpenAt), Appearance | SettingsChangeFlags.WindowPolicy | Persistence, s => s.OpenAt),

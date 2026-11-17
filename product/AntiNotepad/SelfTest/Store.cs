@@ -1,3 +1,4 @@
+// Capability checks for settings persistence and acknowledged note-body saves.
 using AntiNotepad.Model;
 using AntiNotepad.Platform;
 
@@ -483,6 +484,118 @@ internal static partial class SelfTest
 
             report = failures.Count == 0
                 ? "40 queued snapshots coalesce to the last index revision; queued Flush drains; unavailable saves are successful no-ops; blocked writes fail the synchronous Save gate; folder switching recovers after a failed write; logger Flush preserves timestamped order"
+                : string.Join("; ", failures);
+            return failures.Count == 0;
+        }
+        catch (Exception ex)
+        {
+            report = string.Join("; ", failures.Append(ex.ToString()));
+            return false;
+        }
+        finally { try { if (Directory.Exists(root)) Directory.Delete(root, true); } catch { } }
+    }
+
+    /// <summary>Checks save-delay defaults, normalization, persistence, and revision-matched save timestamps.</summary>
+    private static bool SaveDelayStorageChecks(out string report)
+    {
+        var failures = new List<string>();
+        void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
+        var root = Path.Combine(Path.GetTempPath(), $"{AppInfo.Name.ToLowerInvariant()}-save-delay-selftest-{Guid.NewGuid():N}");
+        try
+        {
+            var fresh = new Settings();
+            CheckCase(fresh.SaveDelayMs == 400, "fresh settings default to 400 ms");
+            fresh.SaveDelayMs = 250;
+            CheckCase(fresh.SaveDelayMs == 400, "unsupported delay normalizes to 400 ms");
+            var invalidJson = System.Text.Json.JsonSerializer.Deserialize<StoreData>("{\"Settings\":{\"SaveDelayMs\":250}}")!;
+            CheckCase(invalidJson.Settings.SaveDelayMs == 400, "unsupported persisted delay normalizes to 400 ms");
+
+            var settingsStore = new Store(Path.Combine(root, "settings"));
+            settingsStore.Load();
+            foreach (var delay in new[] { 400, 5000, 10000, 30000 })
+            {
+                settingsStore.Data.Settings.SaveDelayMs = delay;
+                var saved = settingsStore.Save();
+                var reloaded = new Store(settingsStore.Folder);
+                reloaded.Load();
+                CheckCase(saved && reloaded.Data.Settings.SaveDelayMs == delay, $"{delay} ms settings round trip");
+            }
+
+            var durableStore = new Store(Path.Combine(root, "durable"));
+            durableStore.Load();
+            var durableNote = durableStore.Data.Stack[0];
+            durableNote.Text = "saved body";
+            var modified = DateTime.Now.AddMinutes(-2);
+            durableNote.Modified = modified;
+            var queued = durableStore.QueueSave().GetAwaiter().GetResult();
+            CheckCase(queued && !durableNote.Dirty && durableNote.SavedAt is { } savedAt && savedAt >= modified
+                && durableNote.Modified == modified, "durable completion sets SavedAt without changing Modified");
+            var index = File.ReadAllText(Path.Combine(durableStore.Folder, "index.json"));
+            CheckCase(!index.Contains("SavedAt", StringComparison.Ordinal), "SavedAt stays out of the index format");
+            var durableReload = new Store(durableStore.Folder);
+            durableReload.Load();
+            CheckCase(durableReload.Data.Stack[0].SavedAt == File.GetLastWriteTime(Path.Combine(durableStore.Folder, "notes", durableNote.Id + ".md")),
+                "loaded labels use the durable body's file time");
+
+            var emptySavedAt = durableNote.SavedAt;
+            durableNote.Text = "";
+            var emptySaved = durableStore.Save();
+            var emptyBodyPath = Path.Combine(durableStore.Folder, "notes", durableNote.Id + ".md");
+            var emptyBody = File.Exists(emptyBodyPath) ? File.ReadAllText(emptyBodyPath) : null;
+            CheckCase(emptySaved && !durableNote.Dirty && emptySavedAt is { } previousEmptyTime
+                && durableNote.SavedAt is { } emptyTime && emptyTime >= previousEmptyTime
+                && durableNote.Modified == modified && emptyBody == "",
+                $"a previously saved note durably stores its empty body without touching Modified (saved={emptySaved}, dirty={durableNote.Dirty}, oldSavedAt={emptySavedAt:O}, savedAt={durableNote.SavedAt:O}, modified={durableNote.Modified:O}, expected={modified:O}, bodyExists={emptyBody is not null}, bodyLength={emptyBody?.Length})");
+
+            var failedStore = new Store(Path.Combine(root, "failed"));
+            failedStore.Load();
+            var failedNote = failedStore.Data.Stack[0];
+            failedNote.Text = "old durable body";
+            CheckCase(failedStore.Save(), "failure fixture has an initial durable body");
+            var previousSaveTime = failedNote.SavedAt;
+            failedNote.Text = "new body that cannot be written";
+            var notesFolder = Path.Combine(failedStore.Folder, "notes");
+            Directory.Delete(notesFolder, recursive: true);
+            File.WriteAllText(notesFolder, "block directory creation");
+            var failedWrite = failedStore.QueueSave().GetAwaiter().GetResult();
+            CheckCase(!failedWrite && failedNote.Dirty && failedNote.SavedAt == previousSaveTime
+                && failedStore.LastError is not null, "failed disk write keeps the prior saved time and dirty body");
+
+            var largeStore = new Store(Path.Combine(root, "large"));
+            largeStore.Load();
+            var largeNote = largeStore.Data.Stack[0];
+            const int largeChars = 1_000_000;
+            largeNote.Text = new string('x', largeChars);
+            var queueStarted = System.Diagnostics.Stopwatch.GetTimestamp();
+            var largeSave = largeStore.QueueSave();
+            var enqueueMs = System.Diagnostics.Stopwatch.GetElapsedTime(queueStarted).TotalMilliseconds;
+            var pendingBeforeWrite = !largeSave.IsCompleted;
+            var writeStarted = System.Diagnostics.Stopwatch.GetTimestamp();
+            var largeSaved = largeSave.GetAwaiter().GetResult();
+            var completeMs = System.Diagnostics.Stopwatch.GetElapsedTime(writeStarted).TotalMilliseconds;
+            CheckCase(pendingBeforeWrite && largeSaved && !largeNote.Dirty
+                && File.ReadAllText(Path.Combine(largeStore.Folder, "notes", largeNote.Id + ".md")).Length == largeChars,
+                "large body save returns before background write completion and keeps the body");
+            var largeTimingSample = $"large-note chars={largeChars} enqueue={enqueueMs:F1}ms completion-wait={completeMs:F1}ms";
+            Console.WriteLine("SAVE DELAY TIMING " + largeTimingSample);
+
+            var staleStore = new Store(Path.Combine(root, "stale"));
+            staleStore.Load();
+            var staleNote = staleStore.Data.Stack[0];
+            staleNote.Text = "older snapshot";
+            var staleQueue = staleStore.QueueSave();
+            staleNote.Text = "newer revision";
+            var newerModified = DateTime.Now;
+            staleNote.Modified = newerModified;
+            var staleCompleted = staleQueue.GetAwaiter().GetResult();
+            CheckCase(staleCompleted && staleNote.Dirty && staleNote.SavedAt is null && staleNote.Modified == newerModified,
+                "stale completion leaves the newer revision dirty and untimestamped");
+            var latestSaved = staleStore.Save();
+            CheckCase(latestSaved && !staleNote.Dirty && staleNote.SavedAt is not null && staleNote.Modified == newerModified,
+                $"matching completion timestamps the latest revision without changing Modified (saved={latestSaved}, dirty={staleNote.Dirty}, savedAt={staleNote.SavedAt:O}, modified={staleNote.Modified:O}, expected={newerModified:O}, revision={staleNote.SearchRevision})");
+
+            report = failures.Count == 0
+                ? $"default, invalid values, delay round trips, durable load times, saved-empty body, failed-write label retention, stale acknowledgements, unchanged Modified, background large-body sample {largeTimingSample}, no SavedAt serialization"
                 : string.Join("; ", failures);
             return failures.Count == 0;
         }
