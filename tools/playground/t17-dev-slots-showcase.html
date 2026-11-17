@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T17 Dev Slots Showcase</title>
+<style>
+/* Showcase for T17-multi-dev-instances: what several dev copies at once will look like. Nothing here runs the app.
+   Section 4 is a small model of the planned launcher rules; the real rules land in tools/dev.ps1 after approval. */
+:root{--bg:#f7f6f3;--panel:#fff;--sunk:#f1f0ec;--fg:#1f1e1d;--fg2:#5f5e5a;--muted:#9a9893;--line:rgba(40,30,20,.12);--line2:rgba(40,30,20,.22);
+--acc:#2f6fb5;--ok:#2e7d4f;--bad:#b3261e;--bad-bg:#fbe9e7;--ok-bg:#e6f4ea;
+--yellow:#f2d16b;--blue:#6fa8dc;--red:#e57f7f;--green:#7fc58f;--purple:#b39ddb;--orange:#ee7a24;--silver:#b6c0c8;
+--sans:'Segoe UI Variable Text','Segoe UI',system-ui,sans-serif;--mono:'Cascadia Mono',Consolas,ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#181817;--panel:#21201e;--sunk:#1c1b1a;--fg:#ecebe6;--fg2:#b4b2a9;--muted:#77756f;--line:rgba(255,255,255,.1);--line2:rgba(255,255,255,.2);--acc:#8cbcf0;--ok:#7fd3a0;--bad:#f2a29b;--bad-bg:#3a1f1c;--ok-bg:#16301f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 var(--sans)}
+main{max-width:1040px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;margin:0 0 4px}
+h2{font-size:16px;margin:34px 0 4px}
+p{margin:4px 0 10px;color:var(--fg2)}
+code{font-family:var(--mono);font-size:12px;background:var(--sunk);padding:1px 5px;border-radius:5px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:6px;border:1px solid var(--line2)}
+.chip{white-space:nowrap;display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:11px;font:600 12px var(--mono);color:#222;border:1px solid rgba(0,0,0,.15)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{color:var(--fg2);font-weight:600;font-size:12px}
+.kbd{font:12px var(--mono);border:1px solid var(--line2);border-bottom-width:2px;border-radius:5px;padding:1px 6px;background:var(--sunk);white-space:nowrap}
+.note{font-size:12px;color:var(--muted)}
+/* diagram */
+.map{display:grid;grid-template-columns:1.15fr 70px .75fr 70px 1.1fr;gap:0;align-items:stretch}
+.col{display:flex;flex-direction:column;gap:8px}
+.col h3{font-size:12px;margin:0 0 2px;color:var(--fg2);text-transform:uppercase;letter-spacing:.04em}
+.box{border:1px solid var(--line2);border-radius:10px;padding:8px 10px;background:var(--panel);font-size:12.5px;min-height:46px}
+.box b{display:block;font-size:13px}
+.arrow{display:flex;flex-direction:column;gap:8px;padding-top:22px}
+.arrow div{min-height:46px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px}
+.slotbox{border-left-width:6px}
+.wall{margin-top:14px;border:2px dashed var(--line2);border-radius:12px;padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+@media(max-width:760px){.map{grid-template-columns:1fr}.arrow{display:none}.wall{grid-template-columns:1fr}}
+/* simulator */
+.sim{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}
+@media(max-width:860px){.sim{grid-template-columns:1fr}}
+.btn{background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:3px 9px;cursor:pointer;font-size:12px;color:var(--fg)}
+.btn:hover{background:var(--sunk)}
+.btn:disabled{opacity:.4;cursor:default}
+.log{font:12px/1.5 var(--mono);background:var(--sunk);border-radius:8px;padding:8px 10px;min-height:190px;max-height:300px;overflow:auto;white-space:pre-wrap}
+.log .bad{color:var(--bad)} .log .ok{color:var(--ok)} .log .dim{color:var(--muted)}
+.tag{display:inline-block;font-size:11px;border-radius:6px;padding:0 6px;border:1px solid var(--line2)}
+.tag.run{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+.opt{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.q{border-left:4px solid var(--acc);background:var(--sunk);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:13px}
+.trayrow{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.ico{width:28px;height:34px;border-radius:5px 5px 7px 7px;border:1px solid rgba(0,0,0,.2);position:relative}
+.ico:after{content:"";position:absolute;left:5px;right:5px;top:9px;height:2px;background:rgba(0,0,0,.28);box-shadow:0 6px 0 rgba(0,0,0,.28),0 12px 0 rgba(0,0,0,.28)}
+</style>
+</head>
+<body>
+<main>
+<h1>T17: several dev copies at once, one color each</h1>
+<p>A picture of what <code>T17-multi-dev-instances</code> will allow. Nothing here runs the app. Section 4 is a clickable model of the launcher rules.</p>
+
+<h2>1. The big picture</h2>
+<p>Each worktree's dev copy gets a <b>slot</b>. A slot is a color, its own instance id, its own show/hide hotkey and its own data folder. The installed copy sits in its own lane and is never part of the slot system.</p>
+<div class="card">
+  <div class="map">
+    <div class="col">
+      <h3>Worktrees (own code, own build/)</h3>
+      <div class="box"><b>A22-wrap-indent</b><span class="note">.claude/worktrees/app/A22-…/build/dev</span></div>
+      <div class="box"><b>A23-paste-struct</b><span class="note">.claude/worktrees/app/A23-…/build/dev</span></div>
+      <div class="box"><b>A24-save-delay-cleanup</b><span class="note">.claude/worktrees/app/A24-…/build/dev</span></div>
+      <div class="box"><b>main checkout (dev branch)</b><span class="note">build/dev</span></div>
+    </div>
+    <div class="arrow"><div>→</div><div>→</div><div>→</div><div>→</div></div>
+    <div class="col">
+      <h3>Slot = color</h3>
+      <div class="box slotbox" style="border-left-color:var(--blue)"><b><span class="sw" style="background:var(--blue)"></span>Blue</b><span class="note">id AntiNotepad-dev-blue</span></div>
+      <div class="box slotbox" style="border-left-color:var(--red)"><b><span class="sw" style="background:var(--red)"></span>Red</b><span class="note">id AntiNotepad-dev-red</span></div>
+      <div class="box slotbox" style="border-left-color:var(--green)"><b><span class="sw" style="background:var(--green)"></span>Green</b><span class="note">id AntiNotepad-dev-green</span></div>
+      <div class="box slotbox" style="border-left-color:var(--purple)"><b><span class="sw" style="background:var(--purple)"></span>Purple</b><span class="note">id AntiNotepad-dev-purple</span></div>
+    </div>
+    <div class="arrow"><div>→</div><div>→</div><div>→</div><div>→</div></div>
+    <div class="col">
+      <h3>What you press and see</h3>
+      <div class="box"><span class="kbd">Ctrl+Alt+Shift+1</span> show/hide<br><span class="kbd">Ctrl+Alt+Shift+F1</span> new note<br><span class="chip" style="background:var(--blue)">⎇ A22 - wrap-indent - 3:14 PM</span></div>
+      <div class="box"><span class="kbd">Ctrl+Alt+Shift+2</span> show/hide<br><span class="kbd">Ctrl+Alt+Shift+F2</span> new note<br><span class="chip" style="background:var(--red)">⎇ A22 - wrap-indent - 3:14 PM</span></div>
+      <div class="box"><span class="kbd">Ctrl+Alt+Shift+3</span> show/hide<br><span class="kbd">Ctrl+Alt+Shift+F3</span> new note<br><span class="chip" style="background:var(--green)">⎇ A22 - wrap-indent - 3:14 PM</span></div>
+      <div class="box"><span class="kbd">Ctrl+Alt+Shift+4</span> show/hide<br><span class="kbd">Ctrl+Alt+Shift+F4</span> new note<br><span class="chip" style="background:var(--purple)">⎇ T17 - multi-dev - 3:40 PM</span></div>
+    </div>
+  </div>
+  <div class="wall">
+    <div><b><span class="sw" style="background:var(--yellow)"></span>Installed copy (soft yellow, unchanged)</b><br>
+      <span class="note">id <code>AntiNotepad</code> · <span class="kbd">Ctrl+Alt+Shift+S</span> (Settings) · real data in <code>%LOCALAPPDATA%\AntiNotepad</code> · Start menu shortcut owned by <code>tools/install.ps1</code></span></div>
+    <div><span class="tag" style="background:var(--ok-bg);color:var(--ok)">never started, stopped, or edited by the dev launcher</span></div>
+  </div>
+  <p class="note" style="margin-top:8px">Slots five and six (Orange, Silver) work the same way. Hotkeys are the ones you chose.</p>
+</div>
+
+<h2>2. The six slots</h2>
+<p>Order is yours: Blue, Red, Green, Purple, Orange, Silver. Blue and the installed yellow keep the look they have today. The other four are soft tones I will match to them in a lab before anything ships.</p>
+<div class="card"><table>
+<tr><th>#</th><th>Color</th><th>Instance id (mutex, pipe)</th><th>Show/hide</th><th>New note</th><th>Badge</th></tr>
+<tr><td>1</td><td><span class="sw" style="background:var(--blue)"></span>Blue</td><td><code>AntiNotepad-dev-blue</code></td><td><span class="kbd">Ctrl+Alt+Shift+1</span></td><td><span class="kbd">Ctrl+Alt+Shift+F1</span></td><td><span class="chip" style="background:var(--blue)">⎇ A22 - wrap-indent - 3:14 PM</span></td></tr>
+<tr><td>2</td><td><span class="sw" style="background:var(--red)"></span>Red</td><td><code>AntiNotepad-dev-red</code></td><td><span class="kbd">Ctrl+Alt+Shift+2</span></td><td><span class="kbd">Ctrl+Alt+Shift+F2</span></td><td><span class="chip" style="background:var(--red)">⎇ A22 - wrap-indent - 3:14 PM</span></td></tr>
+<tr><td>3</td><td><span class="sw" style="background:var(--green)"></span>Green</td><td><code>AntiNotepad-dev-green</code></td><td><span class="kbd">Ctrl+Alt+Shift+3</span></td><td><span class="kbd">Ctrl+Alt+Shift+F3</span></td><td><span class="chip" style="background:var(--green)">⎇ A22 - wrap-indent - 3:14 PM</span></td></tr>
+<tr><td>4</td><td><span class="sw" style="background:var(--purple)"></span>Purple</td><td><code>AntiNotepad-dev-purple</code></td><td><span class="kbd">Ctrl+Alt+Shift+4</span></td><td><span class="kbd">Ctrl+Alt+Shift+F4</span></td><td><span class="chip" style="background:var(--purple)">⎇ A22 - wrap-indent - 3:14 PM</span></td></tr>
+<tr><td>5</td><td><span class="sw" style="background:var(--orange)"></span>Orange</td><td><code>AntiNotepad-dev-orange</code></td><td><span class="kbd">Ctrl+Alt+Shift+5</span></td><td><span class="kbd">Ctrl+Alt+Shift+F5</span></td><td><span class="chip" style="background:var(--orange)">⎇ A22 - wrap-indent - 3:14 PM</span></td></tr>
+<tr><td>6</td><td><span class="sw" style="background:var(--silver)"></span>Silver</td><td><code>AntiNotepad-dev-silver</code></td><td><span class="kbd">Ctrl+Alt+Shift+6</span></td><td><span class="kbd">Ctrl+Alt+Shift+F6</span></td><td><span class="chip" style="background:var(--silver)">⎇ A22 - wrap-indent - 3:14 PM</span></td></tr>
+<tr><td>·</td><td><span class="sw" style="background:var(--yellow)"></span>Installed</td><td><code>AntiNotepad</code></td><td><span class="kbd">Ctrl+Alt+Shift+S</span></td><td>from Settings</td><td>none</td></tr>
+</table></div>
+
+<h2>3. How a copy shows its color</h2>
+<p>Two places carry it: the badge in the pad's top bar and the tray (and taskbar) icon. The badge reads ID - name - build time (decided), and its color changes from today's standard purple to the slot color.</p>
+<div class="card">
+  <div class="trayrow" id="looks"></div>
+  <div class="trayrow" id="condensed" style="margin-top:10px"></div>
+  <p class="note">Full form when there is room, condensed <code>A22-h:mm</code> (12-hour, no AM/PM; the chip widens and cross-fades to the full form on hover) when the top bar is narrow. Item ID and name come from the branch, as the badge does today. Final tones are lab-first: nothing ships until you approve the lab.</p>
+</div>
+
+<h2>4. Try the flows</h2>
+<p>Click a worktree's buttons. This models the rules the launcher will follow: a slot is taken when a copy starts and given back when it stops; a copy keeps the same color on relaunch.</p>
+<div class="sim">
+  <div class="card"><table id="wt"></table>
+    <p class="note" style="margin-top:8px">Installed copy: <span class="tag run">running, untouched</span> id <code>AntiNotepad</code> · <span class="kbd">Ctrl+Alt+Shift+S</span></p>
+    <button class="btn" id="reset">Reset the model</button>
+  </div>
+  <div class="card"><div class="log" id="log"></div></div>
+</div>
+
+<h2>5. Rules in one place</h2>
+<div class="card"><table>
+<tr><th>Event</th><th>What happens</th></tr>
+<tr><td><b>Launch</b></td><td>Launcher takes a shared lock so two launches never race. Slot = this worktree's remembered color if free, else the first free color in your order. Slot free means nobody holds its instance id; no stale file can lie. It builds, starts the copy with that id, color and hotkeys, then prints PID, EXE, DATA, HOTKEY, COLOR.</td></tr>
+<tr><td><b>Relaunch</b></td><td>Same worktree, same color. Only that slot's copy is asked to quit (exact id, exact exe path, its own data folder), then the new build starts. Other colors keep running.</td></tr>
+<tr><td><b>Seventh launch</b></td><td>All six ids are held by other worktrees. The launcher stops before building and says which worktree holds which color. Nothing is replaced.</td></tr>
+<tr><td><b>Copy closes</b></td><td>Its id frees at once. The worktree still remembers its color for next time, unless another worktree needed it.</td></tr>
+<tr><td><b>Worktree removed</b></td><td>The worktree is gone from <code>git worktree list</code>, so its remembered color is dropped at the next launch or <code>tools/dev-list.ps1</code>. A copy still running from it is quit first.</td></tr>
+<tr><td><b>Installed copy</b></td><td>Different id, different hotkey, different data, no shortcuts touched. The launcher refuses any process whose exe is under <code>Programs\AntiNotepad</code>, as today.</td></tr>
+</table></div>
+
+<h2>6. Decided with you</h2>
+<div class="q">Hotkeys: show/hide Ctrl+Alt+Shift+1 to 6, new note Ctrl+Alt+Shift+F1 to F6. Cap of six; a seventh launch refuses. Badge: ID - name - time, in the slot color. Next: the full Plan for your Approve.</div>
+</main>
+<script>
+/* Model of the launcher rules (section 4). Slots are ordered; a copy is "running" while it holds its slot's id. */
+const COLORS=['blue','red','green','purple','orange','silver'];
+const HEX={blue:'#6fa8dc',red:'#e57f7f',green:'#7fc58f',purple:'#b39ddb',orange:'#ee7a24',silver:'#b6c0c8',yellow:'#f2d16b'};
+const WTS=['A22-wrap-indent','A23-paste-struct','A24-save-delay-cleanup','T17-multi-dev-instances','A25-demo-item','A26-demo-item','A27-demo-item','main (dev)'];
+let held,sticky,exists,seq;
+function reset(){held={};sticky={};exists=Object.fromEntries(WTS.map(w=>[w,true]));seq=0;document.getElementById('log').innerHTML='';say('model reset; no dev copies running','dim');draw();}
+function say(t,c){const l=document.getElementById('log');l.insertAdjacentHTML('beforeend','<div class="'+(c||'')+'">'+t.replace(/</g,'&lt;')+'</div>');l.scrollTop=l.scrollHeight;}
+function colorOf(w){return Object.keys(held).find(c=>held[c]===w);}
+function short(w){return w.split('-')[0];}
+function launch(w){
+  say('> tools/dev.ps1   (from '+w+')','dim');
+  prune();
+  const own=colorOf(w);
+  if(own){say('your copy is '+own+' and running: asking only '+own+' to quit (exact id, exact exe path)');delete held[own];}
+  let c=own||(sticky[w]&&!held[sticky[w]]?sticky[w]:COLORS.find(x=>!held[x]));
+  if(!c){const who=COLORS.map(x=>x+' = '+short(held[x])).join(', ');say('REFUSED: all 6 dev slots are in use ('+who+'). Close one copy or remove a finished worktree. Nothing was replaced.','bad');draw();return;}
+  held[c]=w;sticky[w]=c;const n=COLORS.indexOf(c)+1;
+  say('RUNNING pid='+(4000+(++seq)*37),'ok');
+  say('EXE '+w+'\\build\\dev\\AntiNotepad.exe');say('DATA '+w+'\\build\\testdata');
+  say('HOTKEY Ctrl+Alt+Shift+'+n+'   NEWNOTE Ctrl+Alt+Shift+F'+n);say('COLOR '+c+' (id AntiNotepad-dev-'+c+')','ok');
+  say('installed copy: untouched (id AntiNotepad, Ctrl+Alt+Shift+S)','dim');draw();
+}
+function stop(w){const c=colorOf(w);if(!c)return;delete held[c];say(w+' closed: '+c+' is free again; the worktree remembers '+c,'dim');draw();}
+function removeWt(w){const c=colorOf(w);if(c){delete held[c];say('quit '+w+"'s "+c+' copy first (its own id only)');}delete sticky[w];exists[w]=false;say('worktree '+w+' removed: its remembered color is dropped; '+(c||'no')+' slot free','ok');draw();}
+function prune(){for(const w of Object.keys(sticky))if(!exists[w])delete sticky[w];}
+function draw(){
+  const t=document.getElementById('wt');
+  t.innerHTML='<tr><th>Worktree</th><th>State</th><th></th></tr>'+WTS.map(w=>{
+    if(!exists[w])return '<tr><td><s>'+w+'</s></td><td class="note">removed</td><td></td></tr>';
+    const c=colorOf(w),s=sticky[w];
+    const st=c?'<span class="tag run"><span class="sw" style="background:'+HEX[c]+'"></span>'+c+' · Ctrl+Alt+Shift+'+(COLORS.indexOf(c)+1)+'</span>':(s?'<span class="note">stopped (remembers '+s+')</span>':'<span class="note">not running</span>');
+    return '<tr><td>'+w+'</td><td>'+st+'</td><td><button class="btn" data-a="l" data-w="'+w+'">'+(c?'Relaunch':'Launch')+'</button> <button class="btn" data-a="s" data-w="'+w+'"'+(c?'':' disabled')+'>Close</button> <button class="btn" data-a="r" data-w="'+w+'"'+(w==='main (dev)'?' disabled':'')+'>Remove</button></td></tr>';}).join('');
+  t.querySelectorAll('button').forEach(b=>b.onclick=()=>({l:launch,s:stop,r:removeWt})[b.dataset.a](b.dataset.w));
+}
+function looks(){
+  const el=document.getElementById('looks');
+  el.innerHTML=['yellow',...COLORS].map(c=>{const label=c==='yellow'?'installed':'⎇ A22 - wrap-indent - 3:14 PM';
+    return '<div style="text-align:center"><div class="ico" style="background:'+HEX[c]+';margin:0 auto 4px"></div>'+(c==='yellow'?'<span class="note">no badge</span>':'<span class="chip" style="background:'+HEX[c]+'">'+label+'</span>')+'</div>';}).join('');
+}
+document.getElementById('reset').onclick=reset;
+document.getElementById('condensed').innerHTML='<span class="note">Condensed (narrow bar):</span>'+COLORS.map(c=>'<span class="chip" style="background:'+HEX[c]+'">⎇ A22-3:14</span>').join('');
+looks();reset();
+</script>
+</body>
+</html>

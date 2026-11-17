@@ -32,6 +32,7 @@ internal static class ChromeTokens
     public const double BadgeBottomPadding = 2;
     public const double BadgeDarkFillAlpha = .15;
     public const double BadgeLightFillAlpha = .11;
+    public const double DevBadgeLightTextInkMix = .62;
     public const double BadgeFontSize = 12;
     public const double SavedLabelFontSize = 12;
     public const double RunningTimerFontSize = 12;

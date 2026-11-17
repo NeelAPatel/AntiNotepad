@@ -58,4 +58,5 @@ One row per merged item: what each check found. Empty rows on items that later h
 | 2026-11-17 | A22-wrap-hanging-indent | High | 1 (r2: format gate, result chips on wrapped lines) | 1 (Scope: directory Files entry; Check and Hand test sections missing and branch behind dev at preflight) | - | - | 0 | - |
 | 2026-11-17 | A23-paste-keep-structure | Medium | 4 (r2-r5; scope grew to tables, marks, emoji, toast) | 0 | 3 (2 major, 1 minor, fixed r5) | - | 0 (1 emoji drawing gap logged, not a paste fault) | - |
 | 2026-11-17 | A24-save-delay-cleanup | High | 0 | 0 | 0 | 0 | 0 | -
+| 2026-11-17 | T17-multi-dev-instances | High | 0 | 0 | 0 | 1 (accept; tooltip removed) | 0 | -
 Older rows: `.coord/lessons-archive.md` (budget: 3 KB here).

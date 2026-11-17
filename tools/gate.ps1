@@ -276,7 +276,7 @@ try {
         $buildArguments = @('build', $script:projectPath, '-c', 'Debug', '-o', $script:buildPath)
         if ($Offline) { $buildArguments += '-p:NuGetAudit=false' }
         $build = Invoke-CapturedProcess -FileName 'dotnet' -Arguments $buildArguments `
-            -WorkingDirectory $script:repoRoot -Environment @{ AVALONIA_TELEMETRY_OPTOUT = '1' } -RemoveEnvironment @('ANTINOTEPAD_DEV', 'ANTINOTEPAD_DATA')
+            -WorkingDirectory $script:repoRoot -Environment @{ AVALONIA_TELEMETRY_OPTOUT = '1' } -RemoveEnvironment @('ANTINOTEPAD_DEV', 'ANTINOTEPAD_DATA', 'ANTINOTEPAD_SLOT')
         $script:buildExitCode = $build.ExitCode
         $buildOutput = Get-CombinedOutput $build
         $warningSummary = [regex]::Matches($buildOutput, '(?im)^\s*(\d+)\s+Warning\(s\)\s*$')
@@ -307,7 +307,7 @@ try {
             Clear-BuildTarget -LiteralPath $script:dataPath
             Ensure-BuildDirectory -LiteralPath $script:dataPath
             $selftest = Invoke-CapturedProcess -FileName $script:exePath -Arguments @('--selftest') -WorkingDirectory $script:buildPath `
-                -Environment @{ ANTINOTEPAD_DATA = $script:dataPath } -RemoveEnvironment @('ANTINOTEPAD_DEV')
+                -Environment @{ ANTINOTEPAD_DATA = $script:dataPath } -RemoveEnvironment @('ANTINOTEPAD_DEV', 'ANTINOTEPAD_SLOT')
             $selftestOutput = Get-CombinedOutput $selftest
             $selftestHasPass = $selftestOutput -match '(?m)^SELFTEST PASS\s*$'
             $selftestPassed = $selftest.ExitCode -eq 0 -and $selftestHasPass

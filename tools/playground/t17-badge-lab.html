@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T17 Badge Lab</title>
+<style>
+/* Lab for T17-multi-dev-instances: how the dev badge is built today in worktrees, and the proposed form.
+   formatToday() is a line-by-line port of AppInfo.FormatDevBadge; the chip mimics PadWindow.Chip (text in the color,
+   fill = same color at ChromeTokens alpha .11 light / .15 dark). Nothing here runs the app. */
+:root{--bg:#f7f6f3;--panel:#fff;--sunk:#f1f0ec;--fg:#1f1e1d;--fg2:#5f5e5a;--muted:#9a9893;--line:rgba(40,30,20,.12);--line2:rgba(40,30,20,.22);--acc:#2f6fb5;--bad:#b3261e;--ok:#2e7d4f;
+--sans:'Segoe UI Variable Text','Segoe UI',system-ui,sans-serif;--mono:'Cascadia Mono',Consolas,ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#181817;--panel:#21201e;--sunk:#1c1b1a;--fg:#ecebe6;--fg2:#b4b2a9;--muted:#77756f;--line:rgba(255,255,255,.1);--line2:rgba(255,255,255,.2);--acc:#8cbcf0;--bad:#f2a29b;--ok:#7fd3a0}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 var(--sans)}
+main{max-width:1080px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;margin:0 0 4px} h2{font-size:16px;margin:30px 0 4px} p{margin:4px 0 10px;color:var(--fg2)}
+code{font-family:var(--mono);font-size:12px;background:var(--sunk);padding:1px 5px;border-radius:5px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{color:var(--fg2);font-weight:600;font-size:12px}
+.bar{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.bar label{font-size:12px;color:var(--fg2)} select,input{font:inherit;padding:3px 6px;border-radius:6px;border:1px solid var(--line2);background:var(--panel);color:var(--fg)}
+.stage{border-radius:8px;padding:6px 8px;display:flex;justify-content:flex-end;width:290px}
+.chip{display:inline-flex;align-items:center;height:20px;padding:1px 8px 2px;border-radius:4px;font:600 12px var(--sans);white-space:nowrap;cursor:default}
+.bad{color:var(--bad)} .ok{color:var(--ok)} .note{font-size:12px;color:var(--muted)}
+.mono{font-family:var(--mono);font-size:12px}
+</style>
+</head>
+<body>
+<main>
+<h1>T17 badge lab: how the dev badge works in worktrees</h1>
+<p>Hover a chip: it unfurls to the left (the badge is anchored at the pad's right edge) and cross-fades from the resting label to the full one. Light pad uses the tuned text; dark pad keeps the slot color. What the code does today, what it does for each real worktree branch, and the form you asked for. Hover a chip to see its full form, as the app does.</p>
+
+<h2>1. How it works today (read from the code)</h2>
+<div class="card"><ol style="margin:0;padding-left:20px;color:var(--fg2)">
+<li><code>tools/dev.ps1</code> builds with <code>-p:AntiNotepadBranch=$(git branch --show-current)</code>. In a worktree that is the item branch, for example <code>fix/A11-settings-thread-count</code>. The build time is stamped by the csproj at build, so every relaunch refreshes it.</li>
+<li><code>AppInfo.FormatDevBadge</code> strips only a leading <code>feat/</code>, then reads the ID with <code>^[A-Za-z][0-9]+[A-Za-z]?</code> (one letter, digits, optional letter). Otherwise it uses the first 12 characters.</li>
+<li>Resting text is <code>⎇ A22 · 3:14 PM</code>. Hover shows <code>⎇ dev/A22-wrap-indent@2026-11-17 3:14 PM</code>. Main checkout (<code>dev</code>) shows <code>⎇ dev</code>; a detached HEAD or no stamp shows plain <code>dev</code>.</li>
+<li>The chip color is the palette's <code>Number</code> color (the standard purple): text in that color on the same color at 11% (light) or 15% (dark) fill.</li>
+</ol>
+<p class="note" style="margin-top:8px"><b class="bad">Found:</b> item branches named <code>fix/</code>, <code>chore/</code>, <code>docs/</code> and IDs such as <code>Loop12</code> are not read as IDs today (see the table). Our worktree branches are <code>prefix/ID-slug</code> (AGENTS.md), so the badge would show junk like <code>chore/T15-ff</code>. The build must fix this for any slot badge to make sense.</p></div>
+
+<h2>2. Every real branch, today vs proposed</h2>
+<div class="bar">
+  <label>Slot color <select id="color"></select></label>
+  <label>Pad theme <select id="theme"><option value="light">light</option><option value="dark">dark</option></select></label>
+  <label>Build time <input id="time" type="time" value="15:14"></label>
+  <label>Try a branch <input id="custom" placeholder="fix/A99-my-item" size="26"></label>
+</div>
+<div class="card"><table id="t"></table></div>
+<p class="note">Decided: resting form <code>A22-h:mm</code> (12-hour, no AM/PM), hover/full form <code>A22 - name - h:mm AM/PM</code>. The ID is any letters plus digits plus optional letter (<code>A22</code>, <code>T17</code>, <code>Loop12</code>, <code>A43b</code>), after dropping any <code>prefix/</code>. Detached HEAD shows the short build time only; the main checkout keeps <code>dev</code>.</p>
+
+<h2>3. Can you read the slot color?</h2>
+<p>Today's chip writes the text in the badge color on a faint fill of the same color. That works for the purple. The soft slot tones are light, so on a light pad they may be hard to read. Contrast ratio of the text against its chip (WCAG; 4.5 is the usual floor for small text).</p>
+<div class="card"><table id="c"></table></div>
+<p class="note">Right column: the same chip with the text darkened (light pad) or lightened (dark pad) toward the pad's ink. This is the lab question for the build: keep the color in the fill and border, and tune the text for contrast.</p>
+</main>
+<script>
+const COLORS={blue:'#6fa8dc',red:'#e57f7f',green:'#7fc58f',purple:'#b39ddb',orange:'#ee7a24',silver:'#b6c0c8'};
+const PAD={light:'#f6f5f2',dark:'#1e1d1b'}, INK={light:'#1f1e1d',dark:'#ecebe6'}, ALPHA={light:.11,dark:.15};
+const BRANCHES=['feat/A4-design-tokens','fix/A11-settings-thread-count','docs/D1-ui-region-names','chore/T15-ffmpeg-frame-capture-trial','feat/A43b-notes-session','Loop12-chat-title-scheme','dev','(detached HEAD)'];
+const $=id=>document.getElementById(id);
+function t12(h,m){const ap=h>=12?'PM':'AM';return ((h%12)||12)+':'+String(m).padStart(2,'0')+' '+ap;}
+// Port of AppInfo.FormatDevBadge.
+function formatToday(branch,h,m){
+  if(!branch||branch==='(detached HEAD)')return['dev','dev'];
+  const slug=branch.startsWith('feat/')?branch.slice(5):branch;
+  if(slug==='dev')return['⎇ dev','⎇ dev'];
+  const mt=slug.match(/^[A-Za-z][0-9]+[A-Za-z]?/);const id=mt?mt[0]:slug.slice(0,12);
+  return['⎇ '+id+' · '+t12(h,m),'⎇ dev/'+slug+'@2026-11-17 '+t12(h,m)];
+}
+function formatProposed(branch,h,m){
+  const mm=String(m).padStart(2,'0'),short=((h%12)||12)+':'+mm,full=t12(h,m);
+  if(!branch||branch==='(detached HEAD)')return['⎇ '+short,'⎇ '+full+' (detached HEAD)'];
+  if(branch==='dev')return['⎇ dev','⎇ dev - '+full];
+  const slug=branch.replace(/^[A-Za-z]+\//,'');
+  const mt=slug.match(/^[A-Za-z]+[0-9]+[A-Za-z]?/);
+  if(!mt)return['⎇ '+slug.slice(0,12)+'-'+short,'⎇ '+slug+' - '+full];
+  const id=mt[0],name=slug.slice(id.length).replace(/^-/,'');
+  return['⎇ '+id+'-'+short,'⎇ '+id+(name?' - '+name:'')+' - '+full];
+}
+const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const hex=a=>'#'+a.map(v=>Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('');
+const mix=(a,b,t)=>a.map((v,i)=>v*(1-t)+b[i]*t);
+function lum(c){const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(c[0])+.7152*f(c[1])+.0722*f(c[2]);}
+function ratio(a,b){const x=lum(a),y=lum(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05);}
+const TUNE={light:.62,dark:0};
+const tuneText=(col,theme)=>hex(mix(rgb(col),rgb(INK[theme]),TUNE[theme]));
+// Resting and full text sit in one chip; width and a cross-fade animate between them (the app does the same with its chip).
+function chip(text,full,color,theme,textColor){
+  const bg=hex(mix(rgb(PAD[theme]),rgb(color),ALPHA[theme]));
+  const s=document.createElement('span');s.className='chip';
+  s.style.cssText='background:'+bg+';color:'+(textColor||tuneText(color,theme))+';position:relative;overflow:hidden;transition:width .22s cubic-bezier(.2,.8,.2,1)';
+  const mk=t=>{const e=document.createElement('span');e.textContent=t;e.style.cssText='position:absolute;left:8px;top:1px;line-height:17px;transition:opacity .16s';return e;};
+  const a=mk(text),b=mk(full);b.style.opacity=0;s.append(a,b);
+  const meas=t=>{const e=document.createElement('span');e.className='chip';e.style.cssText='position:absolute;visibility:hidden';e.textContent=t;document.body.appendChild(e);const w=e.getBoundingClientRect().width;e.remove();return w;};
+  const wr=meas(text),wf=meas(full);s.style.width=wr+'px';
+  s.onmouseenter=()=>{s.style.width=wf+'px';a.style.opacity=0;b.style.opacity=1;};
+  s.onmouseleave=()=>{s.style.width=wr+'px';a.style.opacity=1;b.style.opacity=0;};
+  return s;
+}
+function stage(theme,...chips){const d=document.createElement('div');d.className='stage';d.style.background=PAD[theme];chips.forEach(c=>d.appendChild(c));return d;}
+function draw(){
+  const color=COLORS[$('color').value],theme=$('theme').value,[h,m]=$('time').value.split(':').map(Number);
+  const rows=[...BRANCHES];if($('custom').value.trim())rows.unshift($('custom').value.trim());
+  const t=$('t');t.innerHTML='<tr><th>Branch (from git)</th><th>Today (resting / hover)</th><th>Proposed (resting / hover)</th></tr>';
+  rows.forEach(b=>{
+    const tr=t.insertRow();tr.insertCell().innerHTML='<span class="mono">'+(b||'(none)').replace(/</g,'&lt;')+'</span>';
+    const td=formatToday(b,h,m),pr=formatProposed(b,h,m);
+    const ca=tr.insertCell();ca.appendChild(stage(theme,chip(td[0],td[1],color,theme)));
+    const bad=b!=='dev'&&b!=='(detached HEAD)'&&!/^(feat\/)?[A-Za-z][0-9]/.test(b);
+    if(bad){const n=document.createElement('div');n.className='note bad';n.textContent='ID not read';ca.appendChild(n);}
+    const cb=tr.insertCell();cb.appendChild(stage(theme,chip(pr[0],pr[1],color,theme)));
+  });
+  const c=$('c');c.innerHTML='<tr><th>Slot</th><th>Light pad: color as text</th><th>Light pad: tuned text</th><th>Dark pad: color as text</th><th>Dark pad: tuned text</th></tr>';
+  Object.entries(COLORS).forEach(([name,col])=>{
+    const tr=c.insertRow();tr.insertCell().textContent=name;
+    ['light','dark'].forEach(th=>{
+      const bg=mix(rgb(PAD[th]),rgb(col),ALPHA[th]);
+      const tuned=hex(mix(rgb(col),rgb(INK[th]),th==='light'?.62:.35));
+      [col,tuned].forEach(tc=>{
+        const td=tr.insertCell();td.appendChild(stage(th,chip('⎇ A22-15:14','⎇ A22-15:14',col,th,tc)));
+        const r=ratio(rgb(tc),bg);const n=document.createElement('div');n.className='note '+(r>=4.5?'ok':'bad');n.textContent=r.toFixed(1)+':1';td.appendChild(n);
+      });
+    });
+  });
+}
+Object.keys(COLORS).forEach(k=>$('color').add(new Option(k,k)));
+['color','theme','time','custom'].forEach(id=>$(id).addEventListener('input',draw));
+draw();
+</script>
+</body>
+</html>

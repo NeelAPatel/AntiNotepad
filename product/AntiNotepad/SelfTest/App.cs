@@ -1,4 +1,6 @@
+// Capability checks for runtime identity, startup and the dev badge.
 using AntiNotepad.Model;
+using AntiNotepad.Platform;
 using Avalonia.Platform;
 using System.Reflection;
 
@@ -114,6 +116,12 @@ internal static partial class SelfTest
                 return false;
             }
 
+            if (!DevSlotIdentityChecks(out var slotReport))
+            {
+                report = "dev slots: " + slotReport;
+                return false;
+            }
+
             // Use the file resource loader directly: selftest never initializes the desktop platform.
             var assets = new StandardAssetLoader();
             using var icon = assets.Open(new Uri(AppInfo.IconUri));
@@ -124,7 +132,7 @@ internal static partial class SelfTest
                 return false;
             }
 
-            report = "assembly attributes, derived identifiers, and bundled icon/font URIs";
+            report = "assembly attributes, derived identifiers, bundled icon/font URIs; " + slotReport;
             return true;
         }
         catch (Exception ex)
@@ -191,17 +199,29 @@ internal static partial class SelfTest
 
     private static bool DevBadgeBuildStampChecks(out string report)
     {
-        var time = new DateTimeOffset(2026, 10, 29, 11, 30, 0, TimeSpan.FromHours(-4));
+        var time = new DateTimeOffset(2026, 10, 29, 15, 4, 0, TimeSpan.FromHours(-4));
         var failures = new List<string>();
         void Check(bool ok, string detail) { if (!ok) failures.Add(detail); }
         Check(AppInfo.FormatDevBadge("feat/A54-link-hover-click", time) ==
-            ("\uE0A0 A54 · 11:30 AM", "\uE0A0 dev/A54-link-hover-click@2026-10-29 11:30 AM"), "feature format");
-        Check(AppInfo.FormatDevBadge("feat/A43b-notes-session", time).Short == "\uE0A0 A43b · 11:30 AM", "letter suffix");
-        Check(AppInfo.FormatDevBadge("dev", time) == ("\uE0A0 dev", "\uE0A0 dev"), "dev branch");
+            ("\uE0A0 A54-3:04", "\uE0A0 A54 - link-hover-click - 3:04 PM"), "feature format");
+        Check(AppInfo.FormatDevBadge("fix/A11-settings-thread-count", time) ==
+            ("\uE0A0 A11-3:04", "\uE0A0 A11 - settings-thread-count - 3:04 PM"), "fix prefix");
+        Check(AppInfo.FormatDevBadge("docs/D1-ui-region-names", time) ==
+            ("\uE0A0 D1-3:04", "\uE0A0 D1 - ui-region-names - 3:04 PM"), "docs prefix");
+        Check(AppInfo.FormatDevBadge("chore/T17-multi-dev-instances", time) ==
+            ("\uE0A0 T17-3:04", "\uE0A0 T17 - multi-dev-instances - 3:04 PM"), "chore prefix");
+        Check(AppInfo.FormatDevBadge("feat/A43b-notes-session", time) ==
+            ("\uE0A0 A43b-3:04", "\uE0A0 A43b - notes-session - 3:04 PM"), "letter suffix");
+        Check(AppInfo.FormatDevBadge("Loop12-chat-title-scheme", time) ==
+            ("\uE0A0 Loop12-3:04", "\uE0A0 Loop12 - chat-title-scheme - 3:04 PM"), "multi-letter ID");
+        Check(AppInfo.FormatDevBadge("dev", time) == ("\uE0A0 dev", "\uE0A0 dev - 3:04 PM"), "dev branch");
         Check(AppInfo.FormatDevBadge("topic-long-branch-name", time) ==
-            ("\uE0A0 topic-long-b · 11:30 AM", "\uE0A0 dev/topic-long-branch-name@2026-10-29 11:30 AM"), "other branch");
-        Check(AppInfo.FormatDevBadge(null, time) == ("dev", "dev")
-            && AppInfo.FormatDevBadge("", time) == ("dev", "dev")
+            ("\uE0A0 topic-long-b-3:04", "\uE0A0 topic-long-branch-name - 3:04 PM"), "other branch");
+        Check(AppInfo.FormatDevBadge("(detached HEAD)", time) ==
+            ("\uE0A0 3:04", "\uE0A0 3:04 PM (detached HEAD)")
+            && AppInfo.FormatDevBadge(null, time) == ("\uE0A0 3:04", "\uE0A0 3:04 PM (detached HEAD)")
+            && AppInfo.FormatDevBadge("", time) == ("\uE0A0 3:04", "\uE0A0 3:04 PM (detached HEAD)"), "detached or empty branch");
+        Check(AppInfo.FormatDevBadge(null, null) == ("dev", "dev")
             && AppInfo.FormatDevBadge("feat/A54-link-hover-click", null) == ("dev", "dev"), "missing stamp");
         if (!AppInfo.IsDevBuild)
             Check(!typeof(AppInfo).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
@@ -211,13 +231,98 @@ internal static partial class SelfTest
         return failures.Count == 0;
     }
 
+    private static bool DevSlotIdentityChecks(out string report)
+    {
+        var failures = new List<string>();
+        void Check(bool passed, string detail) { if (!passed) failures.Add(detail); }
+        var slots = AppInfo.DevSlots;
+        var slotIds = slots.Select(slot => AppInfo.DevInstanceIdForSlot(slot.Name)).ToArray();
+        Check(slots.Select(slot => slot.Name).SequenceEqual(["Blue", "Red", "Green", "Purple", "Orange", "Silver"]), "slot order");
+        Check(slotIds.All(id => id is not null && id != AppInfo.InstanceId && id != AppInfo.DevInstanceId)
+            && slotIds.Distinct(StringComparer.Ordinal).Count() == slots.Count, "slot ids are distinct from installed and legacy dev ids");
+        Check(AppInfo.ResolveSlotName(null) is null && AppInfo.ResolveSlotName("") is null
+            && AppInfo.ResolveSlotName("chartreuse") is null
+            && AppInfo.ResolveSlotName("bLuE") == "Blue", "slot validation and canonical name");
+        Check(AppInfo.Env("NEWNOTE_HOTKEY") == "ANTINOTEPAD_NEWNOTE_HOTKEY", "new-note hotkey environment name");
+
+        var oldSlot = Environment.GetEnvironmentVariable(AppInfo.Env("SLOT"));
+        var oldActiveSlot = AppInfo.ActiveSlotName;
+        try
+        {
+            Environment.SetEnvironmentVariable(AppInfo.Env("SLOT"), "Red");
+            var validEnvironmentSlot = AppInfo.SlotName == "Red";
+            AppInfo.SetActiveSlotName(null);
+            var slotWithoutDataIgnored = AppInfo.SlotName == "Red" && AppInfo.ActiveSlotName is null
+                && AppInfo.IconUri == AppInfo.ResolveIconUri(AppInfo.IsDevBuild, null);
+            AppInfo.SetActiveSlotName(AppInfo.SlotName);
+            var slotWithDataActive = AppInfo.ActiveSlotName == "Red"
+                && AppInfo.SlotColor == AppInfo.DevSlots.Single(slot => slot.Name == "Red").Color
+                && AppInfo.IconUri == AppInfo.ResolveIconUri(AppInfo.IsDevBuild, "Red");
+            Environment.SetEnvironmentVariable(AppInfo.Env("SLOT"), "chartreuse");
+            AppInfo.SetActiveSlotName(AppInfo.SlotName);
+            var invalidEnvironmentSlot = AppInfo.SlotName is null && AppInfo.ActiveSlotName is null;
+            Environment.SetEnvironmentVariable(AppInfo.Env("SLOT"), "");
+            AppInfo.SetActiveSlotName(AppInfo.SlotName);
+            var emptyEnvironmentSlot = AppInfo.SlotName is null && AppInfo.ActiveSlotName is null;
+            Check(validEnvironmentSlot && slotWithoutDataIgnored && slotWithDataActive
+                && invalidEnvironmentSlot && emptyEnvironmentSlot, "slot environment parsing and data confinement");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(AppInfo.Env("SLOT"), oldSlot);
+            AppInfo.SetActiveSlotName(oldActiveSlot);
+        }
+
+        var isolatedIds = slots.Select(slot => AppInfo.ResolveInstanceId("worktree-data", slot.Name)).ToArray();
+        Check(isolatedIds.Distinct(StringComparer.Ordinal).Count() == slots.Count, "custom data selects distinct slot ids");
+        Check(AppInfo.ResolveInstanceId(null, "Blue") == AppInfo.InstanceId
+            && AppInfo.ResolveInstanceId("", "Red") == AppInfo.InstanceId, "slot ignored without custom data");
+        Check(AppInfo.ResolveInstanceId("worktree-data", null) == AppInfo.DevInstanceId
+            && AppInfo.ResolveInstanceId("worktree-data", "chartreuse") == AppInfo.DevInstanceId, "no valid slot keeps legacy dev id");
+
+        var hotkeysParse = slots.Select((slot, index) =>
+        {
+            var show = GlobalHotkey.HotkeyGesture.Parse(slot.ShowHideHotkey);
+            var newNote = GlobalHotkey.HotkeyGesture.Parse(slot.NewNoteHotkey);
+            return show.VirtualKey == '1' + index && newNote.VirtualKey == 0x70 + index;
+        }).All(passed => passed);
+        Check(hotkeysParse, "show/hide and new-note hotkey strings parse in slot order");
+
+        var reads = 0;
+        string? ReadEnvironment() { reads++; return "Ctrl+Alt+Shift+F1"; }
+        var noSlotDefault = HotkeyRegistrar.ResolveInitialNewNoteHotkey(null, false, ReadEnvironment) is null && reads == 0;
+        var configuredWins = HotkeyRegistrar.ResolveInitialNewNoteHotkey("Ctrl+Shift+N", true, ReadEnvironment) == "Ctrl+Shift+N" && reads == 0;
+        var slotDefault = HotkeyRegistrar.ResolveInitialNewNoteHotkey(null, true, ReadEnvironment) == "Ctrl+Alt+Shift+F1" && reads == 1;
+        Check(noSlotDefault && configuredWins && slotDefault, "new-note environment default is lazy and slot-only");
+
+        report = failures.Count == 0 ? "six slot ids, isolation, environment parsing, and hotkey defaults" : string.Join("; ", failures);
+        return failures.Count == 0;
+    }
+
+    private static bool InstalledInstanceIdentityChecks(out string report)
+    {
+        var stable = AppInfo.InstanceId == "AntiNotepad"
+            && AppInfo.DevInstanceIdForSlot("Blue") != AppInfo.InstanceId
+            && AppInfo.DevSlots.All(slot => AppInfo.ResolveInstanceId(null, slot.Name) == AppInfo.InstanceId);
+        report = stable ? "installed identity remains AntiNotepad with or without a slot environment" : "installed identity changed";
+        return stable;
+    }
+
+    private static bool LegacyDevInstanceIdentityChecks(out string report)
+    {
+        var stable = AppInfo.DevInstanceId == "AntiNotepad-dev"
+            && AppInfo.ResolveInstanceId("worktree-data", null) == AppInfo.DevInstanceId
+            && AppInfo.ResolveInstanceId("worktree-data", "invalid") == AppInfo.DevInstanceId;
+        report = stable ? "custom data without a valid slot keeps AntiNotepad-dev" : "legacy dev identity changed";
+        return stable;
+    }
+
     private static bool DevIdentitySelfTest(out string report)
     {
         try
         {
             var expectedName = AppInfo.IsDevBuild ? "AntiNotepad (dev)" : "AntiNotepad";
-            var expectedIcon = AppInfo.IsDevBuild ? "antinotepad-dev.ico" : "antinotepad.ico";
-            if (AppInfo.DisplayName != expectedName || AppInfo.IconUri != $"avares://AntiNotepad/{expectedIcon}"
+            if (AppInfo.DisplayName != expectedName || AppInfo.IconUri != AppInfo.ResolveIconUri(AppInfo.IsDevBuild, AppInfo.ActiveSlotName)
                 || AppInfo.Name != "AntiNotepad" || AppInfo.InstanceId != "AntiNotepad"
                 || AppInfo.DevInstanceId != "AntiNotepad-dev" || AppInfo.DataFolderName != "AntiNotepad"
                 || AppInfo.RunValueName != "AntiNotepad" || AppInfo.LogFileName != "antinotepad.log"
@@ -228,14 +333,19 @@ internal static partial class SelfTest
             }
 
             var assets = new StandardAssetLoader();
-            foreach (var file in new[] { "antinotepad.ico", "antinotepad-dev.ico" })
+            var icons = new[] { "antinotepad.ico", "antinotepad-dev.ico" }
+                .Concat(AppInfo.DevSlots.Select(slot => $"antinotepad-dev-{slot.Name.ToLowerInvariant()}.ico"));
+            foreach (var file in icons)
             {
                 using var stream = assets.Open(new Uri($"avares://AntiNotepad/{file}"));
                 using var reader = new BinaryReader(stream);
                 if (reader.ReadUInt16() != 0 || reader.ReadUInt16() != 1 || reader.ReadUInt16() == 0)
                     throw new InvalidOperationException($"Invalid icon: {file}");
             }
-            report = $"{expectedName}, {AppInfo.IconUri}; both icons load; stable instance/data/resource identities";
+            var slotIconsResolve = AppInfo.DevSlots.All(slot =>
+                AppInfo.ResolveIconUri(true, slot.Name) == $"avares://AntiNotepad/antinotepad-dev-{slot.Name.ToLowerInvariant()}.ico");
+            if (!slotIconsResolve) throw new InvalidOperationException("slot icon URI does not match its resource");
+            report = $"{expectedName}, {AppInfo.IconUri}; all icons load; stable instance/data/resource identities";
             Console.WriteLine("IDENTITY " + report);
             return true;
         }
