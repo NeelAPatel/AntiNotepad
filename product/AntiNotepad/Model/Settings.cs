@@ -1,7 +1,7 @@
 // User preferences persisted in the store's index.
 using System.Text.Json;
-using AntiNotepad.Theme;
 using System.Text.Json.Serialization;
+using AntiNotepad.Theme;
 
 namespace AntiNotepad.Model;
 
