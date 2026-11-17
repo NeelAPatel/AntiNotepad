@@ -82,8 +82,7 @@ FAIL: stop and tell the user the reason. PASS: the script created the branch and
 STATUS: `approved` (your own row only).
 
 ## 5. Build (same chat)
-Continue in this chat; no new chat. Show the user the status card, role `builder` on line one. Rename the chat
-`<ID> · review · <slug>` when Check starts and `<ID> · test · <slug>` at the hand test.
+Continue in this chat; no new chat. Show the user the status card, role `builder` on line one. Follow the item title legend in `docs/loop.md`: run `tools/chat-title.ps1` at phase changes. When a hook or script prints `SET TITLE: ...`, call `set_session_title` with `self` once; before asking the user use `-State needs-you`, and after a report on an open task use `-State parked`. Hooks cannot retitle the app.
 - Work only in `.claude/worktrees/<prefix>/<ID-slug>` with absolute paths.
 - Launch `bash .coord/tools/codex-run.sh director <ID-slug> .coord/tasks/<ID-slug>.md` there as a tracked background call you own (`docs/agents.md` "Launch": end the turn, resume on the exit notice, never ask the user to check), run `/review-task <ID-slug>`
   when it exits, relaunch rework yourself, commit each round on the item branch.

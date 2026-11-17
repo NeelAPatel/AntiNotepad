@@ -13,6 +13,7 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 
 | Date | Item | Found at | Cause | Caught by | Should have caught | Lesson (one line) | Rule change |
 |---|---|---|---|---|---|---|---|
+| 2026-11-17 | A21-save-delay-setting (merge) | Merge | judgment | user-later | brief | the director staged A22/A23 cards and launch.json into the A21 merge commit; approve.ps1 then refused the next item (card must be untracked). At merge, `git add` only STATUS, lessons, pending, archive and the item's own files | - |
 | 2026-11-17 | A21-save-delay-setting | Build r1, r3 | env | gate, hand-test | brief | r1 ended without a green selftest and r3 hit the 45-minute limit with no report; ask Codex for a draft report after the first green selftest (done from r4). Preflight stale Head again (T16, A21): item chat edits the card after the gate | - |
 | 2026-11-09 | A9-pinned-accent-ring | Build r1 (gate) | test | gate | brief | the new ring selftest hung the whole selftest (it set up Avalonia differently from the Design dump and stalled a later contract); a PadWindow selftest must install the Fluent theme, use a loaded seeded store and run last among contracts | - |
 | 2026-11-06 | A7-version-rc2 | Merge | plan | master | review | merge preflight "stale Head" again (third time: A2, A5, A7); master re-ran the gate in the worktree | - |
@@ -50,4 +51,5 @@ One row per merged item: what each check found. Empty rows on items that later h
 | 2026-11-13 | T14-dirty-allowlist-codex-wake | Low | 0 (A16/A17 launched Codex detached with & or nohup, so no exit wake-up; Hand test section was missing at preflight) | 0 | - | - | 0 | - |
 | 2026-11-16 | T16-roadmap-table-columns | Low | 0 (scope grew twice at the user's word: groups/filters, Excel-style filters; Check and Hand test sections missing and gate stale after the card commit at preflight) | 0 | - | - | 0 | - |
 | 2026-11-17 | A21-save-delay-setting | High | 5 (r2, r4, r5, r6 plus r3 timed out) | 1 (Scope: Design.cs missing from Files) | 3 (2 major, 1 minor, fixed r5) | accept-with-followup (3, in pending) | 2 | - |
+| 2026-11-17 | Loop12-chat-title-scheme | Medium | 0 (gate stale after the hand-test card commit at preflight) | 0 | - | - | 0 | - |
 Older rows: `.coord/lessons-archive.md` (budget: 3 KB here).

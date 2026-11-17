@@ -56,3 +56,5 @@ and tagging happen only on the user's explicit go. Every reply opens with the st
    updates the STATUS "Loop vX.Y.Z is live" line and the three director names in STATUS "Working rules", and (b) renames
    the three live director chats (Master 4, Loop Hub 2, Roadmap Hub 1) to the new `LP<vX.Y.Z>`.
 9. Reply with the status card at Merge ✓: the merge commit hash, gate result, and the next plan item (offer `/next-task`).
+
+After cleanup, run `pwsh -NoProfile -File tools/chat-title.ps1 -Item <ID-slug> -Merged` from the main checkout. The director calls `set_session_title` for the item chat with the printed title, then archives it.

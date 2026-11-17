@@ -4,6 +4,10 @@ param([string]$Root = (Split-Path $PSScriptRoot -Parent))
 $ErrorActionPreference = 'Stop'
 try { [void][Console]::In.ReadToEnd() } catch { }
 try {
+    $titleScript = Join-Path $PSScriptRoot 'chat-title.ps1'
+    if (Test-Path -LiteralPath $titleScript) { & $titleScript -State working }
+} catch { }
+try {
     $common = (& git -C $Root rev-parse --path-format=absolute --git-common-dir 2>$null)
     if ($LASTEXITCODE -eq 0 -and $common) { $Root = Split-Path $common.Trim() -Parent }
 } catch { }

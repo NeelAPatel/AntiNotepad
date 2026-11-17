@@ -23,7 +23,7 @@ Updated: 2026-11-16 · Product: AntiNotepad (`product/AntiNotepad`) · installed
 ## Now
 - A22-wrap-hanging-indent: approved; Codex probe and build. A23-paste-keep-structure: findings (needs the user's clipboard copies). Both merge after A21 (catch up to dev).
 - T15-ffmpeg-frame-capture-trial: test 1 done; awaiting more tests.
-- Last finished: A21-save-delay-setting, T16-roadmap-table-columns (dev 2026-11-17), T14-dirty-allowlist-codex-wake, Loop11-one-chat-flow, A19-settings-scroll-feel, A18-settings-segment-animation, A17-settings-toggle-animation.
+- Last finished: Loop12-chat-title-scheme, A21-save-delay-setting, T16-roadmap-table-columns (dev 2026-11-17), T14-dirty-allowlist-codex-wake, Loop11-one-chat-flow, A19-settings-scroll-feel, A18-settings-segment-animation, A17-settings-toggle-animation.
 
 ## Plan
 Active rows only (the roadmap script parses this table; same 5 columns as `.coord/pending.md`).
@@ -32,7 +32,8 @@ Active rows only (the roadmap script parses this table; same 5 columns as `.coor
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
 | T15-ffmpeg-frame-capture-trial | Trial: record the dev window with ffmpeg, tile frames into one sheet so Claude can judge motion. Card in `.coord/tasks/` | Low | Small | test 1 done; awaiting more tests |
-| A22-wrap-hanging-indent | Wrapped lines of bullets, checkboxes, numbered and indented lines start under their text (library ignores wrap indent; probe then build). Card in `.coord/tasks/` | Medium | Medium | approved; Codex probe+build |
+| A22-wrap-hanging-indent | Wrapped lines of bullets, checkboxes, numbered and indented lines start under their text (library ignores wrap indent; probe then build). Card in `.coord/tasks/` | High | Large | hand test (dev copy running; r2 review fixes in) |
+| A23-paste-keep-structure | Paste engine: pasting rendered bulleted/numbered lists (AI chat, web) keeps nesting as note bullets; reader table, image/file stubs. Card in `.coord/tasks/` | Medium | Medium | rework r4 (Codex terra; paste notice in toast) |
 
 ## Open (needs the user)
 - Live check: A30 restart/sign-out saves an edit typed just before.

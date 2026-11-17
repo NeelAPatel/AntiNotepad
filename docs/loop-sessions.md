@@ -31,8 +31,7 @@
 - **One item chat per item** (v5.4.0; user, 2026-11-12: too many hops and two sets of buttons): one item, one worktree,
   a brief that names its done condition. It does Findings through hand test, sets the tier and tells the director in one
   line, and the user answers it. A second chat only if it sat idle over an hour with a large context, or on the user's
-  word. It records the user's scope changes on the card in their words. Name: `<ID> · <step> · <slug>`, for example
-  `A1 · build · list-commands`; its **role** is shown in its status card.
+  word. It records the user's scope changes on the card in their words. Name: `<state><badge> <ID-slug> · <phase>`; its **role** is shown in its status card.
   | Step | Role | When | Model | Does |
   |---|---|---|---|---|
   | `scan` | `scout` | rarely: a Low scout too big for the master | Haiku | read-only findings, no Codex |
@@ -41,14 +40,13 @@
   | `review` | `reviewer` | Check; the item chat renamed; a fresh one only when it stalled | Sonnet medium | `/review-task` |
   | `test` | `tester` | the hand test; a separate one only for a re-test the user asked for | Sonnet medium | launches the build, gives the UI checks, records the result |
   Each role's model, effort and tools are fixed in `.claude/agents/<role>.md` (builder, reviewer, auditor); this table says when to use them.
-  A build session moving into Check or Hand test renames itself to that step (`A1 · review · list-commands`,
-  `A1 · test · list-commands`) and changes its role, so the sidebar shows where it is; the master renames it if it
-  cannot. The Codex role for each run is picked by the job (`docs/agents.md`).
+  Item titles: `<state><badge> <ID-slug> · <phase>`; phases are request, findings, plan, build, check, hand test (append ` · r2` for rework). States in priority order: ⛔ blocked, ❓ needs you, ⏳ waiting on background, 🔨 working, 🅿️ parked after a report, 💤 standby. 🤖 means Codex running; 🧊 cold is reserved for a future sweeper. `[Merged] <ID-slug>` and `[Closed] <name>` mark retired chats for archive. Directors retain `<Role> <N> · LP<vX.Y.Z> · <slug>`.
+  Hooks cannot retitle the desktop app (see `.coord/research/loop12-title-spike.md`). When a hook or script prints `SET TITLE: ...`, call `set_session_title` with `self` once. Before asking the user, run `tools/chat-title.ps1 -State needs-you` and set the printed title before the reply; after a report on an open task use `-State parked`. At phase changes use the same script; the director renames a chat if self-rename fails. The Codex role for each run is picked by the job (`docs/agents.md`).
 - **Roadmap:** every master uses the same local server page `http://localhost:47811` (`/roadmap`), served live from STATUS
   and Git.
 - **Handing over to a new master** (the chat grew long, or the loop version changed): no sub-session mid-step (or each one
   named in STATUS with its state), STATUS "Now" says where every item stands, dev clean and pushed. Retitle the old master
-  `Master <N> · Loop v<V> · <slug> (closed)`, stop and archive it. The user opens the new master with:
+  `[Closed] <name>`, stop and archive it. The user opens the new master with:
   > You are `Master <N+1> · LP<vX.Y.Z> · <slug>` for AntiNotepad. Read `AGENTS.md`, the core `docs/loop.md` and the files it names, and
   > `.coord/STATUS.md`. Rename this chat to that
   > name, update STATUS "Working rules" with it, open `/roadmap`, then reply with the status card for the next plan item

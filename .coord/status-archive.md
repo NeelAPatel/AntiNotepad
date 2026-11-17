@@ -233,6 +233,7 @@ Done and dropped Plan rows moved out of STATUS by Loop10b-pending-list (2026-11-
 
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
+| Loop12-chat-title-scheme | Chat titles show state and Codex badge, set by hooks and `tools/chat-title.ps1`, no AI tokens; skills, docs, roadmap legend updated. Hand test passed (user, 2026-11-17). Merged to dev 2026-11-17 | Medium | Medium | done |
 | A21-save-delay-setting | Settings > Saving: save after you stop typing 0.4 s (default), 5, 10 or 30 s; note switches save at once; Saved label shows the real save time. Hand test: all passed (user, 2026-11-17). Merged to dev 2026-11-17 | High | Medium | done |
 | T16-roadmap-table-columns | Roadmap table: Tier badge, Type column, narrower branch column, collapsible groups, Entered time, Excel-style column filters and Columns picker; Release marker rows removed. Scope grew at the user's word. Hand test: "Looks good" (2026-11-16). Merged to dev 2026-11-16 | Low | Medium | done |
 | **Next (user, 2026-11-06: "3, then 1 and 2 together as worktrees with codex and then 5 release")** | | | | |
