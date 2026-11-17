@@ -1,3 +1,4 @@
+// Chooses a safe runtime instance identity before startup or a quit request.
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml.Styling;
@@ -39,13 +40,15 @@ internal static class Program
             log.LogCrash(e.Exception);
         };
 
-        // A custom data folder (dev/test runs) gets its own instance, so it can run beside the real one.
+        // A custom data folder (dev/test runs) gets its own instance. Slots are ignored without one.
         // Decided before --quit, so quitting a dev run never quits the real copy.
         var customDataFolder = Environment.GetEnvironmentVariable(AppInfo.Env("DATA"));
         var usesCustomData = customDataFolder is { Length: > 0 };
+        var slotName = usesCustomData ? AppInfo.SlotName : null;
+        AppInfo.SetActiveSlotName(slotName);
         // Only the repo launch scripts opt into dev UI; a data override alone remains isolated.
         var isDev = usesCustomData && Environment.GetEnvironmentVariable(AppInfo.Env("DEV")) == "1";
-        var instanceId = usesCustomData ? AppInfo.DevInstanceId : AppInfo.InstanceId;
+        var instanceId = AppInfo.ResolveInstanceId(customDataFolder, slotName);
         if (args is ["--quit"]) return SingleInstanceService.RequestQuit(instanceId);
         var startHidden = args.Contains("--hidden");
         using var instance = new SingleInstanceService(RequestShow, instanceId, RequestQuit);

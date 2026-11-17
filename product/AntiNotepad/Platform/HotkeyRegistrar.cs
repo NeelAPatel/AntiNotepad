@@ -1,3 +1,4 @@
+// Registers the app's global shortcuts and applies slot defaults at startup.
 using AntiNotepad;
 using Avalonia.Controls;
 
@@ -38,6 +39,7 @@ internal sealed class HotkeyRegistrar : IDisposable
     private readonly Action<string> _toast;
     private IHotkeyRegistration? _hotkey;
     private IHotkeyRegistration? _newNoteHotkey;
+    private bool _newNoteHotkeyInitialized;
     private bool _disposed;
 
     internal HotkeyRegistrar(
@@ -100,6 +102,12 @@ internal sealed class HotkeyRegistrar : IDisposable
     /// <summary>A second global hotkey that shows the pad on a fresh note. Empty turns it off. Returns false if Windows refused it.</summary>
     internal bool RegisterNewNoteHotkey(string? gesture)
     {
+        if (!_newNoteHotkeyInitialized)
+        {
+            _newNoteHotkeyInitialized = true;
+            gesture = ResolveInitialNewNoteHotkey(gesture, AppInfo.ActiveSlotName is not null,
+                () => Environment.GetEnvironmentVariable(AppInfo.Env("NEWNOTE_HOTKEY")));
+        }
         if (string.IsNullOrWhiteSpace(gesture)) { _newNoteHotkey?.Dispose(); _newNoteHotkey = null; return true; }
         try
         {
@@ -108,6 +116,14 @@ internal sealed class HotkeyRegistrar : IDisposable
                 g => _makeNewNoteHotkey(g, _ => _newNoteAction()), out _);
         }
         catch (FormatException ex) { _toast(ex.Message); return false; }
+    }
+
+    /// <summary>Reads the environment default only for an empty initial setting in a slotted dev copy.</summary>
+    internal static string? ResolveInitialNewNoteHotkey(string? configured, bool hasSlot, Func<string?> readEnvironment)
+    {
+        ArgumentNullException.ThrowIfNull(readEnvironment);
+        if (!string.IsNullOrWhiteSpace(configured)) return configured;
+        return hasSlot ? readEnvironment() : configured;
     }
 
     public void Dispose()

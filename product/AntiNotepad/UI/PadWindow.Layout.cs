@@ -387,37 +387,81 @@ internal sealed partial class PadWindow
         _savedLabelTimer.Start();
     }
 
-    private Border Chip(string text, Color color) => new()
+    private Border Chip(string text, Color color, Color? textColor = null) => new()
     {
         Background = new SolidColorBrush(color, _palette.Dark ? ChromeTokens.BadgeDarkFillAlpha : ChromeTokens.BadgeLightFillAlpha),
         CornerRadius = new CornerRadius(ChromeTokens.BadgeCornerRadius),
         Padding = new Thickness(ChromeTokens.BadgeHorizontalPadding, ChromeTokens.BadgeTopPadding, ChromeTokens.BadgeHorizontalPadding, ChromeTokens.BadgeBottomPadding),
         Height = ChromeTokens.BadgeHeight,
-        Child = Kit.Text(text, color, ChromeTokens.BadgeFontSize, Typography.Strong),
+        Child = Kit.Text(text, textColor ?? color, ChromeTokens.BadgeFontSize, Typography.Strong),
         VerticalAlignment = VerticalAlignment.Center
     };
 
+    /// <summary>Builds the branch badge and animates between its measured labels.</summary>
     private Border DevBadge(Color color)
     {
         var (shortText, fullText) = AppInfo.FormatDevBadge(AppInfo.BuildBranch, AppInfo.BuildTime?.ToLocalTime());
-        var chip = Chip(shortText, color);
+        var slotColor = AppInfo.SlotColor;
+        var badgeColor = slotColor ?? color;
+        var textColor = slotColor is { } selected && !_palette.Dark
+            ? MixColor(selected, _palette.Ink, ChromeTokens.DevBadgeLightTextInkMix)
+            : badgeColor;
+        var chip = Chip(shortText, badgeColor, textColor);
         if (shortText == "dev") return chip;
-        var text = (TextBlock)chip.Child!;
-        FontFamily? glyphFont = null;
-        foreach (var family in FontManager.Current.SystemFonts)
+
+        var glyphFont = FindDevBadgeGlyphFont();
+        var resting = DevBadgeText(shortText, textColor, glyphFont);
+        var expanded = DevBadgeText(fullText, textColor, glyphFont);
+        resting.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        expanded.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        var restingWidth = resting.DesiredSize.Width + 2 * ChromeTokens.BadgeHorizontalPadding;
+        var expandedWidth = expanded.DesiredSize.Width + 2 * ChromeTokens.BadgeHorizontalPadding;
+        var content = new Grid { ClipToBounds = true };
+        content.Children.Add(resting);
+        content.Children.Add(expanded);
+        expanded.Opacity = 0;
+        chip.Child = content;
+        chip.ClipToBounds = true;
+        chip.Width = restingWidth;
+
+        Anim.Handle? widthMotion = null;
+        Anim.Handle? fadeMotion = null;
+        void SetExpanded(bool showFull)
         {
-            if (family.Name is "Cascadia Mono" or "Cascadia Code"
-                && FontManager.Current.TryGetGlyphTypeface(new Typeface(family), out var typeface)
-                && typeface.CharacterToGlyphMap.ContainsGlyph(0xE0A0))
+            widthMotion?.Cancel();
+            fadeMotion?.Cancel();
+            var fromWidth = chip.Width;
+            var toWidth = showFull ? expandedWidth : restingWidth;
+            var fromResting = resting.Opacity;
+            var toResting = showFull ? 0 : 1;
+            var fromExpanded = expanded.Opacity;
+            var toExpanded = showFull ? 1 : 0;
+            widthMotion = Anim.Run(chip, MotionTokens.DevBadgeWidth,
+                progress => chip.Width = fromWidth + (toWidth - fromWidth) * progress,
+                easing: MotionTokens.DevBadgeWidthEasing);
+            fadeMotion = Anim.Run(chip, MotionTokens.DevBadgeFade, progress =>
             {
-                glyphFont = family;
-                break;
-            }
+                resting.Opacity = fromResting + (toResting - fromResting) * progress;
+                expanded.Opacity = fromExpanded + (toExpanded - fromExpanded) * progress;
+            }, easing: MotionTokens.DevBadgeFadeEasing);
         }
-        void SetText(string value)
+        chip.PointerEntered += (_, _) => SetExpanded(true);
+        chip.PointerExited += (_, _) => SetExpanded(false);
+        return chip;
+    }
+
+    /// <summary>Builds one badge label while keeping the branch glyph in its icon font.</summary>
+    private static TextBlock DevBadgeText(string value, Color color, FontFamily? glyphFont)
+    {
+        var text = Kit.Text("", color, ChromeTokens.BadgeFontSize, Typography.Strong);
+        text.Text = null;
+        text.TextWrapping = TextWrapping.NoWrap;
+        text.HorizontalAlignment = HorizontalAlignment.Left;
+        text.VerticalAlignment = VerticalAlignment.Center;
+        text.IsHitTestVisible = false;
+        text.Inlines!.Clear();
+        if (value.StartsWith("\uE0A0 ", StringComparison.Ordinal))
         {
-            text.Text = null;
-            text.Inlines!.Clear();
             text.Inlines.Add(new Avalonia.Controls.Documents.Run(glyphFont is null ? "\u2387" : "\uE0A0")
             {
                 FontFamily = glyphFont ?? text.FontFamily,
@@ -425,19 +469,27 @@ internal sealed partial class PadWindow
             });
             text.Inlines.Add(new Avalonia.Controls.Documents.Run(value[1..]));
         }
-        SetText(shortText);
-        var tooltip = fullText == "\uE0A0 dev"
-            ? $"{fullText}@{AppInfo.BuildTime?.ToLocalTime().ToString("yyyy-MM-dd h:mm tt", System.Globalization.CultureInfo.InvariantCulture)}"
-            : fullText;
-        ToolTip.SetTip(chip, new TextBlock
-        {
-            Text = glyphFont is null ? tooltip.Replace('\uE0A0', '\u2387') : tooltip,
-            FontFamily = glyphFont ?? text.FontFamily,
-        });
-        chip.PointerEntered += (_, _) => SetText(fullText);
-        chip.PointerExited += (_, _) => SetText(shortText);
-        return chip;
+        else text.Inlines.Add(new Avalonia.Controls.Documents.Run(value));
+        return text;
     }
+
+    /// <summary>Finds a system font that contains the branch glyph, if available.</summary>
+    private static FontFamily? FindDevBadgeGlyphFont()
+    {
+        foreach (var family in FontManager.Current.SystemFonts)
+        {
+            if (family.Name is "Cascadia Mono" or "Cascadia Code"
+                && FontManager.Current.TryGetGlyphTypeface(new Typeface(family), out var typeface)
+                && typeface.CharacterToGlyphMap.ContainsGlyph(0xE0A0)) return family;
+        }
+        return null;
+    }
+
+    private static Color MixColor(Color from, Color to, double amount) => Color.FromRgb(
+        MixChannel(from.R, to.R, amount), MixChannel(from.G, to.G, amount), MixChannel(from.B, to.B, amount));
+
+    private static byte MixChannel(byte from, byte to, double amount) =>
+        (byte)Math.Round(from + (to - from) * amount, MidpointRounding.AwayFromZero);
 
     private void BuildPill()
     {

@@ -22,6 +22,18 @@ internal static partial class SelfTest
         ContractRow[] rows =
         [
             new(
+                "installed-instance-id-stable",
+                "The installed instance remains AntiNotepad even when ANTINOTEPAD_SLOT is set without custom dev data.",
+                "T17-multi-dev-instances",
+                () => RunExistingCheck(InstalledInstanceIdentityChecks, "installed instance identity: "),
+                null),
+            new(
+                "dev-no-slot-keeps-legacy-id",
+                "Custom data without a valid slot keeps the existing AntiNotepad-dev instance identity.",
+                "T17-multi-dev-instances",
+                () => RunExistingCheck(LegacyDevInstanceIdentityChecks, "legacy dev instance identity: "),
+                null),
+            new(
                 "paste-list-structure",
                 "Structured HTML lists upgrade plain clipboard text without changing already structured text.",
                 "A23-paste-keep-structure",

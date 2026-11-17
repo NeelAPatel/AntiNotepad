@@ -20,6 +20,9 @@ internal static class MotionTokens
 
     /// <summary>Chrome and feedback transitions.</summary>
     public const double BarsReveal = 160, PillFade = 160, ChromeShift = 200, Nudge = 200;
+    public const double DevBadgeWidth = 240, DevBadgeFade = 160;
+    public static readonly Func<double, double> DevBadgeWidthEasing = Anim.CubicBezier(.2, .8, .2, 1);
+    public static readonly Func<double, double> DevBadgeFadeEasing = Anim.CubicBezier(.25, .1, .25, 1);
 
     /// <summary>Pinned window ring fade in either direction.</summary>
     public const double PinRingFade = 250;
