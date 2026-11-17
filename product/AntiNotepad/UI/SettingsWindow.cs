@@ -537,10 +537,7 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Card(Row(null, "Save after I stop typing",
             "Your note is also saved when you hide, switch notes, or quit.",
             () => Dropdown(
-                [(ChromeTokens.SaveDelayDefaultMs.ToString(), "0.4 s"),
-                 (ChromeTokens.SaveDelayFiveSecondsMs.ToString(), "5 s"),
-                 (ChromeTokens.SaveDelayTenSecondsMs.ToString(), "10 s"),
-                 (ChromeTokens.SaveDelayThirtySecondsMs.ToString(), "30 s")],
+                Settings.SaveDelayChoicesMs.Select(ms => (ms.ToString(), (ms / 1000.0).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) + " s")).ToArray(),
                 S.SaveDelayMs.ToString(), v => Set(() => S.SaveDelayMs = int.Parse(v))))));
     }
 

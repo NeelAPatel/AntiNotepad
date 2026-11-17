@@ -20,8 +20,8 @@ public sealed class Note
 
     /// <summary>Set by Store so search-only body cache entries expire immediately on edits and saves.</summary>
     internal static Action<string>? InvalidateSearchBody;
-    /// <summary>Set by Store so blank edits preserve any body that may already reach disk.</summary>
-    internal static Func<string, bool>? HasPendingBodyWrite;
+    /// <summary>True while a queued or unacknowledged body may still reach disk.</summary>
+    internal volatile bool BodyWriteInFlight;
 
     public string Id { get; set; } = Guid.NewGuid().ToString("N")[..12];
     public DateTime Created { get; set; } = DateTime.Now;
@@ -118,7 +118,7 @@ public sealed class Note
         if (BodyUnavailable) return;
         InvalidateSearchCache();
         // A blank first edit stays clean only while no older snapshot can still reach disk.
-        var bodyWriteMayReachDisk = blank && SavedAt is null && HasPendingBodyWrite?.Invoke(Id) == true;
+        var bodyWriteMayReachDisk = blank && SavedAt is null && BodyWriteInFlight;
         Dirty = !(blank && SavedAt is null && !bodyWriteMayReachDisk);
         Blank = blank; ModeCache = mode; Modified = DateTime.Now; TitleCache = null;
     }

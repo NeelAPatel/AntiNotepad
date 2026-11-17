@@ -39,7 +39,6 @@ public sealed partial class Store
     private readonly object _saveGate = new();
     private readonly object _completionGate = new();
     private readonly Dictionary<string, PendingBody> _pendingBodies = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, HashSet<long>> _unsupersededBodyWrites = new(StringComparer.Ordinal);
     private readonly Queue<SaveCompletion> _completedSaves = new();
     private PendingSaveBatch? _pendingSave;
     private Task? _writerTask;
@@ -49,17 +48,8 @@ public sealed partial class Store
     public string? LastError { get; private set; }
     public bool IsAvailable { get; private set; } = true;
     public string Folder => _folder;
-    internal event Action<Note, int>? NoteSaved;
-
-    /// <summary>Reports whether a body is queued, writing, or needs a newer durable revision to replace it.</summary>
-    internal bool HasPendingBodyWrite(Note note) => HasPendingBodyWriteById(note.Id);
-
-    private bool HasPendingBodyWriteById(string id)
-    {
-        lock (_saveGate)
-            return _pendingBodies.ContainsKey(id)
-                || _unsupersededBodyWrites.TryGetValue(id, out var revisions) && revisions.Count > 0;
-    }
+    // Callbacks run on the caller of ApplyCompletedSaves; UI work requires CanTouchPadUi.
+    internal event Action<Note>? NoteSaved;
 
     public Store(string directory, bool createDirectories = true)
     {
@@ -74,7 +64,6 @@ public sealed partial class Store
         IsAvailable = createDirectories || Directory.Exists(_folder);
         Note.LoadBody = ReadBody;
         Note.InvalidateSearchBody = InvalidateSearchBody;
-        Note.HasPendingBodyWrite = HasPendingBodyWriteById;
     }
 
     private string BodyPath(string id)
@@ -395,9 +384,6 @@ public sealed partial class Store
             {
                 foreach (var body in result.DurableBodies)
                 {
-                    if (!_unsupersededBodyWrites.TryGetValue(body.Id, out var revisions))
-                        _unsupersededBodyWrites[body.Id] = revisions = [];
-                    revisions.Add(body.Revision);
                     if (_pendingBodies.TryGetValue(body.Id, out var pending) && pending.Revision == body.Revision)
                         _pendingBodies.Remove(body.Id);
                 }
@@ -421,6 +407,7 @@ public sealed partial class Store
             {
                 if (!note.Dirty || note.BodyUnavailable || !note.TryGetDirtyText(out var text)) continue;
                 _pendingBodies[note.Id] = new PendingBody(text, note.SearchRevision);
+                note.BodyWriteInFlight = true;
             }
 
             var bodies = new List<SaveBodySnapshot>();
@@ -533,9 +520,9 @@ public sealed partial class Store
                             acknowledgement.Note.ModeCache = metadata.ModeCache;
                             acknowledgement.Note.SavedAt = savedAt;
                             acknowledgement.Note.Dirty = false;
-                            NoteSaved?.Invoke(acknowledgement.Note, completion.Data.Settings.SaveDelayMs);
+                            NoteSaved?.Invoke(acknowledgement.Note);
                         }
-                        lock (_saveGate) _unsupersededBodyWrites.Remove(body.Id);
+                        lock (_saveGate) acknowledgement.Note.BodyWriteInFlight = false;
                     }
         }
     }
@@ -585,7 +572,6 @@ public sealed partial class Store
         LastError = IsAvailable ? null : $"Notes folder is unavailable: {_folder}";
         Note.LoadBody = ReadBody;
         Note.InvalidateSearchBody = InvalidateSearchBody;
-        Note.HasPendingBodyWrite = HasPendingBodyWriteById;
         ClearSearchBodyCache();
     }
 
