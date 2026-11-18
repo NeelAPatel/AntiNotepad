@@ -32,8 +32,9 @@ xhigh is never the default. When unsure, start with the cheaper role.
 - The wrapper adds the only working sandbox route on this machine (`-c 'windows.sandbox="unelevated"'` with
   `--sandbox`, never full access). Audits run `CODEX_SANDBOX=read-only`; builds and reviews keep the default
   `workspace-write`.
-- Output: log `.coord/logs/<ID-slug>.<role>.log`, last message `.coord/reports/<ID-slug>.<role>.codex.md`; the brief asks for a
-  short report at `.coord/reports/<ID-slug>.md`.
+- Output: log `.coord/logs/<ID-slug>.<role>.log`, last message `.coord/logs/<ID-slug>.<role>.last.md` in the main
+  checkout (ignored; not part of the item's commits). The brief asks for a short report at
+  `.coord/reports/<ID-slug>.md`. Existing tracked `.codex.md` reports stay as history.
 
 ## What Codex can and cannot check
 The sandbox cannot bind ports, open a browser, see the screen or launch AntiNotepad. **A brief's "Done means" lists only
