@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`). Claude fills Request to Approve before any build; Codex reads the whole card, follows "For Codex", never edits it. Budget: 4 KB (logs go in reports).
 
 Tier: Medium · editor-feature
-State: approved
+State: building
 Branch: `feat/A26-tab-at-text-start` in `.claude/worktrees/feat/A26-tab-at-text-start` (created at Approve, from dev's tip)
 
 ## Request
@@ -34,8 +34,14 @@ Director (Master 6), 2026-11-18, user's go to start Findings (pending: `idea: ta
 - **Needs from you:** Approve; later the quick hand check.
 
 ## Files
-- `product/AntiNotepad/Editor/ListEditing.cs`, `Editor/DocumentCommands.cs`, `Editor/PadView.cs`
-- `product/AntiNotepad/UI/HelpOverlay.cs` (Tab help line), `SelfTest/Lists.cs`, `SelfTest/Contracts.cs`
+Only these files may change (exact paths; `tools/gate.ps1` reads this list). Others need an "Out-of-scope files" line in the report.
+- `product/AntiNotepad/Editor/ListEditing.cs`
+- `product/AntiNotepad/Editor/DocumentCommands.cs`
+- `product/AntiNotepad/Editor/PadView.cs`
+- `product/AntiNotepad/UI/HelpOverlay.cs`
+- `product/AntiNotepad/SelfTest/Lists.cs`
+- `product/AntiNotepad/SelfTest/Contracts.cs`
+- `product/AntiNotepad/SelfTest/Design.cs`
 
 ## Contracts
 - New: Tab changes a list level only at text start; Alt+Shift+Left/Right from anywhere.
