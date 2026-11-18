@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`). Claude fills Request to Approve before any build; Codex reads the whole card, follows "For Codex", never edits it. Budget: 4 KB (logs go in reports).
 
 Tier: High · save-paths
-State: approved
+State: checking
 Branch: `refactor/A21b-save-scheduler-extract` in `.claude/worktrees/refactor/A21b-save-scheduler-extract` (created at Approve, from dev's tip)
 
 ## Request
@@ -51,5 +51,9 @@ Role: terra (`docs/agents.md`), a few files, shared save state. Branch is checke
 
 Report `.coord/reports/A21b-save-scheduler-extract.md`: 1 Summary; 2 Change list; 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 6 Contracts; 7 Lens review; 8 Checks run; 9 Hand checks.
 ## Check
-
+- Gate (offline): PASS, build 0 warnings, SELFTEST PASS, 32 contract rows (31 pass, 1 manual). The online run failed only on NU1900 (no network).
+- Codex review: accept, no findings. Design review: accept.
+- Bounds: ResolveEmptyEdit takes a `blank` argument (both callers need it): justified. The move commit also holds the quit and session-end checks: justified. PadWindow.cs 739 -> 680: within plan.
+- Noticed: SaveTiming.cs ends with a blank line (cosmetic); SelfTest resets SessionEnd through its backing field (same pattern as the Editor selftests); Navigation still calls DiscardUnpersistedEmptyEdit twice.
+- Misses: none.
 ## Hand test
