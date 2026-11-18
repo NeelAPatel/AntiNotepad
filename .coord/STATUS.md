@@ -22,7 +22,7 @@ Updated: 2026-11-16 · Product: AntiNotepad (`product/AntiNotepad`) · installed
 
 ## Now
 - Nothing in flight. T15-ffmpeg-frame-capture-trial paused (user, 2026-11-17).
-- Last finished: A25-page-edge-stuck-after-hide, Loop13-drop-chat-titles, Loop14-codex-closing-files, T17-multi-dev-instances, A24-save-delay-cleanup, A23-paste-keep-structure, A22-wrap-hanging-indent, Loop12-chat-title-scheme-r2, Loop12-chat-title-scheme, A21-save-delay-setting, T16-roadmap-table-columns (dev 2026-11-17), T14-dirty-allowlist-codex-wake, Loop11-one-chat-flow, A19-settings-scroll-feel, A18-settings-segment-animation, A17-settings-toggle-animation.
+- Last finished: Loop15-preflight-stale-head, A25-page-edge-stuck-after-hide, Loop13-drop-chat-titles, Loop14-codex-closing-files, T17-multi-dev-instances, A24-save-delay-cleanup, A23-paste-keep-structure, A22-wrap-hanging-indent, Loop12-chat-title-scheme-r2, Loop12-chat-title-scheme, A21-save-delay-setting, T16-roadmap-table-columns (dev 2026-11-17), T14-dirty-allowlist-codex-wake, Loop11-one-chat-flow, A19-settings-scroll-feel, A18-settings-segment-animation, A17-settings-toggle-animation.
 
 ## Plan
 Active rows only (the roadmap script parses this table; same 5 columns as `.coord/pending.md`).
@@ -30,7 +30,6 @@ Active rows only (the roadmap script parses this table; same 5 columns as `.coor
 ### Pending work
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
-| Loop15-preflight-stale-head | Preflight "stale Head": the allowance exists; fix the `-dirty` gate Head gap with a text rule and a clearer message; branch `chore/Loop15-preflight-stale-head`; card in worktree | Low | Small | accepted |
 | D3-release-checklist | Fold a short Release section (dev -> main steps) into `docs/dev-loop.md`, pointer in `loop.md`; branch `docs/D3-release-checklist`; chat d3-release-list; card `.coord/tasks/` | Low | Small | accepted |
 
 ## Open (needs the user)

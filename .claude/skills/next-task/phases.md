@@ -48,6 +48,9 @@ The master asks one question: approve, change, or drop. Nothing is built, and no
 | Lab build | a design change the user has not approved yet | design changes (`AGENTS.md`) |
 | Hand test | what only the screen shows | anything visible; always for High |
 
+### Build hand-off
+Commit the card and reports first so the tree is clean, run the gate, then commit only the card, reports and STATUS afterwards; a `-dirty` Head always fails preflight.
+
 ## Widgets (Claude app features)
 Priority (user, 2026-10-29): good development and a good understanding of the codebase first, then saving usage. Wasted
 usage is back-and-forth to get things right, so use whatever cuts that:
