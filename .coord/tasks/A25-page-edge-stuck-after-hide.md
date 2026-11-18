@@ -52,4 +52,4 @@ Report `.coord/reports/A25-page-edge-stuck-after-hide.md`, short: 1 Summary; 2 C
 Low tier: gate only. Gate PASS on the item branch (build 0 warnings, SELFTEST PASS, seam, tokens, format, scope, size). Diff read by the item chat: 3 files, 7 product lines plus one selftest case; matches Plan steps 1-3. Mutation check by Codex: the new case fails without the `_frameRunning` reset. Bounds: within plan. Noticed: none. Misses: none.
 
 ## Hand test
-Dev copy (slot color from `tools/dev.ps1`) running from the item worktree; user result pending.
+Dev copy running from the item worktree. User, 2026-11-18: "yes the page resets to normal once i do step 4 to show it again" (pull, hide, show: page at rest).
