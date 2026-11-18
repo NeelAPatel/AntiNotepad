@@ -22,7 +22,7 @@ Updated: 2026-11-16 · Product: AntiNotepad (`product/AntiNotepad`) · installed
 
 ## Now
 - Nothing in flight. T15-ffmpeg-frame-capture-trial paused (user, 2026-11-17).
-- Last finished: A21b-save-scheduler-extract, D3-release-checklist, Loop15-preflight-stale-head, A25-page-edge-stuck-after-hide, Loop13-drop-chat-titles, Loop14-codex-closing-files, T17-multi-dev-instances, A24-save-delay-cleanup, A23-paste-keep-structure, A22-wrap-hanging-indent, Loop12-chat-title-scheme-r2, Loop12-chat-title-scheme, A21-save-delay-setting, T16-roadmap-table-columns (dev 2026-11-17), T14-dirty-allowlist-codex-wake, Loop11-one-chat-flow, A19-settings-scroll-feel, A18-settings-segment-animation, A17-settings-toggle-animation.
+- Last finished: A27-recovered-folder-always-open, A21b-save-scheduler-extract, D3-release-checklist, Loop15-preflight-stale-head, A25-page-edge-stuck-after-hide, Loop13-drop-chat-titles, Loop14-codex-closing-files, T17-multi-dev-instances, A24-save-delay-cleanup, A23-paste-keep-structure, A22-wrap-hanging-indent, Loop12-chat-title-scheme-r2, Loop12-chat-title-scheme, A21-save-delay-setting, T16-roadmap-table-columns (dev 2026-11-17), T14-dirty-allowlist-codex-wake, Loop11-one-chat-flow, A19-settings-scroll-feel, A18-settings-segment-animation, A17-settings-toggle-animation.
 
 ## Plan
 Active rows only (the roadmap script parses this table; same 5 columns as `.coord/pending.md`).
@@ -30,8 +30,7 @@ Active rows only (the roadmap script parses this table; same 5 columns as `.coor
 ### Pending work
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
-| A26-tab-at-text-start | Tab changes a list level only at text start; Alt+Shift+Left/Right from anywhere; branch `feat/A26-tab-at-text-start`; chat a26-tab-rule; card in worktree | Medium | Small | approved |
-| A27-recovered-folder-always-open | Recovered-notes row always shows Open; `NotesLocation.EnsureRecovered` makes the folder only if the notes folder exists; branch `fix/A27-recovered-folder-always-open`; chat a27-recovered; card in worktree | Medium | Small | approved |
+| A26-tab-at-text-start | Tab changes a list level only at text start; Alt+Shift+Left/Right from anywhere; branch `feat/A26-tab-at-text-start`; chat a26-tab-rule; card in worktree | Medium | Small | building |
 
 ## Open (needs the user)
 - Live check: A30 restart/sign-out saves an edit typed just before.

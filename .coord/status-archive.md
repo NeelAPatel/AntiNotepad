@@ -235,6 +235,7 @@ Done and dropped Plan rows moved out of STATUS by Loop10b-pending-list (2026-11-
 
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
+| A27-recovered-folder-always-open | Settings always shows Open on the recovered-notes row; `NotesLocation.EnsureRecovered` makes the folder only if the notes folder exists. Selftest, contract row and design hash updated. Hand test: "yes it opens the correct folders" | Medium | Medium | done |
 | A21b-save-scheduler-extract | `SaveTiming` moved to `UI/SaveTiming.cs` (session-end and quit pending-edit checks with it); one `Note.ResolveEmptyEdit` for the blank-note rule; `PadWindow.cs` 739 to 680 lines. Selftest and gate pass. Hand test: "Passed" | High | Medium | done |
 | D3-release-checklist | Eight-step "Release (dev to main)" section in `docs/dev-loop.md` (bump item, gate and Release build, ancestor check, move main, annotated tag, push and verify, record, user installs) plus a pointer in `docs/loop.md`. Hand test: user, 2026-11-18, "Looks good". Gate PASS offline (dev, 2026-11-18) | Low | Small | done |
 | Loop15-preflight-stale-head | Preflight no longer fails on "stale Head" when the item chat commits only card, report and STATUS files after the last gate: clean-tree-before-gate rule in `next-task` phases and `review-task`, and a clear dirty-Head error in `merge-preflight.ps1`. Hand test: none (docs-tools). Gate PASS offline (dev, 2026-11-18) | Low | Small | done |

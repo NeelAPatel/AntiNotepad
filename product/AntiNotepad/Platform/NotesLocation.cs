@@ -40,6 +40,20 @@ internal static class NotesLocation
     private const string RecoveredFolderName = "recovered";
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
 
+    /// <summary>Ensures recovery storage exists without recreating a missing notes folder.</summary>
+    internal static bool EnsureRecovered(string dataFolder)
+    {
+        try
+        {
+            if (!Directory.Exists(dataFolder)) return false;
+            var recovered = Path.Combine(dataFolder, RecoveredFolderName);
+            Directory.CreateDirectory(recovered);
+            return Directory.Exists(recovered);
+        }
+        catch (IOException) { return false; }
+        catch (UnauthorizedAccessException) { return false; }
+    }
+
     internal static NotesLocationResolution Resolve(string appHome, string documents, string? customFolder = null)
     {
         if (customFolder is { Length: > 0 })
