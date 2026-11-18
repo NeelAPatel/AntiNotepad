@@ -2,7 +2,7 @@
 
 Item card (`docs/loop.md`). Claude fills Request to Approve before any build; Codex reads the whole card, follows "For Codex", never edits it. Budget: 4 KB (logs go in reports).
 
-Tier: Medium · editor-feature
+Tier: Medium Â· editor-feature
 State: approved
 Branch: `feat/A26-tab-at-text-start` in `.claude/worktrees/feat/A26-tab-at-text-start` (created at Approve, from dev's tip)
 
@@ -42,3 +42,13 @@ Director (Master 6), 2026-11-18, user's go to start Findings (pending: `idea: ta
 
 ## Approve
 User, 2026-11-18: "Approve"
+
+## For Codex
+Role: terra, one rule across a few coupled files in `Editor/`. The branch is checked out: never switch, merge or commit. Read `AGENTS.md`, then the Files; re-read before editing.
+- Build exactly the Plan's "After" for the Files above; no drive-by changes. If the Findings are wrong, stop and report that.
+- Build into `build/A26-tab-at-text-start-check` with `AVALONIA_TELEMETRY_OPTOUT=1`, run `--selftest`, delete the folder. Gate: `pwsh -NoProfile -File tools/gate.ps1 -Task A26-tab-at-text-start -Offline`.
+- Never launch or kill AntiNotepad, never run `--quit`, never edit `.coord/STATUS.md` or this card. Offline checks only (no ports, servers, browser).
+- Done means: `ListEditing.TabDecision` exists with selftests and a `CONTRACTS` row; PadView follows it; build 0 warnings, `SELFTEST PASS`, gate passes.
+- Follow `.claude/rules/coding.md` (headers, summaries, no history comments). Keep new logic out of PadView beyond key mapping.
+
+Report `.coord/reports/A26-tab-at-text-start.md`, short: 1 Summary; 2 Change list (`file:lines | what | Plan line`); 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 6 Contracts; 7 Lens review; 8 Checks run; 9 Hand checks for the user.
