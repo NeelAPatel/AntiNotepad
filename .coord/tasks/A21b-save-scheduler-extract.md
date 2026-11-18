@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`). Claude fills Request to Approve before any build; Codex reads the whole card, follows "For Codex", never edits it. Budget: 4 KB (logs go in reports).
 
 Tier: High · save-paths
-State: hand test
+State: hand-tested
 Branch: `refactor/A21b-save-scheduler-extract` in `.claude/worktrees/refactor/A21b-save-scheduler-extract` (created at Approve, from dev's tip)
 
 ## Request
@@ -57,3 +57,4 @@ Report `.coord/reports/A21b-save-scheduler-extract.md`: 1 Summary; 2 Change list
 - Noticed: SaveTiming.cs ends with a blank line (cosmetic); SelfTest resets SessionEnd through its backing field (same pattern as the Editor selftests); Navigation still calls DiscardUnpersistedEmptyEdit twice.
 - Misses: none.
 ## Hand test
+User, 2026-11-18, slot dev copy (type, wait, switch, hide): "Passed"
