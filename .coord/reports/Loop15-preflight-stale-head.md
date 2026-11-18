@@ -28,3 +28,14 @@ gate ran on a dirty tree: commit the card and re-run the gate
 
 ## Gate
 `pwsh -NoProfile -File tools/gate.ps1 -Task Loop15-preflight-stale-head -Offline`: `GATE: PASS` (build, selftest, seam, tokens, format, scope, loop lint, size, cleanup). Existing budget warnings remain for docs/loop.md, lessons and this card.
+## Change list
+- `.claude/skills/review-task/SKILL.md`: clean-tree-before-gate line in steps 2 and 6.
+- `.claude/skills/next-task/phases.md`: "Build hand-off" line.
+- `tools/merge-preflight.ps1`: dirty-Head message before `Test-GateHead`.
+
+## Behavior changes
+- A gate report whose Head ends `-dirty` fails preflight with a specific message; the allowed-file set and pass cases are unchanged.
+
+## Plan deviations
+- None in code. Codex could not make the throwaway branch (no `.git` writes); the item chat re-ran the dry run on a real throwaway branch: card-only True, `-dirty` False, `tools/` commit False.
+- Report sections above added by the item chat at Check (Codex omitted them).
