@@ -421,16 +421,11 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     /// <summary>Schedules one note from its most recent edit using a monotonic clock.</summary>
     private void ScheduleNoteSave(Note note, bool blank)
     {
-        if (blank && note.SavedAt is null)
+        if (note.ResolveEmptyEdit(blank))
         {
-            if (!note.BodyWriteInFlight)
-            {
-                note.DiscardUnpersistedEmptyEdit(blank);
-                _saveSchedules.Remove(note);
-                ArmSaveTimer();
-                return;
-            }
-            note.KeepEmptyEditDirty();
+            _saveSchedules.Remove(note);
+            ArmSaveTimer();
+            return;
         }
 
         var now = Environment.TickCount64;
@@ -454,15 +449,10 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         _dataSaveDeadline = null;
         foreach (var note in Data.All.Where(note => note.Dirty).ToArray())
         {
-            if (note.IsEmpty && note.SavedAt is null)
+            if (note.ResolveEmptyEdit(note.IsEmpty))
             {
-                if (!note.BodyWriteInFlight)
-                {
-                    note.DiscardUnpersistedEmptyEdit(blank: true);
-                    _saveSchedules.Remove(note);
-                    continue;
-                }
-                note.KeepEmptyEditDirty();
+                _saveSchedules.Remove(note);
+                continue;
             }
 
             if (!_saveSchedules.TryGetValue(note, out var state))

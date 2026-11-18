@@ -130,6 +130,15 @@ public sealed class Note
         Dirty = true;
     }
 
+    /// <summary>Resolves a first blank edit and reports whether it can be discarded.</summary>
+    internal bool ResolveEmptyEdit(bool blank)
+    {
+        if (!blank || SavedAt is not null) return false;
+        if (BodyWriteInFlight) { KeepEmptyEditDirty(); return false; }
+        DiscardUnpersistedEmptyEdit(blank);
+        return true;
+    }
+
     /// <summary>Clears a blank edit that has never had a durable body to preserve.</summary>
     internal void DiscardUnpersistedEmptyEdit(bool blank)
     {

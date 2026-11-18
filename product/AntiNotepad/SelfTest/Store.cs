@@ -501,6 +501,18 @@ internal static partial class SelfTest
         var failures = new List<string>();
         void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
         var root = Path.Combine(Path.GetTempPath(), $"{AppInfo.Name.ToLowerInvariant()}-save-delay-selftest-{Guid.NewGuid():N}");
+        var empty = new Note { Dirty = true };
+        CheckCase(empty.ResolveEmptyEdit(blank: true) && !empty.Dirty && empty.Blank,
+            "never-saved empty edit is discarded");
+        var inFlight = new Note { BodyWriteInFlight = true };
+        CheckCase(!inFlight.ResolveEmptyEdit(blank: true) && inFlight.Dirty && inFlight.Blank,
+            "empty edit stays dirty while an older body write is in flight");
+        var savedEmpty = new Note { SavedAt = DateTime.Now, Dirty = true, Blank = true };
+        CheckCase(!savedEmpty.ResolveEmptyEdit(blank: true) && savedEmpty.Dirty && savedEmpty.Blank,
+            "previously saved empty edit is untouched");
+        var nonempty = new Note { Dirty = true, Blank = false };
+        CheckCase(!nonempty.ResolveEmptyEdit(blank: false) && nonempty.Dirty && !nonempty.Blank,
+            "nonempty edit is untouched");
         try
         {
             var fresh = new Settings();
