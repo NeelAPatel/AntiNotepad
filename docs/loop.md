@@ -58,7 +58,7 @@ Chat titles are free-form; the status card carries the phase.
 
 - **One asker:** the user answers the item chat; it shows next-step buttons only for its own item decisions. The director asks only about merges, releases, rule changes and cross-item matters. Decisions are recorded verbatim.
 - **STATUS:** the item chat edits only its own item's row in the main checkout's `.coord/STATUS.md` (absolute path; the roadmap reads it), never other rows; branches never edit STATUS. The director edits Now and finished moves.
-- Release markers: move `main` only on the user's go. Design changes are lab-first (`AGENTS.md`).
+- Release markers: move `main` only on the user's go (`dev-loop.md`, "Release"). Design changes are lab-first (`AGENTS.md`).
 - **Side tasks** (`T`, tooling): fast lane, a few-line card or none, no audit, only the checks the change touches. `Loop` and `D` items keep a short card and a branch.
 - **Who builds:** Codex, role by the job (`docs/agents.md`); the item chat may write docs-only text itself and says so in the report. Codex checks are offline only.
 - **Progress checks:** two samples 30 s apart.

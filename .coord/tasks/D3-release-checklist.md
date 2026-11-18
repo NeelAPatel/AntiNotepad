@@ -36,3 +36,8 @@ Director (Master 6), 2026-11-18, user's go to start Findings (pending: `idea: re
 
 ## Approve
 User, 2026-11-18: "Approved the fold."
+
+## Check
+- Built by the item chat (docs-only, per `docs/loop.md` "Who builds"): `docs/dev-loop.md` "Release" (8 steps), one pointer in `docs/loop.md`. Tier Low, no hand test (not visible).
+- Dry run (read-only): `git merge-base --is-ancestor main dev` ok; `git ls-remote origin main` = local main (01b1b06); tag, push and `branch -f` not run. Every command and path cited exists (`AppInfo.props`, `gate.ps1`, `install.ps1`).
+- Gate PASS (scope, loop-lint). Existing WARN: `loop.md` was 8198 B (budget 8192), now within 10 B of before.
