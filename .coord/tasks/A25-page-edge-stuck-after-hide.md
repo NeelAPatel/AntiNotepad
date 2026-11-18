@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`). Claude fills Request to Approve before any build; Codex reads the whole card, follows "For Codex", never edits it. Budget: 4 KB (logs go in reports).
 
 Tier: Medium (confirm in Findings)
-State: approved
+State: building
 Branch: `fix/A25-page-edge-stuck-after-hide` in `.claude/worktrees/fix/A25-page-edge-stuck-after-hide` (created at Approve, from dev's tip)
 
 ## Request
@@ -37,3 +37,13 @@ Codex: steps 1-3, offline. Gates: gate.ps1.
 
 ## Approve
 User, 2026-11-18, in the item chat: "Approve"
+
+## For Codex
+Role: quick, because it is a one-line wiring change plus one selftest case. The branch is checked out: never switch, merge or commit. Read `AGENTS.md` and `.claude/rules/coding.md`, then the Files; re-read before editing.
+- Build exactly the Plan steps 1-3; no drive-by changes. If the Findings are wrong, stop and report that.
+- Step 3 detail: in `NoteSwipeChecks`, seed `_frameRunning = true` on a fresh `NoteSwipe` by reflection, `Input(1)` (pane pulled, frame stuck), `Cancel()`, then assert pane transform null, opacity 1, `HasRunningTimer` false, and a following `Input(1)` pulls again. Add a CONTRACTS row only if neighbouring swipe checks have one.
+- Build into `build/A25-page-edge-stuck-after-hide-check` with `AVALONIA_TELEMETRY_OPTOUT=1`, run `--selftest`, delete the folder. Gate: `pwsh -NoProfile -File tools/gate.ps1 -Task A25-page-edge-stuck-after-hide -Offline`.
+- Never launch or kill AntiNotepad, never run `--quit`, never edit `.coord/STATUS.md` or this card. Offline checks only.
+- Done means: HideResident calls the cancel; the new selftest case exists and passes; build 0 warnings, `SELFTEST PASS`, gate passes. Show the new case failing without the reset (temporarily skipping `_frameRunning = false` in `Cancel`), then passing.
+
+Report `.coord/reports/A25-page-edge-stuck-after-hide.md`, short: 1 Summary; 2 Change list; 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 6 Contracts; 7 Lens review (n/a); 8 Checks run; 9 Hand checks for the user.
