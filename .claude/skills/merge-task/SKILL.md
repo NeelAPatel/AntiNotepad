@@ -49,8 +49,9 @@ and tagging happen only on the user's explicit go. Every reply opens with the st
    characters or fewer), body of 3-6 short lines: why, what changed, the gate result, the hand test. This merge commit
    carries every STATUS edit since the last commit to dev; the branch's own commits stay as they are, and dev gets no
    separate `chore: status` commit.
-7. `git push origin dev`. Remove the worktree with `git worktree remove <wt>` (never `--force`): if it refuses because of
-   leftover files, stop, list them for the user and wait. Then delete the branch: `git branch -d <branch>` (it works
+7. `git push origin dev`. In the worktree, delete any untracked `.coord/reports/*.codex.md` files (known leftovers from
+   the older wrapper); tracked files are never touched. Remove the worktree with `git worktree remove <wt>` (never
+   `--force`): if it refuses because of any other leftover files, stop, list them for the user and wait. Then delete the branch: `git branch -d <branch>` (it works
    because the merge marks the branch merged) and `git push origin --delete <branch>`.
 8. **Version bump:** if this item bumped the loop version (`docs/loop.md`, .claude/skills/merge-task/branches.md), the merging director also (a)
    updates the STATUS "Loop vX.Y.Z is live" line and the three director names in STATUS "Working rules", and (b) renames

@@ -38,7 +38,7 @@ tier "$role" >/dev/null || { echo "unknown role $role (expected quick|worker|ter
 attempt() {  # $1=role -> 0 ok, 4 limit-type failure (try next tier), else codex exit code
   local r="$1" model effort log out start rc
   read -r model effort <<<"$(tier "$r")"
-  log="$LOGS/$task.$r.log"; out="$ROOT/.coord/reports/$task.$r.codex.md"
+  log="$LOGS/$task.$r.log"; out="$LOGS/$task.$r.last.md"
   echo "PLAN: role=$r model=$model effort=$effort sandbox=$SANDBOX workdir=$WORKDIR task=$file log=$log report=$out timeout=${TMIN}m"
   [ "${CODEX_DRY:-0}" = 1 ] && return 0
   start=$(date +%s)
@@ -60,7 +60,7 @@ r="$role"
 while :; do
   attempt "$r"; rc=$?
   case $rc in
-    0) [ "${CODEX_DRY:-0}" = 1 ] || title -State working; echo "DONE via $r. Report: .coord/reports/$task.$r.codex.md  Log: $LOGS/$task.$r.log"; exit 0;;
+    0) [ "${CODEX_DRY:-0}" = 1 ] || title -State working; echo "DONE via $r. Last message: $LOGS/$task.$r.last.md  Log: $LOGS/$task.$r.log"; exit 0;;
     4) n="$(next "$r")"; [ -z "$n" ] && { title -State blocked; echo "STOP: no further tier after $r (rc=$rc). Write HANDOFF.md, do not loop." >&2; exit $rc; }
          echo "FAILOVER: $r -> $n" >&2; r="$n";;
     *) title -State blocked; echo "FAIL: $r exit=$rc. Not retrying (see log). Revert or fix manually." >&2; exit $rc;;

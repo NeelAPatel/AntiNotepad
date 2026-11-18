@@ -44,8 +44,9 @@ Read by /merge-task for branch, worktree, commit and catch-up detail.
 - **Commit message:** the branch's commits: subject `<ID-slug>: <what changed>`, 72 characters or fewer, body only when
   the why is not obvious. The merge commit: the same subject and a body of 3-6 short lines: why, what changed, the gate
   result, the hand test. No Claude attribution lines (`.claude/settings.json`).
-- **Clean-up at Merge:** remove the worktree (`git worktree remove`, never `--force`: leftover files stop the merge and
-  are listed for the user), then delete the branch locally (`git branch -d`, which works because the merge marks it merged)
+- **Clean-up at Merge:** delete any untracked `.coord/reports/*.codex.md` files in the worktree (known leftovers from the
+  older wrapper); tracked files are never touched. Then remove the worktree (`git worktree remove`, never `--force`:
+  any other leftover files stop the merge and are listed for the user), then delete the branch locally (`git branch -d`, which works because the merge marks it merged)
   and on origin.
 
 **Catching up with dev:** rebase, never merge (user, 2026-11-06). Catch up at two points: before Check and before Merge
