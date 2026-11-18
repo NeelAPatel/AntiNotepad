@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`). Codex reads the whole card, follows "For Codex", never edits it. Budget: 4 KB.
 
 Tier: Medium · notes-folder write (was Low)
-State: hand test
+State: hand-tested
 Branch: `fix/A27-recovered-folder-always-open` in `.claude/worktrees/fix/A27-recovered-folder-always-open`
 
 ## Request
@@ -49,3 +49,4 @@ Item chat, 2026-11-18. Gate (-Offline): PASS after round 1 (selftest design-hash
 - **Noticed:** none. **Misses:** card Files list lacked `Design.cs` (found at gate, cause: design snapshot covers Settings pages; should have caught: Plan; lesson: Settings row changes list `Design.cs`).
 
 ## Hand test
+User, 2026-11-18 (Blue slot, test data): saw Open beside Empty (screenshot); "yes it opens the correct folders". Build checked: recovered folder exists on disk.
