@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`). Codex reads the whole card, follows "For Codex", never edits it. Budget: 4 KB.
 
 Tier: Medium · notes-folder write (was Low)
-State: approved
+State: hand test
 Branch: `fix/A27-recovered-folder-always-open` in `.claude/worktrees/fix/A27-recovered-folder-always-open`
 
 ## Request
