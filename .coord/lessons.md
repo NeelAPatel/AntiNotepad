@@ -61,4 +61,5 @@ One row per merged item: what each check found. Empty rows on items that later h
 | 2026-11-17 | T17-multi-dev-instances | High | 0 | 0 | 0 | 1 (accept; tooltip removed) | 0 | -
 | 2026-11-18 | A25-page-edge-stuck-after-hide | Low | 0 | 0 | - | - | 0 | -
 | 2026-11-18 | Loop15-preflight-stale-head | Low | 0 | 0 | - | - | 0 | -
+| 2026-11-18 | D3-release-checklist | Low | 0 | 0 | - | - | 0 | -
 Older rows: `.coord/lessons-archive.md` (budget: 3 KB here).

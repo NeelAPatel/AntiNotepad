@@ -116,6 +116,17 @@ asks, through `tools/install.ps1`. Dev work uses the separate repo scripts below
 - Computer use: only act in the dev copy; the installed copy holds real user data.
 - `.coord/STATUS.md`, `pending.md`, `lessons.md` and `status-archive.md` may be dirty (uncommitted) in the main checkout at approve, catch-up, gate and preflight; the director commits them in the merge commit. Any other dirty file still stops those tools.
 
+## Release (dev to main)
+Only on the user's go; the director does it (`docs/loop.md`, "Rules"). Habit from `v0.7.0-rc1` to `rc3`.
+1. **Bump:** a Low item (`A12-version-rc3` is the model) sets `AppVersionLabel` in `product/AntiNotepad/AppInfo.props`; the loop merges it to dev.
+2. **Gate on dev** passes (`tools/gate.ps1`), plus a Release build and selftest: `dotnet build product/AntiNotepad -c Release -o build/<task>-check`, then `<build>/AntiNotepad.exe --selftest` prints `SELFTEST PASS`.
+3. **Check dev is ahead of main:** `git merge-base --is-ancestor main dev` must succeed (main only ever fast-forwards).
+4. **Move main:** `git branch -f main dev` from the main checkout on dev (main is never checked out).
+5. **Tag, annotated:** `git tag -a v<version>-<label> -m "v<version>-<label>"`; `-rcN` until hand-tested, then plain `v0.7.0`.
+6. **Push:** `git push origin main <tag>`; `git ls-remote origin main <tag>` must show the same commit.
+7. **Record:** note the release in STATUS (Now), then archive it. No release notes file; the tag message and merge commits are the notes.
+8. **Installing is the user's step**, in a normal terminal (`tools/install.ps1`, above); never run it for them. After it, `(Get-Item "$env:LOCALAPPDATA\Programs\AntiNotepad\AntiNotepad.exe").VersionInfo.ProductVersion` shows the new label.
+
 ## Product identity
 - `product/AntiNotepad/AppInfo.props` owns the name, version, pre-release label, description and copyright. Runtime identity
   comes from generated assembly attributes through `AppInfo`.
