@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`). Claude fills Request to Approve before any build; Codex reads the whole card, follows "For Codex", never edits it. Budget: 4 KB (logs go in reports).
 
 Tier: High · save-paths
-State: plan ready (Approve given; branch waits on the 3-item cap)
+State: approved
 Branch: `refactor/A21b-save-scheduler-extract` in `.claude/worktrees/refactor/A21b-save-scheduler-extract` (created at Approve, from dev's tip)
 
 ## Request
