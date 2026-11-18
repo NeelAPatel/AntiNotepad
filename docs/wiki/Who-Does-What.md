@@ -35,8 +35,6 @@ Three top-level directors are live (`docs/loop.md`, "Sessions", "The picture"):
 
 Earlier masters are closed. Directors do not do item work themselves. They ask you how to route it, and the default is a Sonnet-or-lower sub-chat per change that runs Codex workers. After dispatch, a director steps back. Sub-chats talk with you directly about their item and suggest merges to their master.
 
-Item chats follow the legend in `docs/loop.md`: when a hook or script prints `SET TITLE: ...`, call `set_session_title` with `self` once. Before asking the user run `tools/chat-title.ps1 -State needs-you`; after a report on an open task use `-State parked`. Hooks cannot retitle the desktop app.
-
 ## Claude sub-chats
 
 The master uses `start_session` with `use_worktree: false`: the session works in the already selected checkout using absolute paths, rather than creating another worktree. Audit and backlog-scan launch instructions also specify `user_asked` and `wake_when_done`. The master waits for completion notes instead of polling (`.claude/skills/next-task/SKILL.md`, steps 2 and 5; `.claude/skills/scan-backlog/SKILL.md`, step 3).
@@ -44,7 +42,7 @@ The master uses `start_session` with `use_worktree: false`: the session works in
 ### Scout
 
 - **Kind/model:** Claude sub-chat, Haiku; no effort is fixed. A small Low scout stays in the master; a separate scout is rare. Backlog scans use one Haiku scout per idea.
-- **Started by:** `start_session`, titled `scan · <slug>` for backlog research; item chats follow the title legend in `docs/loop.md`.
+- **Started by:** `start_session` for backlog research.
 - **Given:** a filled `.coord/templates/scan.md` with snapshot absolute path, full commit SHA, idea row, screenshots and the one report path. Its opening sentence is exactly: "Brief for one Haiku scout (role `scout`), read-only, no Codex."
 - **May/may not:** read the detached snapshot; write only the specified research report in the main checkout. No snapshot edits, fix plan, commit or Codex launch.
 - **Leaves:** a research Markdown file under .coord/research/, stamped `Scanned at: <full sha>`, and its absolute path as the completion note.
@@ -54,7 +52,7 @@ Source: `.coord/templates/scan.md`; `.claude/skills/scan-backlog/SKILL.md`, step
 ### Auditor
 
 - **Kind/model:** Claude sub-chat, Haiku; no effort is fixed.
-- **Started by:** the master's `start_session`, using the item title scheme, for Medium/High Findings.
+- **Started by:** the master's `start_session` for Medium/High Findings.
 - **Given:** the master's launch-and-copy instructions in `.claude/skills/next-task/SKILL.md`, step 2, plus the filled findings brief. There is no fixed auditor opening sentence; the skill specifies its payload and actions.
 - **Does:** launches `CODEX_SANDBOX=read-only bash .coord/tools/codex-run.sh director <ID-slug>-audit .coord/tasks/<ID-slug>-audit.md` in the background. It copies only the report named by this invocation's successful `DONE via <role>. Report: <path>` line to the item audit report. No DONE line means no copy.
 - **May/may not:** no product edits or commits before Approve; no report reuse from an earlier run.
@@ -65,8 +63,8 @@ Source: `.claude/skills/next-task/SKILL.md`, step 2. The auditor commits nothing
 ### Builder
 
 - **Kind/model:** Claude sub-chat, Sonnet medium.
-- **Started by:** master `start_session` after Approve, using the item title scheme.
-- **Given:** the item path and the bullet brief in `.claude/skills/next-task/SKILL.md`, step 5. Its first role instruction is exactly: "your role is `builder`; show it on the status card's first line; follow the title scheme in `docs/loop.md`, with role `reviewer` at Check and `tester` at hand test;"
+- **Started by:** master `start_session` after Approve.
+- **Given:** the item path and the bullet brief in `.claude/skills/next-task/SKILL.md`, step 5. Its first role instruction is exactly: "your role is `builder`; show it on the status card's first line; use role `reviewer` at Check and `tester` at hand test;"
 - **Does:** reads the card, launches Codex in the role picked for the job in that worktree, then runs `/review-task` when it exits; relaunches permitted rework, commits each round on the item branch and pushes.
 - **May/may not:** works only in its assigned path, never edits dev or STATUS, never mints IDs. A docs change of a few lines may be made by the builder itself if its report says so.
 - **Leaves:** item-branch commits, reports and the card's Build/Check/Hand test evidence.
