@@ -32,7 +32,7 @@ User, 2026-11-17: "Approve"
 ## For Codex
 Role: terra (a dozen small doc and script edits across files; reasoning needed, not xhigh). Do the Plan exactly. Do not commit. No item IDs in comments.
 Docs say plainly: chat titles are free-form; the status card carries the phase (put this once in `docs/loop.md`, drop it from other docs). Keep `loop-card.ps1` working (read stdin only if still used). Delete `tools/chat-title.ps1` and the untracked `.coord/titles/` folder. Leave `.coord/logs`, `.coord/reports`, `.coord/research`, `.coord/status-archive.md`, `.coord/lessons.md`, `.coord/tasks/Loop12-*` and STATUS "Last finished" alone. Swap the sample slug `Loop12-chat-title-scheme` for `Loop12-sample-slug` in `product/AntiNotepad/SelfTest/App.cs` (both lines, recompute the expected badge text: `Loop12-3:04` and `Loop12 - sample-slug - 3:04 PM`) and `tools/playground/t17-badge-lab.html`. Another item edits `merge-task` SKILL and `codex-run.sh`; touch only the title lines.
-Done means (offline only): `git grep -il chat-title` lists only files under the archive dirs above plus `.coord/tasks/Loop12-*` and `.coord/tasks/Loop13-*`; build into `build/Loop13-drop-chat-titles-check` and run `--selftest` there (all pass); `tools/gate.ps1 -Offline -Task Loop13-drop-chat-titles` passes; delete the build folder after.
+Done means (offline only): `git grep -il chat-title` lists only files under the archive dirs above plus `.coord/tasks/Loop12-*`, `.coord/tasks/Loop13-*` and `.coord/pending.md`/STATUS history lines; build into `build/Loop13-drop-chat-titles-check` and run `--selftest` there (all pass); `tools/gate.ps1 -Offline -Task Loop13-drop-chat-titles` passes; delete the build folder after.
 Report `.coord/reports/Loop13-drop-chat-titles.md`: Changed (file list), Tests run (output tails), the grep output, Risks.
 
 ## Files
@@ -49,3 +49,15 @@ Report `.coord/reports/Loop13-drop-chat-titles.md`: Changed (file list), Tests r
 - `.gitignore`
 - `product/AntiNotepad/SelfTest/App.cs`
 - `tools/playground/t17-badge-lab.html`
+
+## Check
+- Gate (offline, tip): PASS; build 0 warnings, selftest PASS (32 rows, 31 pass, 1 manual). Warnings carried: loop.md 8198 B (was 9044, improved), lessons and this card over budget (history).
+- Review (reviewer subagent, Low tier, no Codex or design review): accept; no blocker or major.
+- Goal: `git grep -il chat-title` lists only STATUS, pending, lessons, status-archive, Loop12 reports/research/cards and this card (history).
+- Within plan: every Plan removal and both sample-slug edits. Justified: Loop12 cards not moved (no archive folder); report headings follow the brief (Changed, Tests, Grep, Risks), not the generic Change list names, since the brief set them.
+- Noticed (not done, out of plan): `docs/loop-sessions.md:46` keeps the older `[Closed] <name>` master-handover rename; `scan-backlog` SKILL line 21 and `docs/wiki/Glossary.md:50,52` mention free-form chat naming. Proposal: leave as is.
+- Misses: none.
+- Commit review: two tidy commits (removal; sample slug) each buildable; caught up with dev (already ancestor). No hand test: nothing visible.
+
+## Hand test
+None: nothing visible (Low tier, docs-tools).
