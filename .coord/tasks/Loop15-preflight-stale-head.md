@@ -47,3 +47,14 @@ Role: quick (`docs/agents.md`), because three small edits, no product code. The 
 - `/review-task` SKILL.md steps 2 and 6 and `phases.md` end-of-build: add one short line each: commit the card and reports first so the tree is clean, run the gate, then commit only card, reports and STATUS afterwards (a `-dirty` Head always fails preflight).
 - `tools/merge-preflight.ps1` line ~175: if the report's `Head:` ends `-dirty`, throw `gate ran on a dirty tree: commit the card and re-run the gate`; otherwise keep `stale Head: re-run the gate`. Do not change the allowed-file set.
 - Write the report `.coord/reports/Loop15-preflight-stale-head.md` with dry-run output of `Test-GateHead` (AST-extracted) on a throwaway local branch (never pushed, deleted after): clean Head + card-only commit True; `-dirty` Head False; clean Head + `tools/` commit False.
+
+## Check
+- Gate: PASS at the clean tip (build, selftest, seam, tokens, format, scope, loop-lint, size). Warnings: existing budgets (loop.md, lessons) and this card (5.9 KB over 4 KB; findings kept).
+- Dry run (real throwaway branch, removed): card-only after clean Head True; `-dirty` Head False; `tools/` commit False. Preflight's new message fires before `Test-GateHead` for `-dirty` Heads.
+- Within plan: three Files only, allowed-file set unchanged.
+- Justified: Codex omitted the report's Change list, Behavior changes and Plan deviations; item chat added them (docs only, no rework round).
+- Not visible: no hand test needed. No Codex review (Low tier). Tidy-up: 4 buildable commits kept as is.
+- Misses: none. Noticed: none.
+
+## Hand test
+None: nothing visible (Low tier, docs-tools).
