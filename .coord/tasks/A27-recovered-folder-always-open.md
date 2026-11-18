@@ -24,6 +24,8 @@ Own scout, dev 8056d53; the note still applies.
 - `product/AntiNotepad/Platform/NotesLocation.cs`
 - `product/AntiNotepad/UI/SettingsWindow.cs`
 - `product/AntiNotepad/SelfTest/Notes.cs`
+- `product/AntiNotepad/SelfTest/Contracts.cs` (the contract row)
+- `product/AntiNotepad/SelfTest/Design.cs` (design hash: the Open button now shows in Storage; proved by a dump diff with only added button lines)
 
 ## Contracts
 - Add one `CONTRACTS` row for the ensure rule if the file has a natural place; keep existing rows passing.
@@ -41,5 +43,9 @@ Role: terra, because it reasons across three files with one guard rule. The bran
 Report `.coord/reports/A27-recovered-folder-always-open.md`, short: 1 Summary; 2 Change list (`file:lines | what | Plan line`); 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 6 Contracts; 7 Lens review; 8 Checks run; 9 Hand checks for the user.
 
 ## Check
+Item chat, 2026-11-18. Gate (-Offline): PASS after round 1 (selftest design-hash fix below). Codex lens review: accept, no proven findings.
+- **Within plan:** `EnsureRecovered`, always-on Open, selftest cases, contract row `recovered-folder-ensure`.
+- **Justified:** `SelfTest/Design.cs` hash (the Storage page now has an Open button when empty). Proof: a dump from the same code with only that line reverted hashes to dev's old value; the diff against the new dump is added Open-button lines in every theme, nothing else. `Contracts.cs` was in the Plan text, now in Files.
+- **Noticed:** none. **Misses:** card Files list lacked `Design.cs` (found at gate, cause: design snapshot covers Settings pages; should have caught: Plan; lesson: Settings row changes list `Design.cs`).
 
 ## Hand test
