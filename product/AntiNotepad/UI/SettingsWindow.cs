@@ -604,6 +604,7 @@ internal sealed partial class SettingsWindow : Window
             SubRow(null, NotesFolderDetails, wide: true, searchTag: "sub Notes folder location and move notes")));
 
         page.Children.Add(Group("Other locations"));
+        NotesLocation.EnsureRecovered(_notes.DataFolder);
         var recovered = Path.Combine(_notes.DataFolder, "recovered");
         int? recoveredCount = null;
         string? recoveredDescription = null;
@@ -624,7 +625,7 @@ internal sealed partial class SettingsWindow : Window
         }
         page.Children.Add(Card(
             Row(() => Fl(0xf418), "Recovered notes", null,
-                () => recoveredCount is > 0 ? TextButton("Open", () => OpenFolder(recovered)) : null,
+                () => TextButton("Open", () => OpenFolder(recovered)),
                 RecoveryDescription, RecoveryDescriptionMatches),
             Row(() => Fl(0xf359), "App data", $"{_notes.AppHome}\nLog file and the pointer to your notes folder.",
                 () => TextButton("Open", () => OpenFolder(_notes.AppHome)))));

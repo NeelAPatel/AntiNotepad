@@ -22,6 +22,12 @@ internal static partial class SelfTest
         ContractRow[] rows =
         [
             new(
+                "recovered-folder-ensure",
+                "Recovery storage is created idempotently only under an existing notes folder.",
+                "A27-recovered-folder-always-open",
+                () => RunExistingCheck(NotesLocationChecks, "notes location: "),
+                "Dev copy: Settings Storage shows Open beside Empty and opens the recovered folder."),
+            new(
                 "installed-instance-id-stable",
                 "The installed instance remains AntiNotepad even when ANTINOTEPAD_SLOT is set without custom dev data.",
                 "T17-multi-dev-instances",

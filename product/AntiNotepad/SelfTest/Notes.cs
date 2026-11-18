@@ -12,6 +12,15 @@ internal static partial class SelfTest
         void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }
         try
         {
+            var ensureFolder = Path.Combine(root, "ensure-notes");
+            Directory.CreateDirectory(ensureFolder);
+            var ensured = NotesLocation.EnsureRecovered(ensureFolder);
+            CheckCase(ensured && Directory.Exists(Path.Combine(ensureFolder, "recovered"))
+                && NotesLocation.EnsureRecovered(ensureFolder), "recovered folder is created and ensure is idempotent");
+            var missingEnsureFolder = Path.Combine(root, "missing-ensure-notes");
+            CheckCase(!NotesLocation.EnsureRecovered(missingEnsureFolder) && !Directory.Exists(missingEnsureFolder),
+                "recovered ensure does not create a missing notes folder");
+
             var freshHome = Path.Combine(root, "fresh-home");
             var freshDocuments = Path.Combine(root, "fresh-documents");
             var fresh = NotesLocation.Resolve(freshHome, freshDocuments);
