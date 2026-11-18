@@ -50,3 +50,14 @@ Role: quick (`docs/agents.md`), because small text and path edits. The branch is
 - Done means: those edits only; dry-run output pasted in the report; gate passes.
 
 Report `.coord/reports/Loop14-codex-closing-files.md`, short: 1 Summary; 2 Change list; 3 Out-of-scope files; 4 Checks run.
+
+## Check
+- Gate: PASS at ace4557 (build 0 warnings, selftest, seam, tokens, scope, loop lint). Low tier: no Codex or design review.
+- Dry run (run by the item chat; Codex's sandbox could not start bash): `CODEX_DRY=1 codex-run.sh quick X-y ...` prints `report=` and `Last message:` under the main checkout's `.coord/logs/`. Scratch worktree with an untracked `*.codex.md`: removed after the rule's delete; with another untracked file: still refuses.
+- Bounds: the four Files changed, as planned (**within plan**). Rule text matches the approved wording.
+- Budget WARN: this card is over 4 KB (Findings and Plan are long); not worth a rework.
+- Noticed: none. Not folded in: "Codex cannot delete check folders" (no detail found).
+- Misses: none. Commit review: two commits, both tidy, no change needed.
+
+## Hand test
+No hand test needed (not visible; docs and tooling).
