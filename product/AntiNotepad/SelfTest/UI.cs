@@ -281,53 +281,53 @@ internal static partial class SelfTest
         const int idle = ChromeTokens.SaveIdleGateMs;
         var delays = new[] { ChromeTokens.SaveDelayFiveSecondsMs, ChromeTokens.SaveDelayTenSecondsMs, ChromeTokens.SaveDelayThirtySecondsMs };
 
-        var quick = UI.PadWindow.SaveTiming.Edit(null, 1000, ChromeTokens.SaveDelayDefaultMs, idle);
-        CheckCase(quick.DeadlineMs == 1400 && UI.PadWindow.SaveTiming.Tick(quick.State, 1399, idle).SaveNow == false
-            && UI.PadWindow.SaveTiming.Tick(quick.State, 1400, idle).SaveNow, "400 ms keeps the old trailing-edge debounce");
+        var quick = UI.SaveTiming.Edit(null, 1000, ChromeTokens.SaveDelayDefaultMs, idle);
+        CheckCase(quick.DeadlineMs == 1400 && UI.SaveTiming.Tick(quick.State, 1399, idle).SaveNow == false
+            && UI.SaveTiming.Tick(quick.State, 1400, idle).SaveNow, "400 ms keeps the old trailing-edge debounce");
 
         foreach (var delay in delays)
         {
-            var idleEdit = UI.PadWindow.SaveTiming.Edit(null, 1000, delay, idle);
-            var gate = UI.PadWindow.SaveTiming.Tick(idleEdit.State, 2000, idle);
+            var idleEdit = UI.SaveTiming.Edit(null, 1000, delay, idle);
+            var gate = UI.SaveTiming.Tick(idleEdit.State, 2000, idle);
             CheckCase(idleEdit.DeadlineMs == 2000 && !gate.SaveNow && gate.DeadlineMs == 1000 + delay,
                 $"{delay} ms starts its countdown after the one-second idle gate");
-            CheckCase(!UI.PadWindow.SaveTiming.Tick(gate.State, 1000 + delay - 1, idle).SaveNow
-                && UI.PadWindow.SaveTiming.Tick(gate.State, 1000 + delay, idle).SaveNow,
+            CheckCase(!UI.SaveTiming.Tick(gate.State, 1000 + delay - 1, idle).SaveNow
+                && UI.SaveTiming.Tick(gate.State, 1000 + delay, idle).SaveNow,
                 $"{delay} ms lands on the last-edit deadline");
 
-            var continuous = UI.PadWindow.SaveTiming.Edit(null, 0, delay, idle).State;
+            var continuous = UI.SaveTiming.Edit(null, 0, delay, idle).State;
             for (var elapsed = 900; elapsed < delay; elapsed += 900)
-                continuous = UI.PadWindow.SaveTiming.Edit(continuous, elapsed, delay, idle).State;
-            var safetyDeadline = UI.PadWindow.SaveTiming.NextDeadline(continuous, continuous.LastEditMs, idle);
-            var safety = UI.PadWindow.SaveTiming.Tick(continuous, delay, idle);
+                continuous = UI.SaveTiming.Edit(continuous, elapsed, delay, idle).State;
+            var safetyDeadline = UI.SaveTiming.NextDeadline(continuous, continuous.LastEditMs, idle);
+            var safety = UI.SaveTiming.Tick(continuous, delay, idle);
             CheckCase(safetyDeadline <= delay && safety.SaveNow && safety.State.RetryAtMs == 2L * delay,
                 $"{delay} ms safety write and repeat while typing");
-            var retry = UI.PadWindow.SaveTiming.Tick(safety.State, 2L * delay, idle);
+            var retry = UI.SaveTiming.Tick(safety.State, 2L * delay, idle);
             CheckCase(retry.SaveNow && retry.State.RetryAtMs == 3L * delay,
                 $"{delay} ms failed-write retry uses the next tick");
         }
 
-        var pause = UI.PadWindow.SaveTiming.Edit(null, 0, 5000, idle).State;
-        pause = UI.PadWindow.SaveTiming.Edit(pause, 900, 5000, idle).State;
-        var idleGate = UI.PadWindow.SaveTiming.Tick(pause, 1900, idle);
-        var resumed = UI.PadWindow.SaveTiming.Edit(idleGate.State, 2000, 5000, idle);
+        var pause = UI.SaveTiming.Edit(null, 0, 5000, idle).State;
+        pause = UI.SaveTiming.Edit(pause, 900, 5000, idle).State;
+        var idleGate = UI.SaveTiming.Tick(pause, 1900, idle);
+        var resumed = UI.SaveTiming.Edit(idleGate.State, 2000, 5000, idle);
         CheckCase(!idleGate.SaveNow && idleGate.DeadlineMs == 5900 && resumed.State.FirstEditMs == 2000
-            && !UI.PadWindow.SaveTiming.Tick(resumed.State, 5000, idle).SaveNow,
+            && !UI.SaveTiming.Tick(resumed.State, 5000, idle).SaveNow,
             "a full idle pause starts a new countdown on the next edit");
 
-        var first = UI.PadWindow.SaveTiming.Edit(null, 100, 5000, idle).State;
-        var second = UI.PadWindow.SaveTiming.Edit(null, 3000, 10000, idle).State;
-        CheckCase(UI.PadWindow.SaveTiming.NextDeadline(first, 100, idle) == 1100
-            && UI.PadWindow.SaveTiming.NextDeadline(second, 3000, idle) == 4000,
+        var first = UI.SaveTiming.Edit(null, 100, 5000, idle).State;
+        var second = UI.SaveTiming.Edit(null, 3000, 10000, idle).State;
+        CheckCase(UI.SaveTiming.NextDeadline(first, 100, idle) == 1100
+            && UI.SaveTiming.NextDeadline(second, 3000, idle) == 4000,
             "two notes retain independent deadlines");
-        var wake = UI.PadWindow.SaveTiming.Edit(null, 10, 30000, idle).State;
-        var afterWake = UI.PadWindow.SaveTiming.Tick(wake, 60000, idle);
+        var wake = UI.SaveTiming.Edit(null, 10, 30000, idle).State;
+        var afterWake = UI.SaveTiming.Tick(wake, 60000, idle);
         CheckCase(afterWake.SaveNow && afterWake.DeadlineMs == 90000, "a delayed dispatcher saves overdue edits once and retries from steady time");
-        var changed = UI.PadWindow.SaveTiming.Edit(first, 150, 10000, idle);
+        var changed = UI.SaveTiming.Edit(first, 150, 10000, idle);
         CheckCase(changed.State.FirstEditMs == 150 && changed.State.DelayMs == 10000,
             "a changed delay applies from the next edit");
-        var boundary = UI.PadWindow.SaveTiming.RetryAfterAttempt(first, 150, resetBurstOnEdit: true);
-        var afterBoundaryEdit = UI.PadWindow.SaveTiming.Edit(boundary, 151, 5000, idle);
+        var boundary = UI.SaveTiming.RetryAfterAttempt(first, 150, resetBurstOnEdit: true);
+        var afterBoundaryEdit = UI.SaveTiming.Edit(boundary, 151, 5000, idle);
         CheckCase(afterBoundaryEdit.State.FirstEditMs == 151,
             "an immediate save boundary starts a fresh run on the next edit");
 
@@ -375,7 +375,7 @@ internal static partial class SelfTest
             var left = (PadView)typeof(UI.PadWindow).GetField("_left", fields)!.GetValue(pad)!;
             var right = (PadView)typeof(UI.PadWindow).GetField("_right", fields)!.GetValue(pad)!;
             PadView ActivePane() => (PadView)typeof(UI.PadWindow).GetField("_active", fields)!.GetValue(pad)!;
-            var schedules = (Dictionary<Note, UI.PadWindow.SaveTiming.State>)typeof(UI.PadWindow)
+            var schedules = (Dictionary<Note, UI.SaveTiming.State>)typeof(UI.PadWindow)
                 .GetField("_saveSchedules", fields)!.GetValue(pad)!;
             var savedLabel = (TextBlock)typeof(UI.PadWindow).GetField("_saved", fields)!.GetValue(pad)!;
             var topLayer = (Panel)typeof(UI.PadWindow).GetField("_topLayer", fields)!.GetValue(pad)!;
@@ -562,8 +562,8 @@ internal static partial class SelfTest
             Edit(left, "left split safety save");
             Edit(right, "right split safety save");
             var now = Environment.TickCount64;
-            schedules[splitLeft] = UI.PadWindow.SaveTiming.Edit(null, now - 5000, 5000, ChromeTokens.SaveIdleGateMs).State;
-            schedules[splitRight] = UI.PadWindow.SaveTiming.Edit(null, now, 30000, ChromeTokens.SaveIdleGateMs).State;
+            schedules[splitLeft] = UI.SaveTiming.Edit(null, now - 5000, 5000, ChromeTokens.SaveIdleGateMs).State;
+            schedules[splitRight] = UI.SaveTiming.Edit(null, now, 30000, ChromeTokens.SaveIdleGateMs).State;
             var priorLabel = savedLabel.Text;
             var priorPill = pill.Child;
             var priorTop = TopShown(); var priorBottom = BottomShown();
@@ -599,7 +599,26 @@ internal static partial class SelfTest
 
             var quitting = left.Note!;
             Edit(left, "pending before quit");
-            CheckCase(pad.Save() && BodyIs(quitting, "pending before quit"), "quit's synchronous save saves a pending edit");
+            var quitRequested = false;
+            pad.QuitRequested += () => quitRequested = true;
+            pad.Quit();
+            CheckCase(quitRequested && BodyIs(quitting, "pending before quit"), "quit saves a pending edit");
+
+            var sessionPad = new UI.PadWindow(store, store.SettingsService, log, false, true, notes);
+            try
+            {
+                var sessionLeft = (PadView)typeof(UI.PadWindow).GetField("_left", fields)!.GetValue(sessionPad)!;
+                var sessionNote = sessionLeft.Note!;
+                Edit(sessionLeft, "pending before session end");
+                sessionPad.PrepareForSessionEnd();
+                CheckCase(BodyIs(sessionNote, "pending before session end"), "session end saves a pending edit");
+            }
+            finally
+            {
+                typeof(AntiNotepad.Platform.SessionEnd).GetField("<IsEnding>k__BackingField", BindingFlags.Static | BindingFlags.NonPublic)!.SetValue(null, false);
+                foreach (var sessionTimer in typeof(UI.PadWindow).GetFields(fields)
+                    .Select(field => field.GetValue(sessionPad)).OfType<DispatcherTimer>()) sessionTimer.Stop();
+            }
 
             report = failures.Count == 0
                 ? "blank and saved-empty behavior, per-edit delays, failure-safe labels, undo, trash, per-note hidden safety saves, transitions, minimize, switch-back and quit pass"
