@@ -47,3 +47,9 @@ Role: quick, because it is a one-line wiring change plus one selftest case. The 
 - Done means: HideResident calls the cancel; the new selftest case exists and passes; build 0 warnings, `SELFTEST PASS`, gate passes. Show the new case failing without the reset (temporarily skipping `_frameRunning = false` in `Cancel`), then passing.
 
 Report `.coord/reports/A25-page-edge-stuck-after-hide.md`, short: 1 Summary; 2 Change list; 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 6 Contracts; 7 Lens review (n/a); 8 Checks run; 9 Hand checks for the user.
+
+## Check
+Low tier: gate only. Gate PASS on the item branch (build 0 warnings, SELFTEST PASS, seam, tokens, format, scope, size). Diff read by the item chat: 3 files, 7 product lines plus one selftest case; matches Plan steps 1-3. Mutation check by Codex: the new case fails without the `_frameRunning` reset. Bounds: within plan. Noticed: none. Misses: none.
+
+## Hand test
+Dev copy (slot color from `tools/dev.ps1`) running from the item worktree; user result pending.
