@@ -613,10 +613,6 @@ finally {
 
 $failed = Write-GateReport
 if ($failed -or $cleanupFailed) {
-    try {
-        $titleScript = Join-Path $script:repoRoot 'tools/chat-title.ps1'
-        if (Test-Path -LiteralPath $titleScript) { & $titleScript -State blocked }
-    } catch { }
     exit 1
 }
 exit 0

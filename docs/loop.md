@@ -54,9 +54,8 @@ One line by default: `**>> <ID-slug>** · ● <phase> · <what changed>`. The **
 - **One chat per item, one level.** An item chat never starts a chat (no `start_session`, no helper or Codex-run chat) unless the user says so there. A second chat only if the first sat idle over an hour with a large context, or on the user's word.
 - Codex runs are background runs in the item chat; the director never launches Codex.
 
-Item titles: `<state><badge> <ID-slug> · <phase>`; phases are request, findings, plan, build, check, hand test (append ` · r2` for rework). States in priority order: ⛔ blocked, ❓ needs you, ⏳ waiting on background, 🔨 working, 🅿️ parked after a report, 💤 standby. 🤖 means Codex running; 🧊 cold is reserved for a future sweeper. `[Merged] <ID-slug>` and `[Closed] <name>` mark retired chats for archive. Directors retain `<Role> <N> · LP<vX.Y.Z> · <slug>`.
+Chat titles are free-form; the status card carries the phase.
 
-Hooks cannot retitle the desktop app (see `.coord/research/loop12-title-spike.md`). When a hook or script prints `SET TITLE: ...`, call `set_session_title` with `self` once. Before asking the user, run `tools/chat-title.ps1 -State needs-you` and set the printed title before the reply; after a report on an open task use `-State parked`. At phase changes use the same script; the director renames a chat if self-rename fails.
 - **One asker:** the user answers the item chat; it shows next-step buttons only for its own item decisions. The director asks only about merges, releases, rule changes and cross-item matters. Decisions are recorded verbatim.
 - **STATUS:** the item chat edits only its own item's row in the main checkout's `.coord/STATUS.md` (absolute path; the roadmap reads it), never other rows; branches never edit STATUS. The director edits Now and finished moves.
 - Release markers: move `main` only on the user's go. Design changes are lab-first (`AGENTS.md`).

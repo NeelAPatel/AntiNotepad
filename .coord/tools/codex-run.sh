@@ -54,15 +54,13 @@ attempt() {  # $1=role -> 0 ok, 4 limit-type failure (try next tier), else codex
   return $rc
 }
 
-title() { pwsh -NoProfile -File "$ROOT/tools/chat-title.ps1" -Item "$task" "$@" 2>/dev/null || true; }
-if [ "${CODEX_DRY:-0}" != 1 ]; then title -State waiting -Codex; fi
 r="$role"
 while :; do
   attempt "$r"; rc=$?
   case $rc in
-    0) [ "${CODEX_DRY:-0}" = 1 ] || title -State working; echo "DONE via $r. Last message: $LOGS/$task.$r.last.md  Log: $LOGS/$task.$r.log"; exit 0;;
-    4) n="$(next "$r")"; [ -z "$n" ] && { title -State blocked; echo "STOP: no further tier after $r (rc=$rc). Write HANDOFF.md, do not loop." >&2; exit $rc; }
+    0) echo "DONE via $r. Last message: $LOGS/$task.$r.last.md  Log: $LOGS/$task.$r.log"; exit 0;;
+    4) n="$(next "$r")"; [ -z "$n" ] && { echo "STOP: no further tier after $r (rc=$rc). Write HANDOFF.md, do not loop." >&2; exit $rc; }
          echo "FAILOVER: $r -> $n" >&2; r="$n";;
-    *) title -State blocked; echo "FAIL: $r exit=$rc. Not retrying (see log). Revert or fix manually." >&2; exit $rc;;
+    *) echo "FAIL: $r exit=$rc. Not retrying (see log). Revert or fix manually." >&2; exit $rc;;
   esac
 done

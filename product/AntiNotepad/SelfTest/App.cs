@@ -212,8 +212,8 @@ internal static partial class SelfTest
             ("\uE0A0 T17-3:04", "\uE0A0 T17 - multi-dev-instances - 3:04 PM"), "chore prefix");
         Check(AppInfo.FormatDevBadge("feat/A43b-notes-session", time) ==
             ("\uE0A0 A43b-3:04", "\uE0A0 A43b - notes-session - 3:04 PM"), "letter suffix");
-        Check(AppInfo.FormatDevBadge("Loop12-chat-title-scheme", time) ==
-            ("\uE0A0 Loop12-3:04", "\uE0A0 Loop12 - chat-title-scheme - 3:04 PM"), "multi-letter ID");
+        Check(AppInfo.FormatDevBadge("Loop12-sample-slug", time) ==
+            ("\uE0A0 Loop12-3:04", "\uE0A0 Loop12 - sample-slug - 3:04 PM"), "multi-letter ID");
         Check(AppInfo.FormatDevBadge("dev", time) == ("\uE0A0 dev", "\uE0A0 dev - 3:04 PM"), "dev branch");
         Check(AppInfo.FormatDevBadge("topic-long-branch-name", time) ==
             ("\uE0A0 topic-long-b-3:04", "\uE0A0 topic-long-branch-name - 3:04 PM"), "other branch");

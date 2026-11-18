@@ -31,17 +31,15 @@
 - **One item chat per item** (v5.4.0; user, 2026-11-12: too many hops and two sets of buttons): one item, one worktree,
   a brief that names its done condition. It does Findings through hand test, sets the tier and tells the director in one
   line, and the user answers it. A second chat only if it sat idle over an hour with a large context, or on the user's
-  word. It records the user's scope changes on the card in their words. Name: `<state><badge> <ID-slug> · <phase>`; its **role** is shown in its status card.
+  word. It records the user's scope changes on the card in their words. Its **role** is shown in its status card.
   | Step | Role | When | Model | Does |
   |---|---|---|---|---|
   | `scan` | `scout` | rarely: a Low scout too big for the master | Haiku | read-only findings, no Codex |
   | `audit` | `auditor` | no longer a chat: the item chat runs the Codex audit itself | n/a | `.claude/agents/auditor.md` stays for an explicit ask |
   | `build` | `builder` | the item chat's role after Approve | Sonnet medium | runs Codex, then Check (`/review-task`) and the hand-test handover |
-  | `review` | `reviewer` | Check; the item chat renamed; a fresh one only when it stalled | Sonnet medium | `/review-task` |
+  | `review` | `reviewer` | Check; a fresh item chat only when it stalled | Sonnet medium | `/review-task` |
   | `test` | `tester` | the hand test; a separate one only for a re-test the user asked for | Sonnet medium | launches the build, gives the UI checks, records the result |
-  Each role's model, effort and tools are fixed in `.claude/agents/<role>.md` (builder, reviewer, auditor); this table says when to use them.
-  Item titles: `<state><badge> <ID-slug> · <phase>`; phases are request, findings, plan, build, check, hand test (append ` · r2` for rework). States in priority order: ⛔ blocked, ❓ needs you, ⏳ waiting on background, 🔨 working, 🅿️ parked after a report, 💤 standby. 🤖 means Codex running; 🧊 cold is reserved for a future sweeper. `[Merged] <ID-slug>` and `[Closed] <name>` mark retired chats for archive. Directors retain `<Role> <N> · LP<vX.Y.Z> · <slug>`.
-  Hooks cannot retitle the desktop app (see `.coord/research/loop12-title-spike.md`). When a hook or script prints `SET TITLE: ...`, call `set_session_title` with `self` once. Before asking the user, run `tools/chat-title.ps1 -State needs-you` and set the printed title before the reply; after a report on an open task use `-State parked`. At phase changes use the same script; the director renames a chat if self-rename fails. The Codex role for each run is picked by the job (`docs/agents.md`).
+  Each role's model, effort and tools are fixed in `.claude/agents/<role>.md` (builder, reviewer, auditor); this table says when to use them. The Codex role for each run is picked by the job (`docs/agents.md`).
 - **Roadmap:** every master uses the same local server page `http://localhost:47811` (`/roadmap`), served live from STATUS
   and Git.
 - **Handing over to a new master** (the chat grew long, or the loop version changed): no sub-session mid-step (or each one
