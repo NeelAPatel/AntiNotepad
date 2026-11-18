@@ -18,6 +18,9 @@ internal sealed partial class PadWindow
     private Note LeftNote => Data.ViewSlot > 0 ? Data.Slots[Data.ViewSlot - 1] : Data.Stack[Data.Current];
     private Note RightNote => Data.Slots[Settings.SplitSlot - 1];
 
+    /// <summary>Stops an in-flight page-edge pull before the window hides.</summary>
+    internal void CancelSwipe() => _noteSwipe?.Cancel();
+
     /// <summary>Binds both panes to the current model selection.</summary>
     private void BindPanes(int arrive, bool focus = true, int rightArrive = 0)
     {

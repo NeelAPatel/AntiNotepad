@@ -635,6 +635,7 @@ internal static partial class SelfTest
         var pane = new Avalonia.Controls.Control();
         var cancelled = new UI.NoteSwipe(pane, () => pane, _ => false, _ => { });
         var committed = new UI.NoteSwipe(pane, () => pane, _ => true, _ => { });
+        UI.NoteSwipe? stuck = null;
         try
         {
             cancelled.Input(1);
@@ -644,6 +645,21 @@ internal static partial class SelfTest
             CheckCase(!cancelled.HasRunningTimer && !cancelled.HasPendingProgress && cancelled.OwedMotion == 0
                 && pane.RenderTransform is null && pane.Opacity == 1, "cancel clears edge and restores the pane");
 
+            var swipe = stuck = new UI.NoteSwipe(pane, () => pane, _ => false, _ => { });
+            typeof(UI.NoteSwipe).GetField("_frameRunning", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .SetValue(swipe, true);
+            swipe.Input(1);
+            CheckCase(swipe.HasPendingProgress && pane.RenderTransform is not null,
+                "input keeps a held pull when a previous frame is stuck running");
+            swipe.Cancel();
+            CheckCase(!swipe.HasRunningTimer && !swipe.HasPendingProgress && swipe.OwedMotion == 0
+                && pane.RenderTransform is null && pane.Opacity == 1,
+                "cancel after a stuck frame clears the pull and restores the pane");
+            swipe.Input(1);
+            CheckCase(swipe.HasPendingProgress && pane.RenderTransform is not null,
+                "input can pull again after cancelling a stuck frame");
+            swipe.Cancel();
+
             var directions = new List<int>();
             committed = new UI.NoteSwipe(pane, () => pane, _ => true, directions.Add);
             committed.Input(-1);
@@ -651,7 +667,7 @@ internal static partial class SelfTest
             CheckCase(directions.SequenceEqual([1]), "one wheel click commits one page and locks repeats");
             committed.Cancel();
 
-            report = failures.Count == 0 ? "edge pull cleanup, one-page click, and repeat lock" : string.Join("; ", failures);
+            report = failures.Count == 0 ? "edge pull cleanup including a stuck frame, one-page click, and repeat lock" : string.Join("; ", failures);
             return failures.Count == 0;
         }
         catch (Exception ex)
@@ -663,6 +679,7 @@ internal static partial class SelfTest
         {
             cancelled.Cancel();
             committed.Cancel();
+            stuck?.Cancel();
         }
     }
 
