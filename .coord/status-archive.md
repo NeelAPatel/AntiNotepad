@@ -235,6 +235,7 @@ Done and dropped Plan rows moved out of STATUS by Loop10b-pending-list (2026-11-
 
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
+| A25-page-edge-stuck-after-hide | Hiding the pad mid page-edge pull cancels the swipe (`NoteSwipe.Cancel` from `HideResident`), so the page is at rest on show. Selftest fails without the reset. Hand test: "yes the page resets to normal once i do step 4 to show it again". Gate PASS offline (dev, 2026-11-18) | Low | Small | done |
 | A22-wrap-hanging-indent | Wrapped lines of bullets, checkboxes, numbered and indented lines start under their text. Vendors AvaloniaEdit 12.0.0 into `third_party/AvaloniaEdit` (patches marked, listed in `PATCHES.md`, upgrade recipe in `docs/dependencies.md`) because the library ignores wrap indent. Hand test: "Looks good" (user, 2026-11-17). Merged to dev 2026-11-17 | High | Medium | done |
 | A23-paste-keep-structure | Paste engine: pasting rendered bulleted/numbered lists, tables, marks, headings and code from AI chat or web keeps structure as note text; image/file stubs. Hand test: "accept and finish" (user, 2026-11-17); emoji drawing gap logged as `idea: emoji-render-gaps`. Merged to dev 2026-11-17 | Medium | Medium | done |
 | T17-multi-dev-instances | Several dev copies at once: one color slot per worktree (Blue, Red, Green, Purple, Orange, Silver; cap of six), own instance id, show/hide and new-note hotkeys, badge and tray icon; `tools/dev.ps1` replaces only its own slot; `dev-list.ps1`, `press-hotkey -Slot`; installed copy untouched | High | Medium | done |

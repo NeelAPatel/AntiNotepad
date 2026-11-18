@@ -262,6 +262,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         CancelQueuedHideOnBlur();
         CloseOverlay(); FinishOverlayClose();   // the window hides now, so a fade would never finish
         SaveImmediately();
+        CancelSwipe();
         _hiddenAt = DateTime.Now;
         Hide();
         _savedLabelTimer.Stop();
