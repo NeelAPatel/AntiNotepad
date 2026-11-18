@@ -172,6 +172,7 @@ try {
     $report = [IO.File]::ReadAllText($gate[0].FullName)
     $head = (Invoke-Git $root @('rev-parse', $branch)) -join ''
     if ($report -notmatch '(?m)^GATE: PASS\r?$') { throw 'newest gate did not pass' }
+    if ($report -match '(?m)^Head: [0-9a-f]{40}-dirty\r?$') { throw 'gate ran on a dirty tree: commit the card and re-run the gate' }
     if (-not (Test-GateHead $root $Task $head $report)) { throw 'stale Head: re-run the gate' }
     Write-Host "CHECK: newest gate PASS at $head ($($gate[0].Name))"
     if ($report -cnotmatch "(?m)^Head: $head\r?`$") {

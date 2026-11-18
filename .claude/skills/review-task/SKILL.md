@@ -33,6 +33,7 @@ Missing Plan or Approve: stop, tell the director the item skipped phases. Missin
 ## 2. Gate (always)
 If `dev` is not an ancestor of HEAD, run `pwsh -NoProfile -File tools/catch-up.ps1 -Task <ID-slug>` (rebase only; no push,
 no force-push), then the gate. CONFLICT: stop, leave the rebase open, tell the director (step 4a).
+Commit the card and reports first so the tree is clean, run the gate, then commit only the card, reports and STATUS afterwards; a `-dirty` Head always fails preflight.
 
 `pwsh -NoProfile -File tools/gate.ps1 -Task <round>` from the worktree writes `.coord/reports/<round>.gate.md` (not
 committed); read only its Summary. Fail: triage (4a) before relaunching anything. Warnings (scope, size): carry to step 4.
@@ -87,4 +88,4 @@ triaged (4a) with a "Misses" line. Not visible: say no hand test is needed. Neve
 After the hand test passes (at once if not visible), tidy the branch as `/merge-task` step 0 says: fold tiny and
 back-and-forth commits, make every message say what changed, drop lab and debug code, keep each commit buildable. Then
 `tools/catch-up.ps1 -Task <ID-slug>`, re-run the gate at the tip, tell the director it is ready to merge, and record the
-tidy-up as one line under `## Check`.
+tidy-up as one line under `## Check`. Commit the card and reports first so the tree is clean, run the gate, then commit only the card, reports and STATUS afterwards; a `-dirty` Head always fails preflight.
