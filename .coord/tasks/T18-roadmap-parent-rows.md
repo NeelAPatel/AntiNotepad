@@ -86,4 +86,4 @@ Report `.coord/reports/T18-roadmap-parent-rows.md`, short: 1 Summary; 2 Change l
 Gate PASS offline (Scope 1 file, SELFTEST PASS); `roadmap-data.ps1 -Check` PASS; Codex terra report `.coord/reports/T18-roadmap-parent-rows.md`. Bounds: within plan. Live probe on 47822 (item chat): children show `parent › step`, orphans `no parent › scale-apply` and `design-plugins-review`, ordering holds. Noticed: `step: timer-names` is deferred and shows in another bucket; orphans stay in the Current bucket after the last row above them.
 
 ## Hand test
-Preview: http://localhost:47822/ (label dev-worktree-roadmap-parent-rows, worktree page). r2-r4 (fold, five groups, shared prefs, right-aligned Columns) checked by item chat; User result: pending.
+Preview: http://localhost:47822/ (label dev-worktree-roadmap-parent-rows, worktree page). r2-r4 (fold, five groups, shared prefs, right-aligned Columns) checked by item chat; User result: "Looks good" (2026-11-19, preview on 47822, after r1-r4).
