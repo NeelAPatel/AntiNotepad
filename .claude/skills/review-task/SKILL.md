@@ -1,7 +1,6 @@
 ---
 name: review-task
 description: Check a finished AntiNotepad round against its plan, run gates, and hand over accepted work.
-disable-model-invocation: true
 shell: powershell
 allowed-tools: PowerShell(git *)
 argument-hint: <ID-slug>

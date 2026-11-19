@@ -33,6 +33,7 @@ One row per merged item: what each check found. Empty rows on items that later h
 |---|---|---|---|---|---|---|---|---|
 | 2026-11-19 | Loop16-poteto-trigger | Medium | 1 | 0 | 2 | - | 0 | - |
 | 2026-11-19 | Loop17-chat-title-selfheal | Medium | 1 | 0 | 2 | - | 0 | - |
+| 2026-11-19 | Loop19-review-task-chat-runnable | Low | 0 | 0 | 0 | - | 0 | - |
 | 2026-11-08 | L1-lv4-native-guards | Medium | 0 | 0 | - | - | 0 | - |
 | 2026-11-08 | L2-lv4-worktree-rules | Medium | 0 | 0 | - | - | 0 | - |
 | 2026-11-08 | L3-lv4-agent-roster | Low | 1 (round 2 tests) | 0 | - | - | 0 | - |
