@@ -26,6 +26,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     private readonly RuntimeLog _log;
     private readonly bool _isDev;
     private readonly bool _softwareRendering;
+    private readonly ShortcutMap _shortcuts;
     private readonly TaskbarTrace _trace;
     private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(ChromeTokens.SaveDelayDefaultMs) };
     private readonly DispatcherTimer _savedLabelTimer = new() { Interval = TimeSpan.FromMilliseconds(ChromeTokens.SavedLabelRefreshMs) };
@@ -51,11 +52,13 @@ internal sealed partial class PadWindow : Window, ISettingsHost
     internal StoreData Data => _store.Data;
     internal Settings Settings => _settingsService.Current;
     internal SettingsService SettingsService => _settingsService;
+    internal ShortcutMap Shortcuts => _shortcuts;
 
     public PadWindow(Store store, SettingsService settingsService, RuntimeLog log, bool isDev, bool softwareRendering, NotesSession notes)
     {
         _store = store;
         _settingsService = settingsService;
+        _shortcuts = new ShortcutMap(settingsService.Current);
         _notes = notes;
         _timers = new(id => store.Data.Stack.Any(n => n.Id == id) || store.Data.Slots.Any(n => n.Id == id));
         _log = log;

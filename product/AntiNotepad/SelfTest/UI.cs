@@ -153,6 +153,289 @@ internal static partial class SelfTest
         return failures.Count == 0;
     }
 
+    /// <summary>Checks the shortcut table, exact routing, persistence fallback, and its user-facing mirrors.</summary>
+    private static bool ShortcutMapChecks(out string report)
+    {
+        var failures = new List<string>();
+        void Expect(bool ok, string name) { if (!ok) failures.Add(name); }
+        var defaults = new Model.Settings();
+        var map = new UI.ShortcutMap(defaults);
+        var seen = new HashSet<(UI.ShortcutScope Scope, UI.ShortcutGesture Gesture)>();
+        foreach (var definition in UI.ShortcutMap.Definitions)
+        {
+            if (definition.DefaultKey.Length == 0) continue;
+            var parsed = UI.ShortcutMap.TryParse(definition.DefaultKey, out var gesture);
+            Expect(parsed, $"parse default {definition.Id}");
+            if (!parsed) continue;
+            Expect(UI.ShortcutMap.BlockedReason(definition.DefaultKey, defaults, definition) is null, $"default is allowed {definition.Id}");
+            Expect(seen.Add((definition.Scope, gesture)), $"default key is unique in {definition.Scope}: {definition.DefaultKey}");
+            var label = map.GetLabel(definition.Id);
+            Expect(UI.ShortcutMap.TryParse(label, out var labelGesture) && labelGesture == gesture,
+                $"default label round-trips {definition.Id}: {label}");
+            var routed = map.TryGet(gesture.Key, gesture.Modifiers, out var route)
+                && (definition.Scope == UI.ShortcutScope.Pad ? route.Pad == definition.Action : route.Search == definition.Action);
+            Expect(routed, $"default routes to {definition.Action}");
+        }
+
+        Expect(map.GetLabel("text-size-up") == "Ctrl++"
+            && UI.ShortcutMap.LabelParts(map.GetLabel("text-size-up")).SequenceEqual(["Ctrl", "+"]),
+            "plus key keeps its label and Settings key cap");
+        Expect(map.GetLabel("text-size-down") == "Ctrl+-" && map.GetLabel("split") == "Ctrl+\\"
+            && map.GetLabel("fold") == "Ctrl+Shift+[" && map.GetLabel("unfold") == "Ctrl+Shift+]",
+            "other symbol-key default labels keep their keys and modifiers");
+
+        var checkbox = UI.ShortcutMap.Definitions.Single(definition => definition.Id == "checkbox-timer");
+        Expect(checkbox.DefaultKey.Length == 0
+            && !map.TryGet(Avalonia.Input.Key.Enter, Avalonia.Input.KeyModifiers.Control, out _),
+            "checkbox or timer has no default Ctrl+Enter route");
+        Expect(UI.ShortcutMap.BlockedReason("Ctrl+Enter", defaults, checkbox) is null,
+            "Ctrl+Enter remains assignable to checkbox or timer");
+        var boundCheckbox = new UI.ShortcutMap(new Model.Settings
+        {
+            ShortcutOverrides = new Dictionary<string, string>(StringComparer.Ordinal) { [checkbox.Id] = "Ctrl+Enter" },
+        });
+        Expect(boundCheckbox.TryGet(Avalonia.Input.Key.Enter, Avalonia.Input.KeyModifiers.Control, out var checkboxRoute)
+            && checkboxRoute.Pad == UI.ShortcutAction.ToggleCheckbox,
+            "a saved checkbox or timer key routes through the shared map");
+
+        foreach (var reserved in new[]
+        {
+            "A", "Ctrl+Alt+Shift+1", "Ctrl+Alt+Shift+F1", "Ctrl+Alt+Shift+F9", "Ctrl+Alt+Shift+S",
+            "Alt+Shift+Left", "Alt+Shift+Up", "Ctrl+Z", "Ctrl+Home", "Ctrl+[", "Shift+Tab", "Ctrl+Alt+Delete",
+            "Shift+Backspace", "Shift+Delete", "Ctrl+Insert", "Shift+Insert", "Ctrl+Shift+Z",
+        }) Expect(UI.ShortcutMap.BlockedReason(reserved, defaults) is not null, $"reserved key refused: {reserved}");
+        Expect(UI.ShortcutMap.RecorderGestureText(Avalonia.Input.Key.F1, Avalonia.Input.KeyModifiers.None) == "F1",
+            "unmodified F1 is recordable");
+        Expect(UI.ShortcutMap.RecorderGestureText(Avalonia.Input.Key.OemPlus, Avalonia.Input.KeyModifiers.Control) == "Ctrl++",
+            "plus key keeps its canonical spelling");
+
+        var custom = new Model.Settings
+        {
+            ShortcutOverrides = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["new-note"] = "Ctrl+Q",
+                ["help"] = "Ctrl+Alt+Shift+F1",
+                ["settings"] = "Ctrl+,",
+            },
+        };
+        var customMap = new UI.ShortcutMap(custom);
+        Expect(customMap.GetLabel("new-note") == "Ctrl+Q" && customMap.GetLabel("search") == "Ctrl+F",
+            "valid custom key coexists with untouched defaults");
+        Expect(customMap.GetLabel("help") == "F1", "reserved saved value falls back to default");
+        Expect(!customMap.TryGet(Avalonia.Input.Key.OemComma, Avalonia.Input.KeyModifiers.Control | Avalonia.Input.KeyModifiers.Shift, out _),
+            "lookup requires exact modifiers");
+        Expect(customMap.TryGet(Avalonia.Input.Key.OemComma, Avalonia.Input.KeyModifiers.Control, out var settingsRoute)
+            && settingsRoute.Pad == UI.ShortcutAction.Settings, "custom Settings chord routes exactly");
+
+        var duplicateSavedKeys = new Model.Settings
+        {
+            ShortcutOverrides = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["new-note"] = "Ctrl+F",
+                ["search"] = "Ctrl+F",
+            },
+        };
+        var duplicateMap = new UI.ShortcutMap(duplicateSavedKeys);
+        Expect(duplicateMap.GetLabel("new-note") == "Ctrl+N" && duplicateMap.GetLabel("search") == "Ctrl+F",
+            "duplicate saved keys fall back to both defaults");
+        Expect(duplicateMap.TryGet(Avalonia.Input.Key.N, Avalonia.Input.KeyModifiers.Control, out var newNoteRoute)
+            && newNoteRoute.Pad == UI.ShortcutAction.NewNote, "duplicate override preserves the New note route");
+        Expect(duplicateMap.TryGet(Avalonia.Input.Key.F, Avalonia.Input.KeyModifiers.Control, out var searchRoute)
+            && searchRoute.Pad == UI.ShortcutAction.Search, "duplicate override preserves the Search route");
+
+        var invalidOverride = new Model.Settings
+        {
+            ShortcutOverrides = new Dictionary<string, string>(StringComparer.Ordinal) { ["search"] = "garbage" },
+        };
+        var invalidMap = new UI.ShortcutMap(invalidOverride);
+        Expect(invalidMap.GetLabel("search") == "Ctrl+F"
+            && invalidMap.TryGet(Avalonia.Input.Key.F, Avalonia.Input.KeyModifiers.Control, out var fallbackSearchRoute)
+            && fallbackSearchRoute.Pad == UI.ShortcutAction.Search, "malformed override restores its default route");
+
+        var invalidPairedValue = new Model.Settings
+        {
+            ShortcutOverrides = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["new-note"] = "Ctrl+F",
+                ["search"] = "garbage",
+            },
+        };
+        var invalidPairedMap = new UI.ShortcutMap(invalidPairedValue);
+        Expect(invalidPairedMap.GetLabel("new-note") == "Ctrl+F" && invalidPairedMap.GetLabel("search").Length == 0,
+            "invalid override falls back unless a valid override owns its default");
+        Expect(invalidPairedMap.TryGet(Avalonia.Input.Key.F, Avalonia.Input.KeyModifiers.Control, out var newNoteOnSearchRoute)
+            && newNoteOnSearchRoute.Pad == UI.ShortcutAction.NewNote
+            && newNoteOnSearchRoute.Search == UI.ShortcutAction.None
+            && !invalidPairedMap.TryGet(Avalonia.Input.Key.N, Avalonia.Input.KeyModifiers.Control, out _),
+            "valid override keeps its key and does not leave a stale default route");
+
+        var swap = new Model.Settings
+        {
+            ShortcutOverrides = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["new-note"] = "Ctrl+F",
+                ["search"] = "Ctrl+N",
+            },
+        };
+        var swapMap = new UI.ShortcutMap(swap);
+        Expect(swapMap.GetLabel("new-note") == "Ctrl+F" && swapMap.GetLabel("search") == "Ctrl+N",
+            "valid shortcut swaps remain assigned");
+
+        var roundTrip = System.Text.Json.JsonSerializer.Deserialize<Model.Settings>(System.Text.Json.JsonSerializer.Serialize(custom))!;
+        var loadedMap = new UI.ShortcutMap(roundTrip);
+        Expect(loadedMap.GetLabel("settings") == "Ctrl+," && loadedMap.GetLabel("new-note") == "Ctrl+Q",
+            "shortcut overrides survive save and load");
+        roundTrip.ShortcutOverrides["search"] = "";
+        Expect(new UI.ShortcutMap(roundTrip).GetLabel("search").Length == 0, "empty override clears a default");
+        roundTrip.ShortcutOverrides.Clear();
+        Expect(new UI.ShortcutMap(roundTrip).GetLabel("search") == "Ctrl+F", "reset restores the default");
+
+        var emptyOpenSlotMap = new UI.ShortcutMap(new Model.Settings());
+        Expect(UI.PadWindow.SlotPromotionMessage(3, emptyOpenSlotMap.GetLabel("open-slot")) == "Kept in slot 3",
+            "slot promotion omits an unassigned Open slot hint");
+        var assignedOpenSlotMap = new UI.ShortcutMap(new Model.Settings
+        {
+            ShortcutOverrides = new Dictionary<string, string>(StringComparer.Ordinal) { ["open-slot"] = "Alt+1" },
+        });
+        Expect(UI.PadWindow.SlotPromotionMessage(3, assignedOpenSlotMap.GetLabel("open-slot"))
+            == "Kept in slot 3 · Alt+1 … 9 opens this slot", "slot promotion uses the effective Open slot hint");
+
+        var service = new Model.SettingsService(new Model.Settings());
+        Model.SettingsChange? observed = null;
+        service.Changed += change => observed = change;
+        service.Update(settings => settings.ShortcutOverrides["settings"] = "Ctrl+,");
+        Expect(observed is { Flags: var flags } && (flags & Model.SettingsChangeFlags.Shortcuts) != 0
+            && observed.Properties.Contains(nameof(Model.Settings.ShortcutOverrides)), "settings change tracks dictionary edits");
+        var detached = service.Current.CopyForSave();
+        detached.ShortcutOverrides.Clear();
+        Expect(service.Current.ShortcutOverrides.ContainsKey("settings"), "saved settings contain a detached override dictionary");
+
+        var helpRows = UI.ShortcutMap.HelpRows(duplicateMap);
+        var activeCount = UI.ShortcutMap.Definitions.Count(definition => duplicateMap.GetLabel(definition.Id).Length > 0);
+        Expect(helpRows.Count == activeCount + 1 + 8, "help contains each assigned action and all fixed rows");
+        foreach (var definition in UI.ShortcutMap.Definitions.Where(definition => duplicateMap.GetLabel(definition.Id).Length > 0))
+            Expect(helpRows.Any(row => row.Keys == duplicateMap.GetLabel(definition.Id) && row.Help == definition.Help),
+                $"help mirrors {definition.Id}");
+
+        string? FindRoot(string start)
+        {
+            var directory = new DirectoryInfo(start);
+            while (directory is not null)
+            {
+                if (File.Exists(Path.Combine(directory.FullName, "docs", "shortcuts.md"))
+                    && File.Exists(Path.Combine(directory.FullName, "product", "AntiNotepad", "AntiNotepad.csproj")))
+                    return directory.FullName;
+                directory = directory.Parent;
+            }
+            return null;
+        }
+        var root = FindRoot(AppContext.BaseDirectory) ?? FindRoot(Environment.CurrentDirectory);
+        var docsMatch = false;
+        if (root is not null)
+        {
+            var doc = File.ReadAllText(Path.Combine(root, "docs", "shortcuts.md")).Replace("\r\n", "\n", StringComparison.Ordinal);
+            const string start = "<!-- shortcuts:table:start -->";
+            const string end = "<!-- shortcuts:table:end -->";
+            var first = doc.IndexOf(start, StringComparison.Ordinal);
+            var last = doc.IndexOf(end, StringComparison.Ordinal);
+            docsMatch = first >= 0 && last > first
+                && doc[(first + start.Length)..last].Trim() == UI.ShortcutMap.DocumentationTable();
+        }
+        Expect(docsMatch, "documentation table matches shortcut definitions");
+
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < 1000; i++) map.TryGet(Avalonia.Input.Key.N, Avalonia.Input.KeyModifiers.Control, out _);
+        Expect(GC.GetAllocatedBytesForCurrentThread() == before, "key lookup allocates nothing");
+
+        if (Application.Current is null) AppBuilder.Configure<Application>().UsePlatformDetect().SetupWithoutStarting();
+        if (!Application.Current!.Styles.OfType<Avalonia.Themes.Fluent.FluentTheme>().Any())
+        {
+            Application.Current.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
+            Application.Current.Styles.Add(new StyleInclude(new Uri(AppInfo.ResourceUri)) { Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml") });
+        }
+        var folder = Path.Combine(Path.GetTempPath(), "AntiNotepad-shortcuts-" + Guid.NewGuid().ToString("N"));
+        using var log = new RuntimeLog();
+        var store = new Store(folder);
+        Model.SettingsService? padSettings = null;
+        UI.PadWindow? pad = null;
+        var subscribed = false;
+        try
+        {
+            store.Load();
+            store.Data.Stack[0].Text = "test note";
+            padSettings = store.SettingsService;
+            var notes = new NotesSession(store, folder, folder, null, log.Write);
+            pad = new UI.PadWindow(store, padSettings, log, false, true, notes);
+            var keyDown = typeof(UI.PadWindow).GetMethod("OnWindowKeyDown", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            padSettings.Changed += pad.HandleSettingsChanged;
+            subscribed = true;
+            padSettings.Update(settings => settings.ShortcutOverrides["settings"] = "Ctrl+,");
+            var comma = new Avalonia.Input.KeyEventArgs
+            {
+                Key = Avalonia.Input.Key.OemComma,
+                KeyModifiers = Avalonia.Input.KeyModifiers.Control | Avalonia.Input.KeyModifiers.Shift,
+            };
+            keyDown.Invoke(pad, [null, comma]);
+            var settingsWindow = typeof(UI.PadWindow).GetField("_settingsWindow", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(pad);
+            Expect(!comma.Handled && settingsWindow is null, "Ctrl+Shift+comma does not open Settings");
+
+            var newNote = new Avalonia.Input.KeyEventArgs { Key = Avalonia.Input.Key.N, KeyModifiers = Avalonia.Input.KeyModifiers.Control };
+            keyDown.Invoke(pad, [null, newNote]);
+            Expect(newNote.Handled && pad.Data.Stack.Count == 2 && pad.Data.Stack[pad.Data.Current].IsEmpty,
+                "Ctrl+N runs the real New note action");
+
+            var wasPinned = pad.Topmost;
+            var pin = new Avalonia.Input.KeyEventArgs { Key = Avalonia.Input.Key.T, KeyModifiers = Avalonia.Input.KeyModifiers.Control };
+            keyDown.Invoke(pad, [null, pin]);
+            Expect(pin.Handled && pad.Topmost != wasPinned && pad.Settings.Pinned == pad.Topmost,
+                "Ctrl+T runs the real Keep on top action");
+
+            var help = new Avalonia.Input.KeyEventArgs { Key = Avalonia.Input.Key.F1, KeyModifiers = Avalonia.Input.KeyModifiers.None };
+            keyDown.Invoke(pad, [null, help]);
+            var overlay = typeof(UI.PadWindow).GetField("_overlay", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(pad);
+            Expect(help.Handled && overlay is UI.HelpOverlay, "F1 opens the real Help overlay");
+
+            var closeHelp = new Avalonia.Input.KeyEventArgs { Key = Avalonia.Input.Key.F1, KeyModifiers = Avalonia.Input.KeyModifiers.None };
+            keyDown.Invoke(pad, [null, closeHelp]);
+            overlay = typeof(UI.PadWindow).GetField("_overlay", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(pad);
+            Expect(closeHelp.Handled && overlay is null, "F1 closes Help while the overlay has focus");
+            var reopenHelp = new Avalonia.Input.KeyEventArgs { Key = Avalonia.Input.Key.F1, KeyModifiers = Avalonia.Input.KeyModifiers.None };
+            keyDown.Invoke(pad, [null, reopenHelp]);
+            overlay = typeof(UI.PadWindow).GetField("_overlay", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(pad);
+            Expect(reopenHelp.Handled && overlay is UI.HelpOverlay, "F1 reopens Help after closing it");
+
+            padSettings.Update(settings => settings.ShortcutOverrides["help"] = "Ctrl+H");
+            var closeBoundHelp = new Avalonia.Input.KeyEventArgs { Key = Avalonia.Input.Key.H, KeyModifiers = KeyModifiers.Control };
+            keyDown.Invoke(pad, [null, closeBoundHelp]);
+            overlay = typeof(UI.PadWindow).GetField("_overlay", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(pad);
+            Expect(closeBoundHelp.Handled && overlay is null, "a user-bound Help key closes Help");
+            var reopenBoundHelp = new Avalonia.Input.KeyEventArgs { Key = Avalonia.Input.Key.H, KeyModifiers = KeyModifiers.Control };
+            keyDown.Invoke(pad, [null, reopenBoundHelp]);
+            overlay = typeof(UI.PadWindow).GetField("_overlay", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(pad);
+            Expect(reopenBoundHelp.Handled && overlay is UI.HelpOverlay, "a user-bound Help key reopens Help");
+
+            var search = new Avalonia.Input.KeyEventArgs { Key = Avalonia.Input.Key.F, KeyModifiers = KeyModifiers.Control };
+            keyDown.Invoke(pad, [null, search]);
+            overlay = typeof(UI.PadWindow).GetField("_overlay", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(pad);
+            Expect(search.Handled && overlay is UI.SearchOverlay, "Ctrl+F opens the real Search overlay");
+            search = new Avalonia.Input.KeyEventArgs { Key = Avalonia.Input.Key.F, KeyModifiers = KeyModifiers.Control };
+            keyDown.Invoke(pad, [null, search]);
+            overlay = typeof(UI.PadWindow).GetField("_overlay", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(pad);
+            Expect(search.Handled && overlay is null, "Ctrl+F closes Search while the overlay is focused");
+            search = new Avalonia.Input.KeyEventArgs { Key = Avalonia.Input.Key.F, KeyModifiers = KeyModifiers.Control };
+            keyDown.Invoke(pad, [null, search]);
+            overlay = typeof(UI.PadWindow).GetField("_overlay", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(pad);
+            Expect(search.Handled && overlay is UI.SearchOverlay, "Ctrl+F opens Search again after closing it");
+        }
+        finally
+        {
+            if (subscribed && padSettings is not null && pad is not null) padSettings.Changed -= pad.HandleSettingsChanged;
+            if (Directory.Exists(folder)) Directory.Delete(folder, recursive: true);
+        }
+        report = failures.Count == 0 ? $"{seen.Count} unique defaults and label round trips, checkbox binding, reserved keys, Help toggle, persistence, docs parity, no-allocation lookup, and real actions" : string.Join("; ", failures);
+        return failures.Count == 0;
+    }
+
     /// <summary>Checks the Settings Escape deferral boundary without opening a window.</summary>
     private static bool HotkeyRecorderEscapeChecks(out string report)
     {
@@ -246,7 +529,7 @@ internal static partial class SelfTest
         service.Replace(replacement);
         Expect(ReferenceEquals(service.Current, replacement), "Replace changes Current identity");
         Expect(first.Count == countBeforeReplace + 1 && first[^1].Flags == SettingsChangeFlags.All
-            && first[^1].Properties.Count == 57, "Replace emits all flags once");
+            && first[^1].Properties.Count == 58, "Replace emits all flags once");
 
         var appearanceBeforeSplit = appearanceCalls;
         var countBeforeSplit = first.Count;

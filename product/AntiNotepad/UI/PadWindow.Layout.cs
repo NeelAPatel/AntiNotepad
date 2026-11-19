@@ -213,12 +213,12 @@ internal sealed partial class PadWindow
         pane.ShowMenu = (anchor, entries) => PadMenu.Show(anchor, entries, _palette, Settings);
         pane.AppMenu = () =>
         [
-            new("New note", "Ctrl+N", MenuGlyphs.NewNote, NewNote),
-            new("Search notes", "Ctrl+F", MenuGlyphs.Search, () => OpenSearch()),
-            new(Settings.Split ? "Close split view" : "Split view", "Ctrl+OemBackslash", MenuGlyphs.Split, ToggleSplit),
-            new(Settings.Pinned ? "Unpin" : "Keep on top", "Ctrl+T", MenuGlyphs.Pin, TogglePin),
+            new("New note", _shortcuts.GetLabel("new-note"), MenuGlyphs.NewNote, NewNote),
+            new("Search notes", _shortcuts.GetLabel("search"), MenuGlyphs.Search, () => OpenSearch()),
+            new(Settings.Split ? "Close split view" : "Split view", _shortcuts.GetLabel("split"), MenuGlyphs.Split, ToggleSplit),
+            new(Settings.Pinned ? "Unpin" : "Keep on top", _shortcuts.GetLabel("keep-on-top"), MenuGlyphs.Pin, TogglePin),
             MenuEntry.Separator,
-            new("Settings", "Ctrl+OemComma", MenuGlyphs.Settings, OpenSettings),
+            new("Settings", _shortcuts.GetLabel("settings"), MenuGlyphs.Settings, OpenSettings),
             new($"Hide {AppInfo.Name}", "Escape", null, HideResident),
         ];
         pane.FocusedPane += () => HandlePaneFocused(pane);
@@ -265,12 +265,12 @@ internal sealed partial class PadWindow
         _badges.Children.Clear();
         if (_isDev) _badges.Children.Add(DevBadge(p.Number));
         _badges.IsVisible = _isDev;
-        _icons.Children.Add(Kit.IconButton(Glyph.Search, "Search notes (Ctrl+F)", p, ToggleSearch));
-        _icons.Children.Add(Kit.IconButton(Glyph.Split, "Split view with a slot (Ctrl+\\)", p, ToggleSplit));
+        _icons.Children.Add(Kit.IconButton(Glyph.Search, ShortcutTooltip("Search notes", _shortcuts.GetLabel("search")), p, ToggleSearch));
+        _icons.Children.Add(Kit.IconButton(Glyph.Split, ShortcutTooltip("Split view with a slot", _shortcuts.GetLabel("split")), p, ToggleSplit));
         // Pinned: the pin is filled with the accent, so the state reads at a glance.
-        _icons.Children.Add(Kit.IconButton(Glyph.Pin, Settings.Pinned ? "Unpin (Ctrl+T)" : "Keep on top (Ctrl+T)", p, TogglePin,
+        _icons.Children.Add(Kit.IconButton(Glyph.Pin, ShortcutTooltip(Settings.Pinned ? "Unpin" : "Keep on top", _shortcuts.GetLabel("keep-on-top")), p, TogglePin,
             filled: Settings.Pinned, color: Settings.Pinned ? p.Accent : null));
-        _icons.Children.Add(Kit.IconButton(Glyph.Settings, "Settings (Ctrl+,)", p, OpenSettings));
+        _icons.Children.Add(Kit.IconButton(Glyph.Settings, ShortcutTooltip("Settings", _shortcuts.GetLabel("settings")), p, OpenSettings));
         _icons.Children.Add(Kit.IconButton(Glyph.Hide, "Hide (Esc)", p, HideResident));
         _divider.Background = new SolidColorBrush(p.Faint, ChromeTokens.DividerAlpha);
         _pill.Background = new SolidColorBrush(p.Surface);
@@ -281,6 +281,8 @@ internal sealed partial class PadWindow
         _overlayHost.Background = new SolidColorBrush(p.Canvas, Settings.Material == "solid" ? 1 : Paint.GlassScrim);
         UpdateChrome();
     }
+
+    private static string ShortcutTooltip(string action, string keys) => keys.Length == 0 ? action : $"{action} ({keys})";
 
     /// <summary>Refreshes metadata text, the pager and slot dots.</summary>
     private void UpdateChrome() => UpdateChrome(0);
@@ -496,7 +498,7 @@ internal sealed partial class PadWindow
         var p = _palette;
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.PagerRowSpacing, VerticalAlignment = VerticalAlignment.Center };
         var onStack = Data.ViewSlot == 0;
-        row.Children.Add(Kit.IconButton(Glyph.Back, "Previous note (Ctrl+[)", p, () => Navigate(-1), radius: ChromeTokens.PagerArrowHoverRadius));
+        row.Children.Add(Kit.IconButton(Glyph.Back, ShortcutTooltip("Previous note", _shortcuts.GetLabel("previous-note")), p, () => Navigate(-1), radius: ChromeTokens.PagerArrowHoverRadius));
         var count = Kit.Text(onStack ? $"{Data.Current + 1} / {Data.Stack.Count}" : "stack", onStack ? p.Muted : p.Faint, ChromeTokens.PagerCountFontSize, Typography.Strong);
         // Fixed box, centred both ways, tabular digits: "5 / 5" sits in the middle and doesn't shift as numbers change.
         count.TextAlignment = TextAlignment.Center; count.HorizontalAlignment = HorizontalAlignment.Center; count.VerticalAlignment = VerticalAlignment.Center;
@@ -506,7 +508,7 @@ internal sealed partial class PadWindow
         countButton.Click += (_, _) => { if (!onStack) ShowStack(); else OpenSearch(); };
         Avalonia.Automation.AutomationProperties.SetName(countButton, onStack ? $"Note {Data.Current + 1} of {Data.Stack.Count}" : "Back to the stack");
         row.Children.Add(countButton);
-        row.Children.Add(Kit.IconButton(Glyph.Forward, "Next note · past the last one starts a new note (Ctrl+])", p, () => Navigate(1), radius: ChromeTokens.PagerArrowHoverRadius));
+        row.Children.Add(Kit.IconButton(Glyph.Forward, ShortcutTooltip("Next note · past the last one starts a new note", _shortcuts.GetLabel("next-note")), p, () => Navigate(1), radius: ChromeTokens.PagerArrowHoverRadius));
         row.Children.Add(new Border { Width = ChromeTokens.PagerSeparatorWidth, Height = ChromeTokens.PagerSeparatorHeight, Background = new SolidColorBrush(p.Faint, ChromeTokens.PagerSeparatorAlpha), Margin = new Thickness(ChromeTokens.PagerSeparatorMargin, 0) });
         for (var i = 1; i <= 9; i++)
         {
@@ -523,7 +525,7 @@ internal sealed partial class PadWindow
             var b = Kit.Plain(dot, p, current ? ChromeTokens.PagerDotSelectedButtonWidth : ChromeTokens.PagerDotButtonWidth, ChromeTokens.PagerDotButtonHeight, ChromeTokens.PagerDotHoverRadius);
             b.Click += (_, _) => OpenSlot(slot);
             var title = Data.Slots[i - 1].IsEmpty ? "empty" : Data.Slots[i - 1].Title;
-            ToolTip.SetTip(b, $"Slot {i} · {title} (Ctrl+{i})");
+            ToolTip.SetTip(b, ShortcutTooltip($"Slot {i} · {title}", _shortcuts.GetLabel("open-slot")));
             Avalonia.Automation.AutomationProperties.SetName(b, $"Slot {i}");
             row.Children.Add(b);
         }

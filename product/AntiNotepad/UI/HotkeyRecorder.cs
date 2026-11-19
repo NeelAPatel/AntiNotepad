@@ -22,6 +22,8 @@ internal sealed class HotkeyRecorder
     private readonly Palette _palette;
     private readonly Func<string> _current;
     private readonly Func<string, bool> _apply;
+    private readonly Func<Key, KeyModifiers, string?> _gestureText;
+    private readonly Func<string, string?>? _validate;
     private readonly bool _allowEmpty;
     private readonly Func<string, Action, bool, Button> _button;
     private readonly StackPanel _caps = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.BadgeSpacing, VerticalAlignment = VerticalAlignment.Center };
@@ -32,11 +34,15 @@ internal sealed class HotkeyRecorder
 
     /// <summary>Connects the recorder to host-owned settings and the shared Settings button factory.</summary>
     public HotkeyRecorder(Palette palette, Func<string> current, Func<string, bool> apply, bool allowEmpty,
-        Func<string, Action, bool, Button> button)
+        Func<string, Action, bool, Button> button,
+        Func<Key, KeyModifiers, string?>? gestureText = null,
+        Func<string, string?>? validate = null)
     {
         _palette = palette;
         _current = current;
         _apply = apply;
+        _gestureText = gestureText ?? GestureText;
+        _validate = validate;
         _allowEmpty = allowEmpty;
         _button = button;
         _host.Tag = this;
@@ -103,7 +109,7 @@ internal sealed class HotkeyRecorder
         _caps.Children.Clear();
         var label = _current();
         if (label is "off" or "") _caps.Children.Add(Kit.Text("None", _palette.Muted, Typography.Body));
-        else AddCaps(label.Split('+', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries), false);
+        else AddCaps(ShortcutMap.LabelParts(label), false);
         var row = NewRow();
         row.Children.Remove(_caps);
         foreach (var cap in _caps.Children.ToArray())
@@ -187,18 +193,19 @@ internal sealed class HotkeyRecorder
             else if (_gesture is { } text) Apply(text);
             return;
         }
-        var gesture = GestureText(e.Key, e.KeyModifiers);
+        var gesture = _gestureText(e.Key, e.KeyModifiers);
         if (gesture is null && !IsModifier(e.Key))
         {
             Hint("That key can't be a shortcut. Use A-Z, 0-9, F1-F24, Space, Tab, Enter, Insert or Delete.");
             return;
         }
+        var error = gesture is null ? null : _validate?.Invoke(gesture);
         _gesture = gesture;
-        _save!.IsEnabled = gesture is not null;
+        _save!.IsEnabled = gesture is not null && error is null;
         _caps.Children.Clear();
-        AddCaps(gesture?.Split('+') ?? ModifierNames(e.KeyModifiers).ToArray(), true);
+        AddCaps(gesture is null ? ModifierNames(e.KeyModifiers).ToArray() : ShortcutMap.LabelParts(gesture), true);
         if (gesture is null) _caps.Children.Add(GhostCap());
-        Hint();
+        Hint(error);
     }
 
     /// <summary>Applies only an explicit Save or Clear, retaining the session when Windows refuses.</summary>
@@ -223,7 +230,8 @@ internal sealed class HotkeyRecorder
             _caps.Children.Add(new Border
             {
                 BorderBrush = new SolidColorBrush(live ? _palette.Accent : _palette.Ink, live ? 1 : Paint.Hover(_palette.Dark)),
-                BorderThickness = new Thickness(1, 1, 1, 2),
+                BorderThickness = new Thickness(ChromeTokens.PillBorderThickness, ChromeTokens.PillBorderThickness,
+                    ChromeTokens.PillBorderThickness, ChromeTokens.BadgeBottomPadding),
                 CornerRadius = new CornerRadius(Shape.Key),
                 Padding = new Thickness(ChromeTokens.MetaSpacing, ChromeTokens.BadgeBottomPadding),
                 Background = new SolidColorBrush(_palette.Surface),

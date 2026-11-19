@@ -76,8 +76,10 @@ internal sealed class SearchOverlay : Grid
         _query.AddHandler(KeyDownEvent, OnKey, RoutingStrategies.Tunnel);
 
         var tools = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, Margin = new Thickness(6, 0, 0, 0) };
-        tools.Children.Add(Kit.IconButton(GridView ? Glyph.List : Glyph.Grid, GridView ? "List view (Ctrl+G)" : "Card grid (Ctrl+G)", _p, ToggleGrid, 32));
-        tools.Children.Add(Kit.IconButton(trash ? Glyph.Back : Glyph.Delete, trash ? "Back to notes (Ctrl+T)" : $"Trash · {window.Data.Trash.Count} (Ctrl+T)", _p, ToggleTrash, 32));
+        tools.Children.Add(Kit.IconButton(GridView ? Glyph.List : Glyph.Grid,
+            ShortcutTooltip(GridView ? "List view" : "Card grid", window.Shortcuts.GetLabel("grid")), _p, ToggleGrid, 32));
+        tools.Children.Add(Kit.IconButton(trash ? Glyph.Back : Glyph.Delete,
+            ShortcutTooltip(trash ? "Back to notes" : $"Trash · {window.Data.Trash.Count}", window.Shortcuts.GetLabel("trash")), _p, ToggleTrash, 32));
         tools.Children.Add(Kit.IconButton(Glyph.Close, "Close (Esc)", _p, window.CloseOverlay, 32));
         var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(0, 0, 0, 8) };
         header.Children.Add(_query);
@@ -323,24 +325,31 @@ internal sealed class SearchOverlay : Grid
 
     private void OnKey(object? sender, KeyEventArgs e)
     {
-        var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
         var step = GridView ? Math.Max(1, (int)((_scroll.Bounds.Width + 8) / (CardWidth() + 8))) : 1;
         switch (e.Key)
         {
-            case Key.Down: Move(step); break;
-            case Key.Up: Move(-step); break;
-            case Key.Right when GridView && (_query.Text?.Length ?? 0) == _query.CaretIndex: Move(1); break;
-            case Key.Left when GridView && _query.CaretIndex == 0: Move(-1); break;
-            case Key.Enter: Open(); break;
-            case Key.G when ctrl: ToggleGrid(); break;
-            case Key.T when ctrl: ToggleTrash(); break;
-            case Key.Space when ctrl: if (_items.Count > 0 && !_selected.Add(_items[_cursor])) _selected.Remove(_items[_cursor]); UpdateCardStates(); UpdateStatus(); break;
-            case Key.Delete when ctrl || ShowingTrash: DeleteSelected(); break;
-            case Key.Back when ctrl && (_query.Text?.Length ?? 0) == 0: DeleteSelected(); break;
+            case Key.Down when e.KeyModifiers == KeyModifiers.None: Move(step); break;
+            case Key.Up when e.KeyModifiers == KeyModifiers.None: Move(-step); break;
+            case Key.Right when e.KeyModifiers == KeyModifiers.None && GridView && (_query.Text?.Length ?? 0) == _query.CaretIndex: Move(1); break;
+            case Key.Left when e.KeyModifiers == KeyModifiers.None && GridView && _query.CaretIndex == 0: Move(-1); break;
+            case Key.Enter when e.KeyModifiers == KeyModifiers.None: Open(); break;
+            case Key.Space when e.KeyModifiers == KeyModifiers.Control: if (_items.Count > 0 && !_selected.Add(_items[_cursor])) _selected.Remove(_items[_cursor]); UpdateCardStates(); UpdateStatus(); break;
+            case Key.Delete when e.KeyModifiers == KeyModifiers.Control || e.KeyModifiers == KeyModifiers.None && ShowingTrash: DeleteSelected(); break;
+            case Key.Back when e.KeyModifiers == KeyModifiers.Control && (_query.Text?.Length ?? 0) == 0: DeleteSelected(); break;
             default: return;
         }
         e.Handled = true;
     }
+
+    internal bool HandleShortcut(ShortcutAction action)
+    {
+        if (action == ShortcutAction.Grid) ToggleGrid();
+        else if (action == ShortcutAction.Trash) ToggleTrash();
+        else return false;
+        return true;
+    }
+
+    private static string ShortcutTooltip(string action, string keys) => keys.Length == 0 ? action : $"{action} ({keys})";
 
     private void Move(int delta)
     {

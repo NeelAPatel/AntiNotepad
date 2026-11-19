@@ -25,17 +25,21 @@ namespace AntiNotepad.UI;
 /// </summary>
 internal sealed partial class SettingsWindow : Window
 {
+    private const int KeyboardGlyph = 0xf4b8;
+
     private static readonly (string Id, string Name, int Icon)[] Sections =
     [
-        // Fluent UI System Icons: color, paint_brush, document_edit, tap_single (a finger touching), desktop, folder, info.
+        // Fluent UI System Icons: color, paint_brush, document_edit, tap_single, desktop, keyboard, folder, info.
         ("theme", "Theme", 0xf2f5), ("ui", "UI", 0xf592), ("editor", "Editor", 0xf386),
-        ("feel", "Feel", 0xec8d), ("system", "System", 0xf359), ("storage", "Storage", 0xf418), ("about", "About", 0xf4a3),
+        ("feel", "Feel", 0xec8d), ("system", "System", 0xf359), ("shortcuts", "Shortcuts", KeyboardGlyph),
+        ("storage", "Storage", 0xf418), ("about", "About", 0xf4a3),
     ];
     // Remembered while AntiNotepad runs: the last section, and which expanders are open (these start open).
     private static string _section = "theme";
     private static readonly HashSet<string> Expanded = ["light-palette", "backing", "toolbar", "scrolling", "switching", "open-at"];
 
     private readonly SettingsService _settings;
+    private readonly ShortcutMap _shortcuts;
     private readonly ISettingsHost _host;
     private readonly bool _softwareRendering;
     private readonly NotesSession _notes;
@@ -60,6 +64,7 @@ internal sealed partial class SettingsWindow : Window
     public SettingsWindow(SettingsService settings, ISettingsHost host, bool softwareRendering, NotesSession notes)
     {
         _settings = settings;
+        _shortcuts = new ShortcutMap(settings.Current);
         _smoothScroll = new SmoothScroll(_scroll, Typography.PanelTitle, () => S);
         _host = host;
         _softwareRendering = softwareRendering;
@@ -122,11 +127,13 @@ internal sealed partial class SettingsWindow : Window
     public void Refresh()
     {
         _p = _host.CurrentPalette;
+        _shortcuts.Refresh(S);
         Restyle();
     }
 
     private void Restyle()
     {
+        _shortcuts.Refresh(S);
         ApplyLook();
         _preview.ApplyLook(_p, S);
         var query = _find.Text;
@@ -282,6 +289,7 @@ internal sealed partial class SettingsWindow : Window
             case "editor": EditorPage(page, withPreview); break;
             case "feel": FeelPage(page, withPreview); break;
             case "system": SystemPage(page); break;
+            case "shortcuts": ShortcutsPage(page); break;
             case "storage": StoragePage(page); break;
             default: AboutPage(page); break;
         }
@@ -496,6 +504,124 @@ internal sealed partial class SettingsWindow : Window
         _ => "Each notch glides a few lines",
     };
 
+    /// <summary>Builds the page for viewing and changing in-window shortcuts.</summary>
+    private void ShortcutsPage(StackPanel page)
+    {
+        page.Children.Add(Group("Shortcut map"));
+        page.Children.Add(Card(Row(() => Fl(KeyboardGlyph), "Reset all shortcuts", "Restore every action to its default key.",
+            () => TextButton("Reset all", ResetAllShortcuts))));
+        foreach (var section in new[] { "Notes", "Search", "Window", "Slots", "Writing" })
+        {
+            var definitions = ShortcutMap.Definitions.Where(definition => definition.Section == section).ToArray();
+            page.Children.Add(Group(section));
+            var rows = definitions.Select(definition => Row(() => Fl(KeyboardGlyph), definition.Name,
+                definition.DefaultKey.Length == 0 ? $"No default shortcut. {definition.Help}" : definition.Help,
+                () => ShortcutControl(definition))).ToArray();
+            page.Children.Add(Card(rows));
+        }
+    }
+
+    /// <summary>Builds the recorder and reset control for one shortcut action.</summary>
+    private Control ShortcutControl(ShortcutDefinition definition)
+    {
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+        row.Children.Add(new HotkeyRecorder(_p,
+            () => _shortcuts.GetRecordedValue(definition.Id),
+            text => ApplyShortcut(definition, text),
+            allowEmpty: true,
+            TextButton,
+            ShortcutMap.RecorderGestureText,
+            text => ShortcutMap.BlockedReason(text, S, definition)).View);
+        row.Children.Add(TextButton("Reset", () => ResetShortcut(definition.Id)));
+        return row;
+    }
+
+    /// <summary>Validates a recorded key and resolves any same-scope ownership conflict.</summary>
+    private bool ApplyShortcut(ShortcutDefinition definition, string text)
+    {
+        if (text.Length == 0)
+        {
+            SaveShortcut(definition.Id, "");
+            return true;
+        }
+        if (ShortcutMap.BlockedReason(text, S, definition) is not null) return false;
+        if (_shortcuts.FindConflict(definition.Id, text) is { } other)
+        {
+            ConfirmShortcutTake(definition, text, other);
+            return true;
+        }
+        SaveShortcut(definition.Id, text);
+        return true;
+    }
+
+    /// <summary>Saves one shortcut change and optionally clears the previous owner.</summary>
+    private void SaveShortcut(string id, string text, string? clearId = null)
+    {
+        _settings.Update(settings =>
+        {
+            if (clearId is not null)
+            {
+                var cleared = ShortcutMap.Definitions.First(item => item.Id == clearId);
+                if (cleared.DefaultKey.Length == 0) settings.ShortcutOverrides.Remove(clearId);
+                else settings.ShortcutOverrides[clearId] = "";
+            }
+            var definition = ShortcutMap.Definitions.First(item => item.Id == id);
+            if (text == definition.DefaultKey) settings.ShortcutOverrides.Remove(id);
+            else settings.ShortcutOverrides[id] = text;
+        });
+        _shortcuts.Refresh(S);
+        AfterSet(rows: true);
+    }
+
+    /// <summary>Removes a saved override so one action returns to its default.</summary>
+    private void ResetShortcut(string id)
+    {
+        _settings.Update(settings => settings.ShortcutOverrides.Remove(id));
+        _shortcuts.Refresh(S);
+        AfterSet(rows: true);
+    }
+
+    /// <summary>Removes every saved override so all actions return to their defaults.</summary>
+    private void ResetAllShortcuts()
+    {
+        _settings.Update(settings => settings.ShortcutOverrides.Clear());
+        _shortcuts.Refresh(S);
+        AfterSet(rows: true);
+    }
+
+    /// <summary>Asks before moving a key from its current action to another action.</summary>
+    private async void ConfirmShortcutTake(ShortcutDefinition definition, string text, ShortcutDefinition owner)
+    {
+        var dialog = new Window
+        {
+            Title = "Shortcut already in use",
+            Width = 420,
+            SizeToContent = SizeToContent.Height,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Background = new SolidColorBrush(_p.Canvas),
+            Content = new StackPanel
+            {
+                Margin = new Thickness(24),
+                Spacing = 16,
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text = $"{text} is assigned to {owner.Name}. Give it to {definition.Name}? The other action will have no shortcut.",
+                        TextWrapping = TextWrapping.Wrap,
+                        Foreground = new SolidColorBrush(_p.Ink),
+                    },
+                },
+            },
+        };
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Spacing = 8 };
+        actions.Children.Add(TextButton("Cancel", () => dialog.Close(false)));
+        actions.Children.Add(TextButton("Take shortcut", () => dialog.Close(true), primary: true));
+        ((StackPanel)dialog.Content!).Children.Add(actions);
+        if (await dialog.ShowDialog<bool>(this)) SaveShortcut(definition.Id, text, owner.Id);
+    }
+
     private void SystemPage(StackPanel page)
     {
         page.Children.Add(Group("Shortcuts"));
@@ -557,7 +683,7 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Group(AppInfo.Name));
         page.Children.Add(Card(
             Row(() => Fl(0xf4a3), $"{AppInfo.Name} {AppInfo.Version} ({AppInfo.Label})", $"{AppInfo.Description}\n{AppInfo.Copyright}", null),
-            Row(() => Fl(0xf4b8), "Keyboard shortcuts", "Every shortcut on one page", () => TextButton("Show", () => { _host.ShowResident(); _host.OpenHelp(); })),
+            Row(() => Fl(KeyboardGlyph), "Keyboard shortcuts", "Every shortcut on one page", () => TextButton("Show", () => { _host.ShowResident(); _host.OpenHelp(); })),
             Row(() => Fl(0xf19f), "Restore default settings", "Undo it from the pad's notice", () => TextButton("Restore", () => _host.ResetSettings()))));
     }
 

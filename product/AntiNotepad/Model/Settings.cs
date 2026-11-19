@@ -22,6 +22,7 @@ public sealed class Settings
     public string Font { get; set; } = "Cascadia Mono";
     public string? Hotkey { get; set; }
     public string? NewNoteHotkey { get; set; }            // opens straight to a new note; null = off
+    public Dictionary<string, string> ShortcutOverrides { get; set; } = new(StringComparer.Ordinal);
     public int FreshNoteAfterMinutes { get; set; } = 30;   // 0 = never
     internal static readonly IReadOnlyList<int> SaveDelayChoicesMs = Array.AsReadOnly<int>([
         ChromeTokens.SaveDelayDefaultMs, ChromeTokens.SaveDelayFiveSecondsMs,
@@ -81,6 +82,9 @@ public sealed class Settings
     {
         var copy = (Settings)MemberwiseClone();
         copy.DisabledLanguages = DisabledLanguages is null ? [] : [.. DisabledLanguages];
+        copy.ShortcutOverrides = ShortcutOverrides is null
+            ? new Dictionary<string, string>(StringComparer.Ordinal)
+            : new Dictionary<string, string>(ShortcutOverrides, StringComparer.Ordinal);
         return copy;
     }
 }
