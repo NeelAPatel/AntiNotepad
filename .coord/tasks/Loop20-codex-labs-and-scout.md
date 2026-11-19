@@ -23,6 +23,15 @@ Edit playbook section 3 (Lab and Findings rows, Keep-with-Claude list, lab brief
 **Proof plan:** diff, gate output, brief example. Real-item proof: none has run yet; the next lab-first item (A29/A31 already built labs) will show it, so I state that reason.
 **Your call at Approve:** approve, change or drop.
 
+## Approve
+User, 2026-11-19, in this chat: "Approve" (plan: playbook Lab and Findings rows, Keep-with-Claude list, lab brief example, `docs/agents.md` note).
+
+## Check
+Gate offline PASS (build, selftest, seam, tokens, scope, loop-lint, size). Diff scope: the playbook, `docs/agents.md` and this card only. Commit review done: one tidy commit `71baddc`.
+
+## Hand test
+None: nothing visible (loop docs).
+
 ## Files
 - `.coord/research/pstack-director-playbook.md`
 - `docs/agents.md`
