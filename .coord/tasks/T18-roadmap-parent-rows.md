@@ -46,8 +46,17 @@ Rough time: about 1 hour (Codex terra build, then Claude gate and test page on p
 - Children keep `parent › step` naming and stay glued under the parent. A child whose parent is filtered out still names it.
 - Same single file, `tools/roadmap/index.html`. Update the legend (fold arrow; remove orphan line).
 
+## Rework r3 (user, 2026-11-19, with a sidebar screenshot)
+User: five groups in this order: 1 Active (items launched / with a sub-chat), 2 Upcoming (what the user said is upcoming), 3 Paused/Deferred, 4 Backlog, 5 Done. "Have some sort of cache too so I can save the column widths I set and expand/fold status across the board."
+- Replace BUCKETS (Current/Next/Backlog/Done) in `planView()`. Precedence per row (a step follows its parent's bucket as in r1): Done (state done) > Paused/Deferred (stKind 'def') > Active (state you/act, or the item has a live branch or worktree: `wtByBranch`) > Upcoming (group name starts "Next"; that is the "Next up" group in `pending.md`) > Backlog. Rename the headers accordingly; the collapse state keys follow the new names.
+- Limit: the page only sees STATUS rows, branches and worktrees, not Claude chats. Chat-aware Active needs Loop Hub to write it into STATUS (follow-up, not here).
+- Shared prefs: widths, hidden columns, group folds, parent folds, hidden rows are saved today in `localStorage`, which is per port, so the preview port and the live port do not share them. Add `GET /prefs` and `POST /prefs` to `tools/roadmap-serve.ps1` (localhost only, body capped at 64 KB, valid JSON object only) reading/writing `roadmap-prefs.json` in the MAIN checkout's `.coord/` (resolve via `git rev-parse --git-common-dir`); add that file to `.gitignore`. The page loads prefs at start (falls back to `localStorage` when the server has none or fails) and writes both on each change.
+- Files for r3 add `tools/roadmap-serve.ps1` and `.gitignore`.
+
 ## Files
 - `tools/roadmap/index.html`
+- `tools/roadmap-serve.ps1` (r3)
+- `.gitignore` (r3)
 
 ## Approve
 User, 2026-11-19: "approved for now, make a worktree'd version of roadmap with this change so i can preview here before going live" (page-only fix; orphans not edited).
@@ -57,6 +66,7 @@ Role: terra (`docs/agents.md`), because one file, normal reasoning. The branch i
 - Build exactly the Plan above in `tools/roadmap/index.html` only; no drive-by changes, no row-file or data-script edits.
 - Offline checks only: `pwsh -NoProfile -File tools/roadmap-data.ps1 -Check`, and a JS syntax check of the page script (extract the `<script>` and run `node --check` if node exists). No ports, servers, browser.
 - Never edit `.coord/STATUS.md` or this card. Gate: `pwsh -NoProfile -File tools/gate.ps1 -Task T18-roadmap-parent-rows -Offline`.
+- Rework r3: build the section "Rework r3" on top of the existing diff. Offline checks only; do not start the server (the item chat tests `/prefs` live). Read-only data script stays untouched.
 - Rework r2: build the section "Rework r2" on top of the existing diff (it supersedes the orphan label from the Plan). Report to `.coord/reports/T18-roadmap-parent-rows.md` (overwrite).
 - Done means: children follow their parent under bucket sort and filters, show `parent › step`, orphans show `no parent`, search matches parent names, legend updated; `-Check` passes.
 
