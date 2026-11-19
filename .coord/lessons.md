@@ -13,7 +13,6 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 
 | Date | Item | Found at | Cause | Caught by | Should have caught | Lesson (one line) | Rule change |
 | 2026-11-19 | Loop16-poteto-trigger | Live check, review | test, code | codex-review | test | Stop self-tests were built from a hand-made transcript, so the real `isMeta` skill message, CRLF and a lowercase marker slipped; build hook self-tests from real transcript shapes | - |
-| 2026-11-19 | A32-selection-convert-menu | Medium | 4 | 1 | 1 | - | 0 | - |
 | 2026-11-19 | Loop16-poteto-trigger (merge) | Merge | plan | merge-preflight | brief | the card heading was `## Check (item chat, date)`; preflight needs a bare `## Check` | - |
 | 2026-11-19 | Loop17-chat-title-selfheal | Check | code | codex-review | test | paused/parked rows were skipped, a bare `paused` row lost its phase, and `done` gave no `[Merged]`; build title-hint self-tests from real STATUS row shapes | - |
 | 2026-11-19 | Loop17-chat-title-selfheal | Build | plan | user | item chat | the chat changed its title before its STATUS row; set the row and the title in the same step | - |
@@ -34,6 +33,7 @@ One row per merged item: what each check found. Empty rows on items that later h
 | Date | Item | Tier | Rework rounds | Gate fails | Codex review (proven) | Design review (findings) | Hand-test fails | Misses after merge |
 |---|---|---|---|---|---|---|---|---|
 | 2026-11-19 | Loop16-poteto-trigger | Medium | 1 | 0 | 2 | - | 0 | - |
+| 2026-11-19 | A32-selection-convert-menu | Medium | 4 | 1 | 1 | - | 0 | - |
 | 2026-11-19 | Loop17-chat-title-selfheal | Medium | 1 | 0 | 2 | - | 0 | - |
 | 2026-11-19 | Loop20-codex-labs-and-scout | Medium | 0 | 0 | 0 | - | 0 | - |
 | 2026-11-19 | Loop19-review-task-chat-runnable | Low | 0 | 0 | 0 | - | 0 | - |
