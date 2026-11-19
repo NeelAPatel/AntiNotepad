@@ -16,8 +16,8 @@ Same loop, same roles: the user picks, the director dispatches and merges, one i
   - **Constraints:** tier, lab first if visible, dev copy only, one Codex run unless the plan says more.
 
 ## 2. Dispatch (director chat)
-- Start one item chat per pick (Sonnet). Its opening brief is the Request plus:
-  `/pstack:poteto-mode` + "Follow the house rules and docs/loop.md. Stop at Approve. Relay the finished summary to <director> when the user asks."
+- Start one item chat per pick (Sonnet). Its opening brief is the Request plus: "Follow the house rules and docs/loop.md. Stop at Approve. Relay the finished summary to <director> when the user asks." and this gate (a started chat cannot load `/pstack:poteto-mode` itself; tested 2026-11-19, the skill is user-typed only):
+  "Do nothing yet. Your first reply is one line plus a code block containing `/pstack:poteto-mode` followed by a short task pointer (for example: work the brief above for <ID-slug>, Findings then Plan, stop at Approve). Then stop. Read no files and start no Findings until the user types it. If the user types anything else first, answer it and remind them of the command once."
 - Then the director steps back.
 
 ## 3. In the item chat (user travels here)
