@@ -235,6 +235,7 @@ Done and dropped Plan rows moved out of STATUS by Loop10b-pending-list (2026-11-
 
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
+| A32-selection-convert-menu | Right-click Convert to list ›: Checklist, Bullet list, Numbered list on selected lines (swap prefixes, skip blanks, numbering via existing renumber); text-only submenu. Card in `.coord/tasks/` | Medium | Small | done |
 | Loop20-codex-labs-and-scout | Lab pages and read-only inventories go to Codex: playbook Lab and Findings rows, Keep-with-Claude list, lab brief example; `docs/agents.md` note | Medium | Small | done |
 | Loop19-review-task-chat-runnable | Item chats can run `/review-task` themselves: typed-only flag removed from that skill only; rule line in `docs/loop-sessions.md` (typed-only command goes in a text block, never a button); `docs/playbook.md` list corrected | Low | Small | done |
 | Loop17-chat-title-selfheal | Item chats keep their own title current: `tools/title-hint.ps1` hook in committed settings prints the should-be title parts, the chat sets the title; rule in `docs/loop.md`, `docs/loop-sessions.md`, next-task and merge-task skills | Medium | Small | done |

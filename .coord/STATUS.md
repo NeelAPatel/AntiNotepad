@@ -22,7 +22,7 @@ Updated: 2026-11-16 · Product: AntiNotepad (`product/AntiNotepad`) · installed
 
 ## Now
 - In flight: A29-shortcut-map (building). T15-ffmpeg-frame-capture-trial paused (user, 2026-11-17).
-- Last finished: T18-roadmap-parent-rows, Loop20-codex-labs-and-scout, Loop19-review-task-chat-runnable, Loop17-chat-title-selfheal, Loop16-poteto-trigger, A26-tab-at-text-start, A27-recovered-folder-always-open, A21b-save-scheduler-extract, D3-release-checklist, Loop15-preflight-stale-head, A25-page-edge-stuck-after-hide, Loop13-drop-chat-titles, Loop14-codex-closing-files, T17-multi-dev-instances, A24-save-delay-cleanup, A23-paste-keep-structure, A22-wrap-hanging-indent, Loop12-chat-title-scheme-r2, Loop12-chat-title-scheme, A21-save-delay-setting, T16-roadmap-table-columns (dev 2026-11-17), T14-dirty-allowlist-codex-wake, Loop11-one-chat-flow, A19-settings-scroll-feel, A18-settings-segment-animation, A17-settings-toggle-animation.
+- Last finished: A32-selection-convert-menu, T18-roadmap-parent-rows, Loop20-codex-labs-and-scout, Loop19-review-task-chat-runnable, Loop17-chat-title-selfheal, Loop16-poteto-trigger, A26-tab-at-text-start, A27-recovered-folder-always-open, A21b-save-scheduler-extract, D3-release-checklist, Loop15-preflight-stale-head, A25-page-edge-stuck-after-hide, Loop13-drop-chat-titles, Loop14-codex-closing-files, T17-multi-dev-instances, A24-save-delay-cleanup, A23-paste-keep-structure, A22-wrap-hanging-indent, Loop12-chat-title-scheme-r2, Loop12-chat-title-scheme, A21-save-delay-setting, T16-roadmap-table-columns (dev 2026-11-17), T14-dirty-allowlist-codex-wake, Loop11-one-chat-flow, A19-settings-scroll-feel, A18-settings-segment-animation, A17-settings-toggle-animation.
 
 ## Plan
 Active rows only (the roadmap script parses this table; same 5 columns as `.coord/pending.md`).
@@ -31,7 +31,6 @@ Active rows only (the roadmap script parses this table; same 5 columns as `.coor
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
 | A29-shortcut-map | Shortcut table in code and docs; Settings Shortcuts page (record, clear, reset); defaults only for basics; Ctrl+Alt+Shift+1-9/F1-F9 reserved for dev copies. Card in `.coord/tasks/` | Medium | Medium | building |
-| A32-selection-convert-menu | Right-click Convert to list ›: Checklist, Bullet list, Numbered list on selected lines (swap prefixes, skip blanks, numbering via existing renumber). Card in `.coord/tasks/` | Medium | Small | hand test |
 
 ## Open (needs the user)
 - Live check: A30 restart/sign-out saves an edit typed just before.

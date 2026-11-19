@@ -193,6 +193,27 @@ internal static partial class SelfTest
         ContinuationCase("head\n\nlast", 2, 0, NoteMode.List,
             "head\n\nlast", false, "List mode declines a later blank line");
 
+        CheckCase(Editor.PadView.ConvertMenu(false, _ => { }) is null, "no conversion menu without selection");
+        CheckCase(Editor.PadView.ConvertMenu(true, _ => { })?.Children?.Count == 3, "selection has three conversion choices");
+
+        foreach (var (kind, expected) in new[]
+        {
+            (Editor.ListEditing.ListKind.Checklist, "list\n[ ] a\n  [ ] b\n\n[ ] c"),
+            (Editor.ListEditing.ListKind.Bullet, "list\n- a\n  - b\n\n- c"),
+            (Editor.ListEditing.ListKind.Numbered, "list\n1. a\n  1. b\n\n1. c"),
+        })
+        {
+            var initial = "list\n[x] a\n  - b\n\n3. c";
+            var document = new AvaloniaEdit.Document.TextDocument(initial);
+            Editor.DocumentCommands.ConvertToList(document, 1, 5, kind);
+            CheckCase(document.Text == expected, $"convert {kind} prefixes, blanks, indent and keyword");
+            document.UndoStack.Undo();
+            CheckCase(document.Text == initial && !document.UndoStack.CanUndo, $"convert {kind} one undo");
+        }
+        var numbered = new AvaloniaEdit.Document.TextDocument("a\nb\n\nc\nd");
+        Editor.DocumentCommands.ConvertToList(numbered, 1, 5, Editor.ListEditing.ListKind.Numbered);
+        CheckCase(numbered.Text == "1. a\n2. b\n\n1. c\n2. d", "conversion numbering restarts after blank");
+
         var selected = new AvaloniaEdit.Document.TextDocument("1. a\nplain\n2. b");
         CheckCase(Editor.DocumentCommands.IndentListLines(selected, 1, 3, true)
             && selected.Text == "  1. a\nplain\n  1. b", "selected list lines indent while plain lines stay put");

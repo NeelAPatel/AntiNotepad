@@ -20,6 +20,19 @@ internal static class ListEditing
 
     internal readonly record struct NumberEdit(int LineNumber, int Number);
 
+    internal enum ListKind { Checklist, Bullet, Numbered }
+
+    /// <summary>Replaces a list marker while preserving indentation, or skips a blank line.</summary>
+    internal static LineEdit? ConvertLine(string text, ListKind kind)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return null;
+        var indent = text.Length - text.TrimStart().Length;
+        var match = ListPrefix.Match(text);
+        var length = IsListLine(text) ? match.Length - indent : 0;
+        var prefix = kind switch { ListKind.Checklist => "[ ] ", ListKind.Bullet => "- ", _ => "1. " };
+        return new LineEdit(indent, length, prefix);
+    }
+
     internal enum TabAction { Indent, Outdent, InsertSpaces, Swallow, Default }
 
     /// <summary>Identifies positions through the end of a valid list marker, using zero-based columns.</summary>
