@@ -37,7 +37,7 @@ Item chat, 2026-11-19.
 - My run of the hook: worktree cwd gives `title-hint Loop17-chat-title-selfheal: me=none codex=none dev=none phase=build`; garbage stdin exits 0 silent. Examples for all six Request titles in `.coord/reports/Loop17-chat-title-selfheal.md`.
 - Bounds: only the Files list changed. No `/review-task` run (typed-only).
 - Misses: I changed the title before the STATUS row (caught by the user's screenshot); stray `cat` hung a run (caught by two samples).
-- Not yet seen: throwaway-chat heal, `⁉️` colour.
+- Live check (user OK 2026-11-19): throwaway chat set `⁉️ colour-test wrong-title`, user sent "hi", it healed to `Loop17-chat-title-selfheal ◆ check` from `title-hint ...: me=none codex=none dev=none phase=check` (user screenshots). User confirmed `⁉️` draws in colour.
 
 ## Hand test
 Look at the throwaway chat's title in the sidebar: `⁉️` must draw in colour; if grey, say so and it becomes `❓`. Nothing else is visible.
