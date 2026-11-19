@@ -19,9 +19,35 @@ internal sealed partial class PadWindow
 
     private void OnWindowKeyDown(object? sender, KeyEventArgs e)
     {
-        var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
-        var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
-        var alt = e.KeyModifiers.HasFlag(KeyModifiers.Alt);
+        if (e.Handled) return;
+        if (e.Key == Key.Escape && Editor.Completion.IsOpen) return; // the popup closes itself
+        if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None)
+        {
+            e.Handled = true;
+            if (_overlayOpen) CloseOverlay(); else HideResident();
+            return;
+        }
+
+        _shortcuts.TryGet(e.Key, e.KeyModifiers, out var route);
+        if (_overlayOpen)
+        {
+            if (_overlay is SearchOverlay search && route.Search != ShortcutAction.None && search.HandleShortcut(route.Search))
+            { e.Handled = true; return; }
+            if (route.Pad is ShortcutAction.Search or ShortcutAction.SearchAliasP or ShortcutAction.SearchAliasK or ShortcutAction.Settings or ShortcutAction.Help)
+            { DispatchShortcut(route.Pad, e.Key); e.Handled = true; return; }
+            if (e.Key == Key.Z && e.KeyModifiers == KeyModifiers.Control && _undoArmed && _toastAction is { } undoInOverlay)
+            { e.Handled = true; undoInOverlay(); HideToast(); }
+            return;
+        }
+
+        if (route.Pad != ShortcutAction.None)
+        {
+            if (route.Pad != ShortcutAction.KeepOnTop) SleepChrome(soon: false);
+            DispatchShortcut(route.Pad, e.Key);
+            e.Handled = true;
+            return;
+        }
+
         if (e.Key == Key.F12 && Environment.GetEnvironmentVariable(AppInfo.Env("SHOTS")) is { Length: > 0 } shots)
         {
             // Dev-only capture of the rendered window (the OS backdrop itself is not included).
@@ -45,65 +71,47 @@ internal sealed partial class PadWindow
             e.Handled = true;
             return;
         }
-        if (e.Key == Key.Escape && Editor.Completion.IsOpen) return; // the popup closes itself
-        if (e.Key == Key.Escape)
-        {
-            e.Handled = true;
-            if (_overlayOpen) CloseOverlay(); else HideResident();
-            return;
-        }
-        if (_overlayOpen)
-        {
-            // Overlays own their keys; a few globals still work.
-            if (ctrl && e.Key == Key.OemComma) { e.Handled = true; OpenSettings(); }
-            else if (ctrl && e.Key is Key.F or Key.P or Key.K) { e.Handled = true; OpenSearch(); }
-            else if (ctrl && e.Key == Key.Z && _undoArmed && _toastAction is { } undoInOverlay) { e.Handled = true; undoInOverlay(); HideToast(); }
-            return;
-        }
-        if (!ctrl && !alt && e.Key == Key.F1) { e.Handled = true; OpenHelp(); return; }
-        if (!(ctrl && !shift && e.Key == Key.T)
-            && e.Key is not (Key.LeftShift or Key.RightShift or Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt)) SleepChrome(soon: false);
-        if (alt && !ctrl)
-        {
-            switch (e.Key)
-            {
-                case Key.Left: e.Handled = true; Navigate(-1); return;
-                case Key.Right: e.Handled = true; Navigate(1); return;
-                case Key.Up when shift: e.Handled = true; MoveCurrent(-1); return;
-                case Key.Down when shift: e.Handled = true; MoveCurrent(1); return;
-            }
-            return;
-        }
-        if (!ctrl) return;
-        var digit = e.Key is >= Key.D1 and <= Key.D9 ? e.Key - Key.D0 : e.Key is >= Key.NumPad1 and <= Key.NumPad9 ? e.Key - Key.NumPad0 : 0;
-        if (digit > 0)
-        {
-            e.Handled = true;
-            if (shift) PromoteToSlot(digit); else OpenSlot(digit);
-            return;
-        }
-        if (e.Key == Key.Z && !shift && _undoArmed && _toastAction is { } undo) { e.Handled = true; undo(); HideToast(); return; }
-        switch (e.Key)
-        {
-            case Key.N when !shift: NewNote(); break;
-            case Key.PageUp when !shift: Navigate(-1); break;
-            case Key.PageDown when !shift: Navigate(1); break;
-            case Key.D0 or Key.NumPad0 or Key.OemTilde: ShowStack(); break;
-            case Key.Back when shift: DeleteCurrent(); break;
-            case Key.F or Key.P or Key.K when !shift: OpenSearch(); break;
-            case Key.OemComma: OpenSettings(); break;
-            case Key.OemPipe or Key.OemBackslash: ToggleSplit(); break;
-            case Key.T when !shift: TogglePin(); break;
-            case Key.OemQuestion: OpenHelp(); break;
-            case Key.O when shift: _ = RunOcr(_active); break;
-            case Key.C when shift: _ = CopyText(_active.Editor.Text); Toast("Copied the whole note"); break;
-            case Key.OemPlus or Key.Add: Zoom(1); break;
-            case Key.OemMinus or Key.Subtract: Zoom(-1); break;
-            case Key.Q when shift: Quit(); break;
-            default: return;
-        }
-        e.Handled = true;
+        if (e.Key == Key.Z && e.KeyModifiers == KeyModifiers.Control && _undoArmed && _toastAction is { } undo)
+        { e.Handled = true; undo(); HideToast(); return; }
+        if (e.Key is not (Key.LeftShift or Key.RightShift or Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt))
+            SleepChrome(soon: false);
     }
+
+    /// <summary>Runs one table action after the window has matched its exact key and modifiers.</summary>
+    private void DispatchShortcut(ShortcutAction action, Key key)
+    {
+        switch (action)
+        {
+            case ShortcutAction.NewNote: NewNote(); break;
+            case ShortcutAction.NextNote or ShortcutAction.NextAlias: Navigate(1); break;
+            case ShortcutAction.PreviousNote or ShortcutAction.PreviousAlias: Navigate(-1); break;
+            case ShortcutAction.FirstNote when Data.Stack.Count > 0: JumpTo(Data.Stack[0]); break;
+            case ShortcutAction.LatestNote when Data.Stack.Count > 0: JumpTo(Data.Stack[^1]); break;
+            case ShortcutAction.MoveEarlier: MoveCurrent(-1); break;
+            case ShortcutAction.MoveLater: MoveCurrent(1); break;
+            case ShortcutAction.DeleteNote: DeleteCurrent(); break;
+            case ShortcutAction.Search or ShortcutAction.SearchAliasP or ShortcutAction.SearchAliasK: ToggleSearch(); break;
+            case ShortcutAction.Settings: OpenSettings(); break;
+            case ShortcutAction.Help: ToggleHelp(); break;
+            case ShortcutAction.OpenSlot: OpenSlot(ShortcutDigit(key)); break;
+            case ShortcutAction.KeepSlot: PromoteToSlot(ShortcutDigit(key)); break;
+            case ShortcutAction.Stack: ShowStack(); break;
+            case ShortcutAction.Split: ToggleSplit(); break;
+            case ShortcutAction.KeepOnTop: TogglePin(); break;
+            case ShortcutAction.TextSizeUp: Zoom(1); break;
+            case ShortcutAction.TextSizeDown: Zoom(-1); break;
+            case ShortcutAction.CopyNote: _ = CopyText(_active.Editor.Text); Toast("Copied the whole note"); break;
+            case ShortcutAction.Ocr: _ = RunOcr(_active); break;
+            case ShortcutAction.Quit: Quit(); break;
+            case ShortcutAction.ToggleCheckbox: _active.ToggleCheckboxAtCaret(); break;
+            case ShortcutAction.Fold: _active.FoldAtCaretShortcut(collapse: true); break;
+            case ShortcutAction.Unfold: _active.FoldAtCaretShortcut(collapse: false); break;
+        }
+    }
+
+    private static int ShortcutDigit(Key key) => key is >= Key.D1 and <= Key.D9
+        ? (int)key - (int)Key.D0
+        : key is >= Key.NumPad1 and <= Key.NumPad9 ? (int)key - (int)Key.NumPad0 : 0;
 
     private void Zoom(int step)
     {
@@ -200,6 +208,13 @@ internal sealed partial class PadWindow
     {
         if (_overlay is SearchOverlay) CloseOverlay();
         else OpenSearch();
+    }
+
+    /// <summary>Toggles Help from its shortcut, including while the overlay itself has focus.</summary>
+    internal void ToggleHelp()
+    {
+        if (_overlay is HelpOverlay) CloseOverlay();
+        else OpenHelp();
     }
 
     private SettingsWindow? _settingsWindow;
@@ -313,6 +328,11 @@ internal sealed partial class PadWindow
     internal void HandleSettingsChanged(SettingsChange change)
     {
         var flags = change.Flags;
+        if ((flags & SettingsChangeFlags.Shortcuts) != 0)
+        {
+            _shortcuts.Refresh(Settings);
+            RebuildChrome();
+        }
         if ((flags & (SettingsChangeFlags.Appearance | SettingsChangeFlags.WindowPolicy)) != 0)
         {
             Topmost = Settings.Pinned;

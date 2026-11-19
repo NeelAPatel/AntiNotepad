@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>A29 shortcuts lab</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#1b1c1f;--fg:#e6e6e6;--mut:#9a9a9a;--card:#26282c;--line:#3a3d42;--acc:#0090ff;--bad:#ff6b6b;--ok:#4cc38a}
+body{margin:0;font:14px/1.4 "Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+header{padding:14px 20px;border-bottom:1px solid var(--line)}h1{margin:0;font-size:17px}
+header p{margin:4px 0 0;color:var(--mut);max-width:900px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--line)}
+button{font:inherit;color:var(--fg);background:transparent;border:1px solid var(--line);padding:4px 10px;cursor:pointer;border-radius:4px}
+button:hover{border-color:var(--mut)}button.go{background:var(--acc);border-color:var(--acc);color:#fff}
+main{padding:16px 20px;max-width:1100px}
+h2{font-size:12px;text-transform:uppercase;color:var(--mut);margin:20px 0 6px}
+table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:middle}
+th{font-size:11px;text-transform:uppercase;color:var(--mut);font-weight:600}
+.k{font-family:Consolas,monospace;font-size:12px;background:var(--card);border:1px solid var(--line);border-radius:5px;padding:2px 8px;display:inline-block;min-width:80px;text-align:center}
+.k.none{color:var(--mut);border-style:dashed}.k.rec{border-color:var(--acc);color:var(--acc)}.k.dup{border-color:var(--bad);color:var(--bad)}
+.k.fixed{opacity:.7}
+tr.gone td:not(.act){opacity:.35;text-decoration:line-through}
+.msg{font-size:12px;color:var(--bad)}.hint{font-size:12px;color:var(--mut)}
+input[type=text]{font:12px Consolas,monospace;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:4px;padding:3px 6px;width:150px}
+textarea{width:100%;height:150px;font:12px Consolas,monospace;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:4px;padding:8px;box-sizing:border-box}
+</style></head><body>
+<header><h1>A29 shortcuts lab</h1>
+<p>A workspace to decide which shortcuts the app offers, which to remove, and the keys, before anything is built. Click a key box and press the keys. Press Record, then press the keys. The browser keeps a few combos for itself (Ctrl+N, Ctrl+T, Ctrl+W, Alt+Left); for those, tick the Ctrl, Alt or Shift chips in the bar first, then press only the plain key (tick Ctrl, press N, get Ctrl+N). Ctrl+Alt+Shift with 1 to 9 or F1 to F9 is refused: dev copies own them. Your choices save in this browser; Export gives text to paste back to the item chat.</p></header>
+<div class="bar">
+<button id="today">Load today's keys</button><button id="basics">Load basics only</button><button id="clearall">Clear all keys</button>
+<button id="add">+ Add action</button><button class="go" id="export">Export</button><span class="hint">Add while recording:</span><label><input type="checkbox" class="mc" value="Ctrl"> Ctrl</label><label><input type="checkbox" class="mc" value="Alt"> Alt</label><label><input type="checkbox" class="mc" value="Shift"> Shift</label><span class="hint" id="status"></span></div>
+<main>
+<table id="t"><thead><tr><th>Keep</th><th>Action</th><th>Group</th><th>Today</th><th>Chosen key</th><th></th><th></th></tr></thead><tbody></tbody></table>
+<details><summary class="hint">What is already taken (the recorder refuses these)</summary><ul class="hint"><li>Plain typing, Space, Enter, Tab, Backspace, Delete, Insert, arrows, Home, End, PageUp, PageDown.</li><li>Shift + arrows, Home, End, PageUp/Down, Insert, Delete: select text, cut, paste.</li><li>Ctrl + arrows, Home, End, Backspace, Delete, Insert: word and document movement and deletion.</li><li>Ctrl + A, C, X, V, Z, Y, D, I and Ctrl+Shift+Z: select all, clipboard, undo/redo, delete line, indent.</li><li>Alt+Shift + arrows, Home, End and Ctrl+Alt+Shift + Left/Right: rectangular selection.</li><li>Alt+F4, Alt+Tab, Alt+Space, Alt+Esc, Ctrl+Esc, PrintScreen, Win keys: Windows.</li><li>Ctrl+Alt+Shift + 1 to 9, F1 to F9 and S: dev copies and the global show/hide.</li><li>Allowed but flagged: Ctrl+W, S, O, P, B, U, K, H, Tab, Shift+C, Shift+Q (other apps use them).</li></ul><p class="hint">From the Codex audit of AvaloniaEdit; the Avalonia TextBox keymap itself is not fully verified.</p></details>
+<h2>Fixed keys (editor, not rebindable)</h2>
+<table id="f"><tbody></tbody></table>
+<h2>Export</h2><textarea id="out" readonly placeholder="Press Export"></textarea>
+</main>
+<script>
+const KEY='a29-shortcuts-lab-v1';
+const A=(id,name,group,today,basic,note)=>({id,name,group,today:today||'',basic:basic||'',keep:true,key:today||'',note:note||''});
+const SEED=[
+A('new','New note','Notes','Ctrl+N','Ctrl+N'),
+A('next','Next note','Notes','Alt+Right'),A('prev','Previous note','Notes','Alt+Left'),
+A('nextalt','Next note (alias)','Notes','Ctrl+PageDown','', 'not in help today'),A('prevalt','Previous note (alias)','Notes','Ctrl+PageUp','', 'not in help today'),
+A('first','First note','Notes','','', 'suggest Alt+Home (Alt+Shift+Left already moves to the previous note)'),A('latest','Latest note','Notes','','', 'suggest Alt+End'),
+A('moveup','Move note earlier','Notes','Alt+Shift+Up','', 'blocks rectangular text selection; pick another key'),A('movedown','Move note later','Notes','Alt+Shift+Down','', 'blocks rectangular text selection; pick another key'),
+A('delete','Delete note (to trash)','Notes','Ctrl+Shift+Backspace'),
+A('search','Search notes','Search','Ctrl+F','Ctrl+F'),A('searchp','Search (alias)','Search','Ctrl+P','', 'undocumented; print in other apps'),A('searchk','Search (alias)','Search','Ctrl+K','', 'undocumented'),
+A('grid','Grid view (in search)','Search','Ctrl+G'),A('trash','Trash (in search)','Search','Ctrl+T','', 'clashes with Keep on top in help'),
+A('settings','Settings','Window','Ctrl+,','Ctrl+,','not in help today'),A('help','Help','Window','F1','F1','also Ctrl+/'),
+A('hide','Hide the pad / close panel','Window','Esc','Esc'),
+A('pin','Keep on top','Window','Ctrl+T'),A('split','Split view','Window','Ctrl+\\'),A('stack','Back to the stack','Slots','Ctrl+0','', 'alias Ctrl+~'),
+A('slot','Open slot 1 to 9','Slots','Ctrl+1..9'),A('promote','Keep note in slot 1 to 9','Slots','Ctrl+Shift+1..9'),
+A('zoomin','Text size up','Writing','Ctrl++'),A('zoomout','Text size down','Writing','Ctrl+-'),
+A('copyall','Copy the whole note','Writing','Ctrl+Shift+C'),A('ocr','Read text from a screen snip','Writing','Ctrl+Shift+O'),
+A('check','Toggle checkbox / start timer','Writing','Ctrl+Enter'),A('fold','Fold at caret','Writing','Ctrl+Shift+[ / ]','', 'not in help today'),
+A('quit','Quit','Window','Ctrl+Shift+Q','', 'not in help today')
+];
+const FIXED=[['Enter','Continue a list'],['Tab / Shift+Tab','Indent list items at text start'],['Ctrl+[ / Ctrl+]','Change list level'],['Ctrl+V','Paste'],['Ctrl+Z / Ctrl+Y','Undo / redo (also undoes a delete toast)'],['Ctrl+Home','Top of note'],['Ctrl+click','Open a link'],['Ctrl+Alt+Shift+S','Global show/hide (a setting)']];
+let rows;try{rows=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!Array.isArray(rows))rows=JSON.parse(JSON.stringify(SEED));
+let recording=null;
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(rows))}catch(e){}};
+const NAMES={Backquote:'~',Comma:',',Period:'.',Slash:'/',Backslash:'\\',BracketLeft:'[',BracketRight:']',Equal:'+',Minus:'-',Semicolon:';',Quote:"'",Space:'Space',Enter:'Enter',Tab:'Tab',Escape:'Esc',Backspace:'Backspace',Delete:'Delete',Insert:'Insert',PageUp:'PageUp',PageDown:'PageDown',Home:'Home',End:'End',ArrowLeft:'Left',ArrowRight:'Right',ArrowUp:'Up',ArrowDown:'Down',NumpadAdd:'+',NumpadSubtract:'-'};
+function codeName(c){if(/^Key[A-Z]$/.test(c))return c[3];if(/^Digit\d$/.test(c))return c[5];if(/^F\d+$/.test(c))return c;return NAMES[c]||''}
+function fromEvent(e){const k=codeName(e.code);if(!k)return null;const m=[];if(e.ctrlKey)m.push('Ctrl');if(e.altKey)m.push('Alt');if(e.shiftKey)m.push('Shift');return m.concat(k).join('+')}
+function reserved(k){return /^Ctrl\+Alt\+Shift\+(\d|F[1-9])$/.test(k)}
+const NAV=['Left','Right','Up','Down','Home','End','PageUp','PageDown'],EDIT=['Backspace','Delete','Insert'];
+function blocked(k){
+ if(!k)return null;const p=k.split('+'),key=p[p.length-1],m=p.slice(0,-1),c=m.includes('Ctrl'),a=m.includes('Alt'),sh=m.includes('Shift');
+ if(reserved(k))return'Those keys belong to dev copies.';
+ if(k==='Ctrl+Alt+Shift+S')return'The global show/hide hotkey.';
+ if(!m.length&&(key.length===1||['Space','Enter','Tab','Backspace','Delete','Insert',...NAV].includes(key)))return'Plain typing and caret keys belong to the text box.';
+ if(!c&&!a&&sh&&(NAV.includes(key)||['Insert','Delete'].includes(key)))return'Shift plus this key selects text or cuts/pastes in every text box.';
+ if(c&&!a&&(NAV.includes(key)&&key!=='PageUp'&&key!=='PageDown'))return'Ctrl plus arrows, Home and End move or select by word and document.';
+ if(c&&!a&&sh&&['PageUp','PageDown'].includes(key))return'Ctrl+Shift+PageUp/Down extends the selection.';
+ if(c&&!a&&['Backspace','Delete'].includes(key)&&!sh)return'Deletes a word in every text box.';
+ if(c&&!a&&key==='Insert')return'Ctrl+Insert is copy.';
+ if(a&&sh&&!c&&(NAV.includes(key)))return'Alt+Shift plus arrows, Home or End is rectangular selection.';
+ if(c&&a&&sh&&['Left','Right'].includes(key))return'Rectangular word selection.';
+ if(c&&!a&&!sh&&['A','C','X','V','Z','Y','D','I'].includes(key))return'Editor key (select all, copy, cut, paste, undo, redo, delete line, indent).';
+ if(c&&sh&&!a&&key==='Z')return'Redo in most editors.';
+ if(a&&!c&&!sh&&['F4','Tab','Space','Esc'].includes(key))return'Windows owns this.';
+ if(c&&!a&&!sh&&key==='Esc')return'Windows owns this (Start menu).';
+ if(c&&a&&!sh&&key==='Delete')return'Windows owns this.';
+ if(key==='PrintScreen')return'Windows owns this.';
+ return null}
+const WARN={ 'Ctrl+W':'close tab/window elsewhere','Ctrl+S':'save','Ctrl+O':'open','Ctrl+P':'print','Ctrl+B':'bold','Ctrl+U':'underline','Ctrl+K':'insert link','Ctrl+Tab':'switch tabs','Ctrl+H':'replace','Ctrl+Shift+C':'copy in terminals','Ctrl+Shift+Q':'quit in browsers','Ctrl+T':'new tab','Ctrl+G':'go to','Ctrl+0':'reset zoom'};
+const warnFor=k=>WARN[k]?'Other apps use this for '+WARN[k]+'.':'';
+function dups(){const m={};rows.forEach(r=>{if(r.keep&&r.key){(m[r.key]=m[r.key]||[]).push(r)}});return m}
+function setKey(r,k){if(!k){r.key='';return''}const b=blocked(k);if(b)return b;r.key=k;return''}
+function render(){
+ const d=dups(),tb=document.querySelector('#t tbody');tb.innerHTML='';
+ rows.forEach((r,i)=>{
+  const tr=document.createElement('tr');if(!r.keep)tr.className='gone';
+  const clash=r.keep&&r.key&&d[r.key].length>1;
+  const names=clash?d[r.key].filter(x=>x!==r).map(x=>x.name).join(', '):'';
+  tr.innerHTML=`<td class="act"><input type="checkbox" ${r.keep?'checked':''}></td><td>${esc(r.name)}${r.note?`<div class="hint">${esc(r.note)}</div>`:''}</td><td>${r.group}</td><td><span class="k ${r.today?'fixed':'none'}">${esc(r.today||'none')}</span></td><td class="act"><span class="k ${recording===i?'rec':clash?'dup':r.key?'':'none'}" tabindex="0">${recording===i?'press keys…':esc(r.key||'Not set')}</span>${clash?`<div class="msg">Also on: ${esc(names)}</div>`:''}${blocked(r.key)?`<div class="msg">Taken: ${esc(blocked(r.key))}</div>`:warnFor(r.key)?`<div class="hint">${esc(warnFor(r.key))}</div>`:''}<div class="msg" data-m></div></td><td class="act"><button data-rec>Record</button></td><td class="act"><button data-clr>Clear</button></td>`;
+  const [cb,box,rec,clr]=[tr.querySelector('input[type=checkbox]'),tr.querySelector('.k[tabindex]'),tr.querySelector('[data-rec]'),tr.querySelector('[data-clr]')];
+  const m=tr.querySelector('[data-m]');
+  cb.onchange=()=>{r.keep=cb.checked;save();render()};
+  box.onclick=rec.onclick=()=>{recording=i;render();document.querySelectorAll('.k[tabindex]')[i].focus()};
+  box.onblur=e=>{if(recording===i&&e.relatedTarget!==rec){recording=null;render()}};
+  box.onkeydown=e=>{if(recording!==i)return;if(['Control','Alt','Shift','Meta'].includes(e.key))return;e.preventDefault();
+   if(e.code==='Escape'&&!e.ctrlKey&&!e.altKey&&!e.shiftKey){recording=null;render();return}
+   let k=fromEvent(e);if(k){const have=k.split('+');const extra=[...document.querySelectorAll('.mc:checked')].map(x=>x.value).filter(m=>!have.includes(m));if(extra.length){const key=have.pop();k=['Ctrl','Alt','Shift'].filter(m=>have.includes(m)||extra.includes(m)).concat(key).join('+')}}const err=k?setKey(r,k):'That key cannot be a shortcut.';recording=null;save();render();if(err){const mm=document.querySelectorAll('[data-m]')[i];if(mm)mm.textContent=err}};
+  clr.onclick=()=>{r.key='';save();render()};
+  tb.appendChild(tr)});
+ const ft=document.querySelector('#f tbody');ft.innerHTML=FIXED.map(f=>`<tr><td><span class="k fixed">${esc(f[0])}</span></td><td>${esc(f[1])}</td></tr>`).join('');
+ const n=rows.filter(r=>r.keep&&r.key).length,c=Object.values(d).filter(v=>v.length>1).length;
+ document.getElementById('status').textContent=`${n} keys set, ${rows.filter(r=>!r.keep).length} actions removed, ${c} clashes`}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+document.getElementById('today').onclick=()=>{rows.forEach(r=>{r.keep=true;r.key=r.today});save();render()};
+document.getElementById('basics').onclick=()=>{rows.forEach(r=>{r.keep=true;r.key=r.basic});save();render()};
+document.getElementById('clearall').onclick=()=>{rows.forEach(r=>r.key='');save();render()};
+document.getElementById('add').onclick=()=>{const n=prompt('Action name');if(!n)return;rows.push({id:'x'+Date.now(),name:n,group:'Custom',today:'',basic:'',keep:true,key:'',note:'new action'});save();render()};
+document.getElementById('export').onclick=()=>{
+ const d=dups(),c=Object.entries(d).filter(([,v])=>v.length>1).map(([k,v])=>`${k}: ${v.map(x=>x.name).join(' / ')}`);
+ const L=['A29 shortcuts lab export','','| Action | Group | Today | Chosen | Keep |','|---|---|---|---|---|'].concat(rows.map(r=>`| ${r.name} | ${r.group} | ${r.today||'none'} | ${r.key||'unbound'} | ${r.keep?'yes':'REMOVE'} |`));
+ if(c.length)L.push('','Clashes: '+c.join('; '));
+ L.push('','JSON: '+JSON.stringify(rows.map(r=>({id:r.id,keep:r.keep,key:r.key}))));
+ const o=document.getElementById('out');o.value=L.join('\n');o.select();try{navigator.clipboard.writeText(o.value)}catch(e){}};
+render();
+</script></body></html>

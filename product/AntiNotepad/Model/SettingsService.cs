@@ -21,7 +21,8 @@ internal enum SettingsChangeFlags
     Split = 1 << 11,
     Search = 1 << 12,
     Persistence = 1 << 13,
-    All = (1 << 14) - 1,
+    Shortcuts = 1 << 14,
+    All = (1 << 15) - 1,
 }
 
 internal sealed record SettingsChange(SettingsChangeFlags Flags, IReadOnlyList<string> Properties);
@@ -90,6 +91,11 @@ internal sealed class SettingsService
         new(nameof(Settings.MenuColorIcons), Appearance | SettingsChangeFlags.Chrome | Persistence, s => s.MenuColorIcons),
         new(nameof(Settings.Hotkey), Appearance | SettingsChangeFlags.Hotkeys | Persistence, s => s.Hotkey),
         new(nameof(Settings.NewNoteHotkey), Appearance | SettingsChangeFlags.Hotkeys | Persistence, s => s.NewNoteHotkey),
+        new(nameof(Settings.ShortcutOverrides), SettingsChangeFlags.Shortcuts | Persistence,
+            s => s.ShortcutOverrides is null ? new Dictionary<string, string>(StringComparer.Ordinal) : new Dictionary<string, string>(s.ShortcutOverrides, StringComparer.Ordinal),
+            (a, b) => ((Dictionary<string, string>)a!).Count == ((Dictionary<string, string>)b!).Count
+                && ((Dictionary<string, string>)a!).All(pair => ((Dictionary<string, string>)b!).TryGetValue(pair.Key, out var value)
+                    && string.Equals(pair.Value, value, StringComparison.Ordinal))),
         new(nameof(Settings.FreshNoteAfterMinutes), Appearance | SettingsChangeFlags.WindowPolicy | Persistence, s => s.FreshNoteAfterMinutes),
         new(nameof(Settings.SaveDelayMs), Persistence, s => s.SaveDelayMs),
         new(nameof(Settings.HideOnBlur), Appearance | SettingsChangeFlags.WindowPolicy | Persistence, s => s.HideOnBlur),

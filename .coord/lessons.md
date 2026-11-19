@@ -26,6 +26,8 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 | 2026-11-06 | Loop8-merge-policy | Build (scratch test) | code | builder | brief | per-commit selftest always failed: the app is a GUI-subsystem exe, so `& $exe` returns no output; copy the gate's process runner whenever a script launches the app | - |
 | 2026-11-17 | A24-save-delay-cleanup | Build | plan | item chat | codex-review | plan step "clear the flag when a note is dropped" not implemented (a deleted note keeps its own unused flag, no store state left); card edit silently missed on CRLF line endings, so preflight failed on empty Check | - |
 | 2026-11-19 | A32-selection-convert-menu | Check | process | item chat | codex-review | format failure got past Codex review; brief should have run dotnet format first | - |
+| 2026-11-19 | A29-shortcut-map | Build run 1 | env | gate, run overlap | brief | Codex worker run 1 timed out on a hung selftest (gate and run overlapped) and wrote no report | - |
+| 2026-11-19 | A29-shortcut-map | Hand test | plan | user | lab | lab export kept Ctrl+Enter as a default and the Help row icon was off; the user wanted no default key | - |
 
 ## Scores
 One row per merged item: what each check found. Empty rows on items that later had misses mean the reviewer is not earning its run.
@@ -33,6 +35,7 @@ One row per merged item: what each check found. Empty rows on items that later h
 | Date | Item | Tier | Rework rounds | Gate fails | Codex review (proven) | Design review (findings) | Hand-test fails | Misses after merge |
 |---|---|---|---|---|---|---|---|---|
 | 2026-11-19 | Loop16-poteto-trigger | Medium | 1 | 0 | 2 | - | 0 | - |
+| 2026-11-19 | A29-shortcut-map | Medium | 4 | 0 | 5 | - | 2 | - |
 | 2026-11-19 | A32-selection-convert-menu | Medium | 4 | 1 | 1 | - | 0 | - |
 | 2026-11-19 | Loop17-chat-title-selfheal | Medium | 1 | 0 | 2 | - | 0 | - |
 | 2026-11-19 | Loop20-codex-labs-and-scout | Medium | 0 | 0 | 0 | - | 0 | - |

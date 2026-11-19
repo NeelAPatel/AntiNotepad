@@ -118,7 +118,7 @@ internal static class Welcome
         - Set line 1 to `math`, `list`, `timer`, `code py`, or `clipboard`.
         - Type `/` for commands such as `/date`, `/todo`, `/sort`, or `/json`.
         - `Ctrl+F` searches your notes.
-        - [ ] Press `Ctrl+Enter` to check off this example.
+        - [ ] Click the box to check off this example.
 
         ## Help
         - `Ctrl+,` opens Settings. `F1` shows all shortcuts.

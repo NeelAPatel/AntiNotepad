@@ -31,7 +31,7 @@ internal static class Showcase
         ## Checklist
         [ ] an open task
         [x] a finished task
-        [ ] Ctrl+Enter ticks the line you're on
+        [ ] Click a box to tick it
 
         ## Lists
         - groceries

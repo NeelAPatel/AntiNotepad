@@ -827,6 +827,9 @@ internal sealed class PadView : Grid
     public void ToggleCheckbox(int lineNumber)
         => DocumentCommands.ToggleCheckbox(Editor.Document, lineNumber);
 
+    internal void ToggleCheckboxAtCaret() { if (Mode == NoteMode.Timer) ToggleTimerAtCaret(); else ToggleCheckbox(CaretLine); }
+    internal bool FoldAtCaretShortcut(bool collapse) => FoldAtCaret(collapse);
+
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Key == Key.V && e.KeyModifiers == KeyModifiers.Control)
@@ -837,17 +840,6 @@ internal sealed class PadView : Grid
         }
         var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
         var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
-        if (ctrl && shift && e.Key is Key.OemOpenBrackets or Key.OemCloseBrackets)
-        {
-            e.Handled = FoldAtCaret(e.Key == Key.OemOpenBrackets);
-            return;
-        }
-        if (e.Key == Key.Enter && ctrl && !shift)
-        {
-            e.Handled = true;
-            if (Mode == NoteMode.Timer) ToggleTimerAtCaret(); else ToggleCheckbox(CaretLine);
-            return;
-        }
         if (e.Key == Key.Enter && !ctrl && !shift && e.KeyModifiers == KeyModifiers.None && Editor.TextArea.Selection.IsEmpty && !Completion.IsOpen)
         {
             bool continued;

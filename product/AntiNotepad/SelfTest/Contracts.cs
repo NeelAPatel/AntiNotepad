@@ -197,10 +197,10 @@ internal static partial class SelfTest
                 "Dev copy: check Tab at the marker, text start and mid-text; Shift+Tab, Ctrl+Tab and Ctrl+[ / Ctrl+] on bullets, checkboxes, numbers and selected lines."),
             new(
                 "checkbox-indent-preserved",
-                "Checkbox toggle and Tab/Shift+Tab indentation apply the same text edit and one Undo restores it; checkbox regex groups remain stable.",
+                "Checkbox toggles and Tab/Shift+Tab indentation apply the same text edit and one Undo restores it; checkbox regex groups remain stable.",
                 "A42c-checkbox-indent",
                 () => RunExistingCheck(CheckboxIndentChecks, "checkbox indent: "),
-                "Dev copy: click and Ctrl+Enter on [ ]task, [X] task, - [ ] task and - task; confirm text, checkbox, strikethrough and one-step Undo. Click a box away from the caret and confirm caret/selection stay put. In a timer note, Ctrl+Enter still toggles the timer. Tab/Shift+Tab a bullet, checkbox and nested numbered list; confirm two-space steps, fresh nested numbering at 1, 9 -> 10, and one Undo for indent plus renumber. Tab on plain or selected text still uses the editor behavior."),
+                "Dev copy: click [ ]task, [X] task, - [ ] task and - task; confirm text, checkbox, strikethrough and one-step Undo. Click a box away from the caret and confirm caret/selection stay put. Ctrl+Enter has no default action; assign it to Checkbox or timer in Settings to check that binding, then clear it. Tab/Shift+Tab a bullet, checkbox and nested numbered list; confirm two-space steps, fresh nested numbering at 1, 9 -> 10, and one Undo for indent plus renumber. Tab on plain or selected text still uses the editor behavior."),
             new(
                 "note-switch-settles",
                 "A note switch never leaves its pane or content transformed or faded once settled; interrupting a departure does not lose or repeat navigation.",
@@ -218,20 +218,26 @@ internal static partial class SelfTest
                 "Enter continuation and Tab/Shift+Tab renumber preserve the same text and one Undo step; caret position and scrolling remain a dev-copy check.",
                 "A42d-list-commands",
                 () => RunExistingCheck(ListCommandsChecks, "list commands: "),
-                "Dev copy: Enter at the end and in the middle of - ab, 9. ab, 9) ab and [x] ab; confirm the same markers, trailing text movement and caret after the new marker. Enter on an empty nested item outdents; Enter on an empty root item exits the list. Tab/Shift+Tab a numbered list across 9 -> 10 and confirm one Ctrl+Z per Enter or Tab. Check Shift+Enter, Enter with a selection and completion open, caret visibility at the bottom of a long note, and typing in a long list. In a timer note, Enter after 10s test still starts the timer and Ctrl+Enter still toggles it."),
+                "Dev copy: Enter at the end and in the middle of - ab, 9. ab, 9) ab and [x] ab; confirm the same markers, trailing text movement and caret after the new marker. Enter on an empty nested item outdents; Enter on an empty root item exits the list. Tab/Shift+Tab a numbered list across 9 -> 10 and confirm one Ctrl+Z per Enter or Tab. Check Shift+Enter, Enter with a selection and completion open, caret visibility at the bottom of a long note, and typing in a long list. In a timer note, Enter after the 10s test still starts the timer; Ctrl+Enter is unassigned by default."),
             new(
                 "convert-list-undo-blanks",
                 "Convert to list skips blank lines and is one undo step.",
                 "A32-selection-convert-menu",
                 () => RunExistingCheck(ListCommandsChecks, "convert to list: "),
                 "Dev copy: select mixed lines with a blank, convert to each list kind and undo once; check submenu pointer and keyboard navigation."),
-            // Keep last: this check initializes shared Avalonia state and constructs a PadWindow.
+            // Keep these final: both checks initialize shared Avalonia state and construct a PadWindow.
             new(
                 "pinned-accent-ring",
                 "Pinned window shows the accent ring; pin changes leave chrome visibility unchanged.",
                 "A9-pinned-accent-ring",
                 () => RunExistingCheck(PinRingChecks, "pinned accent ring: "),
-                "Dev copy: with Fade chrome on, pin button and Ctrl+T leave toolbar and pager visible while the ring fades; typing still fades the bars. Check both themes, custom accents, split view, rapid toggles, Reduce motion, dragging, resizing and top-bar clicks.")
+                "Dev copy: with Fade chrome on, pin button and Ctrl+T leave toolbar and pager visible while the ring fades; typing still fades the bars. Check both themes, custom accents, split view, rapid toggles, Reduce motion, dragging, resizing and top-bar clicks."),
+            new(
+                "shortcut-map",
+                "One key resolves to one action per scope; defaults avoid text editing, Windows and development-slot keys, Help toggles through its active shortcut, and the checkbox/timer action stays bindable without a default.",
+                "A29-shortcut-map",
+                () => RunExistingCheck(ShortcutMapChecks, "shortcut map: "),
+                "Dev copy: record, clear, reset one row, reset all, restart, take a conflicting key, and confirm F1 opens, closes and reopens Help with current bindings. Confirm Ctrl+Enter is unassigned by default and Checkbox or timer can be bound in Settings.")
         ];
 
         var passed = 0;

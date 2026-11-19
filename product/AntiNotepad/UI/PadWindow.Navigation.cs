@@ -167,8 +167,15 @@ internal sealed partial class PadWindow
             || Settings.Split && !ReferenceEquals(_right.Note, RightNote);
         BindPanes(0);
         if (!savedByBinding) SaveImmediately();
-        Toast($"Kept in slot {slot} · Ctrl+{slot} opens it");
+        Toast(SlotPromotionMessage(slot, _shortcuts.GetLabel("open-slot")));
         SleepChrome(soon: false);
+    }
+
+    /// <summary>Describes a promoted note and includes the current Open slot shortcut when assigned.</summary>
+    internal static string SlotPromotionMessage(int slot, string openSlotBinding)
+    {
+        var message = $"Kept in slot {slot}";
+        return string.IsNullOrWhiteSpace(openSlotBinding) ? message : $"{message} · {openSlotBinding} opens this slot";
     }
 
     internal void ToggleSplit()
