@@ -18,7 +18,8 @@ User, 2026-11-19 (via PStack Manager; number confirmed by the user in Loop Hub 4
   3. Item-chat side: a Stop hook with a `stop_hook_active` guard; on the first turn it passes only if the transcript shows the skill launch or a fenced block holding the command.
 - **Constraints:** Medium tier. Both hooks go in user scope or `.claude/settings.local.json`, never only in the committed settings, so they fire in Master 6, Loop Hub 4 and item chats. Editing user-level settings needs the user's own approval in this chat at Approve; do not touch them before. Hooks fail open if they crash (docs/playbook.md). Prefer a short script plus a text rule; Codex may build, offline only; no live-chat checks by Codex. Findings may end in "drop" or a smaller cut if a hook cannot read the `prompt` field or the transcript.
 
-## Check (item chat, 2026-11-19)
+## Check
+Item chat, 2026-11-19.
 - (1) Throwaway chat from the template: transcript shows tool_use Skill then "Launching skill: pstack:poteto-mode"; Stop hook on that real transcript logs `first-turn-pass: Launching skill: pstack:poteto-mode`.
 - (2) Broken brief ("First run ..." in a sentence) refused before start: "Use the item chat template: /pstack:poteto-mode on line 1 and the explicit Skill tool call on line 2." (hooks in block mode).
 - (3) Block text proven offline only (`-SelfTest`: missing launch exits 2 with the fallback line and fenced command; later turn, active guard, bad input pass). Not yet seen live in a chat.
