@@ -60,3 +60,10 @@ Role: terra, one rule across a few coupled files in `Editor/`. The branch is che
 - Follow `.claude/rules/coding.md` (headers, summaries, no history comments). Keep new logic out of PadView beyond key mapping.
 
 Report `.coord/reports/A26-tab-at-text-start.md`, short: 1 Summary; 2 Change list (`file:lines | what | Plan line`); 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 6 Contracts; 7 Lens review; 8 Checks run; 9 Hand checks for the user.
+
+## Check
+- Round 3 gate PASS (build 0 warnings, selftest, seam, tokens, format, scope, size). Rebased on dev (design hash re-taken after conflict).
+- Codex review r2: rework, one major (renumber once per selected line, 6.9 s at 4,000 lines); fixed in r3 (renumber once per block, 2,000-line selftest). Not re-reviewed; the fix is contained in `DocumentCommands`/`ListEditing`.
+- Bounds: Alt+Shift+arrows swapped for Ctrl+[ / Ctrl+] and `PadWindow.Keys.cs` edited: **justified**, user's words 2026-11-18. `docs/decisions.md` line: **justified**, user's "lock that in". `SelfTest/Design.cs`: **within plan** (help text).
+- Misses: Findings said Alt+Shift+arrows were unbound (found at Build, cause plan, caught by Codex, should have caught by Findings searching `UI/` key routing, lesson: grep window-level key handlers for any new shortcut).
+- Noticed: user's shortcut cleanup (Alt+Shift+arrows first/latest note, drop duplicates, empty rows, move-note key) is not an item; Ctrl+T appears twice in the help sheet.
