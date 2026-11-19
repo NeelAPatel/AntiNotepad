@@ -37,3 +37,10 @@ User, 2026-11-19, in this chat: "Approve" (plan as written, including one throwa
 
 ## Hand test
 Look at the throwaway chat's title in the sidebar: `⁉️` must draw in colour; if grey, say so and it becomes `❓`. Nothing else is visible.
+
+## For Codex
+Role: terra, one new script plus small doc and settings edits. Branch is checked out: never switch, merge or commit. Read `AGENTS.md`, `tools/loop-card.ps1`, `tools/poteto-gate.ps1` (self-test style) and the hand-over note in the Request. Build exactly the Plan and Files.
+- `tools/title-hint.ps1` (UTF-8, fail-open, exit 0, ASCII output, `-SelfTest`, `-Root` for canned fixtures). Reads stdin JSON `cwd`; STATUS plan rows and `pending.md` rows (states request/findings/plan ready/needs you); `.coord/logs` and `usage.tsv` from the main checkout. Output lines exactly as in the Plan. Phase map: findings, plan ready->plan, approved/building/rework->build, checking/ask-user->check, hand test/hand-tested->hand-test, done->none. me=needs-you for plan ready, hand test, ask-user, or codex failed/stalled. Running/failed/stalled rules per Findings; rework clears me.
+- `.claude/settings.json`: second command in the existing UserPromptSubmit group.
+- Docs: `docs/loop.md` line 57 becomes the title rule (format, who sets, same step as STATUS row, chat writes emoji/brackets/diamond from the hook's words); `docs/loop-sessions.md` script-table row; one line each in next-task and merge-task skills (director sets `[Merged]`/`[Dropped]`/`[Paused]`). Keep hot-file budgets.
+- Done means: `pwsh -NoProfile -File tools/title-hint.ps1 -SelfTest` passes; `tools/gate.ps1 -Task Loop17-chat-title-selfheal -Offline` passes. Report at `.coord/reports/Loop17-chat-title-selfheal.md`: files changed, self-test output, injected line for each Request example.
