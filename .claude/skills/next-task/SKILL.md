@@ -22,6 +22,8 @@ Branch, commits ahead of dev and changed files are above; steps below need not r
 Phase 1 (Request) runs in the director chat, which then starts the item chat (section 1a). Phases 2-5 (Findings, Plan, Approve, Build) run in that **item chat**, which the user answers; the director steps back.
 Every reply opens with the status card (`docs/loop.md`, "Status card"). Keep the plan row's State cell current. At Approve the row moves from `.coord/pending.md` to STATUS Pending work. Widgets: `.claude/skills/next-task/phases.md`.
 
+The director sets the item chat title to `[Dropped]` or `[Paused]` when it drops or pauses the item; see `docs/loop.md` for the item title rule.
+
 ## 1. Request
 - The item is the user's request, the named item, or the first plan row not done (`.coord/STATUS.md`, .claude/skills/next-task/phases.md, 3. Plan). Stop and
   ask if the next row is a release marker, a `Decision:` row, `proposed`/`needs you`, or lab-first design. An unnumbered
