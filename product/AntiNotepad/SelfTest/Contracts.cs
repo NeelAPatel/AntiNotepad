@@ -219,6 +219,12 @@ internal static partial class SelfTest
                 "A42d-list-commands",
                 () => RunExistingCheck(ListCommandsChecks, "list commands: "),
                 "Dev copy: Enter at the end and in the middle of - ab, 9. ab, 9) ab and [x] ab; confirm the same markers, trailing text movement and caret after the new marker. Enter on an empty nested item outdents; Enter on an empty root item exits the list. Tab/Shift+Tab a numbered list across 9 -> 10 and confirm one Ctrl+Z per Enter or Tab. Check Shift+Enter, Enter with a selection and completion open, caret visibility at the bottom of a long note, and typing in a long list. In a timer note, Enter after 10s test still starts the timer and Ctrl+Enter still toggles it."),
+            new(
+                "convert-list-undo-blanks",
+                "Convert to list skips blank lines and is one undo step.",
+                "A32-selection-convert-menu",
+                () => RunExistingCheck(ListCommandsChecks, "convert to list: "),
+                "Dev copy: select mixed lines with a blank, convert to each list kind and undo once; check submenu pointer and keyboard navigation."),
             // Keep last: this check initializes shared Avalonia state and constructs a PadWindow.
             new(
                 "pinned-accent-ring",

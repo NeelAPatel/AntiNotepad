@@ -41,6 +41,35 @@ internal static class DocumentCommands
         return true;
     }
 
+    /// <summary>Converts selected lines and renumbers their blocks as one undoable edit.</summary>
+    internal static void ConvertToList(TextDocument document, int firstLine, int lastLine, ListEditing.ListKind kind)
+    {
+        var keyword = Modes.Detect(document.GetText(document.GetLineByNumber(1))).KeywordLength > 0;
+        var lines = Enumerable.Range(Math.Max(1, firstLine), Math.Max(0, Math.Min(lastLine, document.LineCount) - Math.Max(1, firstLine) + 1))
+            .Where(n => !(n == 1 && keyword) && !string.IsNullOrWhiteSpace(document.GetText(document.GetLineByNumber(n))))
+            .ToArray();
+        using (document.RunUpdate())
+        {
+            foreach (var number in lines)
+            {
+                var line = document.GetLineByNumber(number);
+                Apply(document, line, ListEditing.ConvertLine(document.GetText(line), kind));
+            }
+            if (kind == ListEditing.ListKind.Numbered)
+            {
+                var fresh = lines.ToHashSet();
+                var last = 0;
+                foreach (var number in lines)
+                {
+                    if (number <= last) continue;
+                    var edits = ListEditing.RenumberBlock(document.LineCount,
+                        n => document.GetText(document.GetLineByNumber(n)), number, fresh, out last);
+                    ApplyNumberEdits(document, edits);
+                }
+            }
+        }
+    }
+
     internal static bool IsListLine(TextDocument document, int lineNumber)
         => TryGetLine(document, lineNumber, out var line) && ListEditing.IsListLine(document.GetText(line));
 

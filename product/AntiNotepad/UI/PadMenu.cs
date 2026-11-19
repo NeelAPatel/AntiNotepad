@@ -33,12 +33,7 @@ internal static class PadMenu
         TextOptions.SetTextRenderingMode(popup, TextRenderingMode.Antialias);
         popup.Opened += (_, _) =>
         {
-            if (TopLevel.GetTopLevel(content) is { } host)
-            {
-                host.TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
-                host.Background = Brushes.Transparent;
-                DesktopPlatform.ConfigurePopupWindow(host);
-            }
+            ConfigurePopup(content);
             content.Focus();
         };
         content.KeyDown += (_, e) =>
@@ -53,10 +48,19 @@ internal static class PadMenu
     private static Border BuildMenu(IReadOnlyList<MenuEntry> entries, Palette p, Settings settings, Action close)
     {
         var content = new StackPanel();
+        var submenus = new Dictionary<Control, Popup?>();
+        Popup? openSubmenu = null;
+        void Activate(Popup? submenu)
+        {
+            if (openSubmenu != submenu && openSubmenu is not null) openSubmenu.IsOpen = false;
+            openSubmenu = submenu;
+        }
         Grid.SetIsSharedSizeScope(content, true);
         if (settings.MenuActionRow)
         {
-            content.Children.Add(BuildActionRow(entries, p, settings.MenuColorIcons, close));
+            var actionRow = BuildActionRow(entries, p, settings.MenuColorIcons, close);
+            submenus.Add(actionRow, null);
+            content.Children.Add(actionRow);
             content.Children.Add(Separator(p));
         }
 
@@ -71,28 +75,43 @@ internal static class PadMenu
                 lastWasSeparator = true;
                 continue;
             }
-            content.Children.Add(BuildMenuRow(entry, p, settings.MenuColorIcons, close));
+            var row = BuildMenuRow(entry, p, settings.MenuColorIcons, close, Activate, out var submenu);
+            submenus.Add(row, submenu);
+            content.Children.Add(row);
             lastWasSeparator = false;
         }
 
-        return new Border
-        {
-            HorizontalAlignment = HorizontalAlignment.Left,
-            Padding = new Thickness(4),
-            CornerRadius = new CornerRadius(Shape.Popup),
-            Background = new SolidColorBrush(p.Surface),
-            BorderBrush = new SolidColorBrush(p.Faint, Paint.PopupBorder),
-            BorderThickness = new Thickness(1),
-            BoxShadow = new BoxShadows(new BoxShadow
-            {
-                Blur = Shape.MenuShadowBlur,
-                OffsetY = Shape.PopupShadowOffsetY,
-                Color = Color.FromArgb(p.Dark ? Shape.PopupShadowDarkAlpha : Shape.PopupShadowLightAlpha, 0, 0, 0),
-            }),
-            Child = content,
-            Focusable = true,
-        };
+        TrackHoveredRow(content, submenus, Activate);
+        return MenuBorder(content, p);
     }
+
+    /// <summary>Gives each menu popup the same transparent native window.</summary>
+    private static void ConfigurePopup(Control content)
+    {
+        if (TopLevel.GetTopLevel(content) is not { } host) return;
+        host.TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
+        host.Background = Brushes.Transparent;
+        DesktopPlatform.ConfigurePopupWindow(host);
+    }
+
+    /// <summary>Wraps menu rows in the shared popup surface and shadow.</summary>
+    private static Border MenuBorder(Control content, Palette p) => new()
+    {
+        HorizontalAlignment = HorizontalAlignment.Left,
+        Padding = new Thickness(4),
+        CornerRadius = new CornerRadius(Shape.Popup),
+        Background = new SolidColorBrush(p.Surface),
+        BorderBrush = new SolidColorBrush(p.Faint, Paint.PopupBorder),
+        BorderThickness = new Thickness(1),
+        BoxShadow = new BoxShadows(new BoxShadow
+        {
+            Blur = Shape.MenuShadowBlur,
+            OffsetY = Shape.PopupShadowOffsetY,
+            Color = Color.FromArgb(p.Dark ? Shape.PopupShadowDarkAlpha : Shape.PopupShadowLightAlpha, 0, 0, 0),
+        }),
+        Child = content,
+        Focusable = true,
+    };
 
     private static Control BuildActionRow(IReadOnlyList<MenuEntry> entries, Palette p, bool colored, Action close)
     {
@@ -126,7 +145,7 @@ internal static class PadMenu
         return new Border { Height = 52, Child = row };
     }
 
-    private static Control BuildMenuRow(MenuEntry entry, Palette p, bool colored, Action close)
+    private static Control BuildMenuRow(MenuEntry entry, Palette p, bool colored, Action close, Action<Popup?> activate, out Popup? rowSubmenu)
     {
         var row = new Grid { ColumnDefinitions = new ColumnDefinitions("28,*,Auto"), Height = 32 };
         row.ColumnDefinitions[2].SharedSizeGroup = "MenuShortcuts";
@@ -145,7 +164,7 @@ internal static class PadMenu
 
         var keys = new TextBlock
         {
-            Text = entry.Keys is null ? null : Display(entry.Keys),
+            Text = entry.Children is not null ? "›" : entry.Keys is null ? null : Display(entry.Keys),
             FontFamily = MenuFont,
             FontSize = Typography.Body,
             Foreground = new SolidColorBrush(p.Muted, Paint.MenuCaption),
@@ -157,9 +176,66 @@ internal static class PadMenu
         row.Children.Add(keys);
 
         var hit = MenuButton(row, p, entry.Enabled, 32, 4);
-        if (entry.Enabled) hit.Click += (_, _) => { entry.Click?.Invoke(); close(); };
+        rowSubmenu = null;
+        if (entry.Enabled && entry.Children is { Count: > 0 } children)
+        {
+            var panel = new StackPanel();
+            var submenu = new Popup
+            {
+                PlacementTarget = hit,
+                Placement = PlacementMode.Right,
+                WindowManagerAddShadowHint = false,
+                Child = MenuBorder(panel, p),
+            };
+            submenu.Opened += (_, _) => ConfigurePopup(panel);
+            rowSubmenu = submenu;
+            Popup? openChild = null;
+            void ActivateChild(Popup? child)
+            {
+                if (openChild != child && openChild is not null) openChild.IsOpen = false;
+                openChild = child;
+            }
+            var childSubmenus = new Dictionary<Control, Popup?>();
+            foreach (var child in children)
+            {
+                var childRow = BuildMenuRow(child, p, colored, () => { submenu.IsOpen = false; close(); }, ActivateChild, out var childSubmenu);
+                childSubmenus.Add(childRow, childSubmenu);
+                panel.Children.Add(childRow);
+            }
+            TrackHoveredRow(panel, childSubmenus, ActivateChild);
+            hit.DetachedFromVisualTree += (_, _) => submenu.IsOpen = false;
+            void Open() { activate(submenu); submenu.IsOpen = true; }
+            hit.PointerEntered += (_, _) => Open();
+            hit.Click += (_, _) => Open();
+            hit.KeyDown += (_, e) =>
+            {
+                if (e.Key != Key.Right) return;
+                Open();
+                if (panel.Children.FirstOrDefault() is Control first) first.Focus();
+                e.Handled = true;
+            };
+            panel.KeyDown += (_, e) =>
+            {
+                if (e.Key is not (Key.Left or Key.Escape)) return;
+                submenu.IsOpen = false;
+                hit.Focus();
+                e.Handled = true;
+            };
+        }
+        else if (entry.Enabled) hit.Click += (_, _) => { entry.Click?.Invoke(); close(); };
         Avalonia.Automation.AutomationProperties.SetName(hit, entry.Header!);
         return hit;
+    }
+
+    /// <summary>Closes a submenu when the pointer moves onto another row in its parent menu.</summary>
+    private static void TrackHoveredRow(StackPanel panel, Dictionary<Control, Popup?> submenus, Action<Popup?> activate)
+    {
+        panel.PointerMoved += (_, e) =>
+        {
+            var position = e.GetPosition(panel);
+            foreach (var (row, submenu) in submenus)
+                if (row.Bounds.Contains(position)) { activate(submenu); break; }
+        };
     }
 
     private static Button MenuButton(Control content, Palette p, bool enabled, double height, double radius, Thickness? margin = null)

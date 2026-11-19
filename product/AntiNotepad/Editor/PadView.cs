@@ -929,6 +929,15 @@ internal sealed class PadView : Grid
             new("Paste", "Ctrl+V", MenuGlyphs.Paste, () => _ = PasteAsync()),
             new("Delete", "Delete", MenuGlyphs.Delete, () => area.Selection.ReplaceSelectionWithText(string.Empty), hasSelection),
         };
+        if (hasSelection)
+        {
+            var start = Editor.SelectionStart;
+            var end = start + Editor.SelectionLength;
+            var first = Editor.Document.GetLineByOffset(start).LineNumber;
+            var last = Editor.Document.GetLineByOffset(end - 1).LineNumber;
+            void Convert(ListEditing.ListKind kind) => DocumentCommands.ConvertToList(Editor.Document, first, last, kind);
+            items.Add(ConvertMenu(true, Convert)!);
+        }
         if (AppMenu?.Invoke() is { } extra)
         {
             items.Add(MenuEntry.Separator);
@@ -936,6 +945,14 @@ internal sealed class PadView : Grid
         }
         ShowMenu?.Invoke(Editor, items);
     }
+
+    /// <summary>Creates the selection conversion submenu.</summary>
+    internal static MenuEntry? ConvertMenu(bool hasSelection, Action<ListEditing.ListKind> convert) => !hasSelection ? null : new("Convert to list", Children:
+    [
+        new("Checklist", Click: () => convert(ListEditing.ListKind.Checklist)),
+        new("Bullet list", Click: () => convert(ListEditing.ListKind.Bullet)),
+        new("Numbered list", Click: () => convert(ListEditing.ListKind.Numbered)),
+    ]);
 
     private const string PasteFormattingFound = "Paste Formatting Found";
     private const string PasteFormattingFallback = "Paste Formatting Fallback";
