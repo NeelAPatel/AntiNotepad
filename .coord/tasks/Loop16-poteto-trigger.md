@@ -18,6 +18,18 @@ User, 2026-11-19 (via PStack Manager; number confirmed by the user in Loop Hub 4
   3. Item-chat side: a Stop hook with a `stop_hook_active` guard; on the first turn it passes only if the transcript shows the skill launch or a fenced block holding the command.
 - **Constraints:** Medium tier. Both hooks go in user scope or `.claude/settings.local.json`, never only in the committed settings, so they fire in Master 6, Loop Hub 4 and item chats. Editing user-level settings needs the user's own approval in this chat at Approve; do not touch them before. Hooks fail open if they crash (docs/playbook.md). Prefer a short script plus a text rule; Codex may build, offline only; no live-chat checks by Codex. Findings may end in "drop" or a smaller cut if a hook cannot read the `prompt` field or the transcript.
 
+## Check (item chat, 2026-11-19)
+- (1) Throwaway chat from the template: transcript shows tool_use Skill then "Launching skill: pstack:poteto-mode"; Stop hook on that real transcript logs `first-turn-pass: Launching skill: pstack:poteto-mode`.
+- (2) Broken brief ("First run ..." in a sentence) refused before start: "Use the item chat template: /pstack:poteto-mode on line 1 and the explicit Skill tool call on line 2." (hooks in block mode).
+- (3) Block text proven offline only (`-SelfTest`: missing launch exits 2 with the fallback line and fenced command; later turn, active guard, bad input pass). Not yet seen live in a chat.
+- Miss found by the live check: the skill's injected text is an `isMeta` user message, so the first Stop version always said "past-first-turn". Fixed (commit 3), self-tests added. Caught by: live check; should have caught: self-test built on a hand-made transcript.
+- Gate PASS (`tools/gate.ps1 -Offline`). Hooks in `~/.claude/settings.json` now block mode, pointing at this worktree's script; repoint to the main checkout path after merge.
+- Codex review round 1: VERDICT rework. Findings: (1) major, lowercase "you are the item chat" (what `/next-task` wrote) skipped the brief check; (2) minor, `/pstack:poteto-mode-unavailable` passed the fenced check. Both fixed in `-r2` (case-insensitive marker, strict command boundary, self-tests added).
+- Bounds check: within plan (script, self-tests, playbook, next-task text, docs/playbook row); `-LogOnly` is a reported, justified addition for the log-only rollout; user-settings hook edit was approved at Approve.
+- Misses: (a) found at live check, cause `test`: first Stop version counted `isMeta` skill text as a user turn; should have caught: a self-test built from a real transcript. (b) found at review, cause `code`: marker case and fenced-suffix boundary; caught by Codex review. (c) found at my r2 check, cause `code`: the new boundary rejected a bare command with CRLF; fixed with a self-test. Lesson: build Stop self-tests from real transcript shapes (CRLF, isMeta, tool_result).
+- Gate PASS after r2. No hand test (loop tooling).
+- Noticed: `/review-task` cannot be run by item chats (typed-only); proposal row `idea: review-task-chat-runnable` in `.coord/pending.md`.
+
 ## Hand test
 None: nothing visible (loop tooling); the live check is the throwaway chat in the Done check, run by the item chat.
 
