@@ -13,6 +13,7 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 
 | Date | Item | Found at | Cause | Caught by | Should have caught | Lesson (one line) | Rule change |
 |---|---|---|---|---|---|---|---|
+| 2026-11-18 | A26-tab-at-text-start | Build | plan | codex-review | brief | Findings said Alt+Shift+arrows were unbound; they were taken at window level (first/latest note). Grep window-level key handlers in `UI/` before proposing any new shortcut | - |
 | 2026-11-17 | A21-save-delay-setting (merge) | Merge | judgment | user-later | brief | the director staged A22/A23 cards and launch.json into the A21 merge commit; approve.ps1 then refused the next item (card must be untracked). At merge, `git add` only STATUS, lessons, pending, archive and the item's own files | - |
 | 2026-11-17 | A23-paste-keep-structure | Review r4 | code | codex-review | brief | deep-nesting stack overflow, quadratic parse and dropped overlapping Ctrl+V found at review; a stress selftest (deep nesting, big input, overlapping calls) should have caught them; paste and parse briefs need size and depth checks up front | - |
 | 2026-11-17 | A21-save-delay-setting | Build r1, r3 | env | gate, hand-test | brief | r1 ended without a green selftest and r3 hit the 45-minute limit with no report; ask Codex for a draft report after the first green selftest (done from r4). Preflight stale Head again (T16, A21): item chat edits the card after the gate | - |
@@ -64,4 +65,5 @@ One row per merged item: what each check found. Empty rows on items that later h
 | 2026-11-18 | D3-release-checklist | Low | 0 | 0 | - | - | 0 | -
 | 2026-11-18 | A21b-save-scheduler-extract | High | 0 | 0 | 0 | 0 | 0 | -
 | 2026-11-18 | A27-recovered-folder-always-open | Medium | 0 | 1 | 0 | - | 0 | -
+| 2026-11-18 | A26-tab-at-text-start | Medium | 2 | 0 | 1 | - | 0 | -
 Older rows: `.coord/lessons-archive.md` (budget: 3 KB here).

@@ -859,14 +859,24 @@ internal sealed class PadView : Grid
             if (continued) { e.Handled = true; return; }
             if (Mode == NoteMode.Timer) StartTimerOnLine(CaretLine);
         }
-        if (e.Key == Key.Tab && Editor.TextArea.Selection.IsEmpty && DocumentCommands.IsListLine(Editor.Document, CaretLine))
+        if (e.Key is Key.OemOpenBrackets or Key.OemCloseBrackets && e.KeyModifiers == KeyModifiers.Control)
         {
+            var selection = Editor.TextArea.Selection;
+            var first = selection.IsEmpty ? CaretLine : Editor.Document.GetLineByOffset(selection.SurroundingSegment.Offset).LineNumber;
+            var last = selection.IsEmpty ? CaretLine : Editor.Document.GetLineByOffset(selection.SurroundingSegment.EndOffset - 1).LineNumber;
+            e.Handled = DocumentCommands.IndentListLines(Editor.Document, first, last, e.Key == Key.OemCloseBrackets);
+            return;
+        }
+        if (e.Key == Key.Tab && Editor.TextArea.Selection.IsEmpty)
+        {
+            var line = Editor.Document.GetLineByNumber(CaretLine);
+            var action = ListEditing.TabDecision(Editor.Document.GetText(line), Editor.CaretOffset - line.Offset,
+                shift, ctrl, e.KeyModifiers.HasFlag(KeyModifiers.Alt));
+            if (action == ListEditing.TabAction.Default) return;
             e.Handled = true;
-            using (Editor.Document.RunUpdate())
-            {
-                DocumentCommands.Indent(Editor.Document, CaretLine, !shift);
-                DocumentCommands.Renumber(Editor.Document, CaretLine, fresh: !shift);
-            }
+            if (action == ListEditing.TabAction.InsertSpaces) Insert("  ");
+            else if (action is ListEditing.TabAction.Indent or ListEditing.TabAction.Outdent)
+                DocumentCommands.IndentListLines(Editor.Document, CaretLine, CaretLine, action == ListEditing.TabAction.Indent);
         }
     }
 

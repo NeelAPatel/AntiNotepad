@@ -19,6 +19,28 @@ internal static class DocumentCommands
         Apply(document, line, ListEditing.Indent(document.GetText(line), deeper));
     }
 
+    /// <summary>Changes each selected list line as one undoable edit and updates its numbering.</summary>
+    internal static bool IndentListLines(TextDocument document, int firstLine, int lastLine, bool deeper)
+    {
+        var lines = Enumerable.Range(firstLine, lastLine - firstLine + 1)
+            .Where(number => IsListLine(document, number)).ToArray();
+        if (lines.Length == 0) return false;
+        using (document.RunUpdate())
+        {
+            foreach (var number in lines) Indent(document, number, deeper);
+            var freshLines = deeper ? lines.ToHashSet() : null;
+            var last = 0;
+            foreach (var number in lines)
+            {
+                if (number <= last) continue;
+                var edits = ListEditing.RenumberBlock(document.LineCount,
+                    n => document.GetText(document.GetLineByNumber(n)), number, freshLines, out last);
+                ApplyNumberEdits(document, edits);
+            }
+        }
+        return true;
+    }
+
     internal static bool IsListLine(TextDocument document, int lineNumber)
         => TryGetLine(document, lineNumber, out var line) && ListEditing.IsListLine(document.GetText(line));
 
@@ -49,6 +71,12 @@ internal static class DocumentCommands
         var edits = ListEditing.Renumber(document.LineCount,
             number => document.GetText(document.GetLineByNumber(number)), lineNumber, fresh);
 
+        ApplyNumberEdits(document, edits);
+    }
+
+    /// <summary>Applies numbered marker changes using current document offsets.</summary>
+    private static void ApplyNumberEdits(TextDocument document, ListEditing.NumberEdit[] edits)
+    {
         foreach (var edit in edits)
         {
             var line = document.GetLineByNumber(edit.LineNumber);

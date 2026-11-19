@@ -190,6 +190,12 @@ internal static partial class SelfTest
                 () => RunExistingCheck(AvaloniaEditForkChecks, "AvaloniaEdit fork: "),
                 null),
             new(
+                "list-tab-text-start",
+                "Tab changes list level only at text start; Ctrl+[ / Ctrl+] changes list levels from anywhere, including selected list lines.",
+                "A26-tab-at-text-start",
+                () => RunExistingCheck(ListEditingChecks, "list Tab: "),
+                "Dev copy: check Tab at the marker, text start and mid-text; Shift+Tab, Ctrl+Tab and Ctrl+[ / Ctrl+] on bullets, checkboxes, numbers and selected lines."),
+            new(
                 "checkbox-indent-preserved",
                 "Checkbox toggle and Tab/Shift+Tab indentation apply the same text edit and one Undo restores it; checkbox regex groups remain stable.",
                 "A42c-checkbox-indent",

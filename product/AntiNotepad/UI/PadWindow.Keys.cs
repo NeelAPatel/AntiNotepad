@@ -86,8 +86,8 @@ internal sealed partial class PadWindow
         switch (e.Key)
         {
             case Key.N when !shift: NewNote(); break;
-            case Key.OemOpenBrackets or Key.PageUp when !shift: Navigate(-1); break;
-            case Key.OemCloseBrackets or Key.PageDown when !shift: Navigate(1); break;
+            case Key.PageUp when !shift: Navigate(-1); break;
+            case Key.PageDown when !shift: Navigate(1); break;
             case Key.D0 or Key.NumPad0 or Key.OemTilde: ShowStack(); break;
             case Key.Back when shift: DeleteCurrent(); break;
             case Key.F or Key.P or Key.K when !shift: OpenSearch(); break;

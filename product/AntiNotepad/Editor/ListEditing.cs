@@ -20,6 +20,24 @@ internal static class ListEditing
 
     internal readonly record struct NumberEdit(int LineNumber, int Number);
 
+    internal enum TabAction { Indent, Outdent, InsertSpaces, Swallow, Default }
+
+    /// <summary>Identifies positions through the end of a valid list marker, using zero-based columns.</summary>
+    internal static bool IsAtTextStart(string text, int caretColumn)
+    {
+        var match = ListPrefix.Match(text);
+        return IsListLine(text) && caretColumn >= 0 && caretColumn <= match.Length;
+    }
+
+    /// <summary>Chooses the list Tab behavior for the caret and modifier keys.</summary>
+    internal static TabAction TabDecision(string text, int caretColumn, bool shift, bool ctrl, bool alt)
+    {
+        if (!IsListLine(text) || alt || (ctrl && shift)) return TabAction.Default;
+        if (ctrl) return TabAction.InsertSpaces;
+        if (IsAtTextStart(text, caretColumn)) return shift ? TabAction.Outdent : TabAction.Indent;
+        return shift ? TabAction.Swallow : TabAction.InsertSpaces;
+    }
+
     internal static LineEdit? ToggleCheckbox(string text)
     {
         var match = Checkbox.Match(text);
@@ -95,6 +113,11 @@ internal static class ListEditing
 
     /// <summary>Returns the numbered markers that should change for the block containing a 1-based line number.</summary>
     internal static NumberEdit[] Renumber(int lineCount, Func<int, string> getLine, int lineNumber, bool fresh = false)
+        => RenumberBlock(lineCount, getLine, lineNumber, fresh ? new HashSet<int> { lineNumber } : null, out _);
+
+    /// <summary>Renumbers one block, restarting moved numbered sequences where needed.</summary>
+    internal static NumberEdit[] RenumberBlock(int lineCount, Func<int, string> getLine, int lineNumber,
+        HashSet<int>? freshLines, out int last)
     {
         bool InBlock(int number)
         {
@@ -102,10 +125,10 @@ internal static class ListEditing
             return text.Trim().Length > 0 && (ListPrefix.IsMatch(text) || text.StartsWith(' '));
         }
 
+        last = lineNumber;
         if (lineNumber < 1 || lineNumber > lineCount || !InBlock(lineNumber)) return [];
 
         var first = lineNumber;
-        var last = lineNumber;
         while (first > 1 && InBlock(first - 1)) first--;
         while (last < lineCount && InBlock(last + 1)) last++;
 
@@ -123,7 +146,7 @@ internal static class ListEditing
             if (counts.TryGetValue(indent, out var previous) && previous == 999_999_999)
             { counts.Remove(indent); continue; }
 
-            var want = counts.TryGetValue(indent, out var before) ? before + 1 : fresh && number == lineNumber ? 1 : own;
+            var want = counts.TryGetValue(indent, out var before) ? before + 1 : freshLines?.Contains(number) == true ? 1 : own;
             counts[indent] = want;
             if (want != own) edits.Add(new(number, want));
         }

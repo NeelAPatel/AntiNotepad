@@ -34,6 +34,22 @@ internal static partial class SelfTest
         CheckCase(Editor.ListEditing.IsListLine("- item") && !Editor.ListEditing.IsListLine("1234567890. item"),
             "list-line recognition validates numbered marker size");
 
+        foreach (var (text, markerEnd) in new[] { ("- item", 2), ("  [x] item", 6), ("12) item", 4), ("- [ ] item", 6) })
+        {
+            CheckCase(Editor.ListEditing.IsAtTextStart(text, 0), $"before marker: {text}");
+            CheckCase(Editor.ListEditing.IsAtTextStart(text, markerEnd - 1), $"inside marker: {text}");
+            CheckCase(Editor.ListEditing.IsAtTextStart(text, markerEnd), $"text start: {text}");
+            CheckCase(!Editor.ListEditing.IsAtTextStart(text, markerEnd + 1), $"after text start: {text}");
+            CheckCase(Editor.ListEditing.TabDecision(text, markerEnd, false, false, false) == Editor.ListEditing.TabAction.Indent, $"Tab at start: {text}");
+            CheckCase(Editor.ListEditing.TabDecision(text, markerEnd, true, false, false) == Editor.ListEditing.TabAction.Outdent, $"Shift+Tab at start: {text}");
+            CheckCase(Editor.ListEditing.TabDecision(text, markerEnd + 1, false, false, false) == Editor.ListEditing.TabAction.InsertSpaces, $"Tab in text: {text}");
+            CheckCase(Editor.ListEditing.TabDecision(text, markerEnd + 1, true, false, false) == Editor.ListEditing.TabAction.Swallow, $"Shift+Tab in text: {text}");
+            CheckCase(Editor.ListEditing.TabDecision(text, markerEnd, false, true, false) == Editor.ListEditing.TabAction.InsertSpaces, $"Ctrl+Tab: {text}");
+        }
+        CheckCase(Editor.ListEditing.TabDecision("plain", 0, false, false, false) == Editor.ListEditing.TabAction.Default, "plain Tab stays default");
+        CheckCase(Editor.ListEditing.TabDecision("- item", 0, false, false, true) == Editor.ListEditing.TabAction.Default, "Alt+Tab stays default");
+        CheckCase(!Editor.ListEditing.IsAtTextStart("1234567890. item", 0), "invalid list marker is not text start");
+
         ContinueCase("- ab", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n- ", "bullet continuation");
         ContinueCase("* ab", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n* ", "star bullet continuation");
         ContinueCase("+ ab", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n+ ", "plus bullet continuation");
@@ -176,6 +192,23 @@ internal static partial class SelfTest
             "\n[ ] ", true, "List mode first blank line creates its checkbox", 2, 4);
         ContinuationCase("head\n\nlast", 2, 0, NoteMode.List,
             "head\n\nlast", false, "List mode declines a later blank line");
+
+        var selected = new AvaloniaEdit.Document.TextDocument("1. a\nplain\n2. b");
+        CheckCase(Editor.DocumentCommands.IndentListLines(selected, 1, 3, true)
+            && selected.Text == "  1. a\nplain\n  1. b", "selected list lines indent while plain lines stay put");
+        selected.UndoStack.Undo();
+        CheckCase(selected.Text == "1. a\nplain\n2. b", "selected list indentation is one undo");
+        CheckCase(!Editor.DocumentCommands.IndentListLines(selected, 2, 2, true), "plain selection stays unhandled");
+
+        var groups = new AvaloniaEdit.Document.TextDocument("8. a\n- break\n7. b\n  plain\n6. c");
+        Editor.DocumentCommands.IndentListLines(groups, 1, 5, true);
+        CheckCase(groups.Text == "  1. a\n  - break\n  1. b\n  plain\n  2. c", "selected numbered groups restart within one block");
+        var large = new AvaloniaEdit.Document.TextDocument(string.Join('\n', Enumerable.Repeat("- item", 2000)));
+        var timer = System.Diagnostics.Stopwatch.StartNew();
+        var handled = Editor.DocumentCommands.IndentListLines(large, 1, 2000, true);
+        timer.Stop();
+        CheckCase(handled && large.Text == string.Join('\n', Enumerable.Repeat("  - item", 2000)), "large selection indentation result");
+        CheckCase(timer.Elapsed < TimeSpan.FromSeconds(2), "large selection indentation completes promptly");
 
         IndentationCase("8. a\n9. b\n9. c\n9. d", 1, 4, deeper: true,
             "  1. a\n9. b\n10. c\n11. d", "Tab indentation plus fresh renumber shares one Undo");
