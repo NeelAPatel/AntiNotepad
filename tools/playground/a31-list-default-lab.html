@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>A31 list default lab</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#1b1c1f;--fg:#e6e6e6;--mut:#9a9a9a;--card:#26282c;--line:#3a3d42;--acc:#4fa3ff;--kw:#c9a0ff}
+body{margin:0;font:14px/1.4 "Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+header{padding:14px 20px;border-bottom:1px solid var(--line)}h1{margin:0;font-size:17px}
+header p{margin:4px 0 0;color:var(--mut);max-width:880px}
+main{padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.card h2{margin:0 0 2px;font-size:14px}.card p{margin:0 0 12px;color:var(--mut);font-size:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}.row span{color:var(--mut)}
+.seg{position:relative;display:inline-flex;gap:2px}
+.opt{padding:4px 12px;border-radius:4px;color:var(--mut);cursor:pointer;user-select:none;white-space:nowrap;transition:background 167ms}
+.opt:hover{background:rgba(255,255,255,.06)}
+.opt.on{color:var(--fg);font-weight:600;background:rgba(79,163,255,.26)}
+.pad{font:15px/1.5 "Cascadia Mono",Consolas,monospace;background:#202226;border:1px solid var(--line);border-radius:6px;padding:10px 12px;min-height:120px;white-space:pre}
+.pad .k{color:var(--kw)}
+.pop{margin-top:6px;width:360px;background:#2f3136;border:1px solid var(--line);border-radius:6px;padding:4px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.pop div{display:flex;gap:10px;padding:5px 10px;border-radius:4px}
+.pop div:first-child{background:rgba(255,255,255,.06)}
+.pop b{color:var(--kw);min-width:96px}.pop i{font-style:normal;color:var(--mut);font-size:12px}
+.pop .new b::after{content:" new";color:var(--acc);font-weight:400;font-size:11px}
+.tg{display:inline-flex;gap:2px;margin-bottom:10px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}.tbl td,.tbl th{padding:5px 8px;border-top:1px solid var(--line);text-align:left}
+.tbl th{color:var(--mut);font-weight:400}code{font-family:"Cascadia Mono",Consolas,monospace}
+</style></head><body>
+<header><h1>A31 list default lab</h1>
+<p>Mock of the Settings control and the keyword popup. Click the choices. Nothing here is built yet; you approve this lab before any code.</p></header>
+<main>
+<div class="card"><h2>1. Settings control</h2><p>One row in the Editor group, same pills as the other Settings choices. Default: Bullets.</p>
+<div class="row"><div>New list lines<br><span>What the <code>list</code> keyword makes</span></div><div class="seg" id="seg"></div></div>
+<p style="margin:10px 0 0">Not affected: <code>todo</code> (always checkboxes) and the fixed words <code>checklist</code>, <code>bullet</code>, <code>bulletlist</code>, <code>numberlist</code>.</p></div>
+
+<div class="card"><h2>2. What a <code>list</code> note does</h2><p>Typing three lines after the keyword with the setting above. Lines that already have a prefix keep their own style.</p>
+<div class="pad" id="pad"></div></div>
+
+<div class="card"><h2>3. Keyword popup (question still open)</h2><p>Typed on an empty first line. Switch between the two options.</p>
+<div class="tg" id="tg"></div>
+<div class="pad" id="pad3"><span class="k">l</span></div><div class="pop" id="pop"></div></div>
+
+<div class="card"><h2>Keywords after this item</h2>
+<table class="tbl"><tr><th>Word</th><th>Makes</th></tr>
+<tr><td><code>list</code></td><td>follows the setting (Bullets by default)</td></tr>
+<tr><td><code>todo</code></td><td>checkboxes, always</td></tr>
+<tr><td><code>checklist</code></td><td>checkboxes</td></tr>
+<tr><td><code>bullet</code>, <code>bulletlist</code></td><td>bullets</td></tr>
+<tr><td><code>numberlist</code></td><td>1. 2. 3.</td></tr></table></div>
+</main>
+<script>
+const kinds={bullet:['Bullets',i=>'- '],check:['Checkboxes',i=>'[ ] '],number:['Numbers',i=>(i+1)+'. ']};
+let cur='bullet';
+const seg=document.getElementById('seg'),pad=document.getElementById('pad');
+function draw(){
+ [...seg.children].forEach(e=>e.classList.toggle('on',e.dataset.k===cur));
+ pad.innerHTML='<span class="k">list</span>\n'+['milk','eggs','bread'].map((t,i)=>kinds[cur][1](i)+t).join('\n');
+ drawPop();
+}
+for(const k in kinds){const e=document.createElement('div');e.className='opt';e.dataset.k=k;e.textContent=kinds[k][0];e.onclick=()=>{cur=k;draw()};seg.appendChild(e)}
+const all=[['list','',0],['checklist','Checkboxes',1],['bullet','Bullets',1],['bulletlist','Bullets (same)',1],['numberlist','1. 2. 3.',1]];
+const tg=document.getElementById('tg'),pop=document.getElementById('pop');
+let showNew=true;
+function drawPop(){
+ [...tg.children].forEach((e,i)=>e.classList.toggle('on',(i===0)===showNew));
+ const dflt={bullet:'bullets',check:'checkboxes',number:'numbers'}[cur];
+ pop.innerHTML=all.filter(a=>showNew||!a[2]).map(a=>`<div class="${a[2]?'new':''}"><b>${a[0]}</b><i>${a[0]==='list'?'Your default: '+dflt+'':a[1]}</i></div>`).join('');
+}
+['Yes, show all','No, typed only'].forEach((t,i)=>{const e=document.createElement('div');e.className='opt';e.textContent=t;e.onclick=()=>{showNew=i===0;drawPop()};tg.appendChild(e)});
+draw();
+</script></body></html>
