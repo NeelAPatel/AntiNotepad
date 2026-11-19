@@ -54,6 +54,14 @@ User: five groups in this order: 1 Active (items launched / with a sub-chat), 2 
 - Shared prefs: widths, hidden columns, group folds, parent folds, hidden rows are saved today in `localStorage`, which is per port, so the preview port and the live port do not share them. Add `GET /prefs` and `POST /prefs` to `tools/roadmap-serve.ps1` (localhost only, body capped at 64 KB, valid JSON object only) reading/writing `roadmap-prefs.json` in the MAIN checkout's `.coord/` (resolve via `git rev-parse --git-common-dir`); add that file to `.gitignore`. The page loads prefs at start (falls back to `localStorage` when the server has none or fails) and writes both on each change.
 - Files for r3 add `tools/roadmap-serve.ps1` and `.gitignore`.
 
+## Rework r4 (user, 2026-11-19, the four boxes at the top)
+User: "Take a look again at the 4 containers at the top... do they make sense? I would rather have it be: Needs You, Working, Hand-test queue, and Recent Codex Runs. The top 4 boxes should only be making use of Active items only."
+Findings: `renderNow()` builds the boxes from `ACTIVE(state)` = stKind 'you' or 'act', and stKind returns 'act' for any unknown state, so "plan ready" ideas fill "Moving without you" (about 100 rows). The Plan table's Active bucket (r3) uses a different rule. Two rules for "active" is the bug.
+- Make one helper `isActiveRow(r)` (the r3 Active rule: live branch/worktree, or an in-flight state; never done, paused/deferred, plan ready, request, proposed, planned) and use it in both `bucketOf()` and `renderNow()`.
+- Boxes, in this order and with these names: **Needs you** (active and the user's turn: approve, answer; not hand test), **Working** (active, not needs-you, not hand test; count text drops "past Approve" unless cheap to keep), **Hand-test queue** (active rows whose state is hand test), **Recent Codex runs** (last 6 runs whose task is an active item; if none, the last 6 overall with the heading note "no active item runs").
+- Update the page header comment, the legend and any copy that says "Your turn"/"Moving without you". Empty states stay plain.
+- Limit: chat self-rename titles (e.g. "[Codexing..] A29-shortcut-map ◆ Lab") are in Claude's own session list, not in any file the page can read. Phase comes from STATUS and cards. A follow-up for Loop Hub: write the chat phase into the STATUS row (or `.coord/` state file) so the page can read it.
+
 ## Files
 - `tools/roadmap/index.html`
 - `tools/roadmap-serve.ps1` (r3)
@@ -67,6 +75,7 @@ Role: terra (`docs/agents.md`), because one file, normal reasoning. The branch i
 - Build exactly the Plan above in `tools/roadmap/index.html` only; no drive-by changes, no row-file or data-script edits.
 - Offline checks only: `pwsh -NoProfile -File tools/roadmap-data.ps1 -Check`, and a JS syntax check of the page script (extract the `<script>` and run `node --check` if node exists). No ports, servers, browser.
 - Never edit `.coord/STATUS.md` or this card. Gate: `pwsh -NoProfile -File tools/gate.ps1 -Task T18-roadmap-parent-rows -Offline`.
+- Rework r4: build the section "Rework r4" on top of the existing diff, same file only (`tools/roadmap/index.html`). Offline checks only.
 - Rework r3: build the section "Rework r3" on top of the existing diff. Offline checks only; do not start the server (the item chat tests `/prefs` live). Read-only data script stays untouched.
 - Rework r2: build the section "Rework r2" on top of the existing diff (it supersedes the orphan label from the Plan). Report to `.coord/reports/T18-roadmap-parent-rows.md` (overwrite).
 - Done means: children follow their parent under bucket sort and filters, show `parent › step`, orphans show `no parent`, search matches parent names, legend updated; `-Check` passes.
