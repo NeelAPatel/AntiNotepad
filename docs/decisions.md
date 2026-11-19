@@ -22,7 +22,7 @@ Newest first. History before 2026-10-23 (overnight build log and write-up) is in
 16. Feel defaults are vertical Rate-matched and horizontal Follow-through; the vertical styles keep their pre-A20 glide and stop at note ends, while horizontal edge-band parameters live in `docs/scroll-feel.md`.
 
 ## 2026-11-18
-- **Note navigation keys** (user, 2026-11-18): Alt+Left and Alt+Right switch notes, previous and next. They stay as they are; the shortcut cleanup item decides the rest (Alt+Shift+Left/Right as first and latest note, dropping the Ctrl+[ and Ctrl+] duplicates).
+- **Note navigation keys** (user, 2026-11-18): Alt+Left and Alt+Right switch notes, previous and next. They stay as they are; Ctrl+[ and Ctrl+] change list level; the shortcut cleanup item decides the remaining navigation keys.
 
 ## 2026-11-15
 - **Scroll feel** (A20-overscroll-speed): Settings calls the four existing vertical modes **Vertical Scroll Style** and adds a one-option **Horizontal Scroll Style**, Follow-through. Rate-matched remains the default inside notes; Follow-through is the horizontal default. On 2026-11-15, after the round 2 hand test, the user asked to remove vertical overscroll and keep the existing Windows 11 style smooth scrolling; vertical scrolling stops at note ends with no carry-over. Horizontal paging uses projection-based commit and spring return, with edge resistance only at the first and last notes. Locked horizontal values are in `docs/scroll-feel.md`.
