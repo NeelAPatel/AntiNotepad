@@ -19,6 +19,20 @@ internal static class DocumentCommands
         Apply(document, line, ListEditing.Indent(document.GetText(line), deeper));
     }
 
+    /// <summary>Changes each selected list line as one undoable edit and updates its numbering.</summary>
+    internal static bool IndentListLines(TextDocument document, int firstLine, int lastLine, bool deeper)
+    {
+        var lines = Enumerable.Range(firstLine, lastLine - firstLine + 1)
+            .Where(number => IsListLine(document, number)).ToArray();
+        if (lines.Length == 0) return false;
+        using (document.RunUpdate())
+        {
+            foreach (var number in lines) Indent(document, number, deeper);
+            foreach (var number in lines) Renumber(document, number, fresh: deeper);
+        }
+        return true;
+    }
+
     internal static bool IsListLine(TextDocument document, int lineNumber)
         => TryGetLine(document, lineNumber, out var line) && ListEditing.IsListLine(document.GetText(line));
 

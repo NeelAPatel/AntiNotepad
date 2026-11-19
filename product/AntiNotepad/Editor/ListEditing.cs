@@ -20,6 +20,24 @@ internal static class ListEditing
 
     internal readonly record struct NumberEdit(int LineNumber, int Number);
 
+    internal enum TabAction { Indent, Outdent, InsertSpaces, Swallow, Default }
+
+    /// <summary>Identifies positions through the end of a valid list marker, using zero-based columns.</summary>
+    internal static bool IsAtTextStart(string text, int caretColumn)
+    {
+        var match = ListPrefix.Match(text);
+        return IsListLine(text) && caretColumn >= 0 && caretColumn <= match.Length;
+    }
+
+    /// <summary>Chooses the list Tab behavior for the caret and modifier keys.</summary>
+    internal static TabAction TabDecision(string text, int caretColumn, bool shift, bool ctrl, bool alt)
+    {
+        if (!IsListLine(text) || alt || (ctrl && shift)) return TabAction.Default;
+        if (ctrl) return TabAction.InsertSpaces;
+        if (IsAtTextStart(text, caretColumn)) return shift ? TabAction.Outdent : TabAction.Indent;
+        return shift ? TabAction.Swallow : TabAction.InsertSpaces;
+    }
+
     internal static LineEdit? ToggleCheckbox(string text)
     {
         var match = Checkbox.Match(text);
