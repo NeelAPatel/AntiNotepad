@@ -37,7 +37,7 @@ Every reply opens with the status card (`docs/loop.md`, "Status card"). Keep the
 
 ## 1a. Start the item chat (director, once)
 Write the Request and the pending/STATUS row, then start one linked **Sonnet medium** chat `<ID> · <slug>`
-(start_session, user_asked, `use_worktree: false`, cwd = the main checkout `F:\LocalVSProj\Visual Studio Apps\AntiQuickPad`, already trusted, so no "Trust this workspace?" popup; the chat works in its worktree by absolute path and Codex runs from the worktree's own `.coord/tools/codex-run.sh`) and step back. Brief: you are the item chat for `<ID-slug>`; read the
+(start_session, user_asked, `use_worktree: false`, cwd = the main checkout `F:\LocalVSProj\Visual Studio Apps\AntiQuickPad`, already trusted, so no "Trust this workspace?" popup; the chat works in its worktree by absolute path and Codex runs from the worktree's own `.coord/tools/codex-run.sh`) and step back. Prompt line 1 is the bare `/pstack:poteto-mode` and line 2 is "Your first action is a Skill tool call with skill `pstack:poteto-mode`. If it is refused, reply with one line and a code block holding `/pstack:poteto-mode <ID-slug>: work the brief above, Findings then Plan, stop at Approve`, then stop." (`tools/poteto-gate.ps1` refuses a start without them). Then: you are the item chat for `<ID-slug>`; read the
 card, `AGENTS.md`, `docs/loop.md`; run sections 2-5 below and `/review-task`; the user answers you, not the director; send
 the director one line (tier, reason) after Findings; edit only your own row in the main checkout's `.coord/STATUS.md` by
 absolute path; never start a chat; never merge. The director asks the user only about merges, releases and cross-item matters.
