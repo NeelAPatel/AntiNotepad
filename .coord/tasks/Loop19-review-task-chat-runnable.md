@@ -45,3 +45,6 @@ User, 2026-11-19: "Approved" (Plan as written, including the throwaway read-only
 - Live check (2026-11-19, throwaway chat `loop19-throwaway`): Skill `review-task` returned "Launching skill: review-task". Control: Skill `merge-task` refused ("cannot be used with Skill tool due to disable-model-invocation").
 - Flags: `merge-task`, `next-task`, `scan-backlog` still carry it; `review-task` does not.
 - Differences from Plan: none (within plan). Not visible: no hand test needed.
+
+## Hand test
+None: nothing visible (loop docs and skill header); the live check was the throwaway chat.
