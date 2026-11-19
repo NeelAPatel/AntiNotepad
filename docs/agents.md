@@ -36,6 +36,11 @@ xhigh is never the default. When unsure, start with the cheaper role.
   checkout (ignored; not part of the item's commits). The brief asks for a short report at
   `.coord/reports/<ID-slug>.md`. Existing tracked `.codex.md` reports stay as history.
 
+## Lab pages and inventories
+- Lab HTML (new page or about 150+ lines): `terra` for a new page, `quick` for a variant. Read-and-grep inventories over
+  more than about 5 files: `quick` with `CODEX_SANDBOX=read-only`. Claude serves labs and checks them in the browser pane.
+  Details: `.coord/research/pstack-director-playbook.md`, section 3.
+
 ## What Codex can and cannot check
 The sandbox cannot bind ports, open a browser, see the screen or launch AntiNotepad. **A brief's "Done means" lists only
 checks Codex can run offline:** build, `--selftest`, `tools/gate.ps1 -Offline`, a script's `-Check`, file contents and

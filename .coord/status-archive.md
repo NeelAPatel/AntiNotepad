@@ -235,6 +235,7 @@ Done and dropped Plan rows moved out of STATUS by Loop10b-pending-list (2026-11-
 
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
+| Loop20-codex-labs-and-scout | Lab pages and read-only inventories go to Codex: playbook Lab and Findings rows, Keep-with-Claude list, lab brief example; `docs/agents.md` note | Medium | Small | done |
 | Loop19-review-task-chat-runnable | Item chats can run `/review-task` themselves: typed-only flag removed from that skill only; rule line in `docs/loop-sessions.md` (typed-only command goes in a text block, never a button); `docs/playbook.md` list corrected | Low | Small | done |
 | Loop17-chat-title-selfheal | Item chats keep their own title current: `tools/title-hint.ps1` hook in committed settings prints the should-be title parts, the chat sets the title; rule in `docs/loop.md`, `docs/loop-sessions.md`, next-task and merge-task skills | Medium | Small | done |
 | Loop16-poteto-trigger | Poteto mode starts on its own in item chats: director brief template (command alone on line 1 plus an explicit Skill-call line and paste fallback), `tools/poteto-gate.ps1` brief and stop hooks, playbook and `/next-task` text; hooks in user settings | Medium | Small | done |
