@@ -15,25 +15,29 @@ User, 2026-11-19 (design decided in the titles discussion chat; number Loop17 co
 - **Constraints:** Medium tier. Stale title on an untouched chat is accepted. Hook output ASCII only. Codex builds, offline only.
 
 ## Findings
-Own scout, no Codex audit (6 small files, all read).
-- **Now:** one committed `UserPromptSubmit` hook exists (`tools/loop-card.ps1`: ASCII, fail-open). `docs/loop.md:57` says titles are free-form. STATUS rows start at Approve; before that the item is a `pending.md` row.
-- **Chat sees:** its phase changes, user answers, Codex launch and exit notice. Not director edits, crashes or merge.
-- **Hook reads:** row state; `.coord/logs/<ID-slug>*.log` mtime; `usage.tsv` (row at run exit, `exit=N`). Running = log newer than the item's last row; failed = last `exit` not 0; stalled = running, log silent 20 min. Stdin `cwd` names a worktree chat's item; a main-checkout chat gets all in-flight rows.
-- **Settled:** committed scope, a second command in the same group (no user-settings edit). Stall 20 min, hint only. Owed reason does not replace the phase. Me marker stays `⁉️`; colour is the hand test.
+Own scout, no Codex audit. Chat sees its phase changes, answers and Codex exit, not director edits or crashes. Hook reads row state, `.coord/logs` mtime and `usage.tsv`; stdin `cwd` names a worktree chat's item. Settled: committed scope (no user-settings edit), stall 20 min as a hint, phase word kept over owed reason, `⁉️` colour is the hand test.
 
 ## Plan
-- **After:** hook prints `title-hint <ID-slug>: me=needs-you|none codex=codexing|failed|stalled|none dev=paused|parked|merged|dropped|none phase=findings|plan|build|check|hand-test|none`; the chat sets that title first in its turn. Rule: set or clear in the same step as the STATUS row.
-- **Must not change:** `loop-card.ps1` output; no retitling script; director titles.
-- **Tests:** `tools/title-hint.ps1 -SelfTest` with canned rows, logs, ledger (running, stalled, failed, paused resume, garbage in fails open). No CONTRACTS rows.
-- **Gates:** `tools/gate.ps1 -Offline`; Codex terra builds, sol reviews.
-- **Needs from you:** at Approve, OK for one throwaway read-only chat (live heal check).
+Hook prints `title-hint <ID-slug>: me=... codex=... dev=... phase=...`; the chat sets the title first in its turn and with each STATUS row change. Tests: `-SelfTest`. Gate: `tools/gate.ps1 -Offline`. Codex terra builds, sol reviews. Live heal check needs the user's OK.
 
 ## Files
-- `tools/title-hint.ps1`, `.claude/settings.json`, `docs/loop.md`, `docs/loop-sessions.md`
-- `.claude/skills/next-task/SKILL.md`, `.claude/skills/merge-task/SKILL.md`
+- `tools/title-hint.ps1`
+- `.claude/settings.json`
+- `docs/loop.md`
+- `docs/loop-sessions.md`
+- `.claude/skills/next-task/SKILL.md`
+- `.claude/skills/merge-task/SKILL.md`
 
 ## Approve
 User, 2026-11-19, in this chat: "Approve" (plan as written, including one throwaway read-only chat for the live check, run only on a further OK).
+
+## Check
+Item chat, 2026-11-19.
+- Codex terra built; lens review rework once (run-name suffixes `-review`, `-rN`), fixed with self-tests. `-SelfTest` PASS (11 cases). Gate PASS; WARN budgets only (`docs/loop.md` was already over).
+- My run of the hook: worktree cwd gives `title-hint Loop17-chat-title-selfheal: me=none codex=none dev=none phase=build`; garbage stdin exits 0 silent. Examples for all six Request titles in `.coord/reports/Loop17-chat-title-selfheal.md`.
+- Bounds: only the Files list changed. No `/review-task` run (typed-only).
+- Misses: I changed the title before the STATUS row (caught by the user's screenshot); stray `cat` hung a run (caught by two samples).
+- Not yet seen: throwaway-chat heal, `⁉️` colour.
 
 ## Hand test
 Look at the throwaway chat's title in the sidebar: `⁉️` must draw in colour; if grey, say so and it becomes `❓`. Nothing else is visible.
