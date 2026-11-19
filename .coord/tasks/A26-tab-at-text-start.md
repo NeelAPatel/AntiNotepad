@@ -18,7 +18,7 @@ Director (Master 6), 2026-11-18, user's go to start Findings (pending: `idea: ta
 ## Findings
 - **Kind and why:** polish; user chose it in the A22 hand test; a mid-line Tab that moves the whole item is a surprise.
 - **Now (dev tip, re-read 2026-11-18, stale check passed):** `PadView.OnKeyDown` (PadView.cs:862) handles Tab only with an empty selection on a list line, from any caret column: `DocumentCommands.Indent` adds/removes 2 leading spaces, then `Renumber`. A selection, or a non-list line, falls through to AvaloniaEdit's own Tab (2 spaces, `ConvertTabsToSpaces`). Alt+Shift+arrows are unbound here (AvaloniaEdit uses them for box selection). List line = `ListEditing.ListPrefix` (bullet, checkbox, number).
-- **Pros:** the common flow (Enter, then Tab) puts the caret right after the marker, so it still works; mid-text Tab stops moving items by accident. **Cons:** users who Tab from mid-text now get spaces; Shift+Tab mid-text must not fall back to AvaloniaEdit's outdent. Mitigation: Alt+Shift+Left/Right, plus the help line. **Recommend: do** (small).
+- **Pros:** the common flow (Enter, then Tab) puts the caret right after the marker, so it still works; mid-text Tab stops moving items by accident. **Cons:** users who Tab from mid-text now get spaces; Shift+Tab mid-text must not fall back to AvaloniaEdit's outdent. Mitigation: Ctrl+[ / Ctrl+], plus the help line. **Recommend: do** (small).
 - **Where / Risk:** `Editor/` only (no `PadWindow*.cs`, no `Model/`). Risk: Alt+Shift box selection lost on list lines. PadView.cs passes 600 lines; split is a separate item, so keep new logic in `ListEditing`/`DocumentCommands`.
 - **Source:** own scout (5 files read; below the Codex-audit floor).
 
@@ -39,13 +39,14 @@ Only these files may change (exact paths; `tools/gate.ps1` reads this list). Oth
 - `product/AntiNotepad/Editor/DocumentCommands.cs`
 - `product/AntiNotepad/Editor/PadView.cs`
 - `product/AntiNotepad/UI/HelpOverlay.cs`
+- `product/AntiNotepad/UI/PadWindow.Keys.cs`
 - `product/AntiNotepad/SelfTest/Lists.cs`
 - `product/AntiNotepad/SelfTest/Contracts.cs`
 - `product/AntiNotepad/SelfTest/Design.cs`
 - `docs/decisions.md` (Alt+Left/Right note-switch lock)
 
 ## Contracts
-- New: Tab changes a list level only at text start; Alt+Shift+Left/Right from anywhere.
+- New: Tab changes a list level only at text start; Ctrl+[ / Ctrl+] from anywhere.
 
 ## Approve
 User, 2026-11-18: "Approve"
