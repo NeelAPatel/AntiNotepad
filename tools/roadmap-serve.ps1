@@ -14,6 +14,10 @@ $ErrorActionPreference = 'Stop'
 $dataScript = Join-Path $PSScriptRoot 'roadmap-data.ps1'
 . $dataScript -RequestedRoot $Root
 $repository = Resolve-RoadmapRoot -RequestedRoot $Root
+$commonDirectory = Invoke-RoadmapGit -Repository (Join-Path $PSScriptRoot '..') -Arguments @('rev-parse', '--path-format=absolute', '--git-common-dir')
+$prefsPath = if ($commonDirectory.Success -and -not [string]::IsNullOrWhiteSpace($commonDirectory.Text)) {
+    Join-Path ([System.IO.Directory]::GetParent($commonDirectory.Text.Trim()).FullName) '.coord/roadmap-prefs.json'
+} else { $null }
 $dataScriptStamp = Get-Item -LiteralPath $dataScript -ErrorAction Stop | ForEach-Object { '{0}|{1}' -f $_.Length, $_.LastWriteTimeUtc.Ticks }
 $serveScript = if (-not [string]::IsNullOrWhiteSpace($PSCommandPath)) { $PSCommandPath } else { Join-Path $PSScriptRoot 'roadmap-serve.ps1' }
 $serveStamp = Get-Item -LiteralPath $serveScript -ErrorAction Stop | ForEach-Object { '{0}|{1}' -f $_.Length, $_.LastWriteTimeUtc.Ticks }
@@ -374,7 +378,8 @@ try {
                 continue
             }
 
-            if ($context.Request.HttpMethod -ne 'GET') {
+            $path = $context.Request.Url.AbsolutePath.TrimEnd('/')
+            if ($context.Request.HttpMethod -ne 'GET' -and -not ($path -eq '/prefs' -and $context.Request.HttpMethod -eq 'POST')) {
                 $context.Response.Headers['Allow'] = 'GET'
                 Send-RoadmapResponse -Response $context.Response -StatusCode 405 -ContentType 'text/plain; charset=utf-8' -Body 'GET only.'
                 continue
@@ -386,6 +391,60 @@ try {
             }
 
             switch ($path) {
+                '/prefs' {
+                    if (-not $prefsPath) {
+                        Send-RoadmapResponse -Response $context.Response -StatusCode 503 -ContentType 'text/plain; charset=utf-8' -Body 'Preferences unavailable.'
+                        break
+                    }
+                    if ($context.Request.HttpMethod -eq 'GET') {
+                        if (-not (Test-Path -LiteralPath $prefsPath -PathType Leaf)) {
+                            Send-RoadmapResponse -Response $context.Response -StatusCode 404 -ContentType 'text/plain; charset=utf-8' -Body 'No preferences saved.'
+                        } else {
+                            Send-RoadmapResponse -Response $context.Response -StatusCode 200 -ContentType 'application/json; charset=utf-8' -Body ([System.IO.File]::ReadAllText($prefsPath))
+                        }
+                        break
+                    }
+                    $origin = $context.Request.Headers['Origin']
+                    if ($origin -and $origin.TrimEnd('/') -ne $baseUrl.TrimEnd('/')) {
+                        Send-RoadmapResponse -Response $context.Response -StatusCode 403 -ContentType 'text/plain; charset=utf-8' -Body 'Origin not allowed.'
+                        break
+                    }
+                    $limit = 64KB
+                    if ($context.Request.ContentLength64 -gt $limit) {
+                        Send-RoadmapResponse -Response $context.Response -StatusCode 413 -ContentType 'text/plain; charset=utf-8' -Body 'Preferences too large.'
+                        break
+                    }
+                    $stream = [System.IO.MemoryStream]::new()
+                    try {
+                        $buffer = [byte[]]::new(4096)
+                        while (($count = $context.Request.InputStream.Read($buffer, 0, $buffer.Length)) -gt 0) {
+                            $stream.Write($buffer, 0, $count)
+                            if ($stream.Length -gt $limit) { break }
+                        }
+                        if ($stream.Length -gt $limit) {
+                            Send-RoadmapResponse -Response $context.Response -StatusCode 413 -ContentType 'text/plain; charset=utf-8' -Body 'Preferences too large.'
+                            break
+                        }
+                        try {
+                            $body = [System.Text.UTF8Encoding]::new($false, $true).GetString($stream.ToArray())
+                            $json = [System.Text.Json.JsonDocument]::Parse($body)
+                            try { $isObject = $json.RootElement.ValueKind -eq [System.Text.Json.JsonValueKind]::Object } finally { $json.Dispose() }
+                            if (-not $isObject) { throw 'Expected an object.' }
+                        } catch {
+                            Send-RoadmapResponse -Response $context.Response -StatusCode 400 -ContentType 'text/plain; charset=utf-8' -Body 'Expected a JSON object.'
+                            break
+                        }
+                        $temporary = $prefsPath + '.' + [guid]::NewGuid().ToString('N') + '.tmp'
+                        try {
+                            [System.IO.File]::WriteAllText($temporary, $body, [System.Text.UTF8Encoding]::new($false))
+                            [System.IO.File]::Move($temporary, $prefsPath, $true)
+                        } finally {
+                            if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Force }
+                        }
+                        Send-RoadmapResponse -Response $context.Response -StatusCode 200 -ContentType 'application/json; charset=utf-8' -Body '{"saved":true}'
+                    } finally { $stream.Dispose() }
+                    break
+                }
                 '/health' {
                     $body = ConvertTo-Json -InputObject ([ordered]@{ app = 'antinotepad-roadmap'; pid = $PID; port = $Port }) -Compress
                     Send-RoadmapResponse -Response $context.Response -StatusCode 200 -ContentType 'application/json; charset=utf-8' -Body $body
