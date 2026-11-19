@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`). Claude fills Request to Approve before any build; Codex reads the whole card, follows "For Codex", never edits it. Budget: 4 KB (logs go in reports).
 
 Tier: Medium · editor-feature
-State: building
+State: hand-tested
 Branch: `feat/A26-tab-at-text-start` in `.claude/worktrees/feat/A26-tab-at-text-start` (created at Approve, from dev's tip)
 
 ## Request
@@ -67,3 +67,6 @@ Report `.coord/reports/A26-tab-at-text-start.md`, short: 1 Summary; 2 Change lis
 - Bounds: Alt+Shift+arrows swapped for Ctrl+[ / Ctrl+] and `PadWindow.Keys.cs` edited: **justified**, user's words 2026-11-18. `docs/decisions.md` line: **justified**, user's "lock that in". `SelfTest/Design.cs`: **within plan** (help text).
 - Misses: Findings said Alt+Shift+arrows were unbound (found at Build, cause plan, caught by Codex, should have caught by Findings searching `UI/` key routing, lesson: grep window-level key handlers for any new shortcut).
 - Noticed: user's shortcut cleanup (Alt+Shift+arrows first/latest note, drop duplicates, empty rows, move-note key) is not an item; Ctrl+T appears twice in the help sheet.
+
+## Hand test
+Build: Red dev slot (AntiNotepad (dev), worktree build/dev, DATA build/testdata). User, 2026-11-18: "All passed"
