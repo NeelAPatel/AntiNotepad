@@ -200,6 +200,16 @@ internal static partial class SelfTest
         CheckCase(selected.Text == "1. a\nplain\n2. b", "selected list indentation is one undo");
         CheckCase(!Editor.DocumentCommands.IndentListLines(selected, 2, 2, true), "plain selection stays unhandled");
 
+        var groups = new AvaloniaEdit.Document.TextDocument("8. a\n- break\n7. b\n  plain\n6. c");
+        Editor.DocumentCommands.IndentListLines(groups, 1, 5, true);
+        CheckCase(groups.Text == "  1. a\n  - break\n  1. b\n  plain\n  2. c", "selected numbered groups restart within one block");
+        var large = new AvaloniaEdit.Document.TextDocument(string.Join('\n', Enumerable.Repeat("- item", 2000)));
+        var timer = System.Diagnostics.Stopwatch.StartNew();
+        var handled = Editor.DocumentCommands.IndentListLines(large, 1, 2000, true);
+        timer.Stop();
+        CheckCase(handled && large.Text == string.Join('\n', Enumerable.Repeat("  - item", 2000)), "large selection indentation result");
+        CheckCase(timer.Elapsed < TimeSpan.FromSeconds(2), "large selection indentation completes promptly");
+
         IndentationCase("8. a\n9. b\n9. c\n9. d", 1, 4, deeper: true,
             "  1. a\n9. b\n10. c\n11. d", "Tab indentation plus fresh renumber shares one Undo");
         IndentationCase("8. a\n  1. b\n9. c", 2, 7, deeper: false,

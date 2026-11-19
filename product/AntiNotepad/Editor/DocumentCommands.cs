@@ -28,7 +28,15 @@ internal static class DocumentCommands
         using (document.RunUpdate())
         {
             foreach (var number in lines) Indent(document, number, deeper);
-            foreach (var number in lines) Renumber(document, number, fresh: deeper);
+            var freshLines = deeper ? lines.ToHashSet() : null;
+            var last = 0;
+            foreach (var number in lines)
+            {
+                if (number <= last) continue;
+                var edits = ListEditing.RenumberBlock(document.LineCount,
+                    n => document.GetText(document.GetLineByNumber(n)), number, freshLines, out last);
+                ApplyNumberEdits(document, edits);
+            }
         }
         return true;
     }
@@ -63,6 +71,12 @@ internal static class DocumentCommands
         var edits = ListEditing.Renumber(document.LineCount,
             number => document.GetText(document.GetLineByNumber(number)), lineNumber, fresh);
 
+        ApplyNumberEdits(document, edits);
+    }
+
+    /// <summary>Applies numbered marker changes using current document offsets.</summary>
+    private static void ApplyNumberEdits(TextDocument document, ListEditing.NumberEdit[] edits)
+    {
         foreach (var edit in edits)
         {
             var line = document.GetLineByNumber(edit.LineNumber);
