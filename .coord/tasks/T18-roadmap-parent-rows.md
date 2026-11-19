@@ -39,6 +39,13 @@ Why this one: the data already has the info; showing it fixes every case, and it
 Not done, your call later: give the 3 orphans a parent by adding an `idea: design-system` row in `pending.md` (a row-file edit, needs your OK).
 Rough time: about 1 hour (Codex terra build, then Claude gate and test page on port 47822).
 
+## Rework r2 (user, 2026-11-19, after the preview)
+"If a parent is found i want it to be collapsable/foldable. If there's no parent then it stands on its own."
+- A parent that has children gets a fold toggle (▾/▸) in its Name cell and a child count; folded hides its steps. State saved like `planCollapsed` (own key, per parent item name). Search or column filters active: show matching steps unfolded, as groups do.
+- A step with no parent renders as a normal standalone row: no `↳`, no "no parent" label, no warning color.
+- Children keep `parent › step` naming and stay glued under the parent. A child whose parent is filtered out still names it.
+- Same single file, `tools/roadmap/index.html`. Update the legend (fold arrow; remove orphan line).
+
 ## Files
 - `tools/roadmap/index.html`
 
@@ -50,6 +57,7 @@ Role: terra (`docs/agents.md`), because one file, normal reasoning. The branch i
 - Build exactly the Plan above in `tools/roadmap/index.html` only; no drive-by changes, no row-file or data-script edits.
 - Offline checks only: `pwsh -NoProfile -File tools/roadmap-data.ps1 -Check`, and a JS syntax check of the page script (extract the `<script>` and run `node --check` if node exists). No ports, servers, browser.
 - Never edit `.coord/STATUS.md` or this card. Gate: `pwsh -NoProfile -File tools/gate.ps1 -Task T18-roadmap-parent-rows -Offline`.
+- Rework r2: build the section "Rework r2" on top of the existing diff (it supersedes the orphan label from the Plan). Report to `.coord/reports/T18-roadmap-parent-rows.md` (overwrite).
 - Done means: children follow their parent under bucket sort and filters, show `parent › step`, orphans show `no parent`, search matches parent names, legend updated; `-Check` passes.
 
 Report `.coord/reports/T18-roadmap-parent-rows.md`, short: 1 Summary; 2 Change list; 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 8 Checks run; 9 Hand checks.
