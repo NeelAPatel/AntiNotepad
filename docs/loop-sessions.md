@@ -80,6 +80,7 @@
 | `.claude/skills/scan-backlog/SKILL.md` | `/scan-backlog [slug ...]`: snapshot scouts and proposed backlog order |
 | `.claude/skills/review-task/SKILL.md` | `/review-task <ID-slug>`: Check (gates, bounds check, verdict), hand over |
 | `.claude/skills/merge-task/SKILL.md` | `/merge-task <ID-slug>`: Merge |
+| `tools/title-hint.ps1` | `UserPromptSubmit` hook: ASCII title hints from item rows, Codex logs and ledger |
 | `tools/loop-card.ps1` | `UserPromptSubmit` hook: status-card reminder and the items in flight |
 | `.coord/lessons.md` | misses (cause, caught by, should have caught) and per-item reviewer scores; master-owned |
 | `.github/workflows/gate.yml` | CI gate, manual trigger |

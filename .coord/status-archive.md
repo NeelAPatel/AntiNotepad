@@ -235,6 +235,7 @@ Done and dropped Plan rows moved out of STATUS by Loop10b-pending-list (2026-11-
 
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
+| Loop17-chat-title-selfheal | Item chats keep their own title current: `tools/title-hint.ps1` hook in committed settings prints the should-be title parts, the chat sets the title; rule in `docs/loop.md`, `docs/loop-sessions.md`, next-task and merge-task skills | Medium | Small | done |
 | Loop16-poteto-trigger | Poteto mode starts on its own in item chats: director brief template (command alone on line 1 plus an explicit Skill-call line and paste fallback), `tools/poteto-gate.ps1` brief and stop hooks, playbook and `/next-task` text; hooks in user settings | Medium | Small | done |
 | A26-tab-at-text-start | Tab and Shift+Tab change a list level only at the start of the text; Ctrl+[ and Ctrl+] change it from anywhere; renumber once per block; help sheet and decisions note updated. Hand test: "All passed" | Medium | Medium | done |
 | A27-recovered-folder-always-open | Settings always shows Open on the recovered-notes row; `NotesLocation.EnsureRecovered` makes the folder only if the notes folder exists. Selftest, contract row and design hash updated. Hand test: "yes it opens the correct folders" | Medium | Medium | done |

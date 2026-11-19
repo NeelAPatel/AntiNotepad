@@ -54,7 +54,7 @@ One line by default: `**>> <ID-slug>** · ● <phase> · <what changed>`. The **
 - **One chat per item, one level.** An item chat never starts a chat (no `start_session`, no helper or Codex-run chat) unless the user says so there. A second chat only if the first sat idle over an hour with a large context, or on the user's word.
 - Codex runs are background runs in the item chat; the director never launches Codex.
 
-Chat titles are free-form; the status card carries the phase.
+Item chats set or clear their own title in the same step as their STATUS row (pending row before Approve): `<me emoji> [Codex word] [dev word] <ID-slug> ◆ <phase>`, empty fields left out. The `title-hint` hook gives ASCII words at each user turn; the chat writes ⁉️, brackets and ◆ and sets the title first. Codex words: Codexing, Codex failed, Codex stalled. Dev words: Merged, Dropped, Paused, Parked (Paused and Parked keep the phase; cleared on resume). Rework clears the me marker.
 
 - **One asker:** the user answers the item chat; it shows next-step buttons only for its own item decisions. The director asks only about merges, releases, rule changes and cross-item matters. Decisions are recorded verbatim.
 - **STATUS:** the item chat edits only its own item's row in the main checkout's `.coord/STATUS.md` (absolute path; the roadmap reads it), never other rows; branches never edit STATUS. The director edits Now and finished moves.
