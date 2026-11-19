@@ -37,6 +37,7 @@ Item chat, 2026-11-19.
 - My run of the hook: worktree cwd gives `title-hint Loop17-chat-title-selfheal: me=none codex=none dev=none phase=build`; garbage stdin exits 0 silent. Examples for all six Request titles in `.coord/reports/Loop17-chat-title-selfheal.md`.
 - Bounds: only the Files list changed. No `/review-task` run (typed-only).
 - Misses: I changed the title before the STATUS row (caught by the user's screenshot); stray `cat` hung a run (caught by two samples).
+- Codex sol review: VERDICT rework. Findings: (1) major, paused/parked pending rows skipped and a bare `paused` row lost its phase; (2) minor, canonical `done` gave no `[Merged]`. Fixed in `-r2` (phase from the card, `done` to merged, self-tests on real row shapes, now 16 cases); gate PASS. Cause `code`; caught by: Codex review; should have caught: self-tests built from real row states (`paused`, `done`), not invented ones.
 - Live check (user OK 2026-11-19): throwaway chat set `⁉️ colour-test wrong-title`, user sent "hi", it healed to `Loop17-chat-title-selfheal ◆ check` from `title-hint ...: me=none codex=none dev=none phase=check` (user screenshots). User confirmed `⁉️` draws in colour.
 
 ## Hand test
