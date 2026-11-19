@@ -113,6 +113,8 @@ input[type=search]{width:min(260px,100%)}
 .tbl td.hidecell:hover .hide-row,.hide-row:focus-visible{opacity:1;pointer-events:auto;transform:none}
 .hide-row:hover{background:var(--line);color:var(--fg)}
 .tbl td.nm .step{color:var(--muted);margin-right:4px}
+.tbl td.nm .step-parent{color:var(--muted)}
+.tbl td.nm .step-orphan{color:var(--you)}
 .scroll{overflow-x:auto;border-radius:10px}
 .num{font-variant-numeric:tabular-nums;color:var(--fg2);white-space:nowrap}
 .sub{margin-top:4px;display:grid;gap:2px;font-size:12px;color:var(--fg2)}
@@ -258,19 +260,29 @@ let planCollapsed = loadPlan('roadmap-plan-collapsed', []); if (!Array.isArray(p
 const planFilters = {}; let pickerOpen = false, filterKey = '', filterSearch = '';
 const FUNNEL = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12L9.5 8v4l-3 1V8z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>';
 function enteredText(value){ if (!value) return ''; const d = new Date(value); if (isNaN(d)) return ''; const h = d.getHours(); return `${d.toLocaleString('en-US',{month:'short'})} ${d.getDate()} ${h%12||12}:${String(d.getMinutes()).padStart(2,'0')}${h<12?'a':'p'}`; }
-function planValues(r, era){
+function planRows(){
+  const parents = new Map();
+  return DATA.rows.filter(r => r.item !== 'Release marker').map((r, index) => {
+    const x = {r, index, era:rowEra(r), k:stKind(r.state)};
+    if (!eraOk(x.era)) return null;
+    if (/^idea:/.test(r.item)) parents.set(r.group, x);
+    else if (/^step:/.test(r.item)) x.parent = parents.get(r.group);
+    return x;
+  }).filter(Boolean);
+}
+function planValues(r, era, parent){
   const full = itemOf(r.item), {id, name} = splitId(full || r.item), br = full ? branchOf(full) : '';
   const kind = (r.item.match(/^(idea|step|Decision):/)||[])[1] || '';
   const entered = enteredText(r.entered);
-  return {id, name:kind ? r.item.replace(/^(idea|step|Decision): ?/,'') : name,
+  const rowName = kind ? r.item.replace(/^(idea|step|Decision): ?/,'') : name;
+  return {id, name:kind === 'step' ? `${parent ? parent.r.item.replace(/^idea: ?/,'') : 'no parent'} › ${rowName}` : rowName,
     entered:entered.replace(/ \d{1,2}:\d{2}[ap]$/, ''), type:kind ? '' : typeOf(id, br),
     scope:plain(r.scope), tier:[r.tier,r.effort].filter(Boolean).join(' '), state:r.state || '', branch:[br,eraName(era)].filter(Boolean).join(' ')};
 }
 function filterCounts(key){
   const counts = new Map();
-  DATA.rows.filter(r => r.item !== 'Release marker').forEach(r => {
-    const era = rowEra(r); if (!eraOk(era)) return;
-    const value = String(planValues(r, era)[key] || ''); counts.set(value, (counts.get(value) || 0) + 1);
+  planRows().forEach(({r, era, parent}) => {
+    const value = String(planValues(r, era, parent)[key] || ''); counts.set(value, (counts.get(value) || 0) + 1);
   });
   return counts;
 }
@@ -423,14 +435,14 @@ function table(head, rows, cols){
 const EYE_OFF = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2l12 12M6.4 6.5a2 2 0 0 0 2.9 2.9M4.1 4.3C2.7 5.3 1.8 6.6 1.5 8c.9 2.6 3.6 4.5 6.5 4.5 1.3 0 2.5-.4 3.5-1.1M7.2 3.5c.3-.1.5-.1.8-.1 2.9 0 5.6 1.9 6.5 4.6-.3.9-.8 1.7-1.4 2.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
 const EYE_ON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 8C2.4 5.4 5.1 3.5 8 3.5s5.6 1.9 6.5 4.5c-.9 2.6-3.6 4.5-6.5 4.5S2.4 10.6 1.5 8z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>';
 function planView(){
-  let rows = DATA.rows.filter(r => r.item !== 'Release marker').map(r => ({r, era: rowEra(r), k: stKind(r.state)})).filter(x => eraOk(x.era));
+  let rows = planRows();
   const all = rows;
-  const eligible = new Map(); const childrenOf = new Map(); let parentByGroup = new Map();
+  const eligible = new Map(); const childrenOf = new Map();
   for (const x of all) {
     const kind = (x.r.item.match(/^(idea|step|Decision):/)||[])[1] || '';
-    if (kind === 'idea') { parentByGroup.set(x.r.group, x); eligible.set(x.r.item, true); }
+    if (kind === 'idea') eligible.set(x.r.item, true);
     if (kind === 'step') {
-      const parent = parentByGroup.get(x.r.group);
+      const parent = x.parent;
       if (parent) { const key = parent.r.item; const children = childrenOf.get(key) || []; children.push(x); childrenOf.set(key, children); }
       eligible.set(x.r.item, true);
     } else if (kind !== 'idea' && x.r.item !== 'Release marker') eligible.set(x.r.item, true);
@@ -444,19 +456,20 @@ function planView(){
   else rows = rows.filter(x => !hiddenRows.has(x.r.item));
   // Four headers: Current (in progress), Next (the STATUS "Next" group), Backlog (everything else open), Done (state done).
   const BUCKETS = ['Current', 'Next', 'Backlog', 'Done'];
-  const bucketOf = x => x.k === 'done' ? 'Done' : ['you','act'].includes(x.k) ? 'Current' : /^next\b/i.test(String(x.r.group || '').replace(/\*/g,'').trim()) ? 'Next' : 'Backlog';
-  rows = [...rows].sort((a, b) => BUCKETS.indexOf(bucketOf(a)) - BUCKETS.indexOf(bucketOf(b)));
+  const bucketOf = x => { x = x.parent || x; return x.k === 'done' ? 'Done' : ['you','act'].includes(x.k) ? 'Current' : /^next\b/i.test(String(x.r.group || '').replace(/\*/g,'').trim()) ? 'Next' : 'Backlog'; };
+  rows = [...rows].sort((a, b) => BUCKETS.indexOf(bucketOf(a)) - BUCKETS.indexOf(bucketOf(b)) || (a.parent || a).index - (b.parent || b).index || a.index - b.index);
   const out = []; let grp = null, n = 0;
-  rows.forEach(({r, era, k}) => {
+  rows.forEach(x => {
+    const {r, era, k, parent} = x;
     const full = itemOf(r.item), {id, name} = splitId(full || r.item), br = full ? branchOf(full) : '';
     const kind = (r.item.match(/^(idea|step|Decision):/)||[])[1] || '';
     const nm = kind ? r.item.replace(/^(idea|step|Decision): ?/,'') : name;
     const type = kind ? '' : typeOf(id, br);
     const entered = enteredText(r.entered);
-    const values = planValues(r, era);
+    const values = planValues(r, era, parent);
     const text = [r.item, ...Object.values(values), r.group, wtByBranch[br]||''].join(' ');
     if (!matches(text) || Object.entries(planFilters).some(([key, value]) => value && !value.has(String(values[key] || '')))) return;
-    const bk = bucketOf({r, k});
+    const bk = bucketOf(x);
     const searching = !!state.q.trim() || Object.keys(planFilters).length > 0;
     if (bk !== grp) { grp = bk; const gn = rows.filter(x => bucketOf(x) === grp).length;
       const expanded = searching || !planCollapsed.includes(grp);
@@ -467,7 +480,8 @@ function planView(){
     const hideLabel = state.filter === 'all' ? 'Hide from All' : 'Show in All';
     const action = canHide && (state.filter === 'all' || hiddenRows.has(r.item)) ? `<button class="hide-row" data-hide="${esc(r.item)}" title="${hideLabel}" aria-label="${hideLabel}: ${esc(r.item)}">${state.filter==='all' ? EYE_OFF : EYE_ON}</button>` : '';
     const idCell = id ? badgeId(id) : `<span class="empty">${kind==='step'?'':'—'}</span>`;
-    const nmCell = (kind==='step' ? '<span class="step">↳</span>' : '') + esc(nm) + (kind==='idea' ? ' <span class="b">idea</span>' : '');
+    const parentName = parent ? parent.r.item.replace(/^idea: ?/,'') : 'no parent';
+    const nmCell = (kind==='step' ? `<span class="step">↳</span><span class="${parent?'step-parent':'step-orphan'}"${parent?'':' title="No preceding idea in this group"'}>${esc(parentName)} › </span>` : '') + esc(nm) + (kind==='idea' ? ' <span class="b">idea</span>' : '');
     const cells = {id:`<td>${idCell}</td>`, name:`<td class="nm">${nmCell}</td>`, entered:`<td class="num">${esc(entered)}</td>`, type:`<td>${type?`<span class="b type">${esc(type)}</span>`:''}</td>`, scope:`<td class="scope"><div>${md(r.scope)}</div></td>`, tier:`<td class="num">${badgeTier(r.tier)} <span class="empty">${esc(r.effort)}</span></td>`, state:`<td>${badgeSt(r.state)}</td>`, branch:`<td><div class="plan-branch">${badgePlanBr(br)}<span class="b era">${esc(eraName(era))}</span></div></td>`};
     out.push({cls:(k==='done'?'done ':'') + 'st-'+k, open: full || r.item, text,
       html:`<td class="hidecell">${action}</td>` + PLAN_COLS.filter(([key]) => !planHidden.includes(key) || key==='id' || key==='name').map(([key]) => cells[key]).join('')});
@@ -770,7 +784,7 @@ const curveS = kind => `<svg class="curve-sample" viewBox="0 0 42 22" aria-hidde
 const LEG_COMMON = () => `<h4>Item IDs, by family</h4>${row(badgeId('A53'),'App')}${row(badgeId('Loop2'),'Dev loop')}${row(badgeId('T1'),'Tooling')}${row(badgeId('C26'),'Old coordination items')}${row(badgeId('D1'),'Docs')}`;
 const LEG = {
   plan: () => `<h4>Row stripe and state</h4>${st('var(--you)','Your turn: approve, answer, hand test')}${st('var(--act)','Active: moving without you')}${st('var(--plan)','Planned: agreed, not started')}${st('var(--line2)','Proposed by a chat, or an idea')}` +
-    `${row(badgeSt('proposed'),'Suggested by Claude, not yet agreed')}${row(badgeSt('needs you'),'An idea you have not confirmed (no ID yet)')}${row('<span class="step">↳</span>','A step under the idea above it')}` +
+    `${row(badgeSt('proposed'),'Suggested by Claude, not yet agreed')}${row(badgeSt('needs you'),'An idea you have not confirmed (no ID yet)')}${row('↳ parent › step','Step and its parent idea; no parent marks an orphan')}` +
     `<h4>Tier and type</h4>${row(badgeTier('Low'),'Item tier; size follows beside it')}${row('<span class="b type">feat</span>','Branch type, or inferred from the item family')}` +
     `<h4>Branch column</h4>${row('<span class="b br">A1-x</span>','Branch still exists; hover for full name and worktree')}${row('<span class="b br">A1-x ✓</span>','Merged into dev and deleted')}${LEG_COMMON()}`,
   log: () => `${row('<span class="linkish">▸ 12 commits</span>','One item, several commits; click to list them')}${row('<span class="b br">x ✓</span>','The branch it came from, merged and deleted')}${row(`<span class="b era">${esc(eraName((DATA.eras || []).length - 1))}</span>`,'The newest configured era')}${LEG_COMMON()}`,
