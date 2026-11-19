@@ -10,6 +10,8 @@
 # Old generated roadmap page (tools/roadmap.ps1, retired by T1-roadmap-overview)
 .coord/roadmap.html
 
+.orca
+
 .vs/
 
 build/
