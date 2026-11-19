@@ -16,8 +16,13 @@ Same loop, same roles: the user picks, the director dispatches and merges, one i
   - **Constraints:** tier, lab first if visible, dev copy only, one Codex run unless the plan says more.
 
 ## 2. Dispatch (director chat)
-- Start one item chat per pick (Sonnet). Its opening brief is the Request plus: "Follow the house rules and docs/loop.md. Stop at Approve. Relay the finished summary to <director> when the user asks." and this gate (a started chat cannot load `/pstack:poteto-mode` itself; tested 2026-11-19, the skill is user-typed only):
-  "Do nothing yet. Your first reply is one line plus a code block containing `/pstack:poteto-mode` followed by a short task pointer (for example: work the brief above for <ID-slug>, Findings then Plan, stop at Approve). Then stop. Read no files and start no Findings until the user types it. If the user types anything else first, answer it and remind them of the command once."
+- Start one item chat per pick (Sonnet). Its `prompt` is exactly this template (the app shows it under `Task:`). Line 1 is the bare command, nothing else on it; line 2 is the explicit Skill-call line (tested 2026-11-19, `.coord/research/poteto-trigger-evidence.md`: command alone on line 1 loaded 10 of 10, inside a sentence refused 11 of 11):
+  ```
+  /pstack:poteto-mode
+  Your first action is a Skill tool call with skill `pstack:poteto-mode`. If it is refused, reply with one line and a code block holding `/pstack:poteto-mode <ID-slug>: work the brief above, Findings then Plan, stop at Approve`, then stop.
+  You are the item chat for <ID-slug> ... <the Request, "Follow the house rules and docs/loop.md. Stop at Approve. Relay the finished summary to <director> when the user asks.">
+  ```
+- Enforced by `tools/poteto-gate.ps1`: a PreToolUse hook on `start_session` refuses a prompt containing "You are the item chat" that breaks the template; a Stop hook blocks an item chat once if its first turn shows neither the skill launch nor a fenced command. The paste line in the template is the only fallback.
 - Then the director steps back.
 
 ## 3. In the item chat (user travels here)
