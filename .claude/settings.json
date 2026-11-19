@@ -35,6 +35,11 @@
             "type": "command",
             "command": "pwsh -NoProfile -File \"$CLAUDE_PROJECT_DIR/tools/loop-card.ps1\"",
             "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File \"$CLAUDE_PROJECT_DIR/tools/title-hint.ps1\"",
+            "timeout": 15
           }
         ]
       }
