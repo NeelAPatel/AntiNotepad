@@ -114,7 +114,7 @@ input[type=search]{width:min(260px,100%)}
 .hide-row:hover{background:var(--line);color:var(--fg)}
 .tbl td.nm .step{color:var(--muted);margin-right:4px}
 .tbl td.nm .step-parent{color:var(--muted)}
-.tbl td.nm .step-orphan{color:var(--you)}
+.plan-table .parent-toggle{background:none;border:0;color:var(--muted);font:inherit;cursor:pointer;padding:0 4px 0 0}
 .scroll{overflow-x:auto;border-radius:10px}
 .num{font-variant-numeric:tabular-nums;color:var(--fg2);white-space:nowrap}
 .sub{margin-top:4px;display:grid;gap:2px;font-size:12px;color:var(--fg2)}
@@ -257,6 +257,7 @@ function savePlan(key, value){ try { localStorage.setItem(key, JSON.stringify(va
 let planHidden = loadPlan('roadmap-plan-columns', []); if (!Array.isArray(planHidden)) planHidden = [];
 let planWidths = loadPlan('roadmap-plan-widths', {}); if (!planWidths || typeof planWidths !== 'object') planWidths = {};
 let planCollapsed = loadPlan('roadmap-plan-collapsed', []); if (!Array.isArray(planCollapsed)) planCollapsed = [];
+let planParentCollapsed = loadPlan('roadmap-plan-parent-collapsed', []); if (!Array.isArray(planParentCollapsed)) planParentCollapsed = [];
 const planFilters = {}; let pickerOpen = false, filterKey = '', filterSearch = '';
 const FUNNEL = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12L9.5 8v4l-3 1V8z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>';
 function enteredText(value){ if (!value) return ''; const d = new Date(value); if (isNaN(d)) return ''; const h = d.getHours(); return `${d.toLocaleString('en-US',{month:'short'})} ${d.getDate()} ${h%12||12}:${String(d.getMinutes()).padStart(2,'0')}${h<12?'a':'p'}`; }
@@ -275,7 +276,7 @@ function planValues(r, era, parent){
   const kind = (r.item.match(/^(idea|step|Decision):/)||[])[1] || '';
   const entered = enteredText(r.entered);
   const rowName = kind ? r.item.replace(/^(idea|step|Decision): ?/,'') : name;
-  return {id, name:kind === 'step' ? `${parent ? parent.r.item.replace(/^idea: ?/,'') : 'no parent'} › ${rowName}` : rowName,
+  return {id, name:kind === 'step' && parent ? `${parent.r.item.replace(/^idea: ?/,'')} › ${rowName}` : rowName,
     entered:entered.replace(/ \d{1,2}:\d{2}[ap]$/, ''), type:kind ? '' : typeOf(id, br),
     scope:plain(r.scope), tier:[r.tier,r.effort].filter(Boolean).join(' '), state:r.state || '', branch:[br,eraName(era)].filter(Boolean).join(' ')};
 }
@@ -454,6 +455,7 @@ function planView(){
   const hiddenCount = all.filter(x => x.r.item !== 'Release marker' && hiddenRows.has(x.r.item)).length;
   if (state.filter !== 'all') rows = rows.filter(x => state.filter === 'active' ? ['you','act'].includes(x.k) : x.k === state.filter);
   else rows = rows.filter(x => !hiddenRows.has(x.r.item));
+  const present = new Set(rows);
   // Four headers: Current (in progress), Next (the STATUS "Next" group), Backlog (everything else open), Done (state done).
   const BUCKETS = ['Current', 'Next', 'Backlog', 'Done'];
   const bucketOf = x => { x = x.parent || x; return x.k === 'done' ? 'Done' : ['you','act'].includes(x.k) ? 'Current' : /^next\b/i.test(String(x.r.group || '').replace(/\*/g,'').trim()) ? 'Next' : 'Backlog'; };
@@ -476,12 +478,16 @@ function planView(){
       out.push({html:`<td colspan="${1+PLAN_COLS.filter(([key]) => !planHidden.includes(key) || key==='id' || key==='name').length}"><button data-group="${esc(grp)}" aria-expanded="${expanded}">${expanded?'▾':'▸'} ${BUCKETS.indexOf(grp)+1}. ${grp} <span>${gn} rows</span></button></td>`, cls:'grp'}); }
     n++;
     if (!searching && planCollapsed.includes(bk)) return;
+    if (!searching && parent && present.has(parent) && planParentCollapsed.includes(parent.r.item)) return;
     const canHide = eligible.get(r.item) === true;
     const hideLabel = state.filter === 'all' ? 'Hide from All' : 'Show in All';
     const action = canHide && (state.filter === 'all' || hiddenRows.has(r.item)) ? `<button class="hide-row" data-hide="${esc(r.item)}" title="${hideLabel}" aria-label="${hideLabel}: ${esc(r.item)}">${state.filter==='all' ? EYE_OFF : EYE_ON}</button>` : '';
     const idCell = id ? badgeId(id) : `<span class="empty">${kind==='step'?'':'—'}</span>`;
-    const parentName = parent ? parent.r.item.replace(/^idea: ?/,'') : 'no parent';
-    const nmCell = (kind==='step' ? `<span class="step">↳</span><span class="${parent?'step-parent':'step-orphan'}"${parent?'':' title="No preceding idea in this group"'}>${esc(parentName)} › </span>` : '') + esc(nm) + (kind==='idea' ? ' <span class="b">idea</span>' : '');
+    const parentName = parent ? parent.r.item.replace(/^idea: ?/,'') : '';
+    const children = childrenOf.get(r.item) || [];
+    const expanded = searching || !planParentCollapsed.includes(r.item);
+    const toggle = kind === 'idea' && children.length ? `<button class="parent-toggle" data-parent="${esc(r.item)}" aria-expanded="${expanded}" aria-label="${expanded?'Collapse':'Expand'} ${esc(nm)}">${expanded?'▾':'▸'}</button>` : '';
+    const nmCell = toggle + (parent ? `<span class="step">↳</span><span class="step-parent">${esc(parentName)} › </span>` : '') + esc(nm) + (kind==='idea' ? ` <span class="b">idea</span>${children.length ? ` <span class="empty">${children.length} ${children.length===1?'step':'steps'}</span>` : ''}` : '');
     const cells = {id:`<td>${idCell}</td>`, name:`<td class="nm">${nmCell}</td>`, entered:`<td class="num">${esc(entered)}</td>`, type:`<td>${type?`<span class="b type">${esc(type)}</span>`:''}</td>`, scope:`<td class="scope"><div>${md(r.scope)}</div></td>`, tier:`<td class="num">${badgeTier(r.tier)} <span class="empty">${esc(r.effort)}</span></td>`, state:`<td>${badgeSt(r.state)}</td>`, branch:`<td><div class="plan-branch">${badgePlanBr(br)}<span class="b era">${esc(eraName(era))}</span></div></td>`};
     out.push({cls:(k==='done'?'done ':'') + 'st-'+k, open: full || r.item, text,
       html:`<td class="hidecell">${action}</td>` + PLAN_COLS.filter(([key]) => !planHidden.includes(key) || key==='id' || key==='name').map(([key]) => cells[key]).join('')});
@@ -784,7 +790,7 @@ const curveS = kind => `<svg class="curve-sample" viewBox="0 0 42 22" aria-hidde
 const LEG_COMMON = () => `<h4>Item IDs, by family</h4>${row(badgeId('A53'),'App')}${row(badgeId('Loop2'),'Dev loop')}${row(badgeId('T1'),'Tooling')}${row(badgeId('C26'),'Old coordination items')}${row(badgeId('D1'),'Docs')}`;
 const LEG = {
   plan: () => `<h4>Row stripe and state</h4>${st('var(--you)','Your turn: approve, answer, hand test')}${st('var(--act)','Active: moving without you')}${st('var(--plan)','Planned: agreed, not started')}${st('var(--line2)','Proposed by a chat, or an idea')}` +
-    `${row(badgeSt('proposed'),'Suggested by Claude, not yet agreed')}${row(badgeSt('needs you'),'An idea you have not confirmed (no ID yet)')}${row('↳ parent › step','Step and its parent idea; no parent marks an orphan')}` +
+    `${row(badgeSt('proposed'),'Suggested by Claude, not yet agreed')}${row(badgeSt('needs you'),'An idea you have not confirmed (no ID yet)')}${row('▾ / ▸','Fold or unfold an idea’s steps')}${row('↳ parent › step','Step and its parent idea')}` +
     `<h4>Tier and type</h4>${row(badgeTier('Low'),'Item tier; size follows beside it')}${row('<span class="b type">feat</span>','Branch type, or inferred from the item family')}` +
     `<h4>Branch column</h4>${row('<span class="b br">A1-x</span>','Branch still exists; hover for full name and worktree')}${row('<span class="b br">A1-x ✓</span>','Merged into dev and deleted')}${LEG_COMMON()}`,
   log: () => `${row('<span class="linkish">▸ 12 commits</span>','One item, several commits; click to list them')}${row('<span class="b br">x ✓</span>','The branch it came from, merged and deleted')}${row(`<span class="b era">${esc(eraName((DATA.eras || []).length - 1))}</span>`,'The newest configured era')}${LEG_COMMON()}`,
@@ -856,6 +862,7 @@ document.addEventListener('click', e => {
   }
   if (filterKey) { closeFilter(); render(); }
   const group=target.closest('[data-group]'); if (group) { const key=group.dataset.group; planCollapsed=planCollapsed.includes(key)?planCollapsed.filter(x=>x!==key):[...planCollapsed,key]; savePlan('roadmap-plan-collapsed',planCollapsed); render(); return; }
+  const parentToggle=target.closest('[data-parent]'); if (parentToggle) { const key=parentToggle.dataset.parent; planParentCollapsed=planParentCollapsed.includes(key)?planParentCollapsed.filter(x=>x!==key):[...planParentCollapsed,key]; savePlan('roadmap-plan-parent-collapsed',planParentCollapsed); render(); return; }
   if (target.closest('[data-columns]')) { pickerOpen=!pickerOpen; render(); return; }
   if (target.closest('[data-column-reset]')) { planHidden=[]; savePlan('roadmap-plan-columns',planHidden); render(); return; }
   if (target.closest('[data-filter-clear]')) { Object.keys(planFilters).forEach(k=>delete planFilters[k]); render(); return; }
