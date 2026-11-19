@@ -27,7 +27,7 @@ User, 2026-11-19 (via Loop Hub 4; number Loop19 confirmed by the user): "Open it
 - **Scope questions:** None.
 - **Test plan:** None (not visible). Checks: `git diff` shows only the flag line gone from `review-task` and still present in the other three; `tools/loop-lint.ps1` clean; live check below.
 - **Gates:** Low tier defaults: `tools/gate.ps1` (docs-only, no selftest rows).
-- **Needs from you:** OK to start a throwaway read-only chat after the edit: it calls the Skill tool with `review-task` on a dummy ID and must show "Launching skill: review-task" (then stops at the missing card). It edits nothing; archived after.
+- **Needs from you:** OK to start a throwaway read-only chat after the edit: it calls the Skill tool with `review-task` on a dummy ID and must show "Launching skill: review-task" (then stops at the missing card). It edits nothing.
 
 ## Files
 - `.claude/skills/review-task/SKILL.md`
@@ -39,3 +39,9 @@ None (loop docs and skill header; no `CONTRACTS` rows).
 
 ## Approve
 User, 2026-11-19: "Approved" (Plan as written, including the throwaway read-only chat live check).
+
+## Check
+- Gate: PASS (3 files, all in scope; loop-lint PASS).
+- Live check (2026-11-19, throwaway chat `loop19-throwaway`): Skill `review-task` returned "Launching skill: review-task". Control: Skill `merge-task` refused ("cannot be used with Skill tool due to disable-model-invocation").
+- Flags: `merge-task`, `next-task`, `scan-backlog` still carry it; `review-task` does not.
+- Differences from Plan: none (within plan). Not visible: no hand test needed.
