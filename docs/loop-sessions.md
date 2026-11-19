@@ -40,6 +40,7 @@
   | `review` | `reviewer` | Check; a fresh item chat only when it stalled | Sonnet medium | `/review-task` |
   | `test` | `tester` | the hand test; a separate one only for a re-test the user asked for | Sonnet medium | launches the build, gives the UI checks, records the result |
   Each role's model, effort and tools are fixed in `.claude/agents/<role>.md` (builder, reviewer, auditor); this table says when to use them. The Codex role for each run is picked by the job (`docs/agents.md`).
+- **Typed-only commands** (Loop19): `/next-task`, `/merge-task` and `/scan-backlog` carry `disable-model-invocation`, so a chat cannot call them. A chat that needs one shows it in a `text` block and waits for the user to type it; it never offers a button for it. `/review-task` is callable: the item chat runs it.
 - **Roadmap:** every master uses the same local server page `http://localhost:47811` (`/roadmap`), served live from STATUS
   and Git.
 - **Handing over to a new master** (the chat grew long, or the loop version changed): no sub-session mid-step (or each one

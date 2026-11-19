@@ -29,7 +29,7 @@ its own before or after an action.
 | **Ask rules** (L1, `.claude/settings.json`) | Claude Code asks you before editing `.coord/STATUS.md`, `.coord/lessons.md` or `docs/loop.md` | Say yes when it is the director doing a planned edit; no otherwise |
 | **Worktree check** (L2, `tools/worktree-check.ps1`) | At session start, logs a worktree whose path or branch is not `<prefix>/<ID-slug>` or that was cut from main, to `.coord/logs/worktree-check.log` | Create worktrees only through `approve.ps1`. The native setting `worktree.baseRef` is `head` |
 | **Agents** (L3, `.claude/agents`) | `builder`, `reviewer` (cannot edit files), `auditor` (read-only, Haiku) have fixed model, effort and tool limits | Nothing; directors pick them |
-| **Typed-only skills** (L4) | `/next-task`, `/review-task`, `/merge-task`, `/scan-backlog` no longer start from plain words ("merge X" does nothing) and no longer cost context each turn. They pre-load git facts | **Type the slash command yourself** |
+| **Typed-only skills** (L4) | `/next-task`, `/merge-task`, `/scan-backlog` no longer start from plain words ("merge X" does nothing) and no longer cost context each turn. They pre-load git facts | **Type the slash command yourself** |
 | **Status line + start-up note** (L5) | The bottom of the chat shows `loop: [WT] branch, item, in flight`. At session start the chat prints the item's phase and next step | Glance at it; it replaces asking "where are we" |
 | **Slimmer docs** (L6) | Directors read about 18 KB at start instead of 39 KB; phase detail loads inside the skill that needs it; coding rules load only when product files are touched | Nothing |
 
