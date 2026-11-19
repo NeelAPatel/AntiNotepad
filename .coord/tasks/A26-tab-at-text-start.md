@@ -42,6 +42,7 @@ Only these files may change (exact paths; `tools/gate.ps1` reads this list). Oth
 - `product/AntiNotepad/SelfTest/Lists.cs`
 - `product/AntiNotepad/SelfTest/Contracts.cs`
 - `product/AntiNotepad/SelfTest/Design.cs`
+- `docs/decisions.md` (Alt+Left/Right note-switch lock)
 
 ## Contracts
 - New: Tab changes a list level only at text start; Alt+Shift+Left/Right from anywhere.
