@@ -687,7 +687,7 @@ internal sealed partial class SettingsWindow : Window
     {
         page.Children.Add(Group(AppInfo.Name));
         page.Children.Add(Card(
-            Row(() => Fl(0xf4a3), $"{AppInfo.Name} {AppInfo.Version} ({AppInfo.Label})", $"{AppInfo.Description}\n{AppInfo.Copyright}", null),
+            Row(() => Fl(0xf4a3), AppInfo.Label.Length == 0 ? $"{AppInfo.Name} {AppInfo.Version}" : $"{AppInfo.Name} {AppInfo.Version} ({AppInfo.Label})", $"{AppInfo.Description}\n{AppInfo.Copyright}", null),
             Row(() => Fl(KeyboardGlyph), "Keyboard shortcuts", "Every shortcut on one page", () => TextButton("Show", () => { _host.ShowResident(); _host.OpenHelp(); })),
             Row(() => Fl(0xf19f), "Restore default settings", "Undo it from the pad's notice", () => TextButton("Restore", () => _host.ResetSettings()))));
     }
