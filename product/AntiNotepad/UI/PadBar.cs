@@ -20,7 +20,7 @@ internal enum BarViewKind { Stack, Slot }
 internal enum BarStyle { Docked, Overlay, Float }
 
 /// <summary>Contains the display state for one permanent slot.</summary>
-internal sealed record BarSlotContext(bool IsEmpty, string Title);
+internal sealed record BarSlotContext(bool IsEmpty, Func<string> Title);
 
 /// <summary>Describes the state and display labels needed to render one pane's bottom bar.</summary>
 internal sealed record BarContext(
@@ -229,7 +229,7 @@ internal sealed class PadBar
                 var dot = new Border { Width = current ? ChromeTokens.PagerDotSelectedWidth : ChromeTokens.PagerDotWidth, Height = ChromeTokens.PagerDotHeight, CornerRadius = new CornerRadius(ChromeTokens.PagerDotRadius), Background = current ? new SolidColorBrush(p.Accent) : filled ? new SolidColorBrush(p.Muted) : Brushes.Transparent, BorderBrush = new SolidColorBrush(current ? p.Accent : p.Faint), BorderThickness = new Thickness(filled || current ? default : ChromeTokens.PagerDotBorderThickness), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
                 var button = Kit.Plain(dot, p, current ? ChromeTokens.PagerDotSelectedButtonWidth : ChromeTokens.PagerDotButtonWidth, ChromeTokens.PagerDotButtonHeight, ChromeTokens.PagerDotHoverRadius);
                 button.Click += (_, _) => actions.SelectSlot(target);
-                ToolTip.SetTip(button, context.TooltipFor($"Slot {i} · {(filled ? slot.Title : "empty")}", "open-slot"));
+                ToolTip.SetTip(button, context.TooltipFor($"Slot {i} · {(filled ? slot.Title() : "empty")}", "open-slot"));
                 Avalonia.Automation.AutomationProperties.SetName(button, $"Slot {i}");
                 row.Children.Add(button);
             }

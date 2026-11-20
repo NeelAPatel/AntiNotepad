@@ -32,6 +32,16 @@ internal static partial class SelfTest
         var restoredOpacity = face.Opacity * ((GlyphIcon)face.Child!).Opacity;
         var clicks = 0;
         var actions = new BarActions(() => clicks++, () => { }, () => { }, () => { }, () => { }, _ => { });
+        var titleCalls = 0;
+        var slots = Enumerable.Range(1, 9).Select(i => new BarSlotContext(i == 9, () => { titleCalls++; return $"Title {i}"; })).ToArray();
+        var stackContext = BarContextForTest(0, true, true, false, 2, false) with { Slots = slots };
+        var lazyBar = new PadBar(BarPane.Left, stackContext, actions);
+        lazyBar.Rebuild(stackContext, actions);
+        var stackTitlesLazy = titleCalls == 0;
+        lazyBar.Update(stackContext with { ViewKind = BarViewKind.Slot, ViewSlot = 1 }, actions);
+        var dots = ((StackPanel)lazyBar.Pager.Child!).Children;
+        var slotTitles = titleCalls == 8 && Enumerable.Range(1, 9).All(i =>
+            Equals(ToolTip.GetTip(dots[i - 1]), $"Slot {i} · {(i == 9 ? "empty" : $"Title {i}")}"));
         var first = new PadBar(BarPane.Left, BarContextForTest(0, true, true, false, 2, false), actions);
         var firstHost = new Grid();
         firstHost.Children.Add(first.Root);
@@ -62,7 +72,7 @@ internal static partial class SelfTest
             && !stack.Slots && stack.ShowNew && stack.NewEnabled && stack.DeleteEnabled
             && slot.Slots && !slot.ShowNew && !slot.DeleteEnabled && slot.DeleteName == "Clear slot 3"
             && !blank.DeleteEnabled && !blank.NewEnabled && !hidden.ShowDelete && !hidden.ShowNew
-            && orderedIds && orderedControls && initiallyHidden && shownForSlot && twoBarsParented && clicks == 1
+            && orderedIds && orderedControls && initiallyHidden && shownForSlot && twoBarsParented && clicks == 1 && stackTitlesLazy && slotTitles
             && !round.ShowDeleteButton && round.ShowNewNoteButton && round.SlotDots == "quiet"
             && JsonSerializer.Deserialize<Settings>("{}")!.ShowDeleteButton
             && PadWindow.CanDeleteAt(1000, 1500) && !PadWindow.CanDeleteAt(1000, 1499)
@@ -86,7 +96,7 @@ internal static partial class SelfTest
         0,
         empty,
         trailingBlank,
-        Enumerable.Repeat(new BarSlotContext(true, ""), 9).ToArray(),
+        Enumerable.Repeat(new BarSlotContext(true, static () => ""), 9).ToArray(),
         showDelete,
         showNew,
         "pill",

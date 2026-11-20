@@ -79,6 +79,7 @@ Build note: model the bottom bar as three named containers (left, center, right)
 - `product/AntiNotepad/UI/SettingsWindow.cs`
 - `product/AntiNotepad/Theme/ChromeTokens.cs`
 - `product/AntiNotepad/Theme/Paint.cs`
+- `product/AntiNotepad/Motion/MotionTokens.cs`
 - `product/AntiNotepad/Model/Settings.cs`
 - `product/AntiNotepad/SelfTest/UI.cs`
 - `product/AntiNotepad/SelfTest/Bar.cs`
@@ -131,3 +132,16 @@ Triage: first three = code (r10 brief). Split items = scope change, proposed as 
 
 ## Plan addendum (user, 2026-11-20)
 User (verbatim): "separate item but we'll do the ground work of making this new bottom bar future proof as much as possible". Scope: after r10, a structure round (r11) with no visible change: the bottom bar becomes one `PadBar` object per pane (new `UI/PadBar.cs`) that owns its three named containers (left, center, right) and registers its controls as ordered items (Delete, pager bar, New note) so later items (split's second bar, status pill, bars-edge-reveal) add or move controls without restructuring. The bar reads nothing from `_active`: it gets a context record (pane view, other pane's slot, toggles, note state, palette, labels) and injected action callbacks. `PadWindow` holds a list of bars (one today), placement code (Docked, Overlay, Float) handles N bars, swap takes a pane argument. Pure refactor: same pixels and behavior; selftests prove the registry and context; the pinned design hash must stay unchanged. `UI/PadBar.cs` joins `## Files`.
+
+## Check (rounds r10, r11, r12)
+- **Gate:** PASS offline at `769617b` (build 0 warnings, 41 contract rows, 40 pass and 1 manual, seam, tokens, format, scope, size). Pinned design hash stays `f08e0c44...` through the r11 refactor (visual tree identical).
+- **Codex review 2** (`.coord/reports/A34-pill-bar-per-mode.review2.md`): `rework` with one major, proven: `BarContextFor` resolved all nine slot titles every `UpdateChrome`, reading slot bodies on stack navigation and on the hide-with-overlay path. Fixed in r12 (lazy title, zero title lookups in stack view, self-test and contract row). Everything else cleared: chrome sleep and pointer hold (all callers traced), slot cycling and split skip, animated dimming, pure-refactor claim, A30 untouched.
+- **Bounds:** within plan and the Plan addendum. Justified additions to `## Files`: `PadWindow.cs` (typing keeps its immediate fade), `SelfTest/Contracts.cs` (bug contract rows). Split-view changes moved to `idea: split-view-modes` (user: "Separate item").
+- **Misses:** (4) r11 on terra produced no changes twice for a large refactor: cause plan/judgment of role, should have used `worker` for shared-state refactors, lesson: a refactor touching more than 4 files with shared state starts on `worker`. (5) The r11 brief did not forbid eager data reads on the hide path; review caught it: lesson: briefs for chrome code state "no new work on the show/hide path".
+- **Noticed:** Codex cannot delete its `build/` folders (policy block); the manager removes them.
+
+## Plan addendum 2 (user, 2026-11-20)
+User (verbatim, hand test round 2): "is there a mouse over animation for all the buttons in the corners? i think we did something like that in settings when you hover across the buttons. We should add that standard across all buttons". Scope: `Kit.Plain` and `Kit.IconButton` get the Settings hover fade (r13); every plain button in the app changes feel, so the re-test list gains: top-row icons, pager arrows, count, dots, corner buttons, Search overlay, toast Undo, Settings buttons. Snapshot hash must stay unchanged.
+
+## Hand test (round 2)
+User, 2026-11-20 (verbatim): "just letting you know, everything else still works" (chrome stays under the pointer, slot scrolling and wrapping, standard bar, hover colors, delete debounce and Undo, three bar styles, new settings, narrow window and themes, show/hide speed with an overlay). Open: dim animation and the new hover fade (r13) not yet re-tested.

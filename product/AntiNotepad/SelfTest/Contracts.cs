@@ -239,6 +239,8 @@ internal static partial class SelfTest
                 "A34-pill-bar-per-mode-r10", barInteraction, "Dev copy: click swap while hovering and move away."),
             new("slot-navigation-cycle", "Navigation cycles slots, wraps and skips the other pane; stack and swap remain available.",
                 "A34-pill-bar-per-mode-r10", barInteraction, "Dev copy: wheel, swipe and shortcuts cycle slots."),
+            new("stack-bar-lazy-slot-titles", "Stack bar snapshots and rebuilds do not resolve slot titles; slot tooltips show titles for filled slots.",
+                "A34-pill-bar-per-mode-r12", () => RunExistingCheck(BarChecks, "bar: "), null),
             new(
                 "pinned-accent-ring",
                 "Pinned window shows the accent ring; pin changes leave chrome visibility unchanged.",

@@ -27,7 +27,7 @@ internal sealed partial class PadWindow
             Data.Current,
             isBlank,
             Data.Current == Data.Stack.Count - 1 && isBlank,
-            Data.Slots.Select(note => new BarSlotContext(note.IsEmpty, note.Title)).ToArray(),
+            Data.Slots.Select(note => new BarSlotContext(note.IsEmpty, () => note.Title)).ToArray(),
             Settings.ShowDeleteButton,
             Settings.ShowNewNoteButton,
             Settings.SlotDots,
