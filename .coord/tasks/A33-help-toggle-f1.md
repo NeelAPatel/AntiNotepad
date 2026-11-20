@@ -38,3 +38,6 @@ Scope: test-only. One Expect in `SelfTest/UI.cs`: F1 with Search open swaps in H
 
 ## Check
 2026-11-20: diff is 9 lines in `SelfTest/UI.cs` only (Files matches plan). `tools/gate.ps1 -Task A33-help-toggle-f1`: GATE PASS, SELFTEST PASS incl. the new "F1 with Search open swaps in Help". Test-only, no UI change: hand test skipped. Tier Low, accepted.
+
+## Hand test
+None needed: test-only change (9 lines in `SelfTest/UI.cs`), no product code or visible UI. User, 2026-11-20 (verbatim): "just add the self test and call it a day"; merge: "Yes, merge".
