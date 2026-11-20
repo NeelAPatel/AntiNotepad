@@ -33,6 +33,13 @@ internal sealed class GlyphIcon(string glyph, Color color, double size = Typogra
     private Geometry? _geometry;
     private Rect _inkBounds;
     private double _textScale = double.NaN;
+    private double _highlightOpacity;
+    public Color? Highlight { get; set; }
+    public double HighlightOpacity
+    {
+        get => _highlightOpacity;
+        set { _highlightOpacity = value; InvalidateVisual(); }
+    }
 
     private Geometry Geometry(double scale)
     {
@@ -56,7 +63,17 @@ internal sealed class GlyphIcon(string glyph, Color color, double size = Typogra
         var origin = inkCenter - _inkBounds.Center;
 
         // Natural weight: one copy. (Five copies on the same spot stack their antialiased edges into a fuzzy outline.)
-        if (weight <= 0) { Draw(context, geometry, origin); return; }
+        if (weight <= 0)
+        {
+            Draw(context, geometry, origin);
+            if (Highlight is { } highlight && HighlightOpacity > 0)
+            {
+                using (context.PushOpacity(HighlightOpacity))
+                using (context.PushTransform(Matrix.CreateTranslation(origin.X, origin.Y)))
+                    context.DrawGeometry(new ImmutableSolidColorBrush(highlight), null, geometry);
+            }
+            return;
+        }
         Draw(context, geometry, new Point(origin.X - weight, origin.Y));
         Draw(context, geometry, new Point(origin.X + weight, origin.Y));
         Draw(context, geometry, new Point(origin.X, origin.Y - weight));
@@ -92,7 +109,8 @@ internal static class Kit
     public static Button IconButton(string glyph, string name, Palette p, Action click, double size = ChromeTokens.ButtonSize, bool filled = false, Color? color = null, double radius = ChromeTokens.TopIconHoverRadius, Color? hoverColor = null)
     {
         var ink = color ?? p.Ink;
-        Control icon = new GlyphIcon(glyph, ink, ChromeTokens.IconGlyphSize, 0) { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        var glyphIcon = new GlyphIcon(glyph, ink, ChromeTokens.IconGlyphSize, 0) { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Highlight = hoverColor };
+        Control icon = glyphIcon;
         // Filled: a soft fill under the outline glyph, so the shape still reads (a solid fill alone is a blob).
         if (filled && glyph == Glyph.Pin)
             icon = new Panel
@@ -102,11 +120,18 @@ internal static class Kit
                 Children = { new GlyphIcon(Glyph.PinFilled, Color.FromArgb(Paint.PinnedGlyphAlpha, ink.R, ink.G, ink.B), ChromeTokens.IconGlyphSize, 0), icon },
             };
         var button = Plain(icon, p, size, size, radius: radius);
-        if (hoverColor is { } highlight && button.Content is Border face)
+        if (hoverColor is not null)
         {
-            var normal = icon;
-            var highlighted = new GlyphIcon(glyph, highlight, ChromeTokens.IconGlyphSize, ChromeTokens.PlainIconWeight) { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
-            void Refresh() => face.Child = button.IsEnabled && (button.IsPointerOver || button.IsKeyboardFocusWithin) ? highlighted : normal;
+            Anim.Handle? highlightFade = null;
+            void Refresh()
+            {
+                highlightFade?.Cancel();
+                var on = button.IsEnabled && (button.IsPointerOver || button.IsKeyboardFocusWithin);
+                var from = glyphIcon.HighlightOpacity;
+                var to = on ? 1.0 : 0.0;
+                highlightFade = Anim.Run(button, on ? MotionTokens.Win11Fast : MotionTokens.Win11Faster,
+                    t => glyphIcon.HighlightOpacity = from + (to - from) * t, easing: on ? MotionTokens.Win11Enter : MotionTokens.Win11Exit);
+            }
             button.PropertyChanged += (_, e) => { if (e.Property == InputElement.IsEnabledProperty) Refresh(); };
             button.PointerEntered += (_, _) => Refresh();
             button.PointerExited += (_, _) => Refresh();
@@ -135,8 +160,6 @@ internal static class Kit
     /// <summary>A borderless button with a soft rounded hover fill.</summary>
     public static Button Plain(Control content, Palette p, double width = double.NaN, double height = double.NaN, double radius = 4)
     {
-        var hover = new SolidColorBrush(p.Ink, Paint.Hover(p.Dark));
-        var press = new SolidColorBrush(p.Ink, Paint.Press(p.Dark));
         var border = new Border { CornerRadius = new CornerRadius(radius), Background = Brushes.Transparent, Child = content, Padding = new Thickness(0) };
         var button = new Button
         {
@@ -145,10 +168,29 @@ internal static class Kit
             HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch,
         };
         button.Classes.Add("plain");
-        button.PointerEntered += (_, _) => { if (button.IsEnabled) border.Background = hover; };
-        button.PointerExited += (_, _) => border.Background = Brushes.Transparent;
-        button.AddHandler(InputElement.PointerPressedEvent, (_, _) => { if (button.IsEnabled) border.Background = press; }, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
-        button.AddHandler(InputElement.PointerReleasedEvent, (_, _) => { if (button.IsEnabled) border.Background = hover; }, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
+        var wash = new SolidColorBrush(p.Ink, 0);
+        Anim.Handle? fade = null;
+        void SetWash(double target, bool immediate = false)
+        {
+            fade?.Cancel();
+            var from = ReferenceEquals(border.Background, wash) ? wash.Opacity : 0;
+            wash.Opacity = from;
+            border.Background = wash;
+            void Step(double t)
+            {
+                // A caller may replace the face background to supply its own feedback.
+                if (ReferenceEquals(border.Background, wash)) wash.Opacity = from + (target - from) * t;
+            }
+            void Done() { if (target == 0 && ReferenceEquals(border.Background, wash)) border.Background = Brushes.Transparent; }
+            if (immediate) { Step(1); Done(); }
+            else fade = Anim.Run(button, target > from ? MotionTokens.Win11Fast : MotionTokens.Win11Faster,
+                Step, Done, easing: target > from ? MotionTokens.Win11Enter : MotionTokens.Win11Exit);
+        }
+        button.PointerEntered += (_, _) => { if (button.IsEnabled) SetWash(Paint.Hover(p.Dark)); };
+        button.PointerExited += (_, _) => SetWash(0);
+        button.AddHandler(InputElement.PointerPressedEvent, (_, _) => { if (button.IsEnabled) SetWash(Paint.Press(p.Dark), true); }, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
+        button.AddHandler(InputElement.PointerReleasedEvent, (_, _) => { if (button.IsEnabled) SetWash(button.IsPointerOver ? Paint.Hover(p.Dark) : 0); }, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
+        button.PropertyChanged += (_, e) => { if (e.Property == InputElement.IsEnabledProperty && !button.IsEnabled) SetWash(0, true); };
         return button;
     }
 

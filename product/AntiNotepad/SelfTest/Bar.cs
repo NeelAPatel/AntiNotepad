@@ -4,6 +4,8 @@ using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
+using Avalonia.Media;
+using AntiNotepad.Motion;
 using AntiNotepad.Model;
 using AntiNotepad.Theme;
 using AntiNotepad.UI;
@@ -68,7 +70,7 @@ internal static partial class SelfTest
         var twoBarsParented = ReferenceEquals(first.Root.Parent, firstHost)
             && ReferenceEquals(second.Root.Parent, secondHost)
             && first.Pane == BarPane.Left && second.Pane == BarPane.Right;
-        var ok = enabledOpacity == 1 && disabledOpacity == Paint.DisabledIcon && restoredOpacity == enabledOpacity
+        var ok = ButtonWashChecks() && enabledOpacity == 1 && disabledOpacity == Paint.DisabledIcon && restoredOpacity == enabledOpacity
             && !stack.Slots && stack.ShowNew && stack.NewEnabled && stack.DeleteEnabled
             && slot.Slots && !slot.ShowNew && !slot.DeleteEnabled && slot.DeleteName == "Clear slot 3"
             && !blank.DeleteEnabled && !blank.NewEnabled && !hidden.ShowDelete && !hidden.ShowNew
@@ -84,6 +86,37 @@ internal static partial class SelfTest
             && ShortcutMap.Definitions.Any(d => d.Id == "swap-view" && d.DefaultKey == "");
         report = ok ? "bar decisions and settings" : "bar decisions or settings failed";
         return ok;
+    }
+
+    /// <summary>Checks settled wash states and a caller replacing the face background.</summary>
+    private static bool ButtonWashChecks()
+    {
+        var previous = Anim.Reduced;
+        try
+        {
+            Anim.Reduced = true;
+            var palette = Palette.All[0];
+            var button = Kit.Plain(new TextBlock(), palette);
+            var face = (Border)button.Content!;
+            void Pointer(Avalonia.Interactivity.RoutedEvent routedEvent)
+            {
+                var args = (PointerEventArgs)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(PointerEventArgs));
+                args.RoutedEvent = routedEvent;
+                button.RaiseEvent(args);
+            }
+            Pointer(InputElement.PointerEnteredEvent);
+            var entered = face.Background is SolidColorBrush wash && wash.Opacity == Paint.Hover(palette.Dark);
+            Pointer(InputElement.PointerExitedEvent);
+            var exited = ReferenceEquals(face.Background, Brushes.Transparent);
+            button.IsEnabled = false;
+            Pointer(InputElement.PointerEnteredEvent);
+            var disabled = ReferenceEquals(face.Background, Brushes.Transparent);
+            button.IsEnabled = true;
+            button.PointerEntered += (_, _) => face.Background = Brushes.Transparent;
+            Pointer(InputElement.PointerEnteredEvent);
+            return entered && exited && disabled && ReferenceEquals(face.Background, Brushes.Transparent);
+        }
+        finally { Anim.Reduced = previous; }
     }
 
     /// <summary>Builds a small bar snapshot for pure content checks.</summary>
