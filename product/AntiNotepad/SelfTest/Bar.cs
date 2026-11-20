@@ -12,12 +12,13 @@ namespace AntiNotepad;
 
 internal static partial class SelfTest
 {
+    /// <summary>Checks bar decisions, registered item order, actions, and basic settings compatibility.</summary>
     private static bool BarChecks(out string report)
     {
-        var stack = PadWindow.DecideBar(0, true, true, false, 2, false);
-        var slot = PadWindow.DecideBar(3, true, true, true, 2, false);
-        var blank = PadWindow.DecideBar(0, true, true, true, 1, true);
-        var hidden = PadWindow.DecideBar(0, false, false, false, 2, false);
+        var stack = PadBar.DecideBar(BarContextForTest(0, true, true, false, 2, false));
+        var slot = PadBar.DecideBar(BarContextForTest(3, true, true, true, 2, false));
+        var blank = PadBar.DecideBar(BarContextForTest(0, true, true, true, 1, true));
+        var hidden = PadBar.DecideBar(BarContextForTest(0, false, false, false, 2, false));
         var settings = JsonSerializer.Deserialize<Settings>("{}")!;
         settings.ShowDeleteButton = false;
         settings.SlotDots = "quiet";
@@ -29,10 +30,39 @@ internal static partial class SelfTest
         var disabledOpacity = face.Opacity * ((GlyphIcon)face.Child!).Opacity;
         iconButton.IsEnabled = true;
         var restoredOpacity = face.Opacity * ((GlyphIcon)face.Child!).Opacity;
+        var clicks = 0;
+        var actions = new BarActions(() => clicks++, () => { }, () => { }, () => { }, () => { }, _ => { });
+        var first = new PadBar(BarPane.Left, BarContextForTest(0, true, true, false, 2, false), actions);
+        var firstHost = new Grid();
+        firstHost.Children.Add(first.Root);
+        var second = new PadBar(BarPane.Right, BarContextForTest(0, true, true, false, 2, false), actions);
+        var secondHost = new Grid();
+        secondHost.Children.Add(second.Root);
+        var before = new Border();
+        var slotOnly = new Border();
+        first.RegisterItem(new("test-before", BarItemContainer.Left, -1, before));
+        first.RegisterItem(new("test-slot-only", BarItemContainer.Left, 2, slotOnly,
+            static context => context.ViewKind == BarViewKind.Slot,
+            static context => !context.IsBlank));
+        var leftRow = (StackPanel)first.Containers[0].Child!;
+        var orderedIds = first.Items.Where(item => item.Container == BarItemContainer.Left).Select(item => item.Id)
+            .SequenceEqual(["test-before", "delete", "test-slot-only"]);
+        var orderedControls = ReferenceEquals(leftRow.Children[0], before)
+            && ReferenceEquals(leftRow.Children[1], first.Items.Single(item => item.Id == "delete").Control)
+            && ReferenceEquals(leftRow.Children[2], slotOnly);
+        var deleteButton = (Button)first.Items.Single(item => item.Id == "delete").Control;
+        deleteButton.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+        var initiallyHidden = !slotOnly.IsVisible;
+        first.Update(BarContextForTest(2, true, true, false, 2, false), actions);
+        var shownForSlot = slotOnly.IsVisible;
+        var twoBarsParented = ReferenceEquals(first.Root.Parent, firstHost)
+            && ReferenceEquals(second.Root.Parent, secondHost)
+            && first.Pane == BarPane.Left && second.Pane == BarPane.Right;
         var ok = enabledOpacity == 1 && disabledOpacity == Paint.DisabledIcon && restoredOpacity == enabledOpacity
             && !stack.Slots && stack.ShowNew && stack.NewEnabled && stack.DeleteEnabled
             && slot.Slots && !slot.ShowNew && !slot.DeleteEnabled && slot.DeleteName == "Clear slot 3"
             && !blank.DeleteEnabled && !blank.NewEnabled && !hidden.ShowDelete && !hidden.ShowNew
+            && orderedIds && orderedControls && initiallyHidden && shownForSlot && twoBarsParented && clicks == 1
             && !round.ShowDeleteButton && round.ShowNewNoteButton && round.SlotDots == "quiet"
             && JsonSerializer.Deserialize<Settings>("{}")!.ShowDeleteButton
             && PadWindow.CanDeleteAt(1000, 1500) && !PadWindow.CanDeleteAt(1000, 1499)
@@ -46,12 +76,31 @@ internal static partial class SelfTest
         return ok;
     }
 
+    /// <summary>Builds a small bar snapshot for pure content checks.</summary>
+    private static BarContext BarContextForTest(int slot, bool showDelete, bool showNew, bool empty, int stackCount, bool trailingBlank) => new(
+        BarPane.Left,
+        slot > 0 ? BarViewKind.Slot : BarViewKind.Stack,
+        slot,
+        0,
+        stackCount,
+        0,
+        empty,
+        trailingBlank,
+        Enumerable.Repeat(new BarSlotContext(true, ""), 9).ToArray(),
+        showDelete,
+        showNew,
+        "pill",
+        BarStyle.Docked,
+        Palette.All[0],
+        static _ => "");
+
     /// <summary>Checks slot navigation and pointer-held docked chrome on a real window without showing it.</summary>
     private static bool BarInteractionChecks(PadWindow pad, Settings settings, out string report)
     {
         const BindingFlags fields = BindingFlags.Instance | BindingFlags.NonPublic;
         var type = typeof(PadWindow);
-        var bar = (Control)type.GetField("_bar", fields)!.GetValue(pad)!;
+        var bar = ((List<PadBar>)type.GetField("_bars", fields)!.GetValue(pad)!)[0];
+        var root = bar.Root;
         var top = (Control)type.GetField("_top", fields)!.GetValue(pad)!;
         var icons = (Control)type.GetField("_icons", fields)!.GetValue(pad)!;
         var awake = type.GetField("_chromeAwake", fields)!;
@@ -77,7 +126,7 @@ internal static partial class SelfTest
             Expect(pad.Data.ViewSlot == 9, "slot 1 to 9");
             pad.ShowStack();
             Expect(pad.Data.ViewSlot == 0, "stack reachable");
-            swap.Invoke(pad, null);
+            swap.Invoke(pad, [BarPane.Left]);
             Expect(pad.Data.ViewSlot == 9, "swap remembers cycled slot");
             settings.Split = true;
             settings.SplitSlot = 1;
@@ -86,23 +135,23 @@ internal static partial class SelfTest
             settings.Split = false;
             settings.Chrome = "fade";
             settings.Bars = "docked";
-            foreach (var control in new[] { bar, top })
+            foreach (var control in new[] { root, top })
             {
                 Point(control, true);
                 sleep.Invoke(pad, [false, false]);
-                Expect((bool)awake.GetValue(pad)! && icons.IsHitTestVisible && bar.IsHitTestVisible && timer.IsEnabled,
+                Expect((bool)awake.GetValue(pad)! && icons.IsHitTestVisible && root.IsHitTestVisible && timer.IsEnabled,
                     "pointer keeps chrome awake");
                 if (ReferenceEquals(control, top))
                 {
                     swapButton.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
-                    Expect((bool)awake.GetValue(pad)! && icons.IsHitTestVisible && bar.IsHitTestVisible, "swap keeps chrome awake");
+                    Expect((bool)awake.GetValue(pad)! && icons.IsHitTestVisible && root.IsHitTestVisible, "swap keeps chrome awake");
                 }
                 Point(control, false);
             }
         }
         finally
         {
-            Point(bar, false);
+            Point(root, false);
             Point(top, false);
             timer.Stop();
         }

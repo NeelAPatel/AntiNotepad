@@ -74,29 +74,30 @@ internal static partial class SelfTest
             settings.Current.Chrome = "fade";
             settings.Changed += pad.HandleSettingsChanged;
             var icons = (Control)typeof(UI.PadWindow).GetField("_icons", fields)!.GetValue(pad)!;
-            var pill = (Control)typeof(UI.PadWindow).GetField("_bar", fields)!.GetValue(pad)!;
+            var padBar = ((List<UI.PadBar>)typeof(UI.PadWindow).GetField("_bars", fields)!.GetValue(pad)!)[0];
+            var chromeBar = padBar.Root;
             var awake = typeof(UI.PadWindow).GetField("_chromeAwake", fields)!;
             var iconsOpacity = icons.Opacity;
-            var pillOpacity = pill.Opacity;
+            var pillOpacity = chromeBar.Opacity;
             settings.Update(s => s.Pinned = true);
             settings.Update(s => s.DimWhenPinned = !s.DimWhenPinned);
-            Expect((bool)awake.GetValue(pad)! && icons.Opacity == iconsOpacity && pill.Opacity == pillOpacity,
+            Expect((bool)awake.GetValue(pad)! && icons.Opacity == iconsOpacity && chromeBar.Opacity == pillOpacity,
                 "pin settings preserve awake chrome");
             var keyDown = typeof(UI.PadWindow).GetMethod("OnWindowKeyDown", fields)!;
             keyDown.Invoke(pad, [null, new KeyEventArgs { Key = Key.T, KeyModifiers = KeyModifiers.Control }]);
-            Expect((bool)awake.GetValue(pad)! && icons.Opacity == iconsOpacity && pill.Opacity == pillOpacity,
+            Expect((bool)awake.GetValue(pad)! && icons.Opacity == iconsOpacity && chromeBar.Opacity == pillOpacity,
                 "pin shortcut preserves awake chrome");
             typeof(UI.PadWindow).GetMethod("Edited", fields)!.Invoke(pad, [null, true]);
             Expect(!(bool)awake.GetValue(pad)!, "normal edit sleeps chrome");
             iconsOpacity = icons.Opacity;
-            pillOpacity = pill.Opacity;
+            pillOpacity = chromeBar.Opacity;
             settings.Update(s => { s.Pinned = !s.Pinned; s.DimWhenPinned = !s.DimWhenPinned; });
-            Expect(!(bool)awake.GetValue(pad)! && icons.Opacity == iconsOpacity && pill.Opacity == pillOpacity,
+            Expect(!(bool)awake.GetValue(pad)! && icons.Opacity == iconsOpacity && chromeBar.Opacity == pillOpacity,
                 "pin settings preserve sleeping chrome");
-            var bar = (Border)typeof(UI.PadWindow).GetField("_bar", fields)!.GetValue(pad)!;
-            var barLeft = (Border)typeof(UI.PadWindow).GetField("_barLeft", fields)!.GetValue(pad)!;
-            var barCenter = (Border)typeof(UI.PadWindow).GetField("_barCenter", fields)!.GetValue(pad)!;
-            var barRight = (Border)typeof(UI.PadWindow).GetField("_barRight", fields)!.GetValue(pad)!;
+            var bar = padBar.Root;
+            var barLeft = padBar.Containers[0];
+            var barCenter = padBar.Containers[1];
+            var barRight = padBar.Containers[2];
             var bottomLayer = (Panel)typeof(UI.PadWindow).GetField("_bottomLayer", fields)!.GetValue(pad)!;
             var popup = (Avalonia.Controls.Primitives.Popup)typeof(UI.PadWindow).GetField("_floatPager", fields)!.GetValue(pad)!;
             Expect(barLeft.Child is Button && barCenter.Child is Border && barRight.Child is Button, "three bar containers");
@@ -692,7 +693,7 @@ internal static partial class SelfTest
             var savedLabel = (TextBlock)typeof(UI.PadWindow).GetField("_saved", fields)!.GetValue(pad)!;
             var topLayer = (Panel)typeof(UI.PadWindow).GetField("_topLayer", fields)!.GetValue(pad)!;
             var bottomLayer = (Panel)typeof(UI.PadWindow).GetField("_bottomLayer", fields)!.GetValue(pad)!;
-            var pill = (Border)typeof(UI.PadWindow).GetField("_pill", fields)!.GetValue(pad)!;
+            var pill = ((List<UI.PadBar>)typeof(UI.PadWindow).GetField("_bars", fields)!.GetValue(pad)!)[0].Pager;
             var pager = (Avalonia.Controls.Primitives.Popup)typeof(UI.PadWindow).GetField("_floatPager", fields)!.GetValue(pad)!;
             bool TopShown() => (bool)typeof(UI.PadWindow).GetField("_topShown", fields)!.GetValue(pad)!;
             bool BottomShown() => (bool)typeof(UI.PadWindow).GetField("_bottomShown", fields)!.GetValue(pad)!;

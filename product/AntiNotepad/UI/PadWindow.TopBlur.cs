@@ -289,12 +289,13 @@ internal sealed partial class PadWindow
         _right.SetTopBackdropMask(band.Y - right.Y, opacity);
     }
 
+    /// <summary>Applies window theme and transparency to the popup hosting the floating bars.</summary>
     private void OnFloatPagerOpened(object? sender, EventArgs e)
     {
         Dispatcher.UIThread.Post(() =>
         {
-            if (!_floatPager.IsOpen || TopLevel.GetTopLevel(_bar) is not { } popup
-                || ReferenceEquals(popup, this) || popup is Window) return;
+            var popup = _bars.Select(bar => TopLevel.GetTopLevel(bar.Root)).FirstOrDefault(top => top is not null);
+            if (!_floatPager.IsOpen || popup is null || ReferenceEquals(popup, this) || popup is Window) return;
             popup.RequestedThemeVariant = RequestedThemeVariant;
             popup.TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
             popup.TransparencyBackgroundFallback = Brushes.Transparent;

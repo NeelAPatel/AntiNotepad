@@ -96,7 +96,7 @@ internal sealed partial class PadWindow
             case ShortcutAction.OpenSlot: OpenSlot(ShortcutDigit(key)); break;
             case ShortcutAction.KeepSlot: PromoteToSlot(ShortcutDigit(key)); break;
             case ShortcutAction.Stack: ShowStack(); break;
-            case ShortcutAction.SwapView: SwapView(); break;
+            case ShortcutAction.SwapView: SwapView(BarPane.Left); break;
             case ShortcutAction.Split: ToggleSplit(); break;
             case ShortcutAction.KeepOnTop: TogglePin(); break;
             case ShortcutAction.TextSizeUp: Zoom(1); break;
@@ -128,6 +128,7 @@ internal sealed partial class PadWindow
 
     // ---------- overlays ----------
 
+    /// <summary>Shows an overlay while hiding every bottom bar from view and input.</summary>
     private void ShowOverlay(Control overlay)
     {
         _overlayAnimation?.Cancel();
@@ -140,7 +141,7 @@ internal sealed partial class PadWindow
         _overlayHost.IsVisible = true;
         UpdateOverlayLayout();
         _panes.Opacity = 0.0;
-        _bar.IsVisible = false;
+        foreach (var bar in _bars) bar.Root.IsVisible = false;
         WakeChrome(hold: true);
         var shift = new TranslateTransform();
         _overlayHost.RenderTransform = shift;
@@ -153,6 +154,7 @@ internal sealed partial class PadWindow
 
     internal bool IsOverlay(Control control) => ReferenceEquals(_overlay, control);
 
+    /// <summary>Restores the bottom bars and pane after an overlay closes.</summary>
     internal void CloseOverlay()
     {
         _overlayAnimation?.Cancel();
@@ -165,7 +167,7 @@ internal sealed partial class PadWindow
         _overlayHost.IsHitTestVisible = false;
         UpdateOverlayLayout();
         _panes.Opacity = 1;
-        _bar.IsVisible = true;
+        foreach (var bar in _bars) bar.Root.IsVisible = true;
         UpdateChrome();
         FocusActive();
         var startOpacity = _overlayHost.Opacity;
