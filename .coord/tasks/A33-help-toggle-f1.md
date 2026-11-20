@@ -35,3 +35,6 @@ Scope: test-only. One Expect in `SelfTest/UI.cs`: F1 with Search open swaps in H
 
 ## Files
 - `product/AntiNotepad/SelfTest/UI.cs`
+
+## Check
+2026-11-20: diff is 9 lines in `SelfTest/UI.cs` only (Files matches plan). `tools/gate.ps1 -Task A33-help-toggle-f1`: GATE PASS, SELFTEST PASS incl. the new "F1 with Search open swaps in Help". Test-only, no UI change: hand test skipped. Tier Low, accepted.
