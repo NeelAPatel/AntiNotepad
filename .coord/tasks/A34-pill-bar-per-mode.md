@@ -71,6 +71,7 @@ Build note: model the bottom bar as three named containers (left, center, right)
 - `product/AntiNotepad/UI/PadWindow.Bar.cs`
 - `product/AntiNotepad/UI/PadWindow.Navigation.cs`
 - `product/AntiNotepad/UI/PadWindow.Keys.cs`
+- `product/AntiNotepad/UI/PadWindow.TopBlur.cs`
 - `product/AntiNotepad/UI/Shortcuts.cs`
 - `product/AntiNotepad/UI/Kit.cs`
 - `product/AntiNotepad/UI/SettingsWindow.cs`
@@ -78,8 +79,33 @@ Build note: model the bottom bar as three named containers (left, center, right)
 - `product/AntiNotepad/Model/Settings.cs`
 - `product/AntiNotepad/SelfTest/UI.cs`
 - `product/AntiNotepad/SelfTest/Bar.cs`
+- `product/AntiNotepad/SelfTest/Design.cs`
 - `docs/shortcuts.md`
 - `AGENTS.md`
 - `tools/playground/a34-pill-bar-lab.html`
 - `tools/playground/app-mock-faithful-2026-11-20.html`
 - `tools/playground/index.html`
+
+## For Codex
+Role: terra at CODEX_EFFORT=high (several UI files with shared state; Plan fixed by the user). Read this whole card, `.coord/research/A34-edge-cases.md`, `.claude/rules/coding.md`, `AGENTS.md`, `docs/glossary.md`. Work only in this worktree. Never commit, never launch or kill AntiNotepad, no ports or browser. Build into `build/A34-pill-bar-per-mode-check`, run `--selftest` there, delete the folder after. Set `AVALONIA_TELEMETRY_OPTOUT=1`.
+Visual truth: the approved lab `tools/playground/a34-pill-bar-lab.html` (same dimensions: corner squares = `ChromeTokens.PillHeight` 42, count and arrows 32, Float one pill with separators, hover colors p.Error for Delete and p.Accent for New note, no red at rest, dots hit area 32 tall). Its script holds the behavior table; read it. Real behavior stays in the app's own methods (`Navigate`, `DeleteCurrent`, `NewNote`, `ShowStack`, `OpenSlot`, `PromoteToSlot`).
+
+### Structure (user's container paradigm, record it in comments and glossary text)
+The bottom bar has three named containers: left (Delete), center (the pager bar, today `_pill`), right (New note). Build them once; only the pager content is rebuilt in `UpdateChrome`. Docked/Overlay: the three containers sit in one bar panel that is the child of the root / `_bottomLayer` (replaces reparenting `_pill` alone; update `ApplyBars`, `FadeChrome`, `OverlayPointer`, `BarsSleepTick`, `FloatPager`, the overlay hide in `PadWindow.Keys.cs`, `PadWindow.TopBlur.cs`). Float: the left and right buttons are placed inside the pill in the popup, 32 px, with separators (`PagerSeparator*` tokens) between the groups. Put the bar code in a new partial `UI/PadWindow.Bar.cs` (BuildPill moves there), with a small pure record or static method deciding content from (view kind, active pane, toggles, note/slot state) so selftests need no window: Standard to pager, slot pane to dots only, New note hidden in slot panes (container kept, empty), Delete label "Delete note" or "Clear slot N", enabled flags (Delete off on a sole blank stack note and on an empty slot; New note off when already on the trailing blank note).
+
+### Behavior and settings
+- Standard pager: `‹ count ›` only (count button height 32, click opens Search as today). Slot panes: the 9 dots only, button height 32 (token), current/filled/empty looks as today. Split: one bar following the active pane (`_active`); right pane active = slot content with both panes' current slots marked.
+- Swap button: first icon in `_icons`, icon only; tooltip names the destination ("Show slots" / "Show stack") plus the bound key from `_shortcuts`; Standard to slots opens the last-used slot (kept in memory only), else the first filled, else slot 1; slots to Standard calls `ShowStack()`. In split it acts on the left pane. New shortcut `swap-view` (name "Swap stack and slots", section "Slots", scope Pad, unbound) in `UI/Shortcuts.cs`, dispatch in `PadWindow.Keys.cs`, row in `docs/shortcuts.md`.
+- Delete debounce: a second Delete within 500 ms is ignored (put the value in `ChromeTokens`). `DeleteCurrent` itself stays as is; do not touch save, `Store`, `Note` or shutdown code.
+- Settings (`Model/Settings.cs`): `ShowDeleteButton` (true), `ShowNewNoteButton` (true), `SlotDots` ("pill" or "quiet"; quiet = the dots with no capsule background, border or shadow behind them). Rows in `UI/SettingsWindow.cs` next to Bar style, using the existing Row/Toggle/Seg helpers.
+- `Kit.IconButton`: add an optional hover glyph color; Delete = `p.Error`, New note = `p.Accent`, only on hover and keyboard focus. Names, tooltips with shortcuts via `_shortcuts.GetLabel`, and `AutomationProperties.Name` on every new button.
+- New design values go in `Theme/ChromeTokens.cs` (corner size, count height 32, dot button height 32, debounce). The pill's measurements otherwise stay as they are.
+
+### Tests (new `SelfTest/Bar.cs` plus updates in `SelfTest/UI.cs`; small capability checks, same style as neighbors)
+Content table (Standard / slot / split-right / toggles off / empty cases); containers present and parented per bar style (reflection on the new fields); delete debounce; swap target rule; settings defaults and JSON round trip with older files lacking the keys; `swap-view` in the shortcut table and docs table (existing A29 checks must stay green); tokens (count 32, corner = PillHeight); the fade and hit-test checks in `SelfTest/UI.cs` now cover the whole bar (they reflect `_pill` today). Register the new file wherever the selftest run lists parts.
+
+### Done means (offline only)
+`dotnet build` clean, `AntiNotepad.exe --selftest` from the check build all pass, `pwsh -NoProfile -File tools/gate.ps1 -Task A34-pill-bar-per-mode -Offline` passes (Format, Tokens, Layers, scope against `## Files`). Report at `.coord/reports/A34-pill-bar-per-mode.md` with sections: Changed files, What I decided, Selftest output summary, Gate result, Not verified (visuals, hover colors, reveal timing, 320 px, split: the manager checks these in the dev copy). Files outside `## Files`: ask in the report, do not edit.
+
+### Round note (manager, 2026-11-20)
+Run 1 stopped without changes because it asked about `PadWindow.TopBlur.cs`. It is now in `## Files` (edit it as needed for the popup blur that uses `_pill` as its visual). Do not stop to ask scope questions: every file you need is in `## Files`; `docs/glossary.md` is NOT in scope (the container terms live in code comments only). Implement the whole Plan, build, run selftests and the gate, then report.
