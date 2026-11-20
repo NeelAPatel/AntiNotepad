@@ -529,7 +529,7 @@ internal static partial class SelfTest
         service.Replace(replacement);
         Expect(ReferenceEquals(service.Current, replacement), "Replace changes Current identity");
         Expect(first.Count == countBeforeReplace + 1 && first[^1].Flags == SettingsChangeFlags.All
-            && first[^1].Properties.Count == 58, "Replace emits all flags once");
+            && first[^1].Properties.Count == 59, "Replace emits all flags once");
 
         var appearanceBeforeSplit = appearanceCalls;
         var countBeforeSplit = first.Count;

@@ -88,7 +88,23 @@ internal static class ListEditing
         return match.Success && (!match.Groups[3].Success || TryListNumber(match, out _));
     }
 
-    internal static Continuation Continue(string text, int lineNumber, NoteMode mode)
+    /// <summary>Maps the persisted list choice to an editing kind.</summary>
+    internal static ListKind KindOf(string kind) => kind switch
+    {
+        "check" => ListKind.Checklist,
+        "number" => ListKind.Numbered,
+        _ => ListKind.Bullet
+    };
+
+    /// <summary>Returns the marker used for a new list item.</summary>
+    internal static string Marker(ListKind kind) => kind switch
+    {
+        ListKind.Checklist => "[ ] ",
+        ListKind.Numbered => "1. ",
+        _ => "- "
+    };
+
+    internal static Continuation Continue(string text, int lineNumber, NoteMode mode, ListKind kind)
     {
         if (mode == NoteMode.Code) return new(ContinuationKind.Decline);
 
@@ -96,7 +112,7 @@ internal static class ListEditing
         if (!match.Success)
         {
             return mode == NoteMode.List && (lineNumber == 1 || text.Trim().Length > 0)
-                ? new(ContinuationKind.InsertAtCaret, "\n[ ] ")
+                ? new(ContinuationKind.InsertAtCaret, "\n" + Marker(kind))
                 : new(ContinuationKind.Decline);
         }
 

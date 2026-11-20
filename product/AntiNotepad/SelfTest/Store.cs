@@ -516,6 +516,11 @@ internal static partial class SelfTest
         try
         {
             var fresh = new Settings();
+            CheckCase(fresh.ListDefault == "bullet", "list defaults to bullet");
+            fresh.ListDefault = "invalid";
+            CheckCase(fresh.ListDefault == "bullet", "invalid list default normalizes to bullet");
+            var invalidList = System.Text.Json.JsonSerializer.Deserialize<StoreData>("{\"Settings\":{\"ListDefault\":\"invalid\"}}")!;
+            CheckCase(invalidList.Settings.ListDefault == "bullet", "invalid persisted list default normalizes to bullet");
             CheckCase(fresh.SaveDelayMs == 400, "fresh settings default to 400 ms");
             fresh.SaveDelayMs = 250;
             CheckCase(fresh.SaveDelayMs == 400, "unsupported delay normalizes to 400 ms");
@@ -531,6 +536,15 @@ internal static partial class SelfTest
                 var reloaded = new Store(settingsStore.Folder);
                 reloaded.Load();
                 CheckCase(saved && reloaded.Data.Settings.SaveDelayMs == delay, $"{delay} ms settings round trip");
+            }
+
+            foreach (var kind in new[] { "bullet", "check", "number" })
+            {
+                settingsStore.Data.Settings.ListDefault = kind;
+                var saved = settingsStore.Save();
+                var reloaded = new Store(settingsStore.Folder);
+                reloaded.Load();
+                CheckCase(saved && reloaded.Data.Settings.ListDefault == kind, $"{kind} list default round trip");
             }
 
             var durableStore = new Store(Path.Combine(root, "durable"));

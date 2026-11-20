@@ -17,7 +17,7 @@ internal static partial class SelfTest
         void ContinueCase(string text, int lineNumber, NoteMode mode,
             Editor.ListEditing.ContinuationKind kind, string? insertion, string name)
         {
-            var result = Editor.ListEditing.Continue(text, lineNumber, mode);
+            var result = Editor.ListEditing.Continue(text, lineNumber, mode, Editor.ListEditing.ListKind.Bullet);
             CheckCase(result.Kind == kind && result.InsertText == insertion, name);
         }
         void RenumberCase(string[] lines, int lineNumber, bool fresh,
@@ -26,6 +26,23 @@ internal static partial class SelfTest
             var result = Editor.ListEditing.Renumber(lines.Length, number => lines[number - 1], lineNumber, fresh);
             CheckCase(result.SequenceEqual(expected), name);
         }
+
+        foreach (var (word, expected) in new[] { ("list", "number"), ("todo", "check"), ("checklist", "check"),
+            ("bullet", "bullet"), ("bulletlist", "bullet"), ("numberlist", "number") })
+        {
+            CheckCase(Modes.Detect(word).Mode == NoteMode.List && Modes.ListKindOf(word, "number") == expected,
+                $"{word} resolves its list kind");
+        }
+        foreach (var (kind, marker) in new[] { ("bullet", "- "), ("check", "[ ] "), ("number", "1. ") })
+        {
+            var result = Editor.ListEditing.Continue("plain", 2, NoteMode.List, Editor.ListEditing.KindOf(kind));
+            CheckCase(result.InsertText == "\n" + marker, $"{kind} plain line continuation");
+            CheckCase(Modes.ListKindOf("list:", kind) == kind, $"list follows {kind}");
+        }
+        CheckCase(Modes.ListKindOf("list", "invalid") == "bullet", "unknown list default falls back to bullet");
+        CheckCase(Editor.Completion.ListDefaultName("check") == "checkboxes"
+            && Editor.Completion.ListDefaultName("number") == "numbers"
+            && Editor.Completion.ListDefaultName("bullet") == "bullets", "popup names list defaults");
 
         CheckCase(Editor.ListEditing.TryListNumber("123456789. item", out var nineDigits) && nineDigits == 123_456_789,
             "9-digit list marker accepted");
@@ -67,9 +84,9 @@ internal static partial class SelfTest
         ContinueCase(" \t- ", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.Outdent, null, "mixed two-character indent outdents");
         ContinueCase("\t\t- ", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.Outdent, null, "two-tab indent outdents");
         ContinueCase("- item", 1, NoteMode.Code, Editor.ListEditing.ContinuationKind.Decline, null, "Code mode declines list continuation");
-        ContinueCase("", 1, NoteMode.List, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n[ ] ", "List mode adds a box on the first blank line");
+        ContinueCase("", 1, NoteMode.List, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n- ", "List mode adds a bullet on the first blank line");
         ContinueCase("", 2, NoteMode.List, Editor.ListEditing.ContinuationKind.Decline, null, "List mode declines a later blank line");
-        ContinueCase("plain", 2, NoteMode.List, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n[ ] ", "List mode adds a box after text");
+        ContinueCase("plain", 2, NoteMode.List, Editor.ListEditing.ContinuationKind.InsertAtCaret, "\n- ", "List mode adds a bullet after text");
         ContinueCase("999999999. item", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.Decline, null, "maximum list number declines continuation");
         ContinueCase("1234567890. item", 1, NoteMode.Plain, Editor.ListEditing.ContinuationKind.Decline, null, "ten-digit list number declines continuation");
 
@@ -189,7 +206,7 @@ internal static partial class SelfTest
         ContinuationCase("999999999. item", 1, 15, NoteMode.Plain,
             "999999999. item", false, "maximum number declines document continuation");
         ContinuationCase("", 1, 0, NoteMode.List,
-            "\n[ ] ", true, "List mode first blank line creates its checkbox", 2, 4);
+            "\n- ", true, "List mode first blank line creates its bullet", 2, 2);
         ContinuationCase("head\n\nlast", 2, 0, NoteMode.List,
             "head\n\nlast", false, "List mode declines a later blank line");
 

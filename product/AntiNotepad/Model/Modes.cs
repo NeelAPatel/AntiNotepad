@@ -3,15 +3,19 @@ namespace AntiNotepad.Model;
 public enum NoteMode { Plain, Math, Code, List, Timer, Clipboard }
 
 /// <summary>A first-line keyword that switches a note into a mode (AntiNote's "contextual note modes").</summary>
-public sealed record ModeKeyword(string Word, NoteMode Mode, string Summary, string Example);
+public sealed record ModeKeyword(string Word, NoteMode Mode, string Summary, string Example, string? ListKind = null);
 
 public static class Modes
 {
     public static readonly ModeKeyword[] Keywords =
     [
         new("math", NoteMode.Math, "Live calculator: variables, units, %, totals", "rent = 1200\nrent / 3"),
-        new("list", NoteMode.List, "Checklist: every new line gets a checkbox", "[ ] milk"),
-        new("todo", NoteMode.List, "Same as list", "[ ] call back"),
+        new("list", NoteMode.List, "Your default: bullets", "- milk"),
+        new("todo", NoteMode.List, "Checkboxes", "[ ] call back", "check"),
+        new("checklist", NoteMode.List, "Checkboxes", "[ ] milk", "check"),
+        new("bullet", NoteMode.List, "Bullets", "- milk", "bullet"),
+        new("bulletlist", NoteMode.List, "Bullets", "- milk", "bullet"),
+        new("numberlist", NoteMode.List, "Numbers", "1. milk", "number"),
         new("timer", NoteMode.Timer, "Countdowns: one per line, Enter starts", "25m focus"),
         new("code", NoteMode.Code, "Syntax coloring: code py, code js, code cs …", "code py"),
         new("clipboard", NoteMode.Clipboard, "Collects everything you copy while it exists", "(copy something)"),
@@ -35,6 +39,14 @@ public static class Modes
         if (parts.Length == 2 && parts[0].Equals("code", StringComparison.OrdinalIgnoreCase) && !parts[1].Contains(' '))
             return (NoteMode.Code, first.TrimEnd().Length, parts[1].ToLowerInvariant());
         return (NoteMode.Plain, 0, null);
+    }
+
+    /// <summary>Resolves a list keyword against the configured default.</summary>
+    internal static string ListKindOf(string firstLine, string defaultKind)
+    {
+        var word = firstLine.Split('\n', 2)[0].Trim().TrimEnd(':');
+        var keyword = Keywords.FirstOrDefault(k => k.Mode == NoteMode.List && k.Word.Equals(word, StringComparison.OrdinalIgnoreCase));
+        return keyword?.ListKind ?? (defaultKind is "check" or "number" ? defaultKind : "bullet");
     }
 
     public static string Label(NoteMode mode, string? argument) => mode switch

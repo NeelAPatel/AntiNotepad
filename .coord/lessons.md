@@ -28,6 +28,7 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 | 2026-11-19 | A32-selection-convert-menu | Check | process | item chat | codex-review | format failure got past Codex review; brief should have run dotnet format first | - |
 | 2026-11-19 | A29-shortcut-map | Build run 1 | env | gate, run overlap | brief | Codex worker run 1 timed out on a hung selftest (gate and run overlapped) and wrote no report | - |
 | 2026-11-19 | A29-shortcut-map | Hand test | plan | user | lab | lab export kept Ctrl+Enter as a default and the Help row icon was off; the user wanted no default key | - |
+| 2026-11-20 | A31-list-default-type | Check | code | gate | brief | gate Scope and Format failed on the card; lesson: one path per Files bullet | - |
 
 ## Scores
 One row per merged item: what each check found. Empty rows on items that later had misses mean the reviewer is not earning its run.
@@ -36,6 +37,7 @@ One row per merged item: what each check found. Empty rows on items that later h
 |---|---|---|---|---|---|---|---|---|
 | 2026-11-19 | Loop16-poteto-trigger | Medium | 1 | 0 | 2 | - | 0 | - |
 | 2026-11-19 | A29-shortcut-map | Medium | 4 | 0 | 5 | - | 2 | - |
+| 2026-11-20 | A31-list-default-type | Medium | 1 | 1 | 0 | - | 0 | - |
 | 2026-11-19 | A32-selection-convert-menu | Medium | 4 | 1 | 1 | - | 0 | - |
 | 2026-11-19 | Loop17-chat-title-selfheal | Medium | 1 | 0 | 2 | - | 0 | - |
 | 2026-11-19 | Loop20-codex-labs-and-scout | Medium | 0 | 0 | 0 | - | 0 | - |

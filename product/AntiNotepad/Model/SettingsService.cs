@@ -98,6 +98,7 @@ internal sealed class SettingsService
                     && string.Equals(pair.Value, value, StringComparison.Ordinal))),
         new(nameof(Settings.FreshNoteAfterMinutes), Appearance | SettingsChangeFlags.WindowPolicy | Persistence, s => s.FreshNoteAfterMinutes),
         new(nameof(Settings.SaveDelayMs), Persistence, s => s.SaveDelayMs),
+        new(nameof(Settings.ListDefault), Persistence, s => s.ListDefault),
         new(nameof(Settings.HideOnBlur), Appearance | SettingsChangeFlags.WindowPolicy | Persistence, s => s.HideOnBlur),
         new(nameof(Settings.DimWhenPinned), Appearance | SettingsChangeFlags.WindowPolicy | Persistence, s => s.DimWhenPinned),
         new(nameof(Settings.OpenAt), Appearance | SettingsChangeFlags.WindowPolicy | Persistence, s => s.OpenAt),

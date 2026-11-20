@@ -76,10 +76,18 @@ internal static class Completion
         if (line.LineNumber == 1 && before.Trim().Length == 1 && line.EndOffset == area.Caret.Offset && doc.LineCount == 1 && char.IsLetter(typed[0]))
         {
             var items = Modes.Keywords.Where(k => k.Word.StartsWith(before.Trim(), StringComparison.OrdinalIgnoreCase))
-                .Select(k => (ICompletionData)new Item(k.Word, k.Summary, pad, null, k.Mode == NoteMode.Code ? "code py" : k.Word)).ToList();
+                .Select(k => (ICompletionData)new Item(k.Word, k.Word == "list" ? $"Your default: {ListDefaultName(pad.Settings.ListDefault)}" : k.Summary, pad, null, k.Mode == NoteMode.Code ? "code py" : k.Word)).ToList();
             if (items.Count > 0) Show(pad, line.Offset, items);
         }
     }
+
+    /// <summary>Names the configured list style in the keyword popup.</summary>
+    internal static string ListDefaultName(string kind) => kind switch
+    {
+        "check" => "checkboxes",
+        "number" => "numbers",
+        _ => "bullets"
+    };
 
     private static void Show(PadView pad, int start, IEnumerable<ICompletionData> items)
     {
@@ -149,7 +157,8 @@ internal static class Completion
                 // Enter on a mode keyword means "that's my line 1": accept it and start line 2.
                 var newline = args is Avalonia.Input.KeyEventArgs { Key: Avalonia.Input.Key.Enter } ? "\n" : "";
                 area.Document.Replace(segment, (insert ?? text) + newline);
-                if (newline.Length > 0 && text is "list" or "todo") area.Document.Insert(area.Caret.Offset, "[ ] ");
+                if (newline.Length > 0 && Modes.Detect(text).Mode == NoteMode.List)
+                    area.Document.Insert(area.Caret.Offset, ListEditing.Marker(ListEditing.KindOf(Modes.ListKindOf(text, pad.Settings.ListDefault))));
                 return;
             }
             area.Document.Replace(segment, "");
