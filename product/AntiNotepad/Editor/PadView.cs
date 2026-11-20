@@ -845,7 +845,7 @@ internal sealed class PadView : Grid
             bool continued;
             using (Editor.Document.RunUpdate())
             {
-                continued = DocumentCommands.ContinueList(Editor.Document, CaretLine, Mode, Insert);
+                continued = DocumentCommands.ContinueList(Editor.Document, CaretLine, Mode, Insert, Settings.ListDefault);
                 if (continued) DocumentCommands.Renumber(Editor.Document, CaretLine);
             }
             if (continued) { e.Handled = true; return; }

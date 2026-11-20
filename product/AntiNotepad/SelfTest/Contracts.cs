@@ -190,6 +190,12 @@ internal static partial class SelfTest
                 () => RunExistingCheck(AvaloniaEditForkChecks, "AvaloniaEdit fork: "),
                 null),
             new(
+                "list-default-kind",
+                "The list keyword follows ListDefault; todo always creates checkboxes.",
+                "A31-list-default-type",
+                () => RunExistingCheck(ListEditingChecks, "list defaults: "),
+                "Dev copy: change New list lines, try list and each direct keyword, and check the popup default text."),
+            new(
                 "list-tab-text-start",
                 "Tab changes list level only at text start; Ctrl+[ / Ctrl+] changes list levels from anywhere, including selected list lines.",
                 "A26-tab-at-text-start",

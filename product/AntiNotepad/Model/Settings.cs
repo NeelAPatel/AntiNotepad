@@ -34,6 +34,12 @@ public sealed class Settings
         get => _saveDelayMs;
         set => _saveDelayMs = SaveDelayChoicesMs.Contains(value) ? value : ChromeTokens.SaveDelayDefaultMs;
     }
+    private string _listDefault = "bullet";
+    public string ListDefault
+    {
+        get => _listDefault;
+        set => _listDefault = value is "check" or "number" ? value : "bullet";
+    }
     public bool HideOnBlur { get; set; }
     public bool DimWhenPinned { get; set; } = true;     // a pinned pad fades back while you work elsewhere
     public string? Accent { get; set; }                   // theme maker: null = palette default

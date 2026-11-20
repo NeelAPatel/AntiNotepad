@@ -73,11 +73,12 @@ internal static class DocumentCommands
     internal static bool IsListLine(TextDocument document, int lineNumber)
         => TryGetLine(document, lineNumber, out var line) && ListEditing.IsListLine(document.GetText(line));
 
-    internal static bool ContinueList(TextDocument document, int lineNumber, NoteMode mode, Action<string> insertAtCaret)
+    internal static bool ContinueList(TextDocument document, int lineNumber, NoteMode mode, Action<string> insertAtCaret, string listDefault = "bullet")
     {
         if (!TryGetLine(document, lineNumber, out var line)) return false;
 
-        var continuation = ListEditing.Continue(document.GetText(line), lineNumber, mode);
+        var continuation = ListEditing.Continue(document.GetText(line), lineNumber, mode,
+            ListEditing.KindOf(Modes.ListKindOf(document.GetText(document.GetLineByNumber(1)), listDefault)));
         switch (continuation.Kind)
         {
             case ListEditing.ContinuationKind.InsertAtCaret:

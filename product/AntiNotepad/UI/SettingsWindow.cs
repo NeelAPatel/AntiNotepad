@@ -440,6 +440,8 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Group("Writing aids"));
         var enabled = Editor.CodeColors.Languages.Count(l => !S.DisabledLanguages.Contains(l.Id));
         page.Children.Add(Card([
+            Row(null, "New list lines", "What the list keyword makes",
+                () => Seg([("bullet", "Bullets"), ("check", "Checkboxes"), ("number", "Numbers")], S.ListDefault, v => Set(() => S.ListDefault = v))),
             Row(() => Fl(0xf20a), "Answers", "Lines ending in = show their result", () => Toggle(S.InlineMath, v => Set(() => S.InlineMath = v), "Answers")),
             Row(null, "Answer position", null,
                 () => Dropdown([("column", "One column"), ("edge", "Right edge")], S.Bubbles, v => Set(() => S.Bubbles = v))),
