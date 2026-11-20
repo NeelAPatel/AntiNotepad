@@ -6,8 +6,8 @@ The configurable table lives in `product/AntiNotepad/UI/Shortcuts.cs`. The Setti
 | Action | Section | Scope | Default |
 |---|---|---|---|
 | New note | Notes | Pad | Ctrl+N |
-| Next note | Notes | Pad | Alt+Right |
-| Previous note | Notes | Pad | Alt+Left |
+| Next note (next slot in slots) | Notes | Pad | Alt+Right |
+| Previous note (previous slot in slots) | Notes | Pad | Alt+Left |
 | Next note (alias) | Notes | Pad | Unassigned (bindable) |
 | Previous note (alias) | Notes | Pad | Unassigned (bindable) |
 | First note | Notes | Pad | Unassigned (bindable) |

@@ -174,7 +174,8 @@ internal sealed partial class PadWindow
         _floatPager.PlacementTarget = root;
         _bottomLayer.RenderTransform = new TranslateTransform();
         _barsSleep.Tick += (_, _) => BarsSleepTick();
-        _bar.PointerExited += (_, _) => { if (Sliding) { _barsSleep.Stop(); _barsSleep.Start(); } };
+        _bar.PointerExited += (_, _) => { if (Sliding) { _barsSleep.Stop(); _barsSleep.Start(); } else SleepChrome(soon: true); };
+        _top.PointerExited += (_, _) => { if (!Sliding) SleepChrome(soon: true); };
         // UI scale: one layout transform over everything, so chrome, text and hit targets scale together.
         _scaler.Child = root;
         Content = _scaler;
@@ -615,12 +616,16 @@ internal sealed partial class PadWindow
         if (!hold && Settings.Chrome == "fade") { _chromeSleep.Interval = TimeSpan.FromMilliseconds(Math.Max(300, Settings.FadeAfterMs)); _chromeSleep.Start(); }
     }
 
-    private void SleepChrome(bool soon)
+    private void SleepChrome(bool soon, bool typing = false)
     {
         // Sliding styles: the pointer may have left for the drag area or the floating pager; let the tick decide.
         if (Sliding) { if (soon) { _barsSleep.Stop(); _barsSleep.Start(); } return; }
         if (Settings.Chrome != "fade" || _overlayOpen) return;
-        if (_bar.IsPointerOver || _top.IsPointerOver) { if (soon) return; }
+        if (!typing && (_bar.IsPointerOver || _top.IsPointerOver))
+        {
+            WakeChrome(hold: false);
+            return;
+        }
         if (soon) { _chromeSleep.Stop(); _chromeSleep.Start(); return; }
         if (!_chromeAwake) return;
         _chromeAwake = false;

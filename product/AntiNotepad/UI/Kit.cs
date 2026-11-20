@@ -8,6 +8,7 @@ using Avalonia.Media.Immutable;
 using Avalonia.Styling;
 using AntiNotepad;
 using AntiNotepad.Theme;
+using AntiNotepad.Motion;
 
 namespace AntiNotepad.UI;
 
@@ -112,11 +113,16 @@ internal static class Kit
             button.GotFocus += (_, _) => Refresh();
             button.LostFocus += (_, _) => Refresh();
         }
+        Anim.Handle? enabledFade = null;
         if (button.Content is Border iconFace)
             button.PropertyChanged += (_, e) =>
             {
                 if (e.Property != InputElement.IsEnabledProperty) return;
-                iconFace.Opacity = button.IsEnabled ? 1 : Paint.DisabledIcon;
+                enabledFade?.Cancel();
+                var from = iconFace.Opacity;
+                var to = button.IsEnabled ? 1 : Paint.DisabledIcon;
+                if (!button.IsEffectivelyVisible) iconFace.Opacity = to;
+                else enabledFade = Anim.Run(iconFace, MotionTokens.PillFade, t => iconFace.Opacity = from + (to - from) * t);
                 if (!button.IsEnabled) iconFace.Background = Brushes.Transparent;
             };
         button.Click += (_, _) => click();

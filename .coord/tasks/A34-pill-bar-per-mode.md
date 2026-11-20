@@ -71,6 +71,7 @@ Build note: model the bottom bar as three named containers (left, center, right)
 - `product/AntiNotepad/UI/PadWindow.Bar.cs`
 - `product/AntiNotepad/UI/PadBar.cs`
 - `product/AntiNotepad/UI/PadWindow.Navigation.cs`
+- `product/AntiNotepad/UI/PadWindow.cs` (typing keeps its existing immediate chrome fade)
 - `product/AntiNotepad/UI/PadWindow.Keys.cs`
 - `product/AntiNotepad/UI/PadWindow.TopBlur.cs`
 - `product/AntiNotepad/UI/Shortcuts.cs`
@@ -81,6 +82,7 @@ Build note: model the bottom bar as three named containers (left, center, right)
 - `product/AntiNotepad/Model/Settings.cs`
 - `product/AntiNotepad/SelfTest/UI.cs`
 - `product/AntiNotepad/SelfTest/Bar.cs`
+- `product/AntiNotepad/SelfTest/Contracts.cs` (rework regression promises)
 - `product/AntiNotepad/SelfTest/Design.cs`
 - `docs/shortcuts.md`
 - `AGENTS.md`

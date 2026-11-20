@@ -77,7 +77,16 @@ internal sealed partial class PadWindow
     internal void Navigate(int direction)
     {
         if (_active == _right) { CycleSplitSlot(direction); return; }
-        if (Data.ViewSlot > 0) { ShowStack(); return; }
+        if (Data.ViewSlot > 0)
+        {
+            _left.Flush();
+            var next = Data.ViewSlot;
+            do { next = (next - 1 + direction + 9) % 9 + 1; } while (Settings.Split && next == Settings.SplitSlot);
+            Data.ViewSlot = _lastSlot = next;
+            BindPanes(direction);
+            SleepChrome(soon: false);
+            return;
+        }
         _left.Flush();
         var leaving = Data.Stack[Data.Current];
         var target = Data.Current + direction;

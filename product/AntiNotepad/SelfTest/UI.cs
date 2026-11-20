@@ -111,6 +111,7 @@ internal static partial class SelfTest
             Expect(!bar.IsHitTestVisible, "faded bar does not receive input");
             fade.Invoke(pad, [1.0]);
             Expect(bar.IsHitTestVisible, "visible bar receives input");
+            Expect(BarInteractionChecks(pad, settings.Current, out var barReport), barReport);
             report = failures.Count == 0 ? "ring and pin chrome visibility" : string.Join("; ", failures);
             return failures.Count == 0;
         }

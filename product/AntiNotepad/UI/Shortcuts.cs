@@ -29,8 +29,8 @@ internal sealed class ShortcutMap
     private static readonly ShortcutDefinition[] Table =
     [
         new("new-note", "New note", "Notes", ShortcutScope.Pad, ShortcutAction.NewNote, "Ctrl+N", "Create a note."),
-        new("next-note", "Next note", "Notes", ShortcutScope.Pad, ShortcutAction.NextNote, "Alt+Right", "Move to the next note; at the end, create a note."),
-        new("previous-note", "Previous note", "Notes", ShortcutScope.Pad, ShortcutAction.PreviousNote, "Alt+Left", "Move to the previous note."),
+        new("next-note", "Next note (next slot in slots)", "Notes", ShortcutScope.Pad, ShortcutAction.NextNote, "Alt+Right", "Move to the next note; at the end, create a note. In a slot, move to the next slot."),
+        new("previous-note", "Previous note (previous slot in slots)", "Notes", ShortcutScope.Pad, ShortcutAction.PreviousNote, "Alt+Left", "Move to the previous note. In a slot, move to the previous slot."),
         new("next-alias", "Next note (alias)", "Notes", ShortcutScope.Pad, ShortcutAction.NextAlias, "", "Another key for the next note."),
         new("previous-alias", "Previous note (alias)", "Notes", ShortcutScope.Pad, ShortcutAction.PreviousAlias, "", "Another key for the previous note."),
         new("first-note", "First note", "Notes", ShortcutScope.Pad, ShortcutAction.FirstNote, "", "Open the oldest note in the stack."),
