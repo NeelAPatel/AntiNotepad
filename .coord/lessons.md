@@ -38,6 +38,7 @@ One row per merged item: what each check found. Empty rows on items that later h
 | 2026-11-19 | Loop16-poteto-trigger | Medium | 1 | 0 | 2 | - | 0 | - |
 | 2026-11-19 | A29-shortcut-map | Medium | 4 | 0 | 5 | - | 2 | - |
 | 2026-11-20 | A31-list-default-type | Medium | 1 | 1 | 0 | - | 0 | - |
+| 2026-11-20 | A33-help-toggle-f1 | Low | 0 | 0 | 0 | - | 0 | - |
 | 2026-11-19 | A32-selection-convert-menu | Medium | 4 | 1 | 1 | - | 0 | - |
 | 2026-11-19 | Loop17-chat-title-selfheal | Medium | 1 | 0 | 2 | - | 0 | - |
 | 2026-11-19 | Loop20-codex-labs-and-scout | Medium | 0 | 0 | 0 | - | 0 | - |

@@ -403,6 +403,15 @@ internal static partial class SelfTest
             keyDown.Invoke(pad, [null, reopenHelp]);
             overlay = typeof(UI.PadWindow).GetField("_overlay", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(pad);
             Expect(reopenHelp.Handled && overlay is UI.HelpOverlay, "F1 reopens Help after closing it");
+            var closeForSearch = new Avalonia.Input.KeyEventArgs { Key = Avalonia.Input.Key.F1, KeyModifiers = Avalonia.Input.KeyModifiers.None };
+            keyDown.Invoke(pad, [null, closeForSearch]);
+            pad.OpenSearch();
+            overlay = typeof(UI.PadWindow).GetField("_overlay", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(pad);
+            Expect(overlay is UI.SearchOverlay, "Search opens for the Help swap check");
+            var swapHelp = new Avalonia.Input.KeyEventArgs { Key = Avalonia.Input.Key.F1, KeyModifiers = Avalonia.Input.KeyModifiers.None };
+            keyDown.Invoke(pad, [null, swapHelp]);
+            overlay = typeof(UI.PadWindow).GetField("_overlay", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(pad);
+            Expect(swapHelp.Handled && overlay is UI.HelpOverlay, "F1 with Search open swaps in Help");
 
             padSettings.Update(settings => settings.ShortcutOverrides["help"] = "Ctrl+H");
             var closeBoundHelp = new Avalonia.Input.KeyEventArgs { Key = Avalonia.Input.Key.H, KeyModifiers = KeyModifiers.Control };
