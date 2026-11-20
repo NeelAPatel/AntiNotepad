@@ -293,7 +293,7 @@ internal sealed partial class PadWindow
     {
         Dispatcher.UIThread.Post(() =>
         {
-            if (!_floatPager.IsOpen || TopLevel.GetTopLevel(_pill) is not { } popup
+            if (!_floatPager.IsOpen || TopLevel.GetTopLevel(_bar) is not { } popup
                 || ReferenceEquals(popup, this) || popup is Window) return;
             popup.RequestedThemeVariant = RequestedThemeVariant;
             popup.TransparencyLevelHint = [WindowTransparencyLevel.Transparent];

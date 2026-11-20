@@ -96,6 +96,7 @@ internal sealed partial class PadWindow
             case ShortcutAction.OpenSlot: OpenSlot(ShortcutDigit(key)); break;
             case ShortcutAction.KeepSlot: PromoteToSlot(ShortcutDigit(key)); break;
             case ShortcutAction.Stack: ShowStack(); break;
+            case ShortcutAction.SwapView: SwapView(); break;
             case ShortcutAction.Split: ToggleSplit(); break;
             case ShortcutAction.KeepOnTop: TogglePin(); break;
             case ShortcutAction.TextSizeUp: Zoom(1); break;
@@ -139,7 +140,7 @@ internal sealed partial class PadWindow
         _overlayHost.IsVisible = true;
         UpdateOverlayLayout();
         _panes.Opacity = 0.0;
-        _pill.IsVisible = false;
+        _bar.IsVisible = false;
         WakeChrome(hold: true);
         var shift = new TranslateTransform();
         _overlayHost.RenderTransform = shift;
@@ -164,7 +165,7 @@ internal sealed partial class PadWindow
         _overlayHost.IsHitTestVisible = false;
         UpdateOverlayLayout();
         _panes.Opacity = 1;
-        _pill.IsVisible = true;
+        _bar.IsVisible = true;
         UpdateChrome();
         FocusActive();
         var startOpacity = _overlayHost.Opacity;

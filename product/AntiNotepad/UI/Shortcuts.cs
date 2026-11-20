@@ -10,7 +10,7 @@ internal enum ShortcutAction
 {
     None, NewNote, NextNote, PreviousNote, NextAlias, PreviousAlias, FirstNote, LatestNote,
     MoveEarlier, MoveLater, DeleteNote, Search, SearchAliasP, SearchAliasK, Settings, Help,
-    OpenSlot, KeepSlot, Stack, Split, KeepOnTop, TextSizeUp, TextSizeDown, CopyNote, Ocr, Quit,
+    OpenSlot, KeepSlot, Stack, SwapView, Split, KeepOnTop, TextSizeUp, TextSizeDown, CopyNote, Ocr, Quit,
     ToggleCheckbox, Fold, Unfold, Grid, Trash,
 }
 
@@ -46,6 +46,7 @@ internal sealed class ShortcutMap
         new("open-slot", "Open slot 1–9", "Slots", ShortcutScope.Pad, ShortcutAction.OpenSlot, "", "Open the numbered slot; use the same key again to return to the stack.", true),
         new("keep-slot", "Keep note in slot 1–9", "Slots", ShortcutScope.Pad, ShortcutAction.KeepSlot, "", "Move the current note into the numbered slot.", true),
         new("stack", "Back to the stack", "Slots", ShortcutScope.Pad, ShortcutAction.Stack, "", "Return from a slot to the note stack."),
+        new("swap-view", "Swap stack and slots", "Slots", ShortcutScope.Pad, ShortcutAction.SwapView, "", "Switch between the stack and slots."),
         new("split", "Split view", "Slots", ShortcutScope.Pad, ShortcutAction.Split, "Ctrl+\\", "Show a slot beside the current note."),
         new("keep-on-top", "Keep on top", "Window", ShortcutScope.Pad, ShortcutAction.KeepOnTop, "Ctrl+T", "Keep the pad above other windows."),
         new("text-size-up", "Text size up", "Writing", ShortcutScope.Pad, ShortcutAction.TextSizeUp, "Ctrl++", "Increase note text size."),

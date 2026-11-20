@@ -1,3 +1,4 @@
+// Shared controls and glyphs for palette-aware application chrome.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -15,7 +16,7 @@ internal static class Glyph
 {
     public const string Search = "", Pin = "", PinFilled = "", Settings = "", Close = "",
         Split = "", Delete = "", Back = "", Forward = "", Grid = "",
-        List = "", Restore = "", Hide = "";
+        List = "", Add = "", Restore = "", Hide = "";
     public static readonly FontFamily Font = new("Segoe Fluent Icons, Segoe MDL2 Assets");
     /// <summary>The bundled Fluent UI System Icons font (named icons; regular weight, drawn at 20 px).</summary>
     public static readonly FontFamily Fluent = new($"{AppInfo.ResourceUri}Assets/Fonts#FluentSystemIcons-Regular");
@@ -87,7 +88,7 @@ internal sealed class GlyphIcon(string glyph, Color color, double size = Typogra
 /// <summary>Small hand-built controls so the chrome follows the palette exactly (no Fluent theme chrome).</summary>
 internal static class Kit
 {
-    public static Button IconButton(string glyph, string name, Palette p, Action click, double size = ChromeTokens.ButtonSize, bool filled = false, Color? color = null, double radius = ChromeTokens.TopIconHoverRadius)
+    public static Button IconButton(string glyph, string name, Palette p, Action click, double size = ChromeTokens.ButtonSize, bool filled = false, Color? color = null, double radius = ChromeTokens.TopIconHoverRadius, Color? hoverColor = null)
     {
         var ink = color ?? p.Ink;
         Control icon = new GlyphIcon(glyph, ink, ChromeTokens.IconGlyphSize, 0) { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
@@ -100,6 +101,24 @@ internal static class Kit
                 Children = { new GlyphIcon(Glyph.PinFilled, Color.FromArgb(Paint.PinnedGlyphAlpha, ink.R, ink.G, ink.B), ChromeTokens.IconGlyphSize, 0), icon },
             };
         var button = Plain(icon, p, size, size, radius: radius);
+        if (hoverColor is { } highlight && button.Content is Border face)
+        {
+            var normal = icon;
+            var highlighted = new GlyphIcon(glyph, highlight, ChromeTokens.IconGlyphSize, ChromeTokens.PlainIconWeight) { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+            void Refresh() => face.Child = button.IsEnabled && (button.IsPointerOver || button.IsKeyboardFocusWithin) ? highlighted : normal;
+            button.PropertyChanged += (_, e) => { if (e.Property == InputElement.IsEnabledProperty) Refresh(); };
+            button.PointerEntered += (_, _) => Refresh();
+            button.PointerExited += (_, _) => Refresh();
+            button.GotFocus += (_, _) => Refresh();
+            button.LostFocus += (_, _) => Refresh();
+        }
+        if (button.Content is Border iconFace)
+            button.PropertyChanged += (_, e) =>
+            {
+                if (e.Property != InputElement.IsEnabledProperty) return;
+                iconFace.Opacity = button.IsEnabled ? 1 : Paint.DisabledIcon;
+                if (!button.IsEnabled) iconFace.Background = Brushes.Transparent;
+            };
         button.Click += (_, _) => click();
         Avalonia.Automation.AutomationProperties.SetName(button, name);
         ToolTip.SetTip(button, name);
@@ -120,10 +139,10 @@ internal static class Kit
             HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch,
         };
         button.Classes.Add("plain");
-        button.PointerEntered += (_, _) => border.Background = hover;
+        button.PointerEntered += (_, _) => { if (button.IsEnabled) border.Background = hover; };
         button.PointerExited += (_, _) => border.Background = Brushes.Transparent;
-        button.AddHandler(InputElement.PointerPressedEvent, (_, _) => border.Background = press, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
-        button.AddHandler(InputElement.PointerReleasedEvent, (_, _) => border.Background = hover, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
+        button.AddHandler(InputElement.PointerPressedEvent, (_, _) => { if (button.IsEnabled) border.Background = press; }, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
+        button.AddHandler(InputElement.PointerReleasedEvent, (_, _) => { if (button.IsEnabled) border.Background = hover; }, Avalonia.Interactivity.RoutingStrategies.Tunnel, true);
         return button;
     }
 

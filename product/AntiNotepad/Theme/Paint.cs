@@ -23,6 +23,7 @@ internal static class Paint
     public const double ResultCurrent = .9;
     public const double ResultSurface = .5;
     public const double Dimmed = .5;
+    public const double DisabledIcon = .5;
     public const double FocusBorder = .9;
     public const double RestBorder = .5;
     public const double ErrorHint = .8;

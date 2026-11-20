@@ -23,6 +23,7 @@ The configurable table lives in `product/AntiNotepad/UI/Shortcuts.cs`. The Setti
 | Open slot 1–9 | Slots | Pad | Unassigned (bindable) |
 | Keep note in slot 1–9 | Slots | Pad | Unassigned (bindable) |
 | Back to the stack | Slots | Pad | Unassigned (bindable) |
+| Swap stack and slots | Slots | Pad | Unassigned (bindable) |
 | Split view | Slots | Pad | Ctrl+\ |
 | Keep on top | Window | Pad | Ctrl+T |
 | Text size up | Writing | Pad | Ctrl++ |

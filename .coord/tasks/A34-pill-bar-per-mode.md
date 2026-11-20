@@ -69,6 +69,7 @@ Build note: model the bottom bar as three named containers (left, center, right)
 ## Files
 - `product/AntiNotepad/UI/PadWindow.Layout.cs`
 - `product/AntiNotepad/UI/PadWindow.Bar.cs`
+- `product/AntiNotepad/UI/PadBar.cs`
 - `product/AntiNotepad/UI/PadWindow.Navigation.cs`
 - `product/AntiNotepad/UI/PadWindow.Keys.cs`
 - `product/AntiNotepad/UI/PadWindow.TopBlur.cs`
@@ -76,6 +77,7 @@ Build note: model the bottom bar as three named containers (left, center, right)
 - `product/AntiNotepad/UI/Kit.cs`
 - `product/AntiNotepad/UI/SettingsWindow.cs`
 - `product/AntiNotepad/Theme/ChromeTokens.cs`
+- `product/AntiNotepad/Theme/Paint.cs`
 - `product/AntiNotepad/Model/Settings.cs`
 - `product/AntiNotepad/SelfTest/UI.cs`
 - `product/AntiNotepad/SelfTest/Bar.cs`
@@ -109,3 +111,21 @@ Content table (Standard / slot / split-right / toggles off / empty cases); conta
 
 ### Round note (manager, 2026-11-20)
 Run 1 stopped without changes because it asked about `PadWindow.TopBlur.cs`. It is now in `## Files` (edit it as needed for the popup blur that uses `_pill` as its visual). Do not stop to ask scope questions: every file you need is in `## Files`; `docs/glossary.md` is NOT in scope (the container terms live in code comments only). Implement the whole Plan, build, run selftests and the gate, then report.
+
+## Check
+Round: A34-pill-bar-per-mode (build), r1 (design snapshot), r9 (review rework). Reports: `.coord/reports/A34-pill-bar-per-mode.md`, `-r1.md`, `-r9.md`, `.review.md`, `.gate.md`.
+- **Gate:** PASS offline (build 0 warnings, selftest 36 of 37 contract rows pass and 1 manual, seam, tokens, format, scope, size). The online gate only failed on the NuGet vulnerability lookup (env, no network).
+- **Codex review:** `VERDICT: rework` with 1 major (disabled Delete and New note not dimmed), 2 minor (save-failure card shadow lost in Float and Quiet; missing summaries). Risks cleared by the reviewer with probes: toast shadow, live settings, reveal/fade/hit testing, Float widths and reserved corners, split view, Delete debounce, A30 untouched.
+- **Rework r9:** all three fixed (shared icon-button dimming at `Paint.DisabledIcon` 0.5, `PillShadow(p)` helper used by pill, toast and card, summaries and `Kit.cs` header); I reviewed the diff and re-diffed the design dump: only the Delete button face Opacity 0.5, once per palette (8), so I updated the pinned `DesignHash` (manager one-line fix).
+- **Bounds:** within plan: three containers, mode-specific pager, corner buttons (42 / 32 in Float), swap button first in `_icons`, `swap-view` shortcut, 3 settings, debounce, dot and count targets (32), split follows the active pane. Justified: `PadWindow.TopBlur.cs`, `SelfTest/Design.cs`, `Theme/Paint.cs` joined `## Files` (popup blur visual, pinned snapshot, disabled token). No change to save, Store, Note or shutdown code.
+- **Report format:** Codex's first report lacks Change list / Behavior changes / Plan deviations headings (r9 has them); not worth a round, noted.
+- **Misses:** (1) card had no `## Files` section, so approve.ps1 failed: found at Approve, cause plan, caught by tools/files-overlap.ps1, should have caught: card writer, lesson: add `## Files` bullets when writing the Plan. (2) Brief named `PadWindow.TopBlur.cs` outside Files; Codex run 1 stopped: cause plan, lesson: Files list is the brief's file list, check them against each other. (3) Codex edits could not be gate-formatted offline (a `dotnet format` whitespace line twice): cause code, lesson: run `dotnet format whitespace --include <file>` before reporting.
+- **Noticed:** none beyond the lab; `tools/playground/index.html` is the token playground, not a lab index (the earlier link edit was reverted).
+- **Not verified (hand test):** pointer reveal transitions, hover colors (red / accent), corner squares vs window corner radius, 320 px fit, Float popup and Overlay reveal, split view, light and dark.
+
+## Hand test
+User, 2026-11-20 (verbatim, first pass): Delete safety and Undo "works"; Standard view, corner hover colors and swap "works". Dimmed states: "the states between active and dim isn't animated. it just snaps between them." Toggle: "the toggle between standard and permanent notes is trippy. I click and then the toolbars fade out when it should just stay there. If im hovering over any of the buttons on the toolbars, they should stay visible." "Scrolling shouldn't kick me out of permanent notes. instead it should scroll among the slots of permanent notes." Split: "swap button shoudl change active pane. but only one instance of permanent can occur at a time. standard standard / standard permenant / permanent standard: 3 valid situations", "two bars should be shown and delete/new note should follow the active container".
+Triage: first three = code (r10 brief). Split items = scope change, proposed as its own lab-first item (right pane can show the stack, two bars, per-pane swap).
+
+## Plan addendum (user, 2026-11-20)
+User (verbatim): "separate item but we'll do the ground work of making this new bottom bar future proof as much as possible". Scope: after r10, a structure round (r11) with no visible change: the bottom bar becomes one `PadBar` object per pane (new `UI/PadBar.cs`) that owns its three named containers (left, center, right) and registers its controls as ordered items (Delete, pager bar, New note) so later items (split's second bar, status pill, bars-edge-reveal) add or move controls without restructuring. The bar reads nothing from `_active`: it gets a context record (pane view, other pane's slot, toggles, note state, palette, labels) and injected action callbacks. `PadWindow` holds a list of bars (one today), placement code (Docked, Overlay, Float) handles N bars, swap takes a pane argument. Pure refactor: same pixels and behavior; selftests prove the registry and context; the pinned design hash must stay unchanged. `UI/PadBar.cs` joins `## Files`.
