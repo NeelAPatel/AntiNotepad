@@ -145,3 +145,10 @@ User (verbatim, hand test round 2): "is there a mouse over animation for all the
 
 ## Hand test (round 2)
 User, 2026-11-20 (verbatim): "just letting you know, everything else still works" (chrome stays under the pointer, slot scrolling and wrapping, standard bar, hover colors, delete debounce and Undo, three bar styles, new settings, narrow window and themes, show/hide speed with an overlay). Open: dim animation and the new hover fade (r13) not yet re-tested.
+
+## Hand test (round 3)
+User, 2026-11-20 (verbatim): "This is perfect! great work." Covers the r13 hover fade and the dim fade re-test. Result: pass.
+
+## Check (round r13)
+- **Gate:** PASS offline at `0a32edf` (41 contract rows, 40 pass, 1 manual; pinned design hash unchanged).
+- **Bounds:** within the Plan addendum 2; `Motion/MotionTokens.cs` and `Theme/Paint.cs` were in Files.
