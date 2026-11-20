@@ -61,6 +61,9 @@ public sealed class Settings
     public string Chrome { get; set; } = "fade";           // fade | always
     public int FadeAfterMs { get; set; } = 1600;          // how long the controls stay after the mouse stops
     public string Bars { get; set; } = "docked";          // docked (top bar row, pager below the text) | overlay (both slide in over the note at the edges)
+    public bool ShowDeleteButton { get; set; } = true;
+    public bool ShowNewNoteButton { get; set; } = true;
+    public string SlotDots { get; set; } = "pill";
     public bool EdgeFade { get; set; } = true;            // text fades into the top/bottom edge where there is more to scroll
     public bool MenuActionRow { get; set; } = true;
     public bool MenuColorIcons { get; set; }

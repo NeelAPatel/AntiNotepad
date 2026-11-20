@@ -19,6 +19,7 @@ internal static partial class SelfTest
         var saveAndLog = Memoize(() => RunExistingCheck(BackgroundSaveAndLogChecks, "background save and log: "));
         var saveDelayUi = Memoize(() => RunExistingCheck(SaveDelayChecks, "save delay UI: "));
         var savedLabelClock = Memoize(() => RunExistingCheck(SavedLabelChecks, "saved label clock: "));
+        var barInteraction = Memoize(() => RunExistingCheck(PinRingChecks, "bar interaction: "));
         ContractRow[] rows =
         [
             new(
@@ -232,6 +233,14 @@ internal static partial class SelfTest
                 () => RunExistingCheck(ListCommandsChecks, "convert to list: "),
                 "Dev copy: select mixed lines with a blank, convert to each list kind and undo once; check submenu pointer and keyboard navigation."),
             // Keep these final: both checks initialize shared Avalonia state and construct a PadWindow.
+            new("icon-disabled-fade", "Icon buttons settle at the disabled opacity and restore full opacity.",
+                "A34-pill-bar-per-mode-r10", barInteraction, "Dev copy: enabled state fades in both directions."),
+            new("chrome-pointer-hold", "Docked fading chrome stays visible under the bar or top row, including after swap.",
+                "A34-pill-bar-per-mode-r10", barInteraction, "Dev copy: click swap while hovering and move away."),
+            new("slot-navigation-cycle", "Navigation cycles slots, wraps and skips the other pane; stack and swap remain available.",
+                "A34-pill-bar-per-mode-r10", barInteraction, "Dev copy: wheel, swipe and shortcuts cycle slots."),
+            new("stack-bar-lazy-slot-titles", "Stack bar snapshots and rebuilds do not resolve slot titles; slot tooltips show titles for filled slots.",
+                "A34-pill-bar-per-mode-r12", () => RunExistingCheck(BarChecks, "bar: "), null),
             new(
                 "pinned-accent-ring",
                 "Pinned window shows the accent ring; pin changes leave chrome visibility unchanged.",

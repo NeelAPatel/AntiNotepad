@@ -29,6 +29,12 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 | 2026-11-19 | A29-shortcut-map | Build run 1 | env | gate, run overlap | brief | Codex worker run 1 timed out on a hung selftest (gate and run overlapped) and wrote no report | - |
 | 2026-11-19 | A29-shortcut-map | Hand test | plan | user | lab | lab export kept Ctrl+Enter as a default and the Help row icon was off; the user wanted no default key | - |
 | 2026-11-20 | A31-list-default-type | Check | code | gate | brief | gate Scope and Format failed on the card; lesson: one path per Files bullet | - |
+| 2026-11-20 | A34-pill-bar-per-mode | Approve | plan | files-overlap tool | card writer | card had no `## Files` section so approve.ps1 failed; add Files bullets when writing the Plan | - |
+| 2026-11-20 | A34-pill-bar-per-mode | Build | plan | Codex run 1 stopped | card writer | brief named a file outside Files; check the Files list against the brief | - |
+| 2026-11-20 | A34-pill-bar-per-mode | Gate | code | gate Format | brief | Codex edits could not be gate-formatted offline; run `dotnet format whitespace --include <file>` before reporting | - |
+| 2026-11-20 | A34-pill-bar-per-mode | Build r11 | plan | item chat | plan | r11 on terra produced no changes twice for a large refactor; a refactor over 4 files with shared state starts on `worker` | - |
+| 2026-11-20 | A34-pill-bar-per-mode | Check | brief | codex-review | brief | brief did not forbid eager data reads on the hide path; briefs for chrome code state no new work on the show/hide path | - |
+| 2026-11-20 | A34-pill-bar-per-mode | Merge | env | merge-preflight | - | per-commit selftest failed once then passed on retry (flaky); design-hash updates sat in later commits and were folded into the first bar commit | - |
 
 ## Scores
 One row per merged item: what each check found. Empty rows on items that later had misses mean the reviewer is not earning its run.
@@ -39,6 +45,7 @@ One row per merged item: what each check found. Empty rows on items that later h
 | 2026-11-19 | A29-shortcut-map | Medium | 4 | 0 | 5 | - | 2 | - |
 | 2026-11-20 | A31-list-default-type | Medium | 1 | 1 | 0 | - | 0 | - |
 | 2026-11-20 | A33-help-toggle-f1 | Low | 0 | 0 | 0 | - | 0 | - |
+| 2026-11-20 | A34-pill-bar-per-mode | Medium | 4 | 2 | 4 | - | 4 | - |
 | 2026-11-19 | A32-selection-convert-menu | Medium | 4 | 1 | 1 | - | 0 | - |
 | 2026-11-19 | Loop17-chat-title-selfheal | Medium | 1 | 0 | 2 | - | 0 | - |
 | 2026-11-19 | Loop20-codex-labs-and-scout | Medium | 0 | 0 | 0 | - | 0 | - |

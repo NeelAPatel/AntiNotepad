@@ -409,7 +409,7 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         if (note is null) ScheduleDataSave();
         else ScheduleNoteSave(note, note.IsEmpty);
         UpdateChrome();
-        if (sleepChrome) SleepChrome(soon: false);
+        if (sleepChrome) SleepChrome(soon: false, typing: true);
     }
 
     private void ScheduleDataSave()

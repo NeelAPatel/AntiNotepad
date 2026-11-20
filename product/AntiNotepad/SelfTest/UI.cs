@@ -40,6 +40,7 @@ internal static partial class SelfTest
         var failures = new List<string>();
         void Expect(bool ok, string name) { if (!ok) failures.Add(name); }
         Expect(MotionCurveChecks(out _), "Windows motion curves");
+        Expect(BarChecks(out _), "bottom bar content and settings");
         var folder = Path.Combine(Path.GetTempPath(), "AntiNotepad-ring-" + Guid.NewGuid().ToString("N"));
         using var log = new RuntimeLog();
         var reduced = Anim.Reduced;
@@ -73,25 +74,45 @@ internal static partial class SelfTest
             settings.Current.Chrome = "fade";
             settings.Changed += pad.HandleSettingsChanged;
             var icons = (Control)typeof(UI.PadWindow).GetField("_icons", fields)!.GetValue(pad)!;
-            var pill = (Control)typeof(UI.PadWindow).GetField("_pill", fields)!.GetValue(pad)!;
+            var padBar = ((List<UI.PadBar>)typeof(UI.PadWindow).GetField("_bars", fields)!.GetValue(pad)!)[0];
+            var chromeBar = padBar.Root;
             var awake = typeof(UI.PadWindow).GetField("_chromeAwake", fields)!;
             var iconsOpacity = icons.Opacity;
-            var pillOpacity = pill.Opacity;
+            var pillOpacity = chromeBar.Opacity;
             settings.Update(s => s.Pinned = true);
             settings.Update(s => s.DimWhenPinned = !s.DimWhenPinned);
-            Expect((bool)awake.GetValue(pad)! && icons.Opacity == iconsOpacity && pill.Opacity == pillOpacity,
+            Expect((bool)awake.GetValue(pad)! && icons.Opacity == iconsOpacity && chromeBar.Opacity == pillOpacity,
                 "pin settings preserve awake chrome");
             var keyDown = typeof(UI.PadWindow).GetMethod("OnWindowKeyDown", fields)!;
             keyDown.Invoke(pad, [null, new KeyEventArgs { Key = Key.T, KeyModifiers = KeyModifiers.Control }]);
-            Expect((bool)awake.GetValue(pad)! && icons.Opacity == iconsOpacity && pill.Opacity == pillOpacity,
+            Expect((bool)awake.GetValue(pad)! && icons.Opacity == iconsOpacity && chromeBar.Opacity == pillOpacity,
                 "pin shortcut preserves awake chrome");
             typeof(UI.PadWindow).GetMethod("Edited", fields)!.Invoke(pad, [null, true]);
             Expect(!(bool)awake.GetValue(pad)!, "normal edit sleeps chrome");
             iconsOpacity = icons.Opacity;
-            pillOpacity = pill.Opacity;
+            pillOpacity = chromeBar.Opacity;
             settings.Update(s => { s.Pinned = !s.Pinned; s.DimWhenPinned = !s.DimWhenPinned; });
-            Expect(!(bool)awake.GetValue(pad)! && icons.Opacity == iconsOpacity && pill.Opacity == pillOpacity,
+            Expect(!(bool)awake.GetValue(pad)! && icons.Opacity == iconsOpacity && chromeBar.Opacity == pillOpacity,
                 "pin settings preserve sleeping chrome");
+            var bar = padBar.Root;
+            var barLeft = padBar.Containers[0];
+            var barCenter = padBar.Containers[1];
+            var barRight = padBar.Containers[2];
+            var bottomLayer = (Panel)typeof(UI.PadWindow).GetField("_bottomLayer", fields)!.GetValue(pad)!;
+            var popup = (Avalonia.Controls.Primitives.Popup)typeof(UI.PadWindow).GetField("_floatPager", fields)!.GetValue(pad)!;
+            Expect(barLeft.Child is Button && barCenter.Child is Border && barRight.Child is Button, "three bar containers");
+            settings.Update(s => s.Bars = "overlay");
+            Expect(ReferenceEquals(bar.Parent, bottomLayer), "overlay bar parent");
+            settings.Update(s => s.Bars = "float");
+            Expect(ReferenceEquals(popup.Child, bar), "floating bar parent");
+            settings.Update(s => s.Bars = "docked");
+            Expect(bar.Parent is Panel && !ReferenceEquals(bar.Parent, bottomLayer), "docked bar parent");
+            var fade = typeof(UI.PadWindow).GetMethod("FadeChrome", fields)!;
+            fade.Invoke(pad, [0.0]);
+            Expect(!bar.IsHitTestVisible, "faded bar does not receive input");
+            fade.Invoke(pad, [1.0]);
+            Expect(bar.IsHitTestVisible, "visible bar receives input");
+            Expect(BarInteractionChecks(pad, settings.Current, out var barReport), barReport);
             report = failures.Count == 0 ? "ring and pin chrome visibility" : string.Join("; ", failures);
             return failures.Count == 0;
         }
@@ -538,7 +559,7 @@ internal static partial class SelfTest
         service.Replace(replacement);
         Expect(ReferenceEquals(service.Current, replacement), "Replace changes Current identity");
         Expect(first.Count == countBeforeReplace + 1 && first[^1].Flags == SettingsChangeFlags.All
-            && first[^1].Properties.Count == 59, "Replace emits all flags once");
+            && first[^1].Properties.Count == 62, "Replace emits all flags once");
 
         var appearanceBeforeSplit = appearanceCalls;
         var countBeforeSplit = first.Count;
@@ -672,7 +693,7 @@ internal static partial class SelfTest
             var savedLabel = (TextBlock)typeof(UI.PadWindow).GetField("_saved", fields)!.GetValue(pad)!;
             var topLayer = (Panel)typeof(UI.PadWindow).GetField("_topLayer", fields)!.GetValue(pad)!;
             var bottomLayer = (Panel)typeof(UI.PadWindow).GetField("_bottomLayer", fields)!.GetValue(pad)!;
-            var pill = (Border)typeof(UI.PadWindow).GetField("_pill", fields)!.GetValue(pad)!;
+            var pill = ((List<UI.PadBar>)typeof(UI.PadWindow).GetField("_bars", fields)!.GetValue(pad)!)[0].Pager;
             var pager = (Avalonia.Controls.Primitives.Popup)typeof(UI.PadWindow).GetField("_floatPager", fields)!.GetValue(pad)!;
             bool TopShown() => (bool)typeof(UI.PadWindow).GetField("_topShown", fields)!.GetValue(pad)!;
             bool BottomShown() => (bool)typeof(UI.PadWindow).GetField("_bottomShown", fields)!.GetValue(pad)!;

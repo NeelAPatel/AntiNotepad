@@ -77,7 +77,16 @@ internal sealed partial class PadWindow
     internal void Navigate(int direction)
     {
         if (_active == _right) { CycleSplitSlot(direction); return; }
-        if (Data.ViewSlot > 0) { ShowStack(); return; }
+        if (Data.ViewSlot > 0)
+        {
+            _left.Flush();
+            var next = Data.ViewSlot;
+            do { next = (next - 1 + direction + 9) % 9 + 1; } while (Settings.Split && next == Settings.SplitSlot);
+            Data.ViewSlot = _lastSlot = next;
+            BindPanes(direction);
+            SleepChrome(soon: false);
+            return;
+        }
         _left.Flush();
         var leaving = Data.Stack[Data.Current];
         var target = Data.Current + direction;
@@ -103,6 +112,7 @@ internal sealed partial class PadWindow
     {
         _left.Flush();
         var leaving = LeftNote;
+        if (Data.ViewSlot > 0) _lastSlot = Data.ViewSlot;
         Data.ViewSlot = 0;
         if (Data.Stack[^1].IsEmpty) Data.Current = Data.Stack.Count - 1;
         else { Data.Stack.Add(new Note()); Data.Current = Data.Stack.Count - 1; }
@@ -127,6 +137,7 @@ internal sealed partial class PadWindow
     internal void ShowStack()
     {
         if (Data.ViewSlot == 0) return;
+        _lastSlot = Data.ViewSlot;
         _left.Flush();
         Data.ViewSlot = 0;
         ActivatePane(_left, saveDeparting: false);
@@ -142,6 +153,7 @@ internal sealed partial class PadWindow
         _left.Flush();
         var leaving = LeftNote;
         Data.ViewSlot = slot;
+        _lastSlot = slot;
         ActivatePane(_left, saveDeparting: false);
         DropIfAbandoned(leaving);
         BindPanes(1);
@@ -207,11 +219,12 @@ internal sealed partial class PadWindow
         SleepChrome(soon: false);
     }
 
-    private void CycleSplitSlot(int direction)
+    private void CycleSplitSlot(int direction, int target = 0)
     {
         _right.Flush();
-        var next = Settings.SplitSlot;
-        do { next = (next - 1 + direction + 9) % 9 + 1; } while (next == Data.ViewSlot);
+        var next = target > 0 ? target : Settings.SplitSlot;
+        if (target == 0)
+            do { next = (next - 1 + direction + 9) % 9 + 1; } while (next == Data.ViewSlot);
         _settingsService.Update(settings => settings.SplitSlot = next);
         BindPanes(0, rightArrive: direction);
     }

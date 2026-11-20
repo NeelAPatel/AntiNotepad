@@ -59,7 +59,11 @@ internal static class ChromeTokens
     public const double PagerDotRadius = PagerDotHeight / 2;
     public const double PagerDotSelectedButtonWidth = 24;
     public const double PagerDotButtonWidth = 16;
-    public const double PagerDotButtonHeight = 20;
+    public const double PagerDotButtonHeight = ButtonSize;
+    public const double PagerCountButtonHeight = ButtonSize;
+    public const double BarCornerSize = PillHeight;
+    public const int DeleteDebounceMs = 500;
+    public const double PlainIconWeight = 0;
     public const double PagerDotBorderThickness = 1;
 
     public const double PillInset = 4;
