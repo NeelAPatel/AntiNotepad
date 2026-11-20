@@ -47,6 +47,7 @@ One row per merged item: what each check found. Empty rows on items that later h
 | 2026-11-20 | A33-help-toggle-f1 | Low | 0 | 0 | 0 | - | 0 | - |
 | 2026-11-20 | A34-pill-bar-per-mode | Medium | 4 | 2 | 4 | - | 4 | - |
 | 2026-11-20 | A36-version-rc4 | Low | 0 | 0 | 0 | - | 0 | - |
+| 2026-11-20 | A37-version-0-7-0 | Low | 0 | 1 | 0 | - | 0 | - |
 | 2026-11-19 | A32-selection-convert-menu | Medium | 4 | 1 | 1 | - | 0 | - |
 | 2026-11-19 | Loop17-chat-title-selfheal | Medium | 1 | 0 | 2 | - | 0 | - |
 | 2026-11-19 | Loop20-codex-labs-and-scout | Medium | 0 | 0 | 0 | - | 0 | - |

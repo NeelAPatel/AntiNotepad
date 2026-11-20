@@ -2,7 +2,7 @@
   <PropertyGroup>
     <AppName>AntiNotepad</AppName>
     <AppVersion>0.7.0</AppVersion>
-    <AppVersionLabel>rc4</AppVersionLabel>
+    <AppVersionLabel></AppVersionLabel>
     <AppDescription>A quick scratchpad for Windows</AppDescription>
     <AppCopyright>Copyright © 2026</AppCopyright>
 
@@ -13,7 +13,8 @@
     <Version>$(AppVersion)</Version>
     <AssemblyVersion>$(AppVersion).0</AssemblyVersion>
     <FileVersion>$(AppVersion).0</FileVersion>
-    <InformationalVersion>$(AppVersion)-$(AppVersionLabel)</InformationalVersion>
+    <InformationalVersion>$(AppVersion)</InformationalVersion>
+    <InformationalVersion Condition="'$(AppVersionLabel)' != ''">$(AppVersion)-$(AppVersionLabel)</InformationalVersion>
     <Description>$(AppDescription)</Description>
     <Copyright>$(AppCopyright)</Copyright>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
