@@ -24,10 +24,21 @@ Own scout (about 6 files).
 - **Gates:** gate + Codex review; hand test in the slot dev copy.
 
 ## Files
-- `product/AntiNotepad/Model/Modes.cs`, `Model/Settings.cs`, `Model/SettingsService.cs`
-- `product/AntiNotepad/Editor/ListEditing.cs`, `Editor/Completion.cs`, `Editor/TextCommands.cs`
-- `product/AntiNotepad/UI/SettingsWindow.cs`, `UI/SettingsParts.cs`
-- `product/AntiNotepad/SelfTest/Lists.cs`, `SelfTest/Store.cs`, `SelfTest/Contracts.cs`
+- `product/AntiNotepad/Model/Modes.cs`
+- `product/AntiNotepad/Model/Settings.cs`
+- `product/AntiNotepad/Model/SettingsService.cs`
+- `product/AntiNotepad/Editor/ListEditing.cs`
+- `product/AntiNotepad/Editor/Completion.cs`
+- `product/AntiNotepad/Editor/TextCommands.cs`
+- `product/AntiNotepad/Editor/DocumentCommands.cs`
+- `product/AntiNotepad/Editor/PadView.cs`
+- `product/AntiNotepad/UI/SettingsWindow.cs`
+- `product/AntiNotepad/UI/SettingsParts.cs`
+- `product/AntiNotepad/SelfTest/Lists.cs`
+- `product/AntiNotepad/SelfTest/Store.cs`
+- `product/AntiNotepad/SelfTest/Contracts.cs`
+- `product/AntiNotepad/SelfTest/UI.cs`
+- `product/AntiNotepad/SelfTest/Design.cs`
 - `tools/playground/a31-list-default-lab.html`
 
 ## Contracts
@@ -46,3 +57,14 @@ Report `.coord/reports/A31-list-default-type.md`: 1 Summary; 2 Change list; 3 Be
 
 ## Hold
 - Held for A29 (user, 2026-11-19: "Wait for A29 merge"); A29 merged at 3e5bc0a, hold over. Check Settings layout and keys against `docs/shortcuts.md`.
+
+## Check
+- Gate (r2, `-Offline`): PASS; plain run only failed on NuGet audit warnings (env). Codex review: no findings, VERDICT accept.
+- Within plan: all Plan "After" items. Justified: four extra files (DocumentCommands, PadView, UI.cs, Design.cs) only carry the setting or update field count and design hash; now in Files. Justified: Model keeps a string kind mapped to `ListEditing.ListKind` (layer boundary, no second enum).
+- Known behavior change, as approved: plain lines in existing `list` notes continue as bullets.
+- Noticed: gate Scope reads one path per Files bullet; the card template could say so (Loop item, not filed).
+- Misses: found at gate Scope and Format; cause `code`/card format; caught by gate; lesson: one path per Files bullet.
+- Commit review: 11 commits folded to 3 (card and lab; code; reports and check); gate PASS at tip, catch-up RETEST: no.
+
+## Hand test
+Dev copy (blue slot, A31 worktree build). User, 2026-11-20, verbatim: "All pass"
