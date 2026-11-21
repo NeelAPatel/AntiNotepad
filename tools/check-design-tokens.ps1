@@ -7,6 +7,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $baselinePath = Join-Path $PSScriptRoot 'design-tokens-baseline.tsv'
 $number = '(?<![\w.])(?:0x[\da-fA-F]+|(?:\d+(?:\.\d+)?|\.\d+)[dfm]?)(?![\w.])'
+$nonzero = '(?!(?:0x0+|0+(?:\.0+)?|\.0+)[dfm]?(?![\w.]))' + $number
 $byteAlpha = '(?<![\w.])(?:[2-9]|[1-9]\d|1\d\d|2[0-4]\d|25[0-4])(?![\w.])'
 $patterns = [ordered]@{
     # Literal corner radii.
@@ -30,7 +31,9 @@ $patterns = [ordered]@{
     # Time spans outside animation duration properties.
     'timer' = "\bTimeSpan\.From(?:Milliseconds|Seconds|Minutes|Hours)\s*\(\s*$number"
     # Literal dimensions, spacing properties, and thickness constructors.
-    'spacing' = "\b(?:MinWidth|MinHeight|MaxWidth|MaxHeight|Width|Height|Spacing|LetterSpacing|Margin|Padding|BorderThickness)\s*=\s*(?!new\s+Thickness\b)[^;\r\n,}]*?$number|\bnew\s+Thickness\s*\([^)]*?$number"
+    'spacing' = "\b(?:MinWidth|MinHeight|MaxWidth|MaxHeight|Width|Height|Spacing|LetterSpacing|Margin|Padding|BorderThickness)\s*=\s*(?!new\s+Thickness\b)[^;\r\n,}]*?$nonzero|\bnew\s+Thickness\s*\([^)]*?$nonzero"
+    # Pen thickness and drawing radii are inspected by argument below.
+    'stroke' = ''
     # Icon code points belong in the icon registry; bare hexadecimal values remain legal elsewhere.
     'icon-code' = '[\uE000-\uF8FF]|\\u[EeFf][0-9a-fA-F]{3}|ConvertFromUtf32\s*\(|\(char\)\s*0[xX][EeFf][0-9a-fA-F]{3}\b'
 }
@@ -257,6 +260,30 @@ function Read-CSharpCode([int] $Start, [int] $InterpolationBraceCount, [bool] $R
 }
 
 
+# Finds top-level argument ranges while respecting nested constructor calls.
+function Get-CallArguments([string]$text, [int]$open) {
+    $depth = 0; $start = $open + 1
+    for ($i = $start; $i -lt $text.Length; $i++) {
+        switch ($text[$i]) {
+            '(' { $depth++ }
+            ')' {
+                if ($depth -eq 0) {
+                    [pscustomobject]@{ Start = $start; Text = $text.Substring($start, $i - $start) }
+                    return
+                }
+                $depth--
+            }
+            ',' {
+                if ($depth -eq 0) {
+                    [pscustomobject]@{ Start = $start; Text = $text.Substring($start, $i - $start) }
+                    $start = $i + 1
+                }
+            }
+            ';' { if ($depth -eq 0) { return } }
+        }
+    }
+}
+
 # Extracts hits with stable source locations and readable source lines.
 function Find-Hits([string]$code, [string]$file) {
     $masked = Mask-DesignCode $code $false
@@ -274,6 +301,7 @@ function Find-Hits([string]$code, [string]$file) {
                 [regex]::Replace($match.Value, '[^\r\n]', ' ')
             })
         }
+        if ($category -eq 'stroke') { continue }
         foreach ($match in [regex]::Matches($searchText, $patterns[$category])) {
             if ($category -eq 'timer') {
                 $prefix = $masked.Substring([Math]::Max(0, $match.Index - 80), [Math]::Min(80, $match.Index))
@@ -281,6 +309,19 @@ function Find-Hits([string]$code, [string]$file) {
             }
             $line = 1 + ([regex]::Matches($searchText.Substring(0, $match.Index), "`n")).Count
             [pscustomobject]@{ category = $category; file = $file; line = $line; match = ($match.Value -replace '[\t\r\n]+', ' '); code = ($lines[$line - 1].Trim() -replace '\t', ' ') }
+        }
+    }
+    foreach ($call in [regex]::Matches($masked, '\b(?:new\s+Pen|RenderPaint\s*\.\s*Pen|DrawRectangle|RoundedRect)\s*\(')) {
+        $args = @(Get-CallArguments $masked ($call.Index + $call.Length - 1))
+        $isPen = $call.Value -match '^(?:new\s+Pen|RenderPaint\s*\.\s*Pen)'
+        $first = if ($isPen) { 1 } elseif ($call.Value -match '^DrawRectangle') { 3 } else { 1 }
+        $last = if ($isPen) { 1 } elseif ($call.Value -match '^DrawRectangle') { 4 } else { 2 }
+        for ($index = $first; $index -le $last -and $index -lt $args.Count; $index++) {
+            $argument = $args[$index]
+            if ($argument.Text -notmatch $number) { continue }
+            $line = 1 + ([regex]::Matches($masked.Substring(0, $argument.Start), "`n")).Count
+            $category = if ($isPen) { 'stroke' } else { 'radius' }
+            [pscustomobject]@{ category = $category; file = $file; line = $line; match = $argument.Text.Trim(); code = ($lines[$line - 1].Trim() -replace '\t', ' ') }
         }
     }
 }
@@ -329,6 +370,20 @@ var timer = TimeSpan.FromMilliseconds(30);
 '@
     $hits = @(Find-Hits $sample 'fixture.cs')
     if (@($hits | Where-Object category -eq 'radius').Count -ne 2 -or @($hits | Where-Object category -eq 'font-family').Count -ne 1 -or @($hits | Where-Object category -eq 'color').Count -ne 1 -or @($hits | Where-Object category -eq 'font-weight').Count -ne 1 -or @($hits | Where-Object category -eq 'opacity').Count -ne 1 -or @($hits | Where-Object category -eq 'shadow').Count -ne 1 -or @($hits | Where-Object category -eq 'spacing').Count -ne 1 -or @($hits | Where-Object category -eq 'tween').Count -ne 1 -or @($hits | Where-Object category -eq 'timer').Count -ne 1) { throw 'Scanner fixture failed.' }
+    foreach ($fixture in @(
+        @{ Category = 'spacing'; Text = 'Margin = new Thickness(0, 4, 0, 0);'; Count = 1 },
+        @{ Category = 'spacing'; Text = 'Width = 0; Padding = new Thickness(0);'; Count = 0 },
+        @{ Category = 'stroke'; Text = 'new Pen(new SolidColorBrush(color), 1.8);'; Count = 1 },
+        @{ Category = 'stroke'; Text = 'new Pen(brush, Shape.Thin);'; Count = 0 },
+        @{ Category = 'stroke'; Text = 'RenderPaint.Pen(Brush(color, opacity), 1.6);'; Count = 1 },
+        @{ Category = 'stroke'; Text = 'RenderPaint.Pen(brush, Shape.Thin);'; Count = 0 },
+        @{ Category = 'radius'; Text = 'dc.DrawRectangle(brush, pen, new Rect(0, 0, 4, 4), 2, 2);'; Count = 2 },
+        @{ Category = 'radius'; Text = 'dc.DrawRectangle(brush, pen, rect, Shape.Control, Shape.Control);'; Count = 0 },
+        @{ Category = 'radius'; Text = 'new RoundedRect(new Rect(0, 0, 4, 4), 2, 2);'; Count = 2 },
+        @{ Category = 'radius'; Text = 'new RoundedRect(rect, Shape.Control, Shape.Control);'; Count = 0 }
+    )) {
+        if (@(Find-Hits $fixture.Text 'fixture.cs' | Where-Object category -eq $fixture.Category).Count -ne $fixture.Count) { throw "Argument fixture failed: $($fixture.Text)" }
+    }
     $brushFixtures = @('new SolidColorBrush(color, .45)', 'RenderPaint.Brush(color, 0.3)', 'Brush(color, dark ? .2 : .1)')
     foreach ($fixture in $brushFixtures) {
         if (@(Find-Hits $fixture 'fixture.cs' | Where-Object category -eq 'opacity').Count -ne 1) { throw "Brush fixture failed: $fixture" }

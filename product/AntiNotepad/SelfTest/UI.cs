@@ -5,7 +5,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media;
 using Avalonia.Threading;
 using AntiNotepad.Editor;
@@ -32,11 +31,7 @@ internal static partial class SelfTest
         public DataSafetyFixture(bool reducedMotion = true)
         {
             if (Application.Current is null) AppBuilder.Configure<Application>().UsePlatformDetect().SetupWithoutStarting();
-            if (!Application.Current!.Styles.OfType<Avalonia.Themes.Fluent.FluentTheme>().Any())
-            {
-                Application.Current.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
-                Application.Current.Styles.Add(new StyleInclude(new Uri(AppInfo.ResourceUri)) { Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml") });
-            }
+            App.ConfigureFluentStyles(Application.Current!);
 
             var palette = Palette.All[0];
             Store = new Store(_folder);
@@ -273,11 +268,7 @@ internal static partial class SelfTest
     private static bool PinRingChecks(out string report)
     {
         if (Application.Current is null) AppBuilder.Configure<Application>().UsePlatformDetect().SetupWithoutStarting();
-        if (!Application.Current!.Styles.OfType<Avalonia.Themes.Fluent.FluentTheme>().Any())
-        {
-            Application.Current.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
-            Application.Current.Styles.Add(new StyleInclude(new Uri(AppInfo.ResourceUri)) { Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml") });
-        }
+        App.ConfigureFluentStyles(Application.Current!);
         var failures = new List<string>();
         void Expect(bool ok, string name) { if (!ok) failures.Add(name); }
         Expect(MotionCurveChecks(out _), "Windows motion curves");
@@ -685,11 +676,7 @@ internal static partial class SelfTest
         Expect(GC.GetAllocatedBytesForCurrentThread() == before, "key lookup allocates nothing");
 
         if (Application.Current is null) AppBuilder.Configure<Application>().UsePlatformDetect().SetupWithoutStarting();
-        if (!Application.Current!.Styles.OfType<Avalonia.Themes.Fluent.FluentTheme>().Any())
-        {
-            Application.Current.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
-            Application.Current.Styles.Add(new StyleInclude(new Uri(AppInfo.ResourceUri)) { Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml") });
-        }
+        App.ConfigureFluentStyles(Application.Current!);
         var folder = Path.Combine(Path.GetTempPath(), "AntiNotepad-shortcuts-" + Guid.NewGuid().ToString("N"));
         using var log = new RuntimeLog();
         var store = new Store(folder);
@@ -971,11 +958,7 @@ internal static partial class SelfTest
     {
         var app = Application.Current ?? throw new InvalidOperationException(
             "shortened-link-opens must initialize Avalonia before save-delay UI checks.");
-        if (!app.Styles.OfType<Avalonia.Themes.Fluent.FluentTheme>().Any())
-        {
-            app.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
-            app.Styles.Add(new StyleInclude(new Uri(AppInfo.ResourceUri)) { Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml") });
-        }
+        App.ConfigureFluentStyles(app);
 
         var failures = new List<string>();
         void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }

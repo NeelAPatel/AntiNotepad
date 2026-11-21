@@ -44,7 +44,7 @@ internal sealed partial class SettingsWindow : Window
     private readonly MotionPreview _preview;
     private readonly SmoothScroll _smoothScroll;
     private readonly ScrollViewer _scroll = new() { HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
-    private readonly StackPanel _rail = new() { Spacing = 2 };
+    private readonly StackPanel _rail = new() { Spacing = Space.Nudge };
     private TextBox _find = null!;
     private Border _tint = null!;
     private string? _appliedMaterial;
@@ -72,7 +72,8 @@ internal sealed partial class SettingsWindow : Window
         _p = host.CurrentPalette;
         Title = $"{AppInfo.DisplayName} Settings";
         Icon = host.Icon;
-        Width = 900; Height = 720; MinWidth = 640; MinHeight = 460;
+        Width = ChromeTokens.Size.SettingsWindowWidth; Height = ChromeTokens.Size.SettingsWindowHeight;
+        MinWidth = ChromeTokens.Size.SettingsWindowMinWidth; MinHeight = ChromeTokens.Size.SettingsWindowMinHeight;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         WindowDecorations = WindowDecorations.BorderOnly;
         ExtendClientAreaToDecorationsHint = true;
@@ -184,28 +185,29 @@ internal sealed partial class SettingsWindow : Window
         Grid.SetColumnSpan(drag, 2);
         top.Children.Add(drag);
         var title = Kit.Text($"{AppInfo.Name} Settings", _p.Muted, Typography.Small);
-        title.Margin = new Thickness(18, 0, 0, 0);
+        title.Margin = new Thickness(Space.L, 0, 0, 0);
         title.IsHitTestVisible = false;
         top.Children.Add(title);
         var close = Kit.IconButton(Icons.Close, "Close (Esc)", _p, Close, 32);
-        close.Margin = new Thickness(0, 0, 8, 0);
+        close.Margin = new Thickness(0, 0, Space.S, 0);
         Grid.SetColumn(close, 1);
         top.Children.Add(close);
         root.Children.Add(top);
 
         var body = new Grid { ColumnDefinitions = new ColumnDefinitions("214,*") };
         Grid.SetRow(body, 1);
-        var railHost = new StackPanel { Margin = new Thickness(10, 4, 10, 10), Spacing = 12 };
+        var railHost = new StackPanel { Margin = new Thickness(Space.M, Space.Xs, Space.M, Space.M), Spacing = Space.M };
         _find = new TextBox
         {
             PlaceholderText = "Find a setting",
             FontSize = Typography.Body,
-            Height = 32,
+            Height = ChromeTokens.Size.SettingsSearchFieldHeight,
             CornerRadius = new CornerRadius(Shape.Control),
-            Padding = new Thickness(8, 8, 8, 0),
+            Padding = new Thickness(Space.S, 0),
+            VerticalContentAlignment = VerticalAlignment.Center,
             Foreground = new SolidColorBrush(_p.Ink),
             CaretBrush = new SolidColorBrush(_p.Caret),
-            InnerLeftContent = new GlyphIcon(Icons.SettingsSearch, _p.Muted, Typography.IconInput) { Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center },
+            InnerLeftContent = new GlyphIcon(Icons.SettingsSearch, _p.Muted, Typography.IconInput) { Margin = new Thickness(Space.M, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center },
         };
         Avalonia.Automation.AutomationProperties.SetName(_find, "Find a setting");
         // Results build matching rows, so they wait for a pause in typing; clearing the box is instant.
@@ -236,7 +238,7 @@ internal sealed partial class SettingsWindow : Window
         foreach (var (id, name, glyph) in Sections)
         {
             var on = id == selected;
-            var face = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(12, 0), VerticalAlignment = VerticalAlignment.Center };
+            var face = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M, Margin = new Thickness(Space.M, 0), VerticalAlignment = VerticalAlignment.Center };
             face.Children.Add(new GlyphIcon(glyph, on ? IconInk : _p.Muted, Typography.IconLarge) { VerticalAlignment = VerticalAlignment.Center });
             face.Children.Add(Kit.Text(name, on ? _p.Ink : _p.Muted, Typography.Large, on ? Typography.Strong : Typography.Regular));
             var item = Kit.Plain(face, _p, height: 36, radius: Shape.Popup);
@@ -260,7 +262,7 @@ internal sealed partial class SettingsWindow : Window
 
     // ---------- pages ----------
 
-    private StackPanel NewPage() => new() { Margin = new Thickness(16, 2, 28, 32), MaxWidth = 780, HorizontalAlignment = HorizontalAlignment.Stretch };
+    private StackPanel NewPage() => new() { Margin = new Thickness(Space.L, Space.Nudge, Space.Xxl, Space.Xxl), MaxWidth = ChromeTokens.Size.SettingsPageMaxWidth, HorizontalAlignment = HorizontalAlignment.Stretch };
 
     private void Show(string section, bool animate = true, bool keepScroll = false)
     {
@@ -348,7 +350,7 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Group("Caret"));
         Control CaretStyles()
         {
-            var cells = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+            var cells = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.S };
             cells.Children.Add(Tile(CaretPicture(false), "Bar", S.CaretStyle != "block", () => Set(() => S.CaretStyle = "bar", rows: true), 56));
             cells.Children.Add(Tile(CaretPicture(true), "Block", S.CaretStyle == "block", () => Set(() => S.CaretStyle = "block", rows: true), 56));
             return cells;
@@ -369,7 +371,7 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Group("Window"));
         Control Materials()
         {
-            var materials = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+            var materials = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.Xs };
             foreach (var (id, name) in new[] { ("acrylic", "Acrylic"), ("mica", "Mica"), ("solid", "Solid") })
                 materials.Children.Add(Tile(MaterialPicture(id), name, S.Material == id, () => Set(() => S.Material = id, rows: true), 80));
             return materials;
@@ -431,7 +433,7 @@ internal sealed partial class SettingsWindow : Window
         {
             var backings = new WrapPanel { Orientation = Orientation.Horizontal };
             foreach (var (id, name) in new[] { ("blank", "Blank"), ("lined", "Lined"), ("dotted", "Dotted"), ("grid", "Grid"), ("biggrid", "Large grid") })
-                backings.Children.Add(Tile(new PatternSwatch(id, _p) { Height = 40 }, name, S.Paper == id, () => Set(() => S.Paper = id, rows: true), 60));
+                backings.Children.Add(Tile(new PatternSwatch(id, _p) { Height = ChromeTokens.Size.PatternPictureHeight }, name, S.Paper == id, () => Set(() => S.Paper = id, rows: true), 60));
             return backings;
         }
         page.Children.Add(Card([
@@ -532,7 +534,7 @@ internal sealed partial class SettingsWindow : Window
     /// <summary>Builds the recorder and reset control for one shortcut action.</summary>
     private Control ShortcutControl(ShortcutDefinition definition)
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.S };
         row.Children.Add(new HotkeyRecorder(_p,
             () => _shortcuts.GetRecordedValue(definition.Id),
             text => ApplyShortcut(definition, text),
@@ -547,7 +549,7 @@ internal sealed partial class SettingsWindow : Window
     /// <summary>Places the pending Undo beside the reset that created it.</summary>
     private Control ShortcutResetControl(string label, Action reset, string target)
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.S };
         row.Children.Add(TextButton(label, reset));
         if (_shortcutUndoTarget == target) row.Children.Add(TextButton("Undo", UndoShortcutReset));
         return row;
@@ -642,15 +644,15 @@ internal sealed partial class SettingsWindow : Window
         var dialog = new Window
         {
             Title = "Shortcut already in use",
-            Width = 420,
+            Width = ChromeTokens.Size.ShortcutDialogWidth,
             SizeToContent = SizeToContent.Height,
             CanResize = false,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Background = new SolidColorBrush(_p.Canvas),
             Content = new StackPanel
             {
-                Margin = new Thickness(24),
-                Spacing = 16,
+                Margin = new Thickness(Space.Xl),
+                Spacing = Space.L,
                 Children =
                 {
                     new TextBlock
@@ -662,7 +664,7 @@ internal sealed partial class SettingsWindow : Window
                 },
             },
         };
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Spacing = 8 };
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Spacing = Space.S };
         actions.Children.Add(TextButton("Cancel", () => dialog.Close(false)));
         actions.Children.Add(TextButton("Take shortcut", () => dialog.Close(true), primary: true));
         ((StackPanel)dialog.Content!).Children.Add(actions);
@@ -683,9 +685,9 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Group("Opening"));
         Control OpenAtTiles()
         {
-            var tiles = new UniformGrid { Columns = 5 };
+            var tiles = new WrapPanel { ItemSpacing = Space.S, LineSpacing = Space.S, HorizontalAlignment = HorizontalAlignment.Left };
             foreach (var (id, name) in new[] { ("remember", "Where I left it"), ("center", "Center"), ("mouse", "Mouse"), ("tray", "Above the tray"), ("dropdown", "Drop down") })
-                tiles.Children.Add(Tile(new ScreenPicture(id, _p) { Height = 64 }, name, S.OpenAt == id, () => Set(() => S.OpenAt = id, rows: true), 104));
+                tiles.Children.Add(Tile(new ScreenPicture(id, _p) { Height = ChromeTokens.Size.ScreenPictureHeight }, name, S.OpenAt == id, () => Set(() => S.OpenAt = id, rows: true), 104));
             return tiles;
         }
         page.Children.Add(Card([
@@ -739,7 +741,7 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Group("Notes folder"));
         Control NotesFolderDetails()
         {
-            var details = new StackPanel { Spacing = 8 };
+            var details = new StackPanel { Spacing = Space.S };
             details.Children.Add(ReadOnlyPath(_notes.DataFolder));
 
             if (_pendingNotesFolder is { } target)
@@ -754,7 +756,7 @@ internal sealed partial class SettingsWindow : Window
             if (!string.IsNullOrWhiteSpace(_notesSuccess)) details.Children.Add(InlineNote(_notesSuccess, _p.Confirm));
             if (!string.IsNullOrWhiteSpace(_notesNotice)) details.Children.Add(InlineNote(_notesNotice, _p.Muted));
 
-            var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+            var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.S };
             if (_pendingNotesFolder is { } destination)
             {
                 // The pending folder action: Cancel, then the accent action button at the right edge.

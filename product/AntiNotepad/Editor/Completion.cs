@@ -1,3 +1,4 @@
+// Offers editor completions and commands so common insertions and text transformations are easy to discover.
 using System.Globalization;
 using System.Text.Json;
 using Avalonia;
@@ -94,9 +95,12 @@ internal static class Completion
         var p = pad.Palette;
         var window = new CompletionWindow(pad.Editor.TextArea)
         {
-            StartOffset = start, CloseWhenCaretAtBeginning = true, CloseAutomatically = true,
+            StartOffset = start,
+            CloseWhenCaretAtBeginning = true,
+            CloseAutomatically = true,
 
-            MinWidth = 300, Width = 340,
+            MinWidth = ChromeTokens.Size.CompletionWindowMinWidth,
+            Width = ChromeTokens.Size.CompletionWindowWidth,
         };
         window.CompletionList.Foreground = new SolidColorBrush(p.Ink);
         window.CompletionList.Background = new SolidColorBrush(p.Surface);
@@ -113,10 +117,11 @@ internal static class Completion
         public string Text => word;
         public object Content => new StackPanel
         {
-            Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10,
+            Orientation = Avalonia.Layout.Orientation.Horizontal,
+            Spacing = Space.M,
             Children =
             {
-                new TextBlock { Text = word, FontWeight = Typography.Strong, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = 70 },
+                new TextBlock { Text = word, FontWeight = Typography.Strong, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = Space.CompletionModeColumnWidth },
                 new TextBlock { Text = name, Foreground = new SolidColorBrush(pad.Palette.Muted), FontSize = Typography.Small, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center },
             }
         };
@@ -140,10 +145,11 @@ internal static class Completion
         public string Text => text;
         public object Content => new StackPanel
         {
-            Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10,
+            Orientation = Avalonia.Layout.Orientation.Horizontal,
+            Spacing = Space.M,
             Children =
             {
-                new TextBlock { Text = text, FontWeight = Typography.Strong, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = 86 },
+                new TextBlock { Text = text, FontWeight = Typography.Strong, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = Space.CompletionCommandColumnWidth },
                 new TextBlock { Text = summary, Foreground = new SolidColorBrush(pad.Palette.Muted), FontSize = Typography.Small, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center },
             }
         };

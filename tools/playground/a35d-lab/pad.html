@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AntiNotepad pad lab</title><link rel="stylesheet" href="core.css"><style>
+
+*{box-sizing:border-box}body{margin:0;padding:24px;background:#252525;color:var(--ink);font-family:"Segoe UI Variable Text","Segoe UI",sans-serif}.lab-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px;font-size:13px}.lab-controls select{margin-left:5px;background:#333;color:#eee;border:1px solid #555;border-radius:4px;padding:5px}.pad-window{position:relative;width:460px;height:562px;border:1px solid #ffffff30;border-radius:8px;overflow:hidden;background:#191817;box-shadow:0 8px 28px #0005}.pad-window.split{width:922px!important}.topbar{height:40px;position:absolute;inset:0 0 auto;display:flex;align-items:center;padding:0 4px 0 12px;gap:4px;z-index:5;background:linear-gradient(#1b1b1bba,transparent)}.topbar .spacer{flex:1}.topbar button,.pager button{color:var(--ink);border:0;background:transparent;cursor:pointer;border-radius:8px}.topbar button:hover,.pager button:hover{background:#ffffff17}.topbar button:active,.pager button:active{background:#ffffff26}.topbar .label{font-size:12px;color:var(--muted)}.topbar .slot-badge{background:#e8ad3430;color:#ffc252;font-size:12px;font-weight:600;padding:3px 8px;border-radius:4px}.top-actions{display:flex;opacity:0;transition:opacity .12s}.pad-window:hover .top-actions,.top-actions:focus-within{opacity:1}.panes{height:100%;display:flex}.pane{width:100%;height:100%;position:relative;min-width:0}.split .pane{width:50%}.split .pane+ .pane:before{content:"";position:absolute;left:0;top:40px;bottom:58px;width:1px;background:#ffffff22}.editor{position:absolute;inset:40px 30px 50px 36px;overflow:auto;outline:0;white-space:pre-wrap;overflow-wrap:anywhere;font:600 15px/1.54 "Cascadia Mono",Consolas,monospace;color:var(--ink);scrollbar-width:thin}.editor .h1{font-size:20px;color:#fa746b}.editor .h2{font-size:17px;color:#f5a05a}.editor .h3{color:#f2c95d}.editor .h4{color:#8ccc94}.editor .h5{color:#77b6eb}.editor .h6{color:#c89de9}.editor .marker{color:#858079}.editor .code{color:#91ce91}.editor .checked{color:#77736d;text-decoration:line-through}.editor .check{color:#e6aa37;cursor:pointer}.editor .result{display:inline-block;margin-left:12px;color:#f5c464;background:#eec36b25;padding:0 7px;border-radius:6px}.editor .comment{color:#878078;font-style:italic}.editor .fold{cursor:pointer;color:#777;margin-left:-18px;width:18px;display:inline-block}.editor .folded{background:#ffffff16;border-radius:var(--snap-18-radius);padding:0 3px}.editor hr{border:0;border-top:1px solid #ffffff26;margin:12px 0}.pager{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:4px;padding:4px;border:1px solid #ffffff25;border-radius:12px;background:#252423;box-shadow:0 2px 12px #0006;height:42px}.pager button{height:32px;min-width:32px;padding:0 7px;font-size:12px}.pager .dot-button{min-width:16px;padding:0 4px}.dot{display:block;width:8px;height:8px;border-radius:5px;background:#88847d}.dot.empty{background:transparent;border:1px solid #777}.dot.current{width:16px;background:#f6b93f}.pager .separator{width:1px;height:16px;background:#ffffff35}.pad-window.float .pager{bottom:8px}.pad-window.overlay .pager{opacity:0}.pad-window.overlay:hover .pager,.pad-window.overlay .pager:focus-within{opacity:1}#overlay-host{position:absolute;inset:0;pointer-events:none;z-index:12}#overlay-host>*{pointer-events:auto}#popup-host{position:absolute;inset:0;pointer-events:none;z-index:20}#popup-host>*{pointer-events:auto}.popup{position:absolute;background:var(--surface);border:1px solid #ffffff20;border-radius:8px;box-shadow:0 4px 16px #0009;padding:4px;min-width:224px;font:14px "Segoe UI",sans-serif}.menu-actions{display:flex;border-bottom:1px solid #ffffff1c;padding:0 0 4px}.menu-actions button{flex:1;height:48px}.menu-row,.menu-actions button{display:flex;align-items:center;gap:8px;color:var(--ink);background:none;border:0;border-radius:4px;cursor:pointer}.menu-actions button{flex-direction:column;justify-content:center;gap:2px;color:var(--muted);font-size:12px}.menu-row{width:100%;height:32px;padding:0 8px;text-align:left}.menu-row:hover,.menu-actions button:hover,.completion-row:hover{background:#ffffff17}.menu-row .shortcut{margin-left:auto;color:var(--muted);font-size:12px}.menu-sep{height:1px;background:#ffffff1c;margin:4px 0}.completion{width:340px;max-height:240px;overflow:auto}.completion-row{display:flex;gap:var(--snap-14-row-gap);padding:5px 8px;cursor:pointer}.completion-row strong{min-width:86px;color:var(--keyword)}.completion-row small{color:var(--muted);font-size:12px}#toast-host{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);z-index:15}#failure-host{position:absolute;inset:auto 9px 52px;z-index:15}.failure{display:flex;flex-direction:column;gap:var(--snap-15-margin);padding:16px;border-radius:8px;background:#322626;border:1px solid #db777766;box-shadow:0 4px 16px #0007;font-size:13px}.failure-actions{display:flex;gap:var(--snap-15-stack-gap);margin-top:var(--snap-15-inner-gap);justify-content:flex-end}.failure-actions button{cursor:pointer}
+
+.pad-window.lab-backdrop{background:linear-gradient(135deg,color-mix(in srgb,var(--canvas) 94%,#746f69),var(--canvas) 65%,color-mix(in srgb,var(--canvas) 96%,#4e5b65))}.editor{font:400 15px/1.32 "Cascadia Mono",Consolas,monospace;scrollbar-color:transparent transparent}.editor.scrolling{scrollbar-color:#ffffff60 transparent}.editor::-webkit-scrollbar{width:8px}.editor::-webkit-scrollbar-thumb{background:transparent;border-radius:4px}.editor.scrolling::-webkit-scrollbar-thumb{background:#ffffff60}.editor .md-marker{color:var(--faint)}.editor .md-hidden{font-size:0}.editor .bullet-line{padding-left:2ch;text-indent:-2ch}.editor .bullet-mark{color:var(--muted);font-size:0}.editor .bullet-mark:before{content:'•';font-size:15px}.editor .check-mark{font-size:0;color:#e6aa37;cursor:pointer}.editor .check-mark:before{content:'▢';font-size:15px}.editor .check-mark.done:before{content:'▣'}.editor .h1{color:#f07a70}.editor .h2{color:#f0a05a}.editor .h3{color:#e6cc60}.editor .h4{color:#7ccf8c}.editor .h5{color:#76b0f0}.editor .h6{color:#c296f0}.pager,.pad-window.overlay .pager{opacity:0;pointer-events:none;transition:opacity .15s}.pad-window.bar-visible .pager,.pager:focus-within{opacity:1;pointer-events:auto}.pad-window.overlay:hover .pager{opacity:0}.pad-window.overlay.bar-visible .pager{opacity:1}.pad-window.overlay .editor,.pad-window.float .editor{bottom:10px}
+.editor .h1,.editor .h2{font-weight:700}.editor .h3,.editor .h4,.editor .h5,.editor .h6{font-weight:600}.editor .fold-control{position:absolute;margin-left:-18px;width:18px;cursor:pointer;color:var(--faint)}.editor .fold-control:before{content:'⌄'}.editor [data-folded]:after{content:' ···';color:var(--faint);background:#ffffff16;border-radius:var(--snap-18-radius)}
+.editor .math-result:after{content:attr(data-result);margin-left:12px;color:#f5c464;background:#eec36b25;padding:0 7px;border-radius:6px}.editor .timer-control{cursor:pointer;color:var(--accent)}.editor .timer-control:after{content:' ▶'}.editor .timer-control.running:after{content:' Ⅱ'}
+</style></head><body>
+<div class="lab-controls"><label>Width <select id="width"><option value="460">460</option><option value="354">354</option></select></label><label>Bar <select id="bar-mode"><option>docked</option><option>overlay</option><option>float</option></select></label><button class="fl-button" id="failure-button">Show save failure</button><button class="fl-button" id="show-pad" hidden>Show pad</button></div>
+<div id="window" class="pad-window"><div id="bar" class="topbar"></div><div id="panes" class="panes"></div><div id="pager" class="pager"></div><div id="overlay-host"></div><div id="popup-host"></div><div id="toast-host"></div><div id="failure-host"></div></div>
+<script src="core.js"></script><script src="help.js"></script><script src="search.js"></script><script>
+
+'use strict';
+const $=id=>document.getElementById(id), win=$('window'), panes=$('panes'), popup=$('popup-host'), overlay=$('overlay-host');
+const slots=["# h1\n## h2\n### h3\n#### h4\n##### h5\n###### h6\n\n\n**bold**\n*italic*\n~~strikethrough~~\n__underline__\n`single quote`\n__*~~**all at once**~~*__\n\ndivider\n---\n\nlists:\n- text\n  - text\n    - text\n- text\n\nnumbered lists:\n1. text\n  2. text\n    3. text\n4. text\n\n```py\ndef process_numbers(numbers: list[int]) -> list[int]:\n    results: list[int] = []\n    # This is a comment\n    for number in numbers:\n        if number % 2 == 0:\n            results.append(number * 2)\n        else:\n            results.append(number)\n\n    return results\n\n\nnumbers: list[int] = [1, 2, 3, 4, 5]\noutput: list[int] = process_numbers(numbers)\n\nprint(\"Processed numbers:\", output)\n```", "math\nrent = 1450\nutilities = 180\ninternet = 65\ntotal\ntotal / 3\n// units and percentages\n5 km in mi\n72 F in C\n2.5 GB in MB\n180 + 15%\n20% of rent\n// dates\ndays until dec 25\ntoday + 30 days", "list\n[x] open AntiNotepad with the hotkey\n[ ] flip to the next note\n[ ] try a timer note: line 1 \"timer\", then \"10m tea\"\n[ ] pick a palette in Settings (Ctrl+,)", "timer\n1m tea\n30s focus\n1h30m laundry\n5:00 eggs\n2min stretch", "# Welcome to AntiNotepad\nA quick guide to your hotkey scratchpad.\n- Press `Ctrl+Alt+Shift+S` to show or hide it; press `Esc` to hide.\n- It saves as you type. Notes live in Settings > Storage.\n\n## Notes and slots\n- The stack holds temporary notes; swipe or use `Ctrl+[` / `Ctrl+]` to flip through it.\n- Slots 1–4 hold demos: 1 Markdown, 2 math, 3 checklist, 4 timers.\n- `Ctrl+1`–`Ctrl+9` opens a permanent slot. `Ctrl+\\` opens a slot beside your note in split view.\n\n## Modes and tools\n- Set line 1 to `math`, `list`, `timer`, `code py`, or `clipboard`.\n- Type `/` for commands such as `/date`, `/todo`, `/sort`, or `/json`.\n- `Ctrl+F` searches your notes.\n- [ ] Click the box to check off this example.\n\n## Help\n- `Ctrl+,` opens Settings. `F1` shows all shortcuts.\n- To clear a demo, open its slot and press `Ctrl+Shift+Backspace`; the note moves to Trash."].concat(['','','','']);
+let stack=[''], stackIndex=0, current={kind:'slot',index:4}, other={kind:'slot',index:0}, active=current, split=false, pinned=false, folded=new Set(), previous='';
+const commands=[['date',"Insert today's date"],['time','Insert the time'],['now','Insert date and time'],['week',"Insert this week's days as a list"],['todo','Insert a checkbox'],['uuid','Insert a new UUID'],['sort',"Sort the note's lines"],['dedupe','Remove duplicate lines'],['reverse','Reverse line order'],['checklist','Make every line a checkbox'],['bullets','Make every line a bullet'],['numbered','Number every line 1. 2. 3.'],['plain','Remove list markers and checkboxes'],['uncheck','Untick every checkbox'],['tidy','Trim trailing spaces'],['upper','UPPERCASE the current line'],['lower','lowercase the current line'],['title','Title Case the current line'],['json','Pretty-print the note as JSON'],['count','Count words, lines and characters'],['clear','Clear done checklist items'],['ocr','Read text from a screen snip'],['showcase','Insert the feature showcase page'],['lorem','Insert placeholder text']];
+const getNote=state=>state.kind==='slot'?slots[state.index]:stack[state.index];
+const setNote=(state,text)=>{if(state.kind==='slot')slots[state.index]=text;else stack[state.index]=text;};
+const escapeHtml=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function inline(s){return escapeHtml(s).replace(/`([^`]+)`/g,'<span class="code">$1</span>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\*([^*]+)\*/g,'<em>$1</em>').replace(/~~(.*?)~~/g,'<s>$1</s>').replace(/__([^_]+)__/g,'<u>$1</u>');}
+function lineHtml(line,index,mode){
+ const h=line.match(/^(#{1,6}) (.*)$/); if(h)return `<span class="fold" data-fold="${index}">⌄</span><span class="h${h[1].length}">${inline(h[2])}</span>`;
+ if(/^---+$/.test(line))return '<hr>';
+ const check=line.match(/^(\s*)\[([ xX])\] (.*)$/);if(check)return `${check[1]}<span class="check" data-check="${index}">${check[2]===' '?'▢':'▣'}</span> <span class="${check[2]===' '?'':'checked'}">${inline(check[3])}</span>`;
+ if(/^\/\//.test(line))return `<span class="comment">${inline(line)}</span>`;
+ if(/^\s*- /.test(line))return inline(line).replace(/^([ ]*)- /,'$1<span class="marker">•</span> ');
+ if(mode==='math') {const vals={'rent = 1450':'1,450','utilities = 180':'180','internet = 65':'65','total':'1,695','total / 3':'1,130','5 km in mi':'3.11 mi','72 F in C':'22.22 °C','2.5 GB in MB':'2,500 MB','180 + 15%':'207','20% of rent':'290','days until dec 25':'51 days','today + 30 days':'Fri, Dec 4 2026'};return inline(line)+(vals[line]?`<span class="result">${vals[line]}</span>`:'');}
+ if(mode==='timer' && index>0 && line.trim())return inline(line)+' <button class="timer-button" contenteditable="false">▶</button>';
+ return inline(line)||'​';
+}
+function rendered(text){const lines=text.split('\n'),mode=lines[0].trim().toLowerCase();let hidden=false,level=0;return lines.map((line,i)=>{const h=line.match(/^(#{1,6}) /);if(h&&hidden&&h[1].length<=level)hidden=false;if(hidden)return '';const result=`<div data-line="${i}">${lineHtml(line,i,mode)}</div>`;if(h&&folded.has(i)){hidden=true;level=h[1].length;return result+`<div class="folded">···</div>`;}return result;}).join('');}
+
+// Preserve the source characters in the editable DOM; only their presentation changes.
+function styledInline(value, caretLine){
+ const pattern=/(`[^`\n]+`|\*\*[^*\n]+\*\*|~~[^~\n]+~~|__[^_\n]+__|\*[^*\n]+\*)/g;
+ let out='',last=0,m;
+ while((m=pattern.exec(value))){
+  out+=escapeHtml(value.slice(last,m.index));
+  const token=m[0], n=token.startsWith('`')||token.startsWith('*')&&!token.startsWith('**')?1:2;
+  const tag=token[0]==='`'?'span':token.startsWith('**')?'strong':token[0]==='*'?'em':token[0]==='~'?'s':'u';
+  const marker=s=>`<span class="md-marker${caretLine?'':' md-hidden'}">${escapeHtml(s)}</span>`;
+  out+=marker(token.slice(0,n))+`<${tag}${tag==='span'?' class="code"':''}>${escapeHtml(token.slice(n,-n))}</${tag}>`+marker(token.slice(-n));
+  last=m.index+token.length;
+ }
+ return out+escapeHtml(value.slice(last));
+}
+function editableMarkup(text, caret){
+ let hidden=false,level=0;const mode=text.split('\n')[0].trim().toLowerCase();
+ const results={'rent = 1450':'1,450','utilities = 180':'180','internet = 65':'65','total':'1,695','total / 3':'1,130','5 km in mi':'3.11 mi','72 F in C':'22.22 °C','2.5 GB in MB':'2,500 MB','180 + 15%':'207','20% of rent':'290','days until dec 25':'51 days','today + 30 days':'Fri, Dec 4 2026'};
+ return text.split('\n').map((line,i)=>{
+  const here=i===caret, heading=line.match(/^(#{1,6}) (.*)$/), bullet=line.match(/^(\s*)(- )(.*)$/), check=line.match(/^(\s*)(?:- )?(\[[ xX]\]) (.*)$/);
+  if(heading&&hidden&&heading[1].length<=level)hidden=false;
+  const isHidden=hidden;if(heading&&folded.has(i)){hidden=true;level=heading[1].length;}
+  let body;
+  if(heading) body=`<span class="fold-control" contenteditable="false" data-fold="${i}"></span><span class="h${heading[1].length}"><span class="md-marker${here?'':' md-hidden'}">${heading[1]} </span>${styledInline(heading[2],here)}</span>`;
+  else if(check) {const prefix=line.slice(0,line.indexOf('['));body=escapeHtml(prefix)+`<span class="check-mark${check[2]!=='[ ]'?' done':''}" data-check="${i}">${check[2]}</span> `+styledInline(check[3],here);}
+  else if(bullet) body=escapeHtml(bullet[1])+`<span class="bullet-mark">-</span> `+styledInline(bullet[3],here);
+  else body=styledInline(line,here);
+  if(mode==='math'&&results[line])body+=`<span class="math-result" contenteditable="false" data-result="${results[line]}"></span>`;
+  if(mode==='timer'&&i>0&&line.trim())body+='<span class="timer-control" contenteditable="false"></span>';
+  return `<div data-line="${i}"${bullet?' class="bullet-line"':''}${isHidden?' hidden':''}${heading&&folded.has(i)?' data-folded=""':''}>${body||'<br>'}</div>`;
+ }).join('');
+}
+function editorPosition(editor,node,offset){
+ if(!node||!editor.contains(node))return null;
+ let line=node.nodeType===1?node:node.parentElement;
+ while(line&&line.parentElement!==editor)line=line.parentElement;
+ if(!line)return null;
+ const range=document.createRange();range.setStart(line,0);try{range.setEnd(node,offset);}catch{return null;}
+ const lines=getNote(editor._state).split('\n'), i=+line.dataset.line;
+ return lines.slice(0,i).reduce((n,s)=>n+s.length+1,0)+range.toString().length;
+}
+function selectionOffsets(editor){
+ const s=window.getSelection();if(!s||!s.rangeCount)return null;
+ const a=editorPosition(editor,s.anchorNode,s.anchorOffset),b=editorPosition(editor,s.focusNode,s.focusOffset);
+ return a===null||b===null?null:{a,b};
+}
+function paintEditor(editor,text,selection){
+ const pos=selection?selection.b:0, caret=text.slice(0,pos).split('\n').length-1, top=editor.scrollTop;
+ editor.innerHTML=editableMarkup(text,caret);editor._caretLine=caret;editor.scrollTop=top;
+ if(!selection)return;
+ function locate(at){
+  const lines=text.split('\n');let i=0;while(i<lines.length-1&&at>lines[i].length){at-=lines[i].length+1;i++;}
+  const line=editor.children[i],walker=document.createTreeWalker(line,NodeFilter.SHOW_TEXT);let node;
+  while((node=walker.nextNode())){if(at<=node.length)return [node,at];at-=node.length;}
+  return [line,line.childNodes.length];
+ }
+ const s=window.getSelection(),a=locate(selection.a),b=locate(selection.b);
+ s.setBaseAndExtent(a[0],a[1],b[0],b[1]);
+}
+
+
+function button(label,title,fn){const b=document.createElement('button');b.type='button';b.title=title;b.setAttribute('aria-label',title);b.textContent=label;b.addEventListener('click',fn);return b;}
+function icon(code,title,fn){const b=LAB.kit.pad.iconButton(code,title,fn);return b;}
+function toast(message,undo){const host=$('toast-host');host.replaceChildren(LAB.kit.pad.toast(message,undo?'Undo':null,undo));setTimeout(()=>host.replaceChildren(),5000);}
+function closeOverlay(){overlay.replaceChildren();}
+function openOverlay(kind){popup.replaceChildren();closeOverlay();const api=LAB.overlays?.[kind];if(!api){toast(kind+' is not available');return;}const ctx={notes:slots.map((text,i)=>({text,title:text.split('\n')[0],slot:i+1})),close:closeOverlay,openNote:i=>{current={kind:'slot',index:i};active=current;closeOverlay();draw();},palette:LAB.theme};api.mount(overlay,ctx);}
+function openSettings(){window.parent.postMessage({lab:'open-settings'},'*');}
+function hidePad(){win.hidden=true;$('show-pad').hidden=false;}
+function toggleSplit(){split=!split;win.classList.toggle('split',split);draw();}
+function switchStack(){current={kind:'stack',index:stackIndex};active=current;draw();}
+function setSlot(i){const right=active===other&&split;if(right){other={kind:'slot',index:i};active=other;}else{current={kind:'slot',index:i};active=current;}draw();}
+function newNote(){stack.push('');stackIndex=stack.length-1;current={kind:'stack',index:stackIndex};active=current;draw();}
+function deleteNote(){const state=active,old=getNote(state);previous=old;setNote(state,'');draw();toast('Note cleared',()=>{setNote(state,previous);draw();});}
+function addEditor(state){
+ const pane=document.createElement('div');pane.className='pane';
+ const editor=document.createElement('div');editor.className='editor fl-scroll';editor.contentEditable='true';editor._state=state;
+ editor.setAttribute('role','textbox');editor.setAttribute('aria-multiline','true');editor.setAttribute('aria-label','Note editor');
+ paintEditor(editor,getNote(state),null);pane.append(editor);panes.append(pane);
+ let scrollTimer;const undo=[],redo=[];
+ editor.addEventListener('scroll',()=>{editor.classList.add('scrolling');clearTimeout(scrollTimer);scrollTimer=setTimeout(()=>editor.classList.remove('scrolling'),900);});
+ editor.addEventListener('pointerdown',e=>{active=state;const fold=e.target.closest('[data-fold]'),check=e.target.closest('[data-check]'),timer=e.target.closest('.timer-control');if(fold){e.preventDefault();const i=+fold.dataset.fold;folded.has(i)?folded.delete(i):folded.add(i);paintEditor(editor,getNote(state),null);const marker=editor.querySelector('[data-folded]');if(marker)LAB.mark(marker,18);}else if(check){e.preventDefault();const lines=getNote(state).split('\n'),i=+check.dataset.check;lines[i]=lines[i].replace(/\[([ xX])\]/,(_,v)=>v===' '?'[x]':'[ ]');setNote(state,lines.join('\n'));paintEditor(editor,getNote(state),null);}else if(timer){e.preventDefault();timer.classList.toggle('running');toast(timer.classList.contains('running')?'Timer started':'Timer paused');}});
+ editor.addEventListener('focus',()=>{active=state;});
+ editor.addEventListener('beforeinput',e=>{
+  if(e.isComposing)return;
+  const sel=selectionOffsets(editor);if(!sel)return;
+  const text=getNote(state);let start=Math.min(sel.a,sel.b),end=Math.max(sel.a,sel.b),insert='';
+  if(e.inputType==='historyUndo'||e.inputType==='historyRedo'){
+   const from=e.inputType==='historyUndo'?undo:redo,to=e.inputType==='historyUndo'?redo:undo;
+   e.preventDefault();if(from.length){to.push(text);const value=from.pop();setNote(state,value);const at=Math.min(start,value.length);paintEditor(editor,value,{a:at,b:at});}return;
+  }
+  if(e.inputType==='insertText'||e.inputType==='insertReplacementText')insert=e.data||'';
+  else if(e.inputType==='insertParagraph'||e.inputType==='insertLineBreak')insert='\n';
+  else if(e.inputType==='insertFromPaste'){insert=e.dataTransfer?.getData('text/plain');if(insert==null)return;}
+  else if(e.inputType.startsWith('delete')){
+   if(start===end){if(e.inputType.includes('Backward'))start=Math.max(0,start-1);else end=Math.min(text.length,end+1);}
+  }else return;
+  e.preventDefault();insert=insert.replace(/\r\n?/g,'\n');const next=text.slice(0,start)+insert+text.slice(end);undo.push(text);if(undo.length>100)undo.shift();redo.length=0;
+  setNote(state,next);const at=start+insert.length;paintEditor(editor,next,{a:at,b:at});
+  if(next.slice(0,at).endsWith('/'))showCompletion(editor);else if(popup.querySelector('.completion')&&!/\/\w*$/.test(next.slice(0,at)))popup.replaceChildren();
+ });
+ editor.addEventListener('input',()=>{
+  // Composition and browser-specific input fall back to the editable DOM.
+  const text=editor.innerText.replace(/\u00a0/g,' ').replace(/\r/g,'');setNote(state,text);
+  const at=text.length;paintEditor(editor,text,{a:at,b:at});
+ });
+ return editor;
+}
+document.addEventListener('selectionchange',()=>{
+ const editor=document.activeElement;if(!editor?.classList.contains('editor'))return;
+ const selection=selectionOffsets(editor);if(!selection||selection.a!==selection.b)return;
+ const text=getNote(editor._state),line=text.slice(0,selection.b).split('\n').length-1;
+ if(line!==editor._caretLine)paintEditor(editor,text,selection);
+});
+function drawBar(){const bar=$('bar');bar.replaceChildren();const badge=document.createElement('span');badge.className='slot-badge';badge.textContent=current.kind==='slot'?'slot '+(current.index+1):'stack';bar.append(badge);const meta=document.createElement('span');meta.className='label';meta.textContent='Saved just now';bar.append(meta);const spacer=document.createElement('span');spacer.className='spacer';bar.append(spacer);const actions=document.createElement('div');actions.className='top-actions';actions.append(icon('\uE8FD','Stack',switchStack),icon('\uE721','Search notes',()=>openOverlay('search')),icon('\uE89F','Split view',toggleSplit),icon('\uE718',pinned?'Unpin':'Keep on top',()=>{pinned=!pinned;drawBar();}),icon('\uE713','Settings',openSettings),icon('\uE921','Hide',hidePad),icon('\uE712','Menu',e=>showMenu(210,38)));const pin=actions.children[3];pin.setAttribute('aria-pressed',String(pinned));if(pinned)pin.style.color='var(--accent)';bar.append(actions);}
+function drawPager(){const pager=$('pager');pager.replaceChildren();pager.append(button('‹','Previous note',()=>{if(current.kind==='stack'){stackIndex=Math.max(0,stackIndex-1);current.index=stackIndex;}else current.index=(current.index+8)%9;draw();}));pager.append(button(current.kind==='stack'?`${current.index+1} / ${stack.length}`:'stack','Open stack',switchStack));pager.append(button('›','Next note',()=>{if(current.kind==='stack'){if(stackIndex===stack.length-1)stack.push('');current.index=++stackIndex;}else current.index=(current.index+1)%9;draw();}));const sep=document.createElement('span');sep.className='separator';pager.append(sep);slots.forEach((text,i)=>{const b=button('','Slot '+(i+1),()=>setSlot(i));b.className='dot-button';const dot=document.createElement('span');dot.className='dot'+(!text?' empty':'')+(current.kind==='slot'&&current.index===i?' current':'');b.append(dot);pager.append(b);});}
+function draw(){panes.replaceChildren();addEditor(current);if(split)addEditor(other);drawBar();drawPager();}
+
+
+function showMenu(x,y){popup.replaceChildren();const m=document.createElement('div');m.className='popup';m.style.left=Math.max(0,Math.min(x,win.clientWidth-235))+'px';m.style.top=Math.max(0,Math.min(y,win.clientHeight-380))+'px';const actions=document.createElement('div');actions.className='menu-actions';for(const [name,glyph] of [['Cut','✂'],['Copy','□'],['Paste','▣'],['Delete','⌫']]){actions.append(button(glyph+'\n'+name,name,()=>{if(name==='Delete')deleteNote();else {document.execCommand(name.toLowerCase());toast(name==='Copy'?'Copied':name);}popup.replaceChildren();}));}m.append(actions);
+ const rows=[['↶','Undo','Ctrl+Z',()=>document.execCommand('undo')],['↷','Redo','Ctrl+Y',()=>document.execCommand('redo')],['▦','Select all','Ctrl+A',()=>document.execCommand('selectAll')],null,['＋','New note','Ctrl+N',newNote],['⌕','Search notes','Ctrl+F',()=>openOverlay('search')],['⊞',split?'Close split view':'Split view','Ctrl+\\',toggleSplit],['♧',pinned?'Unpin':'Keep on top','Ctrl+T',()=>{pinned=!pinned;drawBar();}],null,['⚙','Settings','Ctrl+,',openSettings],['','Hide AntiNotepad','Esc',hidePad]];
+ for(const row of rows){if(!row){const sep=document.createElement('div');sep.className='menu-sep';m.append(sep);continue;}const b=button('',row[1],()=>{popup.replaceChildren();row[3]();});b.className='menu-row';const icon=document.createElement('span');icon.style.width='20px';icon.textContent=row[0];const title=document.createElement('span');title.textContent=row[1];const shortcut=document.createElement('span');shortcut.className='shortcut';shortcut.textContent=row[2];b.append(icon,title,shortcut);m.append(b);}popup.append(m);}
+function showCompletion(editor){popup.replaceChildren();const menu=document.createElement('div');menu.className='popup completion';menu.style.left='36px';menu.style.top='70px';commands.forEach(([name,summary])=>{const row=button('', '/'+name,()=>{const value=getNote(active),insert=name==='todo'?'[ ] ':name==='date'?new Date().toLocaleDateString():name==='time'?new Date().toLocaleTimeString():name==='uuid'?crypto.randomUUID():name==='lorem'?'Lorem ipsum dolor sit amet, consectetur adipiscing elit.':'';setNote(active,value.replace(/\/\w*$/,insert));popup.replaceChildren();draw();});row.className='completion-row';const word=document.createElement('strong');word.textContent='/'+name;const desc=document.createElement('small');desc.textContent=summary;row.append(word,desc);LAB.mark(row,14);menu.append(row);});popup.append(menu);}
+$('width').addEventListener('change',e=>{win.style.width=e.target.value+'px';});$('bar-mode').addEventListener('change',e=>{win.classList.remove('docked','overlay','float');win.classList.add(e.target.value);});$('show-pad').addEventListener('click',()=>{win.hidden=false;$('show-pad').hidden=true;});
+win.addEventListener('pointermove',e=>{const r=win.getBoundingClientRect(),zone=win.classList.contains('float')?8:20;win.classList.toggle('bar-visible',e.clientY>r.bottom-zone||Boolean(e.target.closest('.pager')));});
+win.addEventListener('pointerleave',()=>win.classList.remove('bar-visible'));
+$('failure-button').addEventListener('click',()=>{const host=$('failure-host');host.innerHTML='<div class="failure" role="alertdialog" aria-label="Save failure prompt"><strong style="font-size:18px">Couldn’t save your notes</strong><span>The notes could not be saved.</span><div class="failure-actions"><button class="fl-button">Retry</button><button class="fl-button">Quit anyway</button></div></div>';const card=host.firstElementChild;LAB.mark(card,15);card.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>host.replaceChildren()));});
+win.addEventListener('contextmenu',e=>{e.preventDefault();const r=win.getBoundingClientRect();showMenu(e.clientX-r.left,e.clientY-r.top);});document.addEventListener('pointerdown',e=>{if(!popup.contains(e.target)&&!e.target.closest('[aria-label="Menu"]'))popup.replaceChildren();});
+document.addEventListener('keydown',e=>{if(e.key==='F1'){e.preventDefault();openOverlay('help');}else if(e.ctrlKey&&e.key.toLowerCase()==='f'){e.preventDefault();openOverlay('search');}else if(e.key==='Escape'){if(e.defaultPrevented)return;if(overlay.childElementCount)closeOverlay();else if(popup.childElementCount)popup.replaceChildren();else if($('failure-host').childElementCount)$('failure-host').replaceChildren();else hidePad();}else if(e.ctrlKey&&e.key==='\\'){e.preventDefault();toggleSplit();}else if(e.ctrlKey&&/^[1-9]$/.test(e.key)){e.preventDefault();setSlot(+e.key-1);}});
+LAB.backdrop(win);draw();
+
+</script></body></html>
