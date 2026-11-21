@@ -355,3 +355,7 @@ fade and the backdrop do **not** change.
 
 **Your call:** lift the bar-and-pager lock for these values so the lab build applies them, or keep them (the lab build then
 leaves ChromeTokens as it is and applies the scales to everything else)?
+
+## Contrast
+
+`Theme/Contrast` calculates WCAG relative luminance, opaque contrast ratios, and composited colors. Text requires 4.5:1 and non-text marks require 3:1. Primary button text chooses the stronger of white and near-black; field focus uses the accent when it meets 3:1 and Ink otherwise. `EnsureOn` adjusts save-failure detail, pager empty, filled and selected marks, and toggle edges and on fills against their modeled surfaces. The Clear tint over a desktop (D-1/D-4) remains model-only and has not been measured live.

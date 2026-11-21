@@ -749,7 +749,8 @@ internal sealed partial class PadWindow
         _withdrawToastUndoOnEdit = onAction is null ? null : withdrawUndoOnEdit;
         if (action is not null && onAction is not null)
         {
-            var label = Kit.Text(action, p.Accent, Typography.Body, Typography.Strong);
+            var label = Kit.Text(action, p.Canvas, Typography.Body, Typography.Strong);
+            label.TextDecorations = TextDecorations.Underline;
             label.Margin = new Thickness(Space.S, Space.Nudge);
             var button = Kit.Plain(label, p with { Ink = p.Canvas }, height: ChromeTokens.ButtonSize);
             button.Click += (_, _) =>
@@ -804,7 +805,7 @@ internal sealed partial class PadWindow
         {
             Text = message,
             IsVisible = message.Length > 0,
-            Foreground = new SolidColorBrush(p.Muted),
+            Foreground = new SolidColorBrush(Contrast.EnsureOn(p.Muted, p.Surface, Contrast.Text)),
             FontSize = Typography.Body,
             TextWrapping = TextWrapping.Wrap,
             MaxWidth = ChromeTokens.Size.SaveFailureReasonMaxWidth,

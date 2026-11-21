@@ -226,6 +226,10 @@ internal sealed class PadBar
         }
         else
         {
+            var surface = context.Style == BarStyle.Float || context.SlotDots != "quiet" ? p.Surface : p.Canvas;
+            var selectedColor = Contrast.EnsureOn(p.Accent, surface, Contrast.Mark);
+            var filledColor = Contrast.EnsureOn(p.Muted, surface, Contrast.Mark);
+            var emptyColor = Contrast.EnsureOn(p.Faint, surface, Contrast.Mark);
             var dots = new StackPanel { Orientation = Orientation.Horizontal };
             for (var i = 1; i <= 9; i++)
             {
@@ -233,7 +237,7 @@ internal sealed class PadBar
                 var slot = context.Slots[i - 1];
                 var filled = !slot.IsEmpty;
                 var current = context.ViewSlot == i || context.OtherPaneSlot == i;
-                var dot = new Border { Width = current ? ChromeTokens.PagerDotSelectedWidth : ChromeTokens.PagerDotWidth, Height = ChromeTokens.PagerDotHeight, CornerRadius = new CornerRadius(ChromeTokens.PagerDotRadius), Background = current ? new SolidColorBrush(p.Accent) : filled ? new SolidColorBrush(p.Muted) : Brushes.Transparent, BorderBrush = new SolidColorBrush(current ? p.Accent : p.Faint), BorderThickness = new Thickness(filled || current ? default : ChromeTokens.PagerDotBorderThickness), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+                var dot = new Border { Width = current ? ChromeTokens.PagerDotSelectedWidth : ChromeTokens.PagerDotWidth, Height = ChromeTokens.PagerDotHeight, CornerRadius = new CornerRadius(ChromeTokens.PagerDotRadius), Background = current ? new SolidColorBrush(selectedColor) : filled ? new SolidColorBrush(filledColor) : Brushes.Transparent, BorderBrush = new SolidColorBrush(current ? selectedColor : emptyColor), BorderThickness = new Thickness(filled || current ? default : ChromeTokens.PagerDotBorderThickness), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
                 var button = Kit.Plain(dot, p, ChromeTokens.PagerDotTargetWidth, ChromeTokens.PagerDotButtonHeight, ChromeTokens.PagerDotHoverRadius);
                 button.Click += (_, _) => actions.SelectSlot(target);
                 ToolTip.SetTip(button, context.TooltipFor($"Slot {i} · {(filled ? slot.Title() : "empty")}", "open-slot"));
