@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`). Codex reads the whole card, follows "For Codex", never edits it. Budget: 4 KB.
 
 Tier: Medium · bug-fix (key and toast handlers only; the quit path gets key routing, its logic is untouched)
-State: building
+State: hand-tested
 Branch: `fix/A35a-data-safety` in `.claude/worktrees/fix/A35a-data-safety` (from `docs/A35-ux-pass`; merges back there)
 
 ## Request
@@ -55,5 +55,7 @@ Role: worker (`docs/agents.md`); a terra run stopped after reading, with no chan
 Report `.coord/reports/A35a-data-safety.md`: 1 Summary; 2 Change list; 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 6 Contracts; 7 Lens review; 8 Checks (FAIL before, PASS after); 9 Hand checks.
 
 ## Check
+2026-11-20. Round 1: gate PASS after two formatter line fixes by the item chat; Codex review rework (delete-forever Undo lost saved bodies; withdrawn toast button still clickable during fade). Round 2 (`-r2`): both fixed with failing-first tests; gate `-r2` PASS (44/45 contracts, 1 manual); Codex review r2 VERDICT: accept. Bounds: within plan; Ctrl+Delete also skips when query text is selected (justified: it would erase the selection). Size WARN: `SelfTest/UI.cs`, `SelfTest/Store.cs` grew. Noticed: repeated save prompts keep the first button closures (same methods today, no failure). Misses: round 1 tests used unsaved notes and reduced motion; caught by Codex review.
 
 ## Hand test
+Green slot dev copy, 2026-11-21. User (verbatim): "there should be a timer countdown animation on the notification itself like the background unfilling from right to left" (new idea, not this item; sent to the A35 chat); "message shows but that preview has not updated" (test 3, unclear what preview; slot-only delete changes nothing, so the list is right); "everything else works fine". Save-error card: selftest only.

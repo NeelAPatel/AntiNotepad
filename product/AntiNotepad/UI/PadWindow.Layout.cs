@@ -68,6 +68,7 @@ internal sealed partial class PadWindow
     private Anim.Handle? _chromeAnim;
     private Anim.Handle? _toastAnim;
     private Action? _toastAction;
+    private long _toastGeneration;
     private Note? _withdrawToastUndoOnEdit;
     /// <summary>Ctrl+Z undoes the toast's action (a delete) until the user types something.</summary>
     private bool _undoArmed;
@@ -696,6 +697,7 @@ internal sealed partial class PadWindow
     internal void Toast(string text, string? action = null, Action? onAction = null, bool brief = false, Note? withdrawUndoOnEdit = null)
     {
         var p = _palette;
+        var generation = ++_toastGeneration;
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
         row.Children.Add(new TextBlock { Text = text, Foreground = new SolidColorBrush(p.Canvas), FontSize = Typography.Caption, TextWrapping = TextWrapping.Wrap, MaxWidth = 300, VerticalAlignment = VerticalAlignment.Center });
         _toastAction = onAction;
@@ -706,7 +708,12 @@ internal sealed partial class PadWindow
             var label = Kit.Text(action, p.Accent, Typography.Body, Typography.Strong);
             label.Margin = new Thickness(8, 2);
             var button = Kit.Plain(label, p with { Ink = p.Canvas }, height: 32);
-            button.Click += (_, _) => { onAction(); HideToast(); };
+            button.Click += (_, _) =>
+            {
+                if (_toastGeneration != generation || !ReferenceEquals(_toastAction, onAction)) return;
+                onAction();
+                if (_toastGeneration == generation) HideToast();
+            };
             row.Children.Add(button);
         }
         _toast.Child = row;
@@ -726,6 +733,7 @@ internal sealed partial class PadWindow
 
     private void HideToast()
     {
+        _toastGeneration++;
         _toastAction = null; _undoArmed = false; _withdrawToastUndoOnEdit = null;
         _toastAnim?.Cancel();
         var startOpacity = _toast.Opacity;

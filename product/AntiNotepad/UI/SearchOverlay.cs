@@ -379,15 +379,22 @@ internal sealed class SearchOverlay : Grid
         if (ShowingTrash)
         {
             var removed = targets.Where(n => d.Trash.Contains(n))
-                .Select(n => (Note: n, Index: d.Trash.IndexOf(n)))
+                .Select(n =>
+                {
+                    var body = n.Text;
+                    return (Note: n, Index: d.Trash.IndexOf(n), Body: body, BodyAvailable: !n.BodyUnavailable);
+                })
                 .OrderBy(item => item.Index)
                 .ToList();
-            foreach (var (note, _) in removed) d.Trash.Remove(note);
+            foreach (var item in removed) d.Trash.Remove(item.Note);
             if (removed.Count > 0)
                 _window.Toast(removed.Count == 1 ? "Deleted forever" : $"{removed.Count} notes deleted forever", "Undo", () =>
                 {
-                    foreach (var (note, index) in removed)
-                        d.Trash.Insert(Math.Clamp(index, 0, d.Trash.Count), note);
+                    foreach (var item in removed)
+                    {
+                        d.Trash.Insert(Math.Clamp(item.Index, 0, d.Trash.Count), item.Note);
+                        if (item.BodyAvailable) item.Note.Text = item.Body;
+                    }
                     _window.SearchChangedData();
                     if (_window.IsOverlay(this)) StartSearch();
                 });

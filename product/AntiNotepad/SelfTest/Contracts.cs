@@ -260,13 +260,13 @@ internal static partial class SelfTest
             IconRegistryContractRow(),
             new(
                 "search-delete-undo",
-                "Delete edits the search query; Ctrl+Delete removes forever only at query end and Undo restores original trash positions.",
+                "Delete edits the search query; Ctrl+Delete removes forever only at query end, Undo restores original trash positions, and saved text survives both saves and reload.",
                 "A35a-data-safety",
                 searchDeleteSafety,
                 "Dev copy: in Trash, type abc, place the caret mid-query and press Delete and Ctrl+Delete; confirm Trash is unchanged. Move to the end, press Ctrl+Delete, then Undo; confirm the note returns in its original order."),
             new(
                 "slot-clear-undo-withdrawal",
-                "A cleared slot can be restored until it is edited, after which its Undo toast action is withdrawn.",
+                "A cleared slot can be restored until it is edited; its withdrawn toast button cannot run during normal motion or overwrite later text.",
                 "A35a-data-safety",
                 slotClearUndoSafety,
                 "Dev copy: clear a slot and Undo before editing; repeat, type new text, then confirm the toast is gone and the new text remains."),

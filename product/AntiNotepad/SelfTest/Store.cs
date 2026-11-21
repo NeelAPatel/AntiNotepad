@@ -318,6 +318,55 @@ internal static partial class SelfTest
         }
     }
 
+    /// <summary>Checks permanent-delete Undo against durable and unavailable note bodies.</summary>
+    private static bool SearchDeletePersistenceChecks(out string report)
+    {
+        using var fixture = new DataSafetyFixture();
+        var overlay = fixture.Search("body", true);
+        var failures = new List<string>();
+
+        var savedTarget = new Note { Text = "body survives permanent-delete Undo" };
+        fixture.Store.Data.Trash.Add(savedTarget);
+        var savedBeforeDelete = fixture.Store.Save();
+        savedTarget.Detach();
+        DataSafetyFixture.SetSearchItems(overlay, "body", savedTarget);
+        DataSafetyFixture.Key(overlay, Avalonia.Input.Key.Delete, Avalonia.Input.KeyModifiers.Control);
+        var durableUndo = DataSafetyFixture.Get(fixture.Pad, "_toastAction") as Action;
+        var savedDelete = fixture.Store.Save();
+        durableUndo?.Invoke();
+        var savedUndo = fixture.Store.Save();
+        var reloadedStore = new Store(fixture.Folder);
+        reloadedStore.Load();
+        var reloadedTarget = reloadedStore.Data.Trash.SingleOrDefault(note => note.Id == savedTarget.Id);
+        if (!savedBeforeDelete || durableUndo is null || !savedDelete || !savedUndo
+            || reloadedTarget?.Text != "body survives permanent-delete Undo")
+            failures.Add("permanent-delete Undo must preserve a saved body across delete save, Undo save, and reload");
+
+        var unavailableTarget = new Note { Text = "body intentionally unavailable" };
+        fixture.Store.Data.Trash.Clear();
+        fixture.Store.Data.Trash.Add(unavailableTarget);
+        var savedUnavailableMetadata = fixture.Store.Save();
+        unavailableTarget.Detach();
+        var unavailablePath = Path.Combine(fixture.Folder, "notes", unavailableTarget.Id + ".md");
+        File.Delete(unavailablePath);
+        DataSafetyFixture.SetSearchItems(overlay, "unavailable", unavailableTarget);
+        DataSafetyFixture.Key(overlay, Avalonia.Input.Key.Delete, Avalonia.Input.KeyModifiers.Control);
+        var unavailableUndo = DataSafetyFixture.Get(fixture.Pad, "_toastAction") as Action;
+        var savedPermanentDelete = fixture.Store.Save();
+        unavailableUndo?.Invoke();
+        var savedMetadataUndo = fixture.Store.Save();
+        var unavailableReload = new Store(fixture.Folder);
+        unavailableReload.Load();
+        var restoredUnavailable = unavailableReload.Data.Trash.SingleOrDefault(note => note.Id == unavailableTarget.Id);
+        _ = restoredUnavailable?.Text;
+        if (!savedUnavailableMetadata || unavailableUndo is null || !savedPermanentDelete || !savedMetadataUndo
+            || restoredUnavailable is null || !restoredUnavailable.BodyUnavailable || restoredUnavailable.Dirty || File.Exists(unavailablePath))
+            failures.Add("Undo must keep an unavailable body as metadata without writing empty text");
+
+        report = failures.Count == 0 ? "saved body survives delete, Undo, and reload; unavailable body remains metadata-only" : string.Join("; ", failures);
+        return failures.Count == 0;
+    }
+
     private static bool BackgroundSaveAndLogChecks(out string report)
     {
         var failures = new List<string>();

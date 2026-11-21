@@ -26,8 +26,9 @@ internal static partial class SelfTest
 
         public Store Store { get; }
         public UI.PadWindow Pad { get; }
+        public string Folder => _folder;
 
-        public DataSafetyFixture()
+        public DataSafetyFixture(bool reducedMotion = true)
         {
             if (Application.Current is null) AppBuilder.Configure<Application>().UsePlatformDetect().SetupWithoutStarting();
             if (!Application.Current!.Styles.OfType<Avalonia.Themes.Fluent.FluentTheme>().Any())
@@ -42,8 +43,8 @@ internal static partial class SelfTest
             var settings = Store.SettingsService;
             settings.Current.Theme = palette.Dark ? "dark" : "light";
             if (palette.Dark) settings.Current.DarkPalette = palette.Id; else settings.Current.LightPalette = palette.Id;
-            settings.Current.ReduceMotion = true;
-            Anim.Reduced = true;
+            settings.Current.ReduceMotion = reducedMotion;
+            Anim.Reduced = reducedMotion;
             Welcome.SeedIfNew(Store.Data, settings);
             var notes = new NotesSession(Store, _folder, _folder, null, _log.Write);
             Pad = new UI.PadWindow(Store, settings, _log, false, true, notes);
@@ -175,14 +176,16 @@ internal static partial class SelfTest
             failures.Add("Ctrl+Backspace on an empty query keeps its existing delete action");
         else backspaceUndo();
 
-        report = failures.Count == 0 ? "query Delete routes and permanent-delete Undo positions" : string.Join("; ", failures);
+        if (!SearchDeletePersistenceChecks(out var persistenceReport)) failures.Add(persistenceReport);
+
+        report = failures.Count == 0 ? "query Delete routes, Undo positions, and saved-body persistence" : string.Join("; ", failures);
         return failures.Count == 0;
     }
 
     /// <summary>Checks that a cleared slot can be undone before editing, and its toast action is withdrawn after editing.</summary>
     private static bool SlotClearUndoSafetyChecks(out string report)
     {
-        using var fixture = new DataSafetyFixture();
+        using var fixture = new DataSafetyFixture(reducedMotion: false);
         var slot = fixture.Store.Data.Slots[0];
         Editor.PadView.DocumentFor(slot).Text = "old slot text";
         fixture.Pad.OpenSlot(1);
@@ -191,12 +194,15 @@ internal static partial class SelfTest
         var restored = Editor.PadView.DocumentFor(slot).Text == "old slot text";
 
         fixture.Pad.DeleteCurrent();
+        var toast = (Border)DataSafetyFixture.Get(fixture.Pad, "_toast")!;
+        var button = toast.Child is StackPanel row ? row.Children.OfType<Button>().LastOrDefault() : null;
         Editor.PadView.DocumentFor(slot).Text = "new slot text";
         var action = DataSafetyFixture.Get(fixture.Pad, "_toastAction");
         var undoArmed = (bool)DataSafetyFixture.Get(fixture.Pad, "_undoArmed")!;
-        var toast = (Border)DataSafetyFixture.Get(fixture.Pad, "_toast")!;
-        var safe = action is null && !undoArmed && !toast.IsVisible && Editor.PadView.DocumentFor(slot).Text == "new slot text";
-        report = restored && safe ? "slot clear Undo restores before edit and withdraws after edit" : $"restore={restored}; edited text kept={Editor.PadView.DocumentFor(slot).Text == "new slot text"}; action withdrawn={action is null}; undo disarmed={!undoArmed}";
+        var normalMotion = !Anim.Reduced;
+        button?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        var safe = normalMotion && button is not null && action is null && !undoArmed && Editor.PadView.DocumentFor(slot).Text == "new slot text";
+        report = restored && safe ? "slot clear Undo restores before edit and a withdrawn button cannot overwrite later text" : $"restore={restored}; normal motion={normalMotion}; edited text kept={Editor.PadView.DocumentFor(slot).Text == "new slot text"}; action withdrawn={action is null}; undo disarmed={!undoArmed}; stale button present={button is not null}; toast visible={toast.IsVisible}";
         return restored && safe;
     }
 
