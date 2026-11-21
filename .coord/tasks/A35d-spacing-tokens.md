@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`).
 
 Tier: Medium · settings-sections (corner override restyles Fluent controls app-wide; Settings rows move)
-State: hand test
+State: hand-tested
 Branch: `refactor/A35d-spacing-tokens` in `.claude/worktrees/refactor/A35d-spacing-tokens` (from and back into `docs/A35-ux-pass`)
 
 ## Request
@@ -64,5 +64,14 @@ User, 2026-11-21, after the lab (`tools/playground/a35d-lab/`): "Approve"
 Four runs, one step each: `.coord/tasks/A35d-spacing-tokens.build.md`. Claude commits between steps.
 
 ## Check
+Gate PASS (offline, base 3b6ecb5) on every step and both fixes. Codex review: pass; its two minor findings fixed (`.coord/reports/A35d-spacing-tokens-review.md`, `-fix-2.md`).
 
 ## Hand test
+User, 2026-11-21, blue dev copy, round 1 findings:
+- "search hint text misaligned" -> fixed here (fix-3, hint centered).
+- "the Open at option things should reflow into multiple rows" -> fixed here (fix-4, tiles wrap).
+- Completion tooltip timing and position; shortcut recorder flow ("Adopt a Click -> Record -> save/cancel/reset. ; record -> esc clears the shortcut") -> out of scope; sent to Master 7 backlog on the user's word.
+
+User, 2026-11-21, after the fixes: "All looks right"
+
+User, 2026-11-21, after the rebase onto A35g-labels-tooltips (Reset/Undo gap 6->8, save-failure card spacing): "Both look right"

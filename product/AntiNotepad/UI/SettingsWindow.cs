@@ -685,7 +685,7 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Group("Opening"));
         Control OpenAtTiles()
         {
-            var tiles = new UniformGrid { Columns = 5 };
+            var tiles = new WrapPanel { ItemSpacing = Space.S, LineSpacing = Space.S, HorizontalAlignment = HorizontalAlignment.Left };
             foreach (var (id, name) in new[] { ("remember", "Where I left it"), ("center", "Center"), ("mouse", "Mouse"), ("tray", "Above the tray"), ("dropdown", "Drop down") })
                 tiles.Children.Add(Tile(new ScreenPicture(id, _p) { Height = ChromeTokens.Size.ScreenPictureHeight }, name, S.OpenAt == id, () => Set(() => S.OpenAt = id, rows: true), 104));
             return tiles;
