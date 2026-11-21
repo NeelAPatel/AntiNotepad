@@ -549,7 +549,7 @@ internal sealed partial class SettingsWindow : Window
     /// <summary>Places the pending Undo beside the reset that created it.</summary>
     private Control ShortcutResetControl(string label, Action reset, string target)
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.S };
         row.Children.Add(TextButton(label, reset));
         if (_shortcutUndoTarget == target) row.Children.Add(TextButton("Undo", UndoShortcutReset));
         return row;
