@@ -187,6 +187,7 @@ function Get-RoadmapPlanRows {
             section = $(if ([string]::IsNullOrWhiteSpace($Heading)) { 'Pending' } else { $Heading })
             source = $Source
             group = $currentGroup
+            parent = $(if ($cells[1] -match '^child of\s+([^:]+):') { $Matches[1].Trim() } else { '' })
         })
     }
 

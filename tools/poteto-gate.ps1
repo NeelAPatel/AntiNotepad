@@ -29,6 +29,22 @@ function Get-Verdict($Hook) {
         if ($prompt.IndexOf('You are the item chat', [StringComparison]::OrdinalIgnoreCase) -lt 0) { return 'unrelated' }
         $lines = $prompt -split "`r?`n"
         if ($lines.Count -lt 2 -or $lines[0] -cne $command -or -not $lines[1].StartsWith('Your first action is a Skill tool call', [StringComparison]::Ordinal)) { return 'bad-brief' }
+        if ($prompt -match '(?i)you are the item chat for\s+`?(?<id>[A-Z][A-Za-z0-9]*(?:-[a-z0-9]+)+)`?') {
+            $id = $Matches.id
+            $project = if ($env:CLAUDE_PROJECT_DIR) { $env:CLAUDE_PROJECT_DIR } else { Split-Path -Parent $PSScriptRoot }
+            $common = & git -C $project rev-parse --path-format=absolute --git-common-dir 2>$null
+            $root = if ($LASTEXITCODE -eq 0 -and $common) { Split-Path -Parent $common.Trim() } else { $project }
+            $found = $false
+            foreach ($file in @('.coord/STATUS.md', '.coord/pending.md')) {
+                $path = Join-Path $root $file
+                if (Test-Path -LiteralPath $path -PathType Leaf) {
+                    foreach ($line in [IO.File]::ReadLines($path)) {
+                        if ($line -match ('^\|\s*' + [regex]::Escape($id) + '\s*\|')) { $found = $true; break }
+                    }
+                }
+            }
+            if (-not $found) { return "missing-row:$id" }
+        }
         return 'valid-brief'
     }
     if ($Mode -ne 'Stop') { throw 'Mode is required' }
@@ -90,6 +106,12 @@ function Invoke-SelfTest {
         function Json($Value) { return ($Value | ConvertTo-Json -Depth 20 -Compress) }
         $valid = "/pstack:poteto-mode`nYour first action is a Skill tool call with skill pstack:poteto-mode`nYou are the item chat"
         Check 'valid brief' Brief (Json @{tool_input=@{prompt=$valid}}) 0
+        $named = $valid + ' for `Loop21-test-item`'
+        Check 'missing row' Brief (Json @{tool_input=@{prompt=$named}}) 2 'Loop21-test-item'
+        Check 'missing row log-only' Brief (Json @{tool_input=@{prompt=$named}}) 0 '' $true
+        [void](New-Item -ItemType Directory -Path (Join-Path $root '.coord') -Force)
+        [IO.File]::WriteAllText((Join-Path $root '.coord/pending.md'), "| Loop21-test-item | scope | Low | S | request |`n")
+        Check 'existing row' Brief (Json @{tool_input=@{prompt=$named}}) 0
         Check 'bad first line' Brief (Json @{tool_input=@{prompt="prefix`n$valid"}}) 2 'item chat template'
         Check 'lowercase marker with bad first line' Brief (Json @{tool_input=@{prompt="you are the item chat for Loop16-poteto-trigger; begin Findings"}}) 2 'item chat template'
         Check 'bad second line' Brief (Json @{tool_input=@{prompt="/pstack:poteto-mode`nwrong`nYou are the item chat"}}) 2 'item chat template'
@@ -133,6 +155,7 @@ try {
     $verdict = Get-Verdict $hook
     try { Write-GateLog "$verdict$(if ($LogOnly) { ' (log-only)' })" } catch { }
     if (-not $LogOnly -and $verdict -eq 'bad-brief') { [Console]::Error.WriteLine($briefReason); exit 2 }
+    if (-not $LogOnly -and $verdict -like 'missing-row:*') { [Console]::Error.WriteLine("Missing STATUS or pending row for $($verdict.Substring(12)); add it before dispatch."); exit 2 }
     if (-not $LogOnly -and $verdict -eq 'first-turn-missing') { [Console]::Error.WriteLine($fallback); exit 2 }
     exit 0
 }
