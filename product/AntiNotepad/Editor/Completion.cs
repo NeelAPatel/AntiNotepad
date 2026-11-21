@@ -1,3 +1,4 @@
+// Offers editor completions and commands so common insertions and text transformations are easy to discover.
 using System.Globalization;
 using System.Text.Json;
 using Avalonia;

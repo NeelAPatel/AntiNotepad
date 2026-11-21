@@ -1,3 +1,4 @@
+// Builds the reusable rows, controls, and illustrations used by the settings window.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;

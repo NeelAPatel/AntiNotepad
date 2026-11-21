@@ -1,3 +1,4 @@
+// Presents keyboard shortcuts and modes in the pad so users can find commands without leaving it.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;

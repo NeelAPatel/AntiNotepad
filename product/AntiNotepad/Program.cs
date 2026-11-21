@@ -187,6 +187,7 @@ internal sealed class StartupRequestLatch
 internal sealed record AppLaunch(RuntimeLog Log, bool IsDev, bool StartHidden, string? StartupNotice,
     bool SoftwareRendering, Action<PadWindow> Attach);
 
+/// <summary>Starts the pad and connects its services to the desktop application lifetime.</summary>
 public sealed class App : Application
 {
     private readonly AppLaunch _launch;

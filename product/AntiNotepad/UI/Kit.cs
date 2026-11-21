@@ -29,6 +29,7 @@ internal sealed class GlyphIcon(Icon icon, Color color, double size = Typography
         set { _highlightOpacity = value; InvalidateVisual(); }
     }
 
+    /// <summary>Caches the icon outline for the current scale so repeated draws can reuse it.</summary>
     private Geometry Geometry(double scale)
     {
         if (_geometry is not null && _textScale.Equals(scale)) return _geometry;

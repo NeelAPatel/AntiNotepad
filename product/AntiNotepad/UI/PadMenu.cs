@@ -1,3 +1,4 @@
+// Builds the pad’s popup menus, including action rows and submenus for editor commands.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;

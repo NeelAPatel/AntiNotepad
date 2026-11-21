@@ -1,3 +1,4 @@
+// Presents note and trash search inside the pad, with navigation and selection of results.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -108,6 +109,7 @@ internal sealed class SearchOverlay : Grid
         return Enumerable.Reverse(d.Stack).Where(n => !n.IsEmpty).Concat(d.Slots.Where(s => !s.IsEmpty));
     }
 
+    /// <summary>Starts a search against a snapshot of the current notes so results match the requested query.</summary>
     private void StartSearch()
     {
         if (_disposed || !_window.IsOverlay(this)) return;

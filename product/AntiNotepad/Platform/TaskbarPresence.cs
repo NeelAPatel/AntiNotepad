@@ -1,3 +1,4 @@
+// Connects the pad to a Windows taskbar button so clicks can show or hide it reliably.
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;

@@ -1,3 +1,4 @@
+// Draws the editor paper and decorations, including result chips, dividers, and checkboxes.
 using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
