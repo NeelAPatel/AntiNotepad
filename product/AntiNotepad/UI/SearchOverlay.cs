@@ -78,7 +78,7 @@ internal sealed class SearchOverlay : Grid
         var tools = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, Margin = new Thickness(6, 0, 0, 0) };
         tools.Children.Add(Kit.IconButton(GridView ? Icons.List : Icons.Grid,
             ShortcutTooltip(GridView ? "List view" : "Card grid", window.Shortcuts.GetLabel("grid")), _p, ToggleGrid, 32));
-        tools.Children.Add(Kit.IconButton(trash ? Icons.Back : Icons.Delete,
+        tools.Children.Add(Kit.IconButton(trash ? Icons.Back : Icons.OpenTrash,
             ShortcutTooltip(trash ? "Back to notes" : $"Trash · {window.Data.Trash.Count}", window.Shortcuts.GetLabel("trash")), _p, ToggleTrash, 32));
         tools.Children.Add(Kit.IconButton(Icons.Close, "Close (Esc)", _p, window.CloseOverlay, 32));
         var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(0, 0, 0, 8) };
