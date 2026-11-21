@@ -4,7 +4,7 @@ Who does what, and what each phase leaves behind. Start/resume: .coord/STATUS.md
 
 Every item has one **item card**, `.coord/tasks/<ID-slug>.md` (from `.coord/templates/item.md`) that grows phase by phase: request, findings, approved plan, then the check against both.
 
-**Loop version: v5.4.0** (LP<vX.Y.Z> in director names). Roles or ownership change: major; new checks, scripts or routes: minor; chat output only: patch. On a bump the merging director updates STATUS and live director names.
+**Loop version: v5.5.0** (LP<vX.Y.Z> in director names). Roles or ownership change: major; new checks, scripts or routes: minor; chat output only: patch. On a bump the merging director updates STATUS and live director names.
 
 **One chat per item.** The director writes the Request, starts the item chat and steps back; that chat runs Findings through Hand test and the user answers it. The director merges. Start it in the trusted main checkout (`use_worktree: false`); it works in its worktree by absolute path.
 
@@ -52,6 +52,7 @@ One line by default: `**>> <ID-slug>** · ● <phase> · <what changed>`. The **
 ## Rules
 - Every bug fixed adds a `CONTRACTS` row.
 - **One chat per item, one level.** An item chat never starts a chat (no `start_session`, no helper or Codex-run chat) unless the user says so there. A second chat only if the first sat idle over an hour with a large context, or on the user's word.
+- **Umbrellas:** with the user's go an umbrella chat may start children; dispatch requires a parent row and each child row (Scope `child of <ID-slug>:`), plus `.coord/tasks/<umbrella>-board.md` for queue, order and landed. Children rebase when ready and merge into their parent; only a director merges the umbrella to dev. Crosstalk is need-to-know: no acks or progress FYIs; message for coordination, a major result requested by the parent, or at the user's request. At review/merge ready print `READY: <ID-slug>. Go to <chat> and run /merge-task <ID-slug>` (or `/review-task` here).
 - Codex runs are background runs in the item chat; the director never launches Codex.
 
 Item chats set or clear their own title in the same step as their STATUS row (pending row before Approve): `<me emoji> [Codex word] [dev word] <ID-slug> ◆ <phase>`, empty fields left out. The `title-hint` hook gives ASCII words at each user turn; the chat writes ⁉️, brackets and ◆ and sets the title first. Codex words: Codexing, Codex failed, Codex stalled. Dev words: Merged, Dropped, Paused, Parked (Paused and Parked keep the phase; cleared on resume). Rework clears the me marker.
