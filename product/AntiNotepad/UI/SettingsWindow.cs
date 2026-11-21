@@ -5,8 +5,12 @@ using Avalonia.Controls.Chrome;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
+using Avalonia.Automation;
 using Avalonia.Platform.Storage;
 using AntiNotepad;
 using AntiNotepad.Model;
@@ -55,6 +59,7 @@ internal sealed partial class SettingsWindow : Window
     private bool _notesFolderRestartPending;
     private Palette? _stylesPalette;
     private string? _searchQuery;
+    private FocusIdentity? _focusBeforeSet;
     private string? _shortcutUndoTarget;
     private Dictionary<string, string>? _shortcutUndoOverrides;
     private Dictionary<string, string>? _shortcutResetOverrides;
@@ -115,7 +120,7 @@ internal sealed partial class SettingsWindow : Window
     {
         if (Equals(_p, _host.CurrentPalette)) return;
         _p = _host.CurrentPalette;
-        Restyle();
+        RebuildWithFocus(Restyle);
     }
 
     /// <summary>Dev tooling: open a given section without a click.</summary>
@@ -137,6 +142,13 @@ internal sealed partial class SettingsWindow : Window
 
     private void Restyle()
     {
+        RenderTargetBitmap? snapshot = null;
+        if (!Anim.Reduced && Content is Control oldRoot && oldRoot.Bounds.Width > 0 && oldRoot.Bounds.Height > 0 && VisualRoot is not null)
+        {
+            var scale = RenderScaling;
+            snapshot = new RenderTargetBitmap(PixelSize.FromSize(oldRoot.Bounds.Size, scale), new Vector(96 * scale, 96 * scale));
+            snapshot.Render(oldRoot);
+        }
         _shortcuts.Refresh(S);
         ApplyLook();
         _preview.ApplyLook(_p, S);
@@ -144,13 +156,26 @@ internal sealed partial class SettingsWindow : Window
         Build();
         if (string.IsNullOrWhiteSpace(query)) Show(_section, animate: false, keepScroll: true);
         else { _find.Text = query; ShowResults(query); }
+        if (snapshot is not null && Content is Grid root)
+        {
+            var image = new Image { Source = snapshot, IsHitTestVisible = false, Stretch = Stretch.Fill };
+            Grid.SetRowSpan(image, 2);
+            root.Children.Add(image);
+            Anim.Run(image, MotionTokens.Win11Fast, t => image.Opacity = 1 - t, () =>
+            {
+                root.Children.Remove(image);
+                image.Source = null;
+                snapshot.Dispose();
+            });
+        }
     }
 
     /// <summary>Applies a change to the pad. Only <paramref name="rows"/> changes (an option that shows or hides rows) rebuild the page.</summary>
     private void Set(System.Action change, bool rows = false)
     {
-        _settings.Update(_ => change());
-        AfterSet(rows);
+        _focusBeforeSet = CaptureFocus(PageControls());
+        try { _settings.Update(_ => change()); AfterSet(rows); }
+        finally { _focusBeforeSet = null; }
     }
 
     private void SetLanguageEnabled(string id)
@@ -161,12 +186,57 @@ internal sealed partial class SettingsWindow : Window
 
     private void AfterSet(bool rows)
     {
-        if (!Equals(_p, _host.CurrentPalette)) { _p = _host.CurrentPalette; Restyle(); return; }
+        if (!Equals(_p, _host.CurrentPalette)) { _p = _host.CurrentPalette; RebuildWithFocus(Restyle); return; }
         ApplyLook();
         _preview.ApplyLook(_p, S);
         if (!rows) return;
-        if (_find.Text is { Length: > 0 } query) ShowResults(query);
-        else Show(_section, animate: false, keepScroll: true);
+        RebuildWithFocus(() =>
+        {
+            if (_find.Text is { Length: > 0 } query) ShowResults(query);
+            else Show(_section, animate: false, keepScroll: true);
+        });
+    }
+
+    internal readonly record struct FocusIdentity(bool HadFocus, string? Name, int Index, bool KeyboardVisible = false);
+
+    private Control[] PageControls() => _scroll.Content is Control page
+        ? page.GetVisualDescendants().OfType<Control>()
+            .Where(control => control.Focusable && control.IsVisible && control.IsEffectivelyEnabled).ToArray()
+        : [];
+
+    /// <summary>Captures a control's accessible name or its position before a rebuild.</summary>
+    internal static FocusIdentity IdentifyFocus(IReadOnlyList<Control> controls, Control? focused)
+    {
+        var index = -1;
+        for (var i = 0; i < controls.Count; i++)
+            if (ReferenceEquals(controls[i], focused)) { index = i; break; }
+        return new FocusIdentity(focused is not null, focused is null ? null : AutomationProperties.GetName(focused), index, focused?.Classes.Contains(":focus-visible") == true);
+    }
+
+    private FocusIdentity CaptureFocus(IReadOnlyList<Control> controls) =>
+        IdentifyFocus(controls, FocusManager?.GetFocusedElement() as Control);
+
+    /// <summary>Rebuilds controls and restores their previous focus after attachment.</summary>
+    private void RebuildWithFocus(Action rebuild, Func<Control[]>? controls = null, FocusIdentity? identity = null)
+    {
+        controls ??= PageControls;
+        var focus = identity ?? _focusBeforeSet ?? CaptureFocus(controls());
+        rebuild();
+        Dispatcher.UIThread.Post(() =>
+        {
+            var target = FocusTarget(controls(), focus);
+            if (focus.KeyboardVisible) target?.Focus(NavigationMethod.Tab);
+            else target?.Focus();
+        }, DispatcherPriority.Loaded);
+    }
+
+    /// <summary>Finds the named or indexed control, choosing the first only when nothing had focus.</summary>
+    internal static Control? FocusTarget(IReadOnlyList<Control> controls, FocusIdentity focus)
+    {
+        if (!focus.HadFocus) return controls.FirstOrDefault();
+        if (!string.IsNullOrEmpty(focus.Name))
+            return controls.FirstOrDefault(control => AutomationProperties.GetName(control) == focus.Name);
+        return focus.Index >= 0 && focus.Index < controls.Count ? controls[focus.Index] : null;
     }
 
     // ---------- frame ----------
@@ -252,8 +322,15 @@ internal sealed partial class SettingsWindow : Window
             var target = id;
             item.Click += (_, _) =>
             {
-                if (_find.Text is { Length: > 0 }) _find.Text = "";
-                if (_section != target || _scroll.Content is null) Show(target);
+                var hadSearch = _find.Text is { Length: > 0 };
+                if (!hadSearch && _section == target && _scroll.Content is not null) return;
+                Control[] RailControls() => _rail.Children.OfType<Control>().ToArray();
+                var focus = IdentifyFocus(RailControls(), item);
+                RebuildWithFocus(() =>
+                {
+                    if (hadSearch) _find.Text = "";
+                    if (_section != target || _scroll.Content is null) Show(target);
+                }, RailControls, focus);
             };
             Avalonia.Automation.AutomationProperties.SetName(item, name + " settings");
             _rail.Children.Add(item);
@@ -272,7 +349,7 @@ internal sealed partial class SettingsWindow : Window
         var page = BuildSection(section, withPreview: true);
         _smoothScroll.Stop();
         _scroll.Content = page;
-        if (keepScroll) Dispatcher.UIThread.Post(() => _scroll.Offset = offset, DispatcherPriority.Loaded);
+        if (keepScroll) { _scroll.Offset = offset; Dispatcher.UIThread.Post(() => _scroll.Offset = offset, DispatcherPriority.Loaded); }
         else _scroll.Offset = default;
         if (!animate || Anim.Reduced) return;
         // Tab change: the page rises a few pixels as it fades in.
@@ -341,9 +418,9 @@ internal sealed partial class SettingsWindow : Window
             Row(() => ModeIcon(), "Mode", "Follow Windows, or stay light or dark",
                 () => Seg([("system", "System"), ("light", "Light"), ("dark", "Dark")], S.Theme, v => Set(() => S.Theme = v))),
             .. Expander("light-palette", () => Fl(Icons.LightMode), "Light mode palette", null, Palette.Get(S.LightPalette, false).Name,
-                () => SubRow(null, () => PaletteChips(false, S.LightPalette, v => Set(() => { S.LightPalette = v; if (S.Theme == "dark") S.Theme = "light"; })), wide: true)),
+                () => SubRow(null, () => PaletteChips(false, S.LightPalette, v => Set(() => { S.LightPalette = v; if (S.Theme == "dark") S.Theme = "light"; }, rows: true)), wide: true)),
             .. Expander("dark-palette", () => Fl(Icons.DarkMode), "Dark mode palette", null, Palette.Get(S.DarkPalette, true).Name,
-                () => SubRow(null, () => PaletteChips(true, S.DarkPalette, v => Set(() => { S.DarkPalette = v; if (S.Theme == "light") S.Theme = "dark"; })), wide: true)),
+                () => SubRow(null, () => PaletteChips(true, S.DarkPalette, v => Set(() => { S.DarkPalette = v; if (S.Theme == "light") S.Theme = "dark"; }, rows: true)), wide: true)),
             Row(() => Fl(Icons.Accent), "Accent", "Caret, selection, headings and switches", () => AccentDots()),
         ]));
 
@@ -535,13 +612,15 @@ internal sealed partial class SettingsWindow : Window
     private Control ShortcutControl(ShortcutDefinition definition)
     {
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.S };
-        row.Children.Add(new HotkeyRecorder(_p,
+        var recorder = new HotkeyRecorder(_p,
             () => _shortcuts.GetRecordedValue(definition.Id),
             text => ApplyShortcut(definition, text),
             allowEmpty: true,
             TextButton,
             ShortcutMap.RecorderGestureText,
-            text => ShortcutMap.BlockedReason(text, S, definition)).View);
+            text => ShortcutMap.BlockedReason(text, S, definition));
+        AutomationProperties.SetName(recorder.View, definition.Id);
+        row.Children.Add(recorder.View);
         row.Children.Add(ShortcutResetControl("Reset", () => ResetShortcut(definition.Id), definition.Id));
         return row;
     }
@@ -591,6 +670,13 @@ internal sealed partial class SettingsWindow : Window
         });
         _shortcuts.Refresh(S);
         AfterSet(rows: true);
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (_scroll.Content is not Control page) return;
+            var host = page.GetLogicalDescendants().OfType<ContentControl>()
+                .FirstOrDefault(control => AutomationProperties.GetName(control) == id && control.Tag is HotkeyRecorder);
+            (host?.Tag as HotkeyRecorder)?.FocusChange();
+        }, DispatcherPriority.Loaded);
     }
 
     /// <summary>Removes a saved override so one action returns to its default.</summary>

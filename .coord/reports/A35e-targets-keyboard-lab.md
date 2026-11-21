@@ -1,0 +1,14 @@
+# A35e-targets-keyboard and A35f-contrast HTML lab
+
+Open `tools/playground/a35ef-lab/index.html` directly. The copied pad and Settings mocks remain below the comparison panels. Before, After, Flip, Show changes, palette selection, Paper/Ink, and 320 px controls are at the top. Show changes reveals finding IDs and 24 px target circles.
+
+- B-5, B-4, B-1: segment, language, text-button and swatch target comparisons, plus palette and accent selection by keyboard in After. Before omits the palette and swatch tab stops.
+- A-2/A-5 and A-9: nine selectable dots, fixed After pitch, a 320 px pad/pill width readout, and the proposed Delete/Clear separation. The readout reports clipping in the browser; it has not been independently measured in a browser in this sandbox.
+- Shared Plain focus: sample icon, segment, text, dot, chip and swatch; focus-visible styling also applies to the copied mock frames. The comparison is illustrative, not a change to product Kit.
+- B-2, A-3, B-7: recorder with Before/After key behavior, F6 pane switching in After, and a simulated page/rows change with focus retention in After.
+- C-5, A-7: menu row order and three selectable hidden-bar cues, with the handle recommended.
+- D-3: eight accents with the source brightness rule versus the higher-contrast white/#111111 choice. D-5: all eight source palettes and both field states. D-7: dark Ink toast action. D-2: Paper and Ink card detail. D-6: Paper pager and toggle state comparisons with surface and state ratios. D-1/D-4: the same clearly labelled 0.55 alpha model in both modes, on black and white, without a proposed fix. All printed ratios are calculated in JavaScript from hex values; composite channels are rounded to 8-bit before calculating.
+
+Values that are proposals rather than existing tokens: 32 px segment/swatch targets, 24 px equal dot targets and 24 px pitch, the 2 px focus ring and gap, 24 px handle and Delete gap, 55% field border, 3:1 fallback, and the safe text/color mixes. These use source palette roles or the brief's explicitly requested foregrounds; the Paper D-6 After accent is a calculated mix toward Ink, and its filled and empty marks both use Ink, so their color-to-color ratio remains 1:1 even though filled versus outlined shape differs. The detail uses the first passing 0.1% mix step toward Ink, rounded to 8-bit. The inherited A35d mocks retain their own existing illustrative colors and geometry; the comparison panels are the A35e/A35f proposals.
+
+Checks: JavaScript syntax checked with Node; a minimal DOM stub executed initial comparison rendering, including the palette matrix and calculated ratios. A headless Chrome attempt was blocked by sandbox profile/crashpad access (exit 21), so actual rendering, console, keyboard navigation, and clipping have not been verified in a browser. No product app was launched.
