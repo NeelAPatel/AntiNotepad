@@ -11,6 +11,10 @@ argument-hint: <ID-slug>
 
 Phase detail: `.claude/skills/merge-task/branches.md`.
 
+## Into an umbrella
+
+The umbrella chat acts as the director for its children, with the user's go to start them. The child reviews its commits against the parent branch, rebases onto that branch when ready, and runs `tools/gate.ps1 -Task <ID-slug> -Base <parent-branch> -Umbrella <parent-branch>`. It prints `READY: <ID-slug>. Go to <chat> and run /merge-task <ID-slug>`. From the parent worktree, run `tools/merge-preflight.ps1 -Task <ID-slug> -Base <parent-branch>`, review the diff and commits, then merge `--no-ff` and gate the parent. Resolve failures before committing. Do not edit STATUS, archive or lessons in child merges; record queue, order and landed on the shared board. The director merges the accepted umbrella to dev once using the normal steps below, including STATUS and lessons.
+
 ## Live facts
 
 !`git branch --show-current`

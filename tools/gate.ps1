@@ -3,6 +3,7 @@
 param(
     [string]$Task,
     [string]$Base = 'dev',
+    [string]$Umbrella,
     [switch]$LooseScope,
     [ValidateRange(1, 2147483647)][int]$SizeWarn = 600,
     [ValidateRange(0, 2147483647)][int]$SizeGrowth = 25,
@@ -270,6 +271,14 @@ if ($Offline) {
         -Lines @('Offline: NuGet audit off (sandbox)')
 }
 try {
+    if ($Umbrella) {
+        try {
+            $prefix = ($Umbrella -split '/')[-1] -replace '-.*$', ''
+            $survival = Invoke-CapturedProcess -FileName 'python' -Arguments @('-I', (Join-Path $script:repoRoot 'tools/survival.py'), 'HEAD', $Umbrella, $prefix) -WorkingDirectory $script:repoRoot
+            $status = if ($survival.ExitCode -eq 0) { 'PASS' } else { 'FAIL' }
+            Add-Step -Name 'Survival' -Status $status -Summary "survival.py exit $($survival.ExitCode)" -Lines @(Get-OutputLines (Get-CombinedOutput $survival))
+        } catch { Add-Step -Name 'Survival' -Status 'FAIL' -Summary $_.Exception.Message }
+    }
     try {
         Clear-BuildTarget -LiteralPath $script:buildPath
         Clear-BuildTarget -LiteralPath $script:dataPath

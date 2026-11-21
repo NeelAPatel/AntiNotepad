@@ -1,6 +1,7 @@
 Read by /merge-task for branch, worktree, commit and catch-up detail.
 
 ## Branches, worktrees and commits (user, 2026-10-29)
+- **Umbrellas:** on the user's go, child branches start from their parent branch. The child reviews commits, rebases onto the parent when ready, and gates against it; the parent runs preflight with `-Base <parent-branch>` and merges `--no-ff` without STATUS edits. Record queue, order and landed on `.coord/tasks/<umbrella>-board.md`. Once all children have landed, the director reviews and merges the umbrella to dev once using the normal STATUS and lessons procedure.
 - **`main`** holds releases only. At a release, on the user's go, it fast-forwards to `dev` (no merge commits) and gets
   a plain semver tag: `v0.7.0`, with `-rc1`, `-rc2` for builds not yet hand-tested. No pull requests for now; they come
   back with the release pipeline.
