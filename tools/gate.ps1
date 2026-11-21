@@ -349,6 +349,13 @@ try {
         Add-Step -Name 'Tokens' -Status 'FAIL' -Summary $_.Exception.Message
     }
 
+    try {
+        $contract = Invoke-CapturedProcess -FileName 'pwsh' -Arguments @('-NoProfile', '-File', (Join-Path $script:repoRoot 'tools/check-design-contract.ps1')) -WorkingDirectory $script:repoRoot
+        $contractStatus = if ($contract.ExitCode -eq 0) { 'PASS' } else { 'FAIL' }
+        Add-Step -Name 'Contract' -Status $contractStatus -Summary "check-design-contract.ps1 exit $($contract.ExitCode)" -Lines @(Get-KeyLines -Text (Get-CombinedOutput $contract) -Pattern '(?i)(CONTRACT|error)')
+    }
+    catch { Add-Step -Name 'Contract' -Status 'FAIL' -Summary $_.Exception.Message }
+
     # Format: `dotnet format` on the changed product C# files only. A problem on a line this change touched fails;
     # problems on untouched lines are older code and only counted, so existing files never block a gate. In a new file, lines
     # that the same change removed verbatim from product files (a split) count as untouched.

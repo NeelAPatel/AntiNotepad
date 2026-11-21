@@ -1,0 +1,9 @@
+file	max lines	reason
+product/AntiNotepad/Editor/PadView.cs	1075	Holds the editor view, its setup, and input handling.
+product/AntiNotepad/SelfTest/Editor.cs	635	Groups editor behavior checks and their shared test helpers.
+product/AntiNotepad/SelfTest/Store.cs	697	Groups store behavior checks and their shared test helpers.
+product/AntiNotepad/SelfTest/UI.cs	1485	Groups UI behavior checks and their shared test helpers.
+product/AntiNotepad/UI/PadWindow.Layout.cs	903	Builds and wires the pad window layout and its controls.
+product/AntiNotepad/UI/PadWindow.cs	683	Owns pad window behavior and coordinates its partial implementations.
+product/AntiNotepad/UI/SettingsParts.cs	698	Builds shared settings controls and their presentation helpers.
+product/AntiNotepad/UI/SettingsWindow.cs	1016	Owns settings window navigation, page construction, and interaction.
