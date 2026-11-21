@@ -33,6 +33,7 @@ User via Loop Hub 4, 2026-11-21, after the audit `.coord/research/A35-chat-famil
 - `tools/survival.py`
 - `tools/gate.ps1`
 - `tools/roadmap-data.ps1`
+- `tools/roadmap/index.html`
 - `.claude/settings.json`
 - `.claude/skills/merge-task/SKILL.md`
 - `.claude/skills/merge-task/branches.md`
