@@ -53,12 +53,15 @@ public static class AppInfo
     /// <summary>Stores the slot selected by Program after it confirms custom data is present.</summary>
     internal static void SetActiveSlotName(string? name) => _activeSlotName = ResolveSlotName(name);
 
+    /// <summary>The branch symbol that opens the dev badge; drawn from Cascadia, with a text fallback.</summary>
+    internal const string DevBadgeGlyph = "\uE0A0";
+
     /// <summary>Formats the branch and build time shown by the dev badge.</summary>
     internal static (string Short, string Full) FormatDevBadge(string? branch, DateTimeOffset? time)
     {
         if (time is null) return ("dev", "dev");
 
-        const string glyph = "\uE0A0";
+        const string glyph = DevBadgeGlyph;
         var shortTime = time.Value.ToString("h:mm", CultureInfo.InvariantCulture);
         var fullTime = time.Value.ToString("h:mm tt", CultureInfo.InvariantCulture);
         if (string.IsNullOrWhiteSpace(branch) || branch == "(detached HEAD)")

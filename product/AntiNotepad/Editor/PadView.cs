@@ -22,6 +22,7 @@ using AntiNotepad.Calc;
 using AntiNotepad.Model;
 using AntiNotepad.Motion;
 using AntiNotepad.Theme;
+using AntiNotepad.UI;
 
 namespace AntiNotepad.Editor;
 
@@ -912,14 +913,14 @@ internal sealed class PadView : Grid
         var hasSelection = !area.Selection.IsEmpty;
         var items = new List<MenuEntry>
         {
-            new("Undo", "Ctrl+Z", MenuGlyphs.Undo, () => Editor.Undo(), Editor.CanUndo),
-            new("Redo", "Ctrl+Y", MenuGlyphs.Redo, () => Editor.Redo(), Editor.CanRedo),
-            new("Select all", "Ctrl+A", MenuGlyphs.SelectAll, () => Editor.SelectAll()),
+            new("Undo", "Ctrl+Z", Icons.Undo, () => Editor.Undo(), Editor.CanUndo),
+            new("Redo", "Ctrl+Y", Icons.Redo, () => Editor.Redo(), Editor.CanRedo),
+            new("Select all", "Ctrl+A", Icons.SelectAll, () => Editor.SelectAll()),
             MenuEntry.Separator,
-            new("Cut", "Ctrl+X", MenuGlyphs.Cut, () => Editor.Cut(), hasSelection),
-            new("Copy", "Ctrl+C", MenuGlyphs.Copy, () => Editor.Copy(), hasSelection),
-            new("Paste", "Ctrl+V", MenuGlyphs.Paste, () => _ = PasteAsync()),
-            new("Delete", "Delete", MenuGlyphs.Delete, () => area.Selection.ReplaceSelectionWithText(string.Empty), hasSelection),
+            new("Cut", "Ctrl+X", Icons.Cut, () => Editor.Cut(), hasSelection),
+            new("Copy", "Ctrl+C", Icons.Copy, () => Editor.Copy(), hasSelection),
+            new("Paste", "Ctrl+V", Icons.Paste, () => _ = PasteAsync()),
+            new("Delete", "Delete", Icons.Delete, () => area.Selection.ReplaceSelectionWithText(string.Empty), hasSelection),
         };
         if (hasSelection)
         {

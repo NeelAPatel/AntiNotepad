@@ -165,7 +165,7 @@ internal static partial class SelfTest
                 }
                 Capture(new HelpOverlay(pad, palette), palette.Id + "/help", lines);
                 Capture(new SearchOverlay(pad, palette, store, "", false), palette.Id + "/search", lines);
-                IReadOnlyList<MenuEntry> entries = [new("New note", "Ctrl+N", MenuGlyphs.NewNote), new("Search notes", "Ctrl+F", MenuGlyphs.Search), new("Split view", "Ctrl+OemBackslash", MenuGlyphs.Split), new("Keep on top", "Ctrl+T", MenuGlyphs.Pin), MenuEntry.Separator, new("Settings", "Ctrl+OemComma", MenuGlyphs.Settings), new($"Hide {AppInfo.Name}", "Escape")];
+                IReadOnlyList<MenuEntry> entries = [new("New note", "Ctrl+N", Icons.NewNote), new("Search notes", "Ctrl+F", Icons.Search), new("Split view", "Ctrl+OemBackslash", Icons.Split), new("Keep on top", "Ctrl+T", Icons.KeepOnTop), MenuEntry.Separator, new("Settings", "Ctrl+OemComma", Icons.Settings), new($"Hide {AppInfo.Name}", "Escape")];
                 var builder = typeof(PadMenu).GetMethod("BuildMenu", BindingFlags.NonPublic | BindingFlags.Static)!;
                 var menu = (Border)builder.Invoke(null, [entries, palette, settings.Current, (Action)(() => { })])!;
                 Capture(menu, palette.Id + "/menu", lines);

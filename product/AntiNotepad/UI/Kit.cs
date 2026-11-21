@@ -1,4 +1,4 @@
-// Shared controls and glyphs for palette-aware application chrome.
+// Shared controls for palette-aware application chrome.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -12,23 +12,11 @@ using AntiNotepad.Motion;
 
 namespace AntiNotepad.UI;
 
-/// <summary>Segoe Fluent Icons code points used by the chrome.</summary>
-internal static class Glyph
+/// <summary>Draws a registered icon with its declared font and palette color.</summary>
+internal sealed class GlyphIcon(Icon icon, Color color, double size = Typography.IconBody) : Control
 {
-    public const string Search = "", Pin = "", PinFilled = "", Settings = "", Close = "",
-        Split = "", Delete = "", Back = "", Forward = "", Grid = "",
-        List = "", Add = "", Restore = "", Hide = "";
-    public static readonly FontFamily Font = new("Segoe Fluent Icons, Segoe MDL2 Assets");
-    /// <summary>The bundled Fluent UI System Icons font (named icons; regular weight, drawn at 20 px).</summary>
-    public static readonly FontFamily Fluent = new($"{AppInfo.ResourceUri}Assets/Fonts#FluentSystemIcons-Regular");
-}
-
-/// <summary>
-/// A Segoe Fluent Icons glyph. Weight 0 draws it once; positive weights add four offset copies for faux bold.
-/// </summary>
-internal sealed class GlyphIcon(string glyph, Color color, double size = Typography.IconBody, double weight = 0.15, FontFamily? font = null) : Control
-{
-    private readonly Typeface _face = new(font ?? Glyph.Font);
+    private readonly string _glyph = icon.Character;
+    private readonly Typeface _face = new(Icons.FontFamily(icon.Font));
     private readonly IBrush _brush = new ImmutableSolidColorBrush(color);
     private Geometry? _geometry;
     private Rect _inkBounds;
@@ -44,7 +32,7 @@ internal sealed class GlyphIcon(string glyph, Color color, double size = Typogra
     private Geometry Geometry(double scale)
     {
         if (_geometry is not null && _textScale.Equals(scale)) return _geometry;
-        var text = new FormattedText(glyph, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+        var text = new FormattedText(_glyph, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
             _face, size, new ImmutableSolidColorBrush(color));
         _geometry = text.BuildGeometry(default)!;
         _inkBounds = _geometry.Bounds;
@@ -62,23 +50,13 @@ internal sealed class GlyphIcon(string glyph, Color color, double size = Typogra
         var inkCenter = DevicePixelCenter(localCenter);
         var origin = inkCenter - _inkBounds.Center;
 
-        // Natural weight: one copy. (Five copies on the same spot stack their antialiased edges into a fuzzy outline.)
-        if (weight <= 0)
-        {
-            Draw(context, geometry, origin);
-            if (Highlight is { } highlight && HighlightOpacity > 0)
-            {
-                using (context.PushOpacity(HighlightOpacity))
-                using (context.PushTransform(Matrix.CreateTranslation(origin.X, origin.Y)))
-                    context.DrawGeometry(new ImmutableSolidColorBrush(highlight), null, geometry);
-            }
-            return;
-        }
-        Draw(context, geometry, new Point(origin.X - weight, origin.Y));
-        Draw(context, geometry, new Point(origin.X + weight, origin.Y));
-        Draw(context, geometry, new Point(origin.X, origin.Y - weight));
-        Draw(context, geometry, new Point(origin.X, origin.Y + weight));
         Draw(context, geometry, origin);
+        if (Highlight is { } highlight && HighlightOpacity > 0)
+        {
+            using (context.PushOpacity(HighlightOpacity))
+            using (context.PushTransform(Matrix.CreateTranslation(origin.X, origin.Y)))
+                context.DrawGeometry(new ImmutableSolidColorBrush(highlight), null, geometry);
+        }
     }
 
     private Point DevicePixelCenter(Point localCenter)
@@ -106,20 +84,20 @@ internal sealed class GlyphIcon(string glyph, Color color, double size = Typogra
 /// <summary>Small hand-built controls so the chrome follows the palette exactly (no Fluent theme chrome).</summary>
 internal static class Kit
 {
-    public static Button IconButton(string glyph, string name, Palette p, Action click, double size = ChromeTokens.ButtonSize, bool filled = false, Color? color = null, double radius = ChromeTokens.TopIconHoverRadius, Color? hoverColor = null)
+    public static Button IconButton(Icon icon, string name, Palette p, Action click, double size = ChromeTokens.ButtonSize, bool filled = false, Color? color = null, double radius = ChromeTokens.TopIconHoverRadius, Color? hoverColor = null)
     {
         var ink = color ?? p.Ink;
-        var glyphIcon = new GlyphIcon(glyph, ink, ChromeTokens.IconGlyphSize, 0) { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Highlight = hoverColor };
-        Control icon = glyphIcon;
+        var glyphIcon = new GlyphIcon(icon, ink, ChromeTokens.IconGlyphSize) { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Highlight = hoverColor };
+        Control content = glyphIcon;
         // Filled: a soft fill under the outline glyph, so the shape still reads (a solid fill alone is a blob).
-        if (filled && glyph == Glyph.Pin)
-            icon = new Panel
+        if (filled && ReferenceEquals(icon, Icons.KeepOnTop))
+            content = new Panel
             {
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
-                Children = { new GlyphIcon(Glyph.PinFilled, Color.FromArgb(Paint.PinnedGlyphAlpha, ink.R, ink.G, ink.B), ChromeTokens.IconGlyphSize, 0), icon },
+                Children = { new GlyphIcon(Icons.KeepOnTopFilled, Color.FromArgb(Paint.PinnedGlyphAlpha, ink.R, ink.G, ink.B), ChromeTokens.IconGlyphSize), glyphIcon },
             };
-        var button = Plain(icon, p, size, size, radius: radius);
+        var button = Plain(content, p, size, size, radius: radius);
         if (hoverColor is not null)
         {
             Anim.Handle? highlightFade = null;
@@ -227,7 +205,7 @@ internal static class Kit
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(8, 0, 0, 0) };
         var text = Text(title, p.Ink, Typography.PanelTitle, Typography.Strong);
         grid.Children.Add(text);
-        var x = IconButton(Glyph.Close, "Close (Esc)", p, close);
+        var x = IconButton(Icons.Close, "Close (Esc)", p, close);
         x.VerticalAlignment = VerticalAlignment.Center;
         Grid.SetColumn(x, 1);
         grid.Children.Add(x);

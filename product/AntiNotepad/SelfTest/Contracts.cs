@@ -252,13 +252,20 @@ internal static partial class SelfTest
                 "One key resolves to one action per scope; defaults avoid text editing, Windows and development-slot keys, Help toggles through its active shortcut, and the checkbox/timer action stays bindable without a default.",
                 "A29-shortcut-map",
                 () => RunExistingCheck(ShortcutMapChecks, "shortcut map: "),
-                "Dev copy: record, clear, reset one row, reset all, restart, take a conflicting key, and confirm F1 opens, closes and reopens Help with current bindings. Confirm Ctrl+Enter is unassigned by default and Checkbox or timer can be bound in Settings.")
+                "Dev copy: record, clear, reset one row, reset all, restart, take a conflicting key, and confirm F1 opens, closes and reopens Help with current bindings. Confirm Ctrl+Enter is unassigned by default and Checkbox or timer can be bound in Settings."),
+            IconRegistryContractRow()
         ];
 
         var passed = 0;
         var manual = 0;
+        var deferred = 0;
         foreach (var row in rows)
         {
+            if (row.Id == "icon-font-glyph-names")
+            {
+                deferred++;
+                continue;
+            }
             if (row.Check is null)
             {
                 manual++;
@@ -285,8 +292,24 @@ internal static partial class SelfTest
             failures.Add($"contract {row.Id}: {detail}");
         }
 
-        Console.WriteLine($"CONTRACTS: {rows.Length} rows, {passed} pass, {manual} manual");
+        Console.WriteLine($"CONTRACTS: {rows.Length} rows, {passed} pass, {manual} manual, {deferred} deferred");
     }
+
+    /// <summary>Runs the icon contract after Avalonia's asset services are initialized by the design check.</summary>
+    private static bool IconRegistryContractCheck(out string report)
+    {
+        var result = IconRegistryContractRow().Check!();
+        report = result.Detail;
+        return result.Passed;
+    }
+
+    /// <summary>Defines the A29 promise that icon codes and bundled glyph names remain tied to their fonts.</summary>
+    private static ContractRow IconRegistryContractRow() => new(
+        "icon-font-glyph-names",
+        "Every icon code exists in its declared font, and each bundled Fluent code matches its post glyph name.",
+        "A29-icon-codes",
+        () => RunExistingCheck(IconRegistrySelfTest, "icon registry: "),
+        null);
 
     /// <summary>Checks the vendored source markers and documented upstream pin.</summary>
     private static bool AvaloniaEditForkChecks(out string report)

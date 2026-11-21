@@ -25,14 +25,11 @@ namespace AntiNotepad.UI;
 /// </summary>
 internal sealed partial class SettingsWindow : Window
 {
-    private const int KeyboardGlyph = 0xf4b8;
-
-    private static readonly (string Id, string Name, int Icon)[] Sections =
+    private static readonly (string Id, string Name, Icon Icon)[] Sections =
     [
-        // Fluent UI System Icons: color, paint_brush, document_edit, tap_single, desktop, keyboard, folder, info.
-        ("theme", "Theme", 0xf2f5), ("ui", "UI", 0xf592), ("editor", "Editor", 0xf386),
-        ("feel", "Feel", 0xec8d), ("system", "System", 0xf359), ("shortcuts", "Shortcuts", KeyboardGlyph),
-        ("storage", "Storage", 0xf418), ("about", "About", 0xf4a3),
+        ("theme", "Theme", Icons.ThemeTab), ("ui", "UI", Icons.UiTab), ("editor", "Editor", Icons.EditorTab),
+        ("feel", "Feel", Icons.FeelTab), ("system", "System", Icons.System), ("shortcuts", "Shortcuts", Icons.Keyboard),
+        ("storage", "Storage", Icons.StorageTab), ("about", "About", Icons.About),
     ];
     // Remembered while AntiNotepad runs: the last section, and which expanders are open (these start open).
     private static string _section = "theme";
@@ -184,7 +181,7 @@ internal sealed partial class SettingsWindow : Window
         title.Margin = new Thickness(18, 0, 0, 0);
         title.IsHitTestVisible = false;
         top.Children.Add(title);
-        var close = Kit.IconButton(Glyph.Close, "Close (Esc)", _p, Close, 32);
+        var close = Kit.IconButton(Icons.Close, "Close (Esc)", _p, Close, 32);
         close.Margin = new Thickness(0, 0, 8, 0);
         Grid.SetColumn(close, 1);
         top.Children.Add(close);
@@ -202,7 +199,7 @@ internal sealed partial class SettingsWindow : Window
             Padding = new Thickness(8, 8, 8, 0),
             Foreground = new SolidColorBrush(_p.Ink),
             CaretBrush = new SolidColorBrush(_p.Caret),
-            InnerLeftContent = new GlyphIcon(char.ConvertFromUtf32(0xf68f), _p.Muted, Typography.IconInput, 0, Glyph.Fluent) { Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center },
+            InnerLeftContent = new GlyphIcon(Icons.SettingsSearch, _p.Muted, Typography.IconInput) { Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center },
         };
         Avalonia.Automation.AutomationProperties.SetName(_find, "Find a setting");
         // Results build matching rows, so they wait for a pause in typing; clearing the box is instant.
@@ -234,7 +231,7 @@ internal sealed partial class SettingsWindow : Window
         {
             var on = id == selected;
             var face = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(12, 0), VerticalAlignment = VerticalAlignment.Center };
-            face.Children.Add(new GlyphIcon(char.ConvertFromUtf32(glyph), on ? IconInk : _p.Muted, Typography.IconLarge, 0, Glyph.Fluent) { VerticalAlignment = VerticalAlignment.Center });
+            face.Children.Add(new GlyphIcon(glyph, on ? IconInk : _p.Muted, Typography.IconLarge) { VerticalAlignment = VerticalAlignment.Center });
             face.Children.Add(Kit.Text(name, on ? _p.Ink : _p.Muted, Typography.Large, on ? Typography.Strong : Typography.Regular));
             var item = Kit.Plain(face, _p, height: 36, radius: Shape.Popup);
             item.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -335,11 +332,11 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Card([
             Row(() => ModeIcon(), "Mode", "Follow Windows, or stay light or dark",
                 () => Seg([("system", "System"), ("light", "Light"), ("dark", "Dark")], S.Theme, v => Set(() => S.Theme = v))),
-            .. Expander("light-palette", () => Fl(0xf8a1), "Light mode palette", null, Palette.Get(S.LightPalette, false).Name,
+            .. Expander("light-palette", () => Fl(Icons.LightMode), "Light mode palette", null, Palette.Get(S.LightPalette, false).Name,
                 () => SubRow(null, () => PaletteChips(false, S.LightPalette, v => Set(() => { S.LightPalette = v; if (S.Theme == "dark") S.Theme = "light"; })), wide: true)),
-            .. Expander("dark-palette", () => Fl(0xf87d), "Dark mode palette", null, Palette.Get(S.DarkPalette, true).Name,
+            .. Expander("dark-palette", () => Fl(Icons.DarkMode), "Dark mode palette", null, Palette.Get(S.DarkPalette, true).Name,
                 () => SubRow(null, () => PaletteChips(true, S.DarkPalette, v => Set(() => { S.DarkPalette = v; if (S.Theme == "light") S.Theme = "dark"; })), wide: true)),
-            Row(() => Fl(0xf2f5), "Accent", "Caret, selection, headings and switches", () => AccentDots()),
+            Row(() => Fl(Icons.Accent), "Accent", "Caret, selection, headings and switches", () => AccentDots()),
         ]));
 
         page.Children.Add(Group("Caret"));
@@ -353,11 +350,11 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Card(
             Row(() => CursorIcon("Ab", clock: false), "Caret style", null, CaretStyles),
             Row(() => CursorIcon("A", clock: true), "Blink", null, () => Toggle(S.CaretBlink, v => Set(() => S.CaretBlink = v), "Blink")),
-            Row(() => Fl(0xe0cd), "Glide between positions", null, () => Toggle(S.CaretGlide, v => Set(() => S.CaretGlide = v), "Glide between positions"))));
+            Row(() => Fl(Icons.CaretGlide), "Glide between positions", null, () => Toggle(S.CaretGlide, v => Set(() => S.CaretGlide = v), "Glide between positions"))));
 
         page.Children.Add(Group("Split view"));
         page.Children.Add(Card(
-            Row(() => Fl(0xe8b0), "Side pane palette", "The slot beside your note can look different",
+            Row(() => Fl(Icons.SidePane), "Side pane palette", "The slot beside your note can look different",
                 () => Dropdown([("same", "Same as main"), .. Palette.For(_p.Dark).Select(x => (x.Id, x.Name))], S.SplitPalette, v => Set(() => S.SplitPalette = v)))));
     }
 
@@ -372,8 +369,8 @@ internal sealed partial class SettingsWindow : Window
             return materials;
         }
         page.Children.Add(Card(
-            Row(() => Fl(0xf592), "Background", MaterialHint(), Materials),
-            S.Material == "solid" ? null : Row(() => Fl(0xf595), "Tint", "How much of the desktop shows through",
+            Row(() => Fl(Icons.Background), "Background", MaterialHint(), Materials),
+            S.Material == "solid" ? null : Row(() => Fl(Icons.Tint), "Tint", "How much of the desktop shows through",
                 () => Dropdown([("0.55", "Clear"), ("0.7", "Light"), ("0.82", "Medium"), ("0.92", "Dense")], Closest(S.Tint, 0.55, 0.7, 0.82, 0.92), v => Set(() => S.Tint = Num(v)))),
             Row(() => ScaleIcon(), "Scale", "Toolbar, panels and text together",
                 () => Dropdown([("0.9", "90%"), ("1", "100%"), ("1.15", "115%"), ("1.3", "130%"), ("1.5", "150%")], Closest(S.UiScale, 0.9, 1, 1.15, 1.3, 1.5), v => Set(() => S.UiScale = Num(v))))));
@@ -414,13 +411,13 @@ internal sealed partial class SettingsWindow : Window
         if (withPreview) page.Children.Add(Preview(feel: false));
         page.Children.Add(Group("Text"));
         page.Children.Add(Card(
-            Row(() => Fl(0xf7e4), "Font", null,
+            Row(() => Fl(Icons.Font), "Font", null,
                 () => Dropdown([("Cascadia Mono", "Cascadia Mono"), ("Cascadia Code", "Cascadia Code"), ("Consolas", "Consolas"), ("Segoe UI", "Segoe UI")], S.Font, v => Set(() => S.Font = v))),
-            Row(() => Fl(0xf7e6), "Font size", null,
+            Row(() => Fl(Icons.FontSize), "Font size", null,
                 () => Dropdown([("13", "13"), ("14", "14"), ("15", "15"), ("16", "16"), ("18", "18"), ("20", "20")], Closest(S.FontSize, 13, 14, 15, 16, 18, 20), v => Set(() => S.FontSize = Num(v)))),
             Row(null, "Text width", "Wide windows center the column",
                 () => Dropdown([("0", "Full width"), ("60", "60 characters"), ("72", "72 characters"), ("88", "88 characters"), ("110", "110 characters")], Closest(S.TextWidth, 0, 60, 72, 88, 110), v => Set(() => S.TextWidth = int.Parse(v)))),
-            Row(() => Fl(0xf7f6), "Line spacing", null,
+            Row(() => Fl(Icons.LineSpacing), "Line spacing", null,
                 () => Seg([("1.15", "Tight"), ("1.32", "Normal"), ("1.5", "Relaxed"), ("1.7", "Airy")], Closest(S.LineSpacing, 1.15, 1.32, 1.5, 1.7), v => Set(() => S.LineSpacing = Num(v))))));
 
         page.Children.Add(Group("Page"));
@@ -432,9 +429,9 @@ internal sealed partial class SettingsWindow : Window
             return backings;
         }
         page.Children.Add(Card([
-            Row(() => Fl(0xf2f9), "Paper tone", null,
+            Row(() => Fl(Icons.PaperTone), "Paper tone", null,
                 () => Dropdown(Palette.Tones.Select(t => (t.Id, t.Id == "default" ? "From palette" : t.Name)).ToList(), S.Tone, v => Set(() => S.Tone = v))),
-            .. Expander("backing", () => Fl(0xf462), "Backing", null, Label(S.Paper),
+            .. Expander("backing", () => Fl(Icons.Backing), "Backing", null, Label(S.Paper),
                 () => SubRow(null, Backings, wide: true),
                 S.Paper == "blank" ? null : () => SubRow("Pattern weight",
                     () => Seg([("0", "Subtle"), ("1", "Clear"), ("2", "Bold")], S.PaperStrength.ToString(), v => Set(() => S.PaperStrength = int.Parse(v))))),
@@ -445,14 +442,14 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Card([
             Row(null, "New list lines", "What the list keyword makes",
                 () => Seg([("bullet", "Bullets"), ("check", "Checkboxes"), ("number", "Numbers")], S.ListDefault, v => Set(() => S.ListDefault = v))),
-            Row(() => Fl(0xf20a), "Answers", "Lines ending in = show their result", () => Toggle(S.InlineMath, v => Set(() => S.InlineMath = v), "Answers")),
+            Row(() => Fl(Icons.Answers), "Answers", "Lines ending in = show their result", () => Toggle(S.InlineMath, v => Set(() => S.InlineMath = v), "Answers")),
             Row(null, "Answer position", null,
                 () => Dropdown([("column", "One column"), ("edge", "Right edge")], S.Bubbles, v => Set(() => S.Bubbles = v))),
-            Row(() => Fl(0xe7db), "Clean markdown", "Hide ** and # except on the line you're editing", () => Toggle(S.CleanMarkdown, v => Set(() => S.CleanMarkdown = v), "Clean markdown")),
+            Row(() => Fl(Icons.CleanMarkdown), "Clean markdown", "Hide ** and # except on the line you're editing", () => Toggle(S.CleanMarkdown, v => Set(() => S.CleanMarkdown = v), "Clean markdown")),
             Row(() => IndentIcon(), "Indent guides", null, () => Toggle(S.IndentGuides, v => Set(() => S.IndentGuides = v), "Indent guides")),
-            Row(() => Fl(0xecf4), "Folding", null, () => Toggle(S.Folding, v => Set(() => S.Folding = v), "Folding")),
-            Row(() => Fl(0xf4e4), "Short links", "The full address stays in the text", () => Toggle(S.ShortenLinks, v => Set(() => S.ShortenLinks = v), "Short links")),
-            .. Expander("code", () => Fl(0xf2ef), "Code languages", "Off: plain text, not offered after ```",
+            Row(() => Fl(Icons.Folding), "Folding", null, () => Toggle(S.Folding, v => Set(() => S.Folding = v), "Folding")),
+            Row(() => Fl(Icons.ShortLinks), "Short links", "The full address stays in the text", () => Toggle(S.ShortenLinks, v => Set(() => S.ShortenLinks = v), "Short links")),
+            .. Expander("code", () => Fl(Icons.CodeLanguages), "Code languages", "Off: plain text, not offered after ```",
                 enabled == Editor.CodeColors.Languages.Length ? $"All {enabled} on" : $"{enabled} of {Editor.CodeColors.Languages.Length} on",
                 () => SubRow(null, () => Kit.Toggles(_p, Editor.CodeColors.Languages.Select(l => (l.Id, l.Name)).ToList(),
                     id => !S.DisabledLanguages.Contains(id), SetLanguageEnabled), wide: true)),
@@ -464,14 +461,14 @@ internal sealed partial class SettingsWindow : Window
         if (withPreview) page.Children.Add(Preview(feel: true));
         page.Children.Add(Group("Scrolling"));
         page.Children.Add(Card([
-            .. Expander("scrolling", () => Fl(0xe077), "Vertical Scroll Style", ScrollHint(S.Scrolling), ScrollName(S.Scrolling),
+            .. Expander("scrolling", () => Fl(Icons.VerticalScroll), "Vertical Scroll Style", ScrollHint(S.Scrolling), ScrollName(S.Scrolling),
                 [() => SubRow("Style", () => Seg([("lines", "Lines"), ("free", "Free"), ("rate", "Rate-matched"), ("wheel", "Wheel-driven")], S.Scrolling, v => Set(() => S.Scrolling = v, rows: true))),
                  .. TuningRows()]),
         ]));
 
         page.Children.Add(Group("Switching between notes"));
         page.Children.Add(Card([
-            .. Expander("switching", () => Fl(0xf18d), "Horizontal Scroll Style",
+            .. Expander("switching", () => Fl(Icons.HorizontalScroll), "Horizontal Scroll Style",
                 "Follows input, with projection-based switching and spring edge pulls",
                 "Follow-through",
                 () => SubRow("Style", () => Seg([("follow", "Follow-through")], S.HorizontalScrollStyle,
@@ -480,7 +477,7 @@ internal sealed partial class SettingsWindow : Window
 
         page.Children.Add(Group("Motion"));
         page.Children.Add(Card(
-            Row(() => Fl(0xf103), "Reduce motion", "No glides, coasts, slides or horizontal overscroll", () => Toggle(S.ReduceMotion, v => Set(() => S.ReduceMotion = v), "Reduce motion"))));
+            Row(() => Fl(Icons.ReduceMotion), "Reduce motion", "No glides, coasts, slides or horizontal overscroll", () => Toggle(S.ReduceMotion, v => Set(() => S.ReduceMotion = v), "Reduce motion"))));
     }
 
     /// <summary>Presets for the chosen scroll style, shown under it.</summary>
@@ -513,13 +510,13 @@ internal sealed partial class SettingsWindow : Window
     private void ShortcutsPage(StackPanel page)
     {
         page.Children.Add(Group("Shortcut map"));
-        page.Children.Add(Card(Row(() => Fl(KeyboardGlyph), "Reset all shortcuts", "Restore every action to its default key.",
+        page.Children.Add(Card(Row(() => Fl(Icons.Keyboard), "Reset all shortcuts", "Restore every action to its default key.",
             () => TextButton("Reset all", ResetAllShortcuts))));
         foreach (var section in new[] { "Notes", "Search", "Window", "Slots", "Writing" })
         {
             var definitions = ShortcutMap.Definitions.Where(definition => definition.Section == section).ToArray();
             page.Children.Add(Group(section));
-            var rows = definitions.Select(definition => Row(() => Fl(KeyboardGlyph), definition.Name,
+            var rows = definitions.Select(definition => Row(() => Fl(Icons.Keyboard), definition.Name,
                 definition.DefaultKey.Length == 0 ? $"No default shortcut. {definition.Help}" : definition.Help,
                 () => ShortcutControl(definition))).ToArray();
             page.Children.Add(Card(rows));
@@ -631,8 +628,8 @@ internal sealed partial class SettingsWindow : Window
     {
         page.Children.Add(Group("Shortcuts"));
         page.Children.Add(Card(
-            Row(() => Fl(0xf4b8), $"Show or hide {AppInfo.Name}", null, () => HotkeyControl(() => _host.HotkeyStatus, text => _host.RegisterHotkey(text) && Store(() => S.Hotkey = text), allowEmpty: false)),
-            Row(() => Fl(0xf8bd), "Open on a new note", null, () => HotkeyControl(() => _host.NewNoteHotkeyStatus, text =>
+            Row(() => Fl(Icons.Keyboard), $"Show or hide {AppInfo.Name}", null, () => HotkeyControl(() => _host.HotkeyStatus, text => _host.RegisterHotkey(text) && Store(() => S.Hotkey = text), allowEmpty: false)),
+            Row(() => Fl(Icons.NewNoteHotkey), "Open on a new note", null, () => HotkeyControl(() => _host.NewNoteHotkeyStatus, text =>
             {
                 var value = string.IsNullOrWhiteSpace(text) ? null : text;
                 return _host.RegisterNewNoteHotkey(value) && Store(() => S.NewNoteHotkey = value);
@@ -647,18 +644,18 @@ internal sealed partial class SettingsWindow : Window
             return tiles;
         }
         page.Children.Add(Card([
-            .. Expander("open-at", () => Fl(0xee77), "Open at", null, OpenAtName(S.OpenAt), () => SubRow(null, OpenAtTiles, wide: true)),
-            Row(() => Fl(0xf359), "Taskbar icon", "The tray icon stays available while the pad is hidden",
+            .. Expander("open-at", () => Fl(Icons.OpenAt), "Open at", null, OpenAtName(S.OpenAt), () => SubRow(null, OpenAtTiles, wide: true)),
+            Row(() => Fl(Icons.TaskbarIcon), "Taskbar icon", "The tray icon stays available while the pad is hidden",
                 () => Seg([("visible", "While visible"), ("always", "Always"), ("never", "Never")], S.Taskbar, v => Set(() => S.Taskbar = v))),
-            Row(() => Fl(0xf2dd), "Fresh note after", "Away this long, the hotkey opens a new page",
+            Row(() => Fl(Icons.FreshNote), "Fresh note after", "Away this long, the hotkey opens a new page",
                 () => Dropdown([("0", "Never"), ("5", "5 minutes"), ("15", "15 minutes"), ("30", "30 minutes"), ("120", "2 hours")], S.FreshNoteAfterMinutes.ToString(), v => Set(() => S.FreshNoteAfterMinutes = int.Parse(v)))),
         ]));
 
         page.Children.Add(Group("Window"));
         page.Children.Add(Card(
-            Row(() => Fl(0xf601), "Keep on top", null, () => Toggle(S.Pinned, v => Set(() => S.Pinned = v), "Keep on top")),
-            Row(() => Fl(0xf165), "Hide when I click away", "Not while kept on top", () => Toggle(S.HideOnBlur, v => Set(() => S.HideOnBlur = v), "Hide when I click away")),
-            Row(() => Fl(0xf60e), "Start with Windows", null, () =>
+            Row(() => Fl(Icons.KeepOnTopSetting), "Keep on top", null, () => Toggle(S.Pinned, v => Set(() => S.Pinned = v), "Keep on top")),
+            Row(() => Fl(Icons.HideWhenClickAway), "Hide when I click away", "Not while kept on top", () => Toggle(S.HideOnBlur, v => Set(() => S.HideOnBlur = v), "Hide when I click away")),
+            Row(() => Fl(Icons.StartWithWindows), "Start with Windows", null, () =>
             {
                 bool startup = false; try { startup = Startup.IsEnabled; } catch { }
                 return Toggle(startup, v => { try { Startup.SetEnabled(v); } catch (Exception ex) { _host.Toast(ex.Message); } }, "Start with Windows");
@@ -687,9 +684,9 @@ internal sealed partial class SettingsWindow : Window
     {
         page.Children.Add(Group(AppInfo.Name));
         page.Children.Add(Card(
-            Row(() => Fl(0xf4a3), AppInfo.Label.Length == 0 ? $"{AppInfo.Name} {AppInfo.Version}" : $"{AppInfo.Name} {AppInfo.Version} ({AppInfo.Label})", $"{AppInfo.Description}\n{AppInfo.Copyright}", null),
-            Row(() => Fl(KeyboardGlyph), "Keyboard shortcuts", "Every shortcut on one page", () => TextButton("Show", () => { _host.ShowResident(); _host.OpenHelp(); })),
-            Row(() => Fl(0xf19f), "Restore default settings", "Undo it from the pad's notice", () => TextButton("Restore", () => _host.ResetSettings()))));
+            Row(() => Fl(Icons.About), AppInfo.Label.Length == 0 ? $"{AppInfo.Name} {AppInfo.Version}" : $"{AppInfo.Name} {AppInfo.Version} ({AppInfo.Label})", $"{AppInfo.Description}\n{AppInfo.Copyright}", null),
+            Row(() => Fl(Icons.Keyboard), "Keyboard shortcuts", "Every shortcut on one page", () => TextButton("Show", () => { _host.ShowResident(); _host.OpenHelp(); })),
+            Row(() => Fl(Icons.RestoreDefaults), "Restore default settings", "Undo it from the pad's notice", () => TextButton("Restore", () => _host.ResetSettings()))));
     }
 
     private void StoragePage(StackPanel page)
@@ -731,7 +728,7 @@ internal sealed partial class SettingsWindow : Window
             return details;
         }
 
-        page.Children.Add(Card(Row(() => Fl(0xf418), "Notes folder", "Your notes are plain files here, saved as you type.", null),
+        page.Children.Add(Card(Row(() => Fl(Icons.NotesFolder), "Notes folder", "Your notes are plain files here, saved as you type.", null),
             SubRow(null, NotesFolderDetails, wide: true, searchTag: "sub Notes folder location and move notes")));
 
         page.Children.Add(Group("Other locations"));
@@ -755,10 +752,10 @@ internal sealed partial class SettingsWindow : Window
             return false;
         }
         page.Children.Add(Card(
-            Row(() => Fl(0xf418), "Recovered notes", null,
+            Row(() => Fl(Icons.RecoveredNotes), "Recovered notes", null,
                 () => TextButton("Open", () => OpenFolder(recovered)),
                 RecoveryDescription, RecoveryDescriptionMatches),
-            Row(() => Fl(0xf359), "App data", $"{_notes.AppHome}\nLog file and the pointer to your notes folder.",
+            Row(() => Fl(Icons.AppData), "App data", $"{_notes.AppHome}\nLog file and the pointer to your notes folder.",
                 () => TextButton("Open", () => OpenFolder(_notes.AppHome)))));
     }
 
