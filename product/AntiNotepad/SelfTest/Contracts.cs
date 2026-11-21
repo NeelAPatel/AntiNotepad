@@ -20,6 +20,10 @@ internal static partial class SelfTest
         var saveDelayUi = Memoize(() => RunExistingCheck(SaveDelayChecks, "save delay UI: "));
         var savedLabelClock = Memoize(() => RunExistingCheck(SavedLabelChecks, "saved label clock: "));
         var barInteraction = Memoize(() => RunExistingCheck(PinRingChecks, "bar interaction: "));
+        var searchDeleteSafety = Memoize(() => RunExistingCheck(SearchDeleteSafetyChecks, "search delete safety: "));
+        var slotClearUndoSafety = Memoize(() => RunExistingCheck(SlotClearUndoSafetyChecks, "slot clear undo safety: "));
+        var saveFailureEnter = Memoize(() => RunExistingCheck(SaveFailureEnterChecks, "save failure Enter: "));
+        var searchDeleteToast = Memoize(() => RunExistingCheck(SearchDeleteToastChecks, "search delete toast: "));
         ContractRow[] rows =
         [
             new(
@@ -253,7 +257,31 @@ internal static partial class SelfTest
                 "A29-shortcut-map",
                 () => RunExistingCheck(ShortcutMapChecks, "shortcut map: "),
                 "Dev copy: record, clear, reset one row, reset all, restart, take a conflicting key, and confirm F1 opens, closes and reopens Help with current bindings. Confirm Ctrl+Enter is unassigned by default and Checkbox or timer can be bound in Settings."),
-            IconRegistryContractRow()
+            IconRegistryContractRow(),
+            new(
+                "search-delete-undo",
+                "Delete edits the search query; Ctrl+Delete removes forever only at query end, Undo restores original trash positions, and saved text survives both saves and reload.",
+                "A35a-data-safety",
+                searchDeleteSafety,
+                "Dev copy: in Trash, type abc, place the caret mid-query and press Delete and Ctrl+Delete; confirm Trash is unchanged. Move to the end, press Ctrl+Delete, then Undo; confirm the note returns in its original order."),
+            new(
+                "slot-clear-undo-withdrawal",
+                "A cleared slot can be restored until it is edited; its withdrawn toast button cannot run during normal motion or overwrite later text.",
+                "A35a-data-safety",
+                slotClearUndoSafety,
+                "Dev copy: clear a slot and Undo before editing; repeat, type new text, then confirm the toast is gone and the new text remains."),
+            new(
+                "save-failure-enter-focus",
+                "Enter runs the focused save-failure button, and a repeated prompt refreshes the Quit action.",
+                "A35a-data-safety",
+                saveFailureEnter,
+                null),
+            new(
+                "search-delete-toast-count",
+                "Search deletion counts only notes moved to trash and says when slot results were skipped.",
+                "A35a-data-safety",
+                searchDeleteToast,
+                "Dev copy: select only a slot and press Ctrl+Delete; confirm the editor hint. Select two notes and one slot; confirm the note count and skipped-slot count.")
         ];
 
         var passed = 0;

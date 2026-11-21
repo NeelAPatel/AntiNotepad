@@ -3,6 +3,7 @@ using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -15,6 +16,245 @@ namespace AntiNotepad;
 
 internal static partial class SelfTest
 {
+    /// <summary>Builds a pad with temporary storage for data-safety UI checks.</summary>
+    private sealed class DataSafetyFixture : IDisposable
+    {
+        private const BindingFlags PrivateInstance = BindingFlags.Instance | BindingFlags.NonPublic;
+        private readonly string _folder = Path.Combine(Path.GetTempPath(), "AntiNotepad-data-safety-" + Guid.NewGuid().ToString("N"));
+        private readonly RuntimeLog _log = new();
+        private readonly bool _reducedMotion = Anim.Reduced;
+
+        public Store Store { get; }
+        public UI.PadWindow Pad { get; }
+        public string Folder => _folder;
+
+        public DataSafetyFixture(bool reducedMotion = true)
+        {
+            if (Application.Current is null) AppBuilder.Configure<Application>().UsePlatformDetect().SetupWithoutStarting();
+            if (!Application.Current!.Styles.OfType<Avalonia.Themes.Fluent.FluentTheme>().Any())
+            {
+                Application.Current.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
+                Application.Current.Styles.Add(new StyleInclude(new Uri(AppInfo.ResourceUri)) { Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml") });
+            }
+
+            var palette = Palette.All[0];
+            Store = new Store(_folder);
+            Store.Load();
+            var settings = Store.SettingsService;
+            settings.Current.Theme = palette.Dark ? "dark" : "light";
+            if (palette.Dark) settings.Current.DarkPalette = palette.Id; else settings.Current.LightPalette = palette.Id;
+            settings.Current.ReduceMotion = reducedMotion;
+            Anim.Reduced = reducedMotion;
+            Welcome.SeedIfNew(Store.Data, settings);
+            var notes = new NotesSession(Store, _folder, _folder, null, _log.Write);
+            Pad = new UI.PadWindow(Store, settings, _log, false, true, notes);
+        }
+
+        /// <summary>Attaches a search overlay seeded with synchronous result state.</summary>
+        public UI.SearchOverlay Search(string query, bool trash, params Note[] items)
+        {
+            var overlay = new UI.SearchOverlay(Pad, Pad.CurrentPalette, Store, query, trash);
+            typeof(UI.PadWindow).GetMethod("ShowOverlay", PrivateInstance)!.Invoke(Pad, [overlay]);
+            Set(overlay, "_items", items.ToList());
+            Set(overlay, "_cursor", 0);
+            Set(overlay, "_displayedQuery", query);
+            Set(overlay, "_resultsPending", false);
+            var queryBox = (TextBox)Get(overlay, "_query")!;
+            queryBox.SelectionStart = query.Length; queryBox.SelectionEnd = query.Length;
+            queryBox.CaretIndex = query.Length;
+            return overlay;
+        }
+
+        /// <summary>Resets query and result state between key-route checks.</summary>
+        public static void SetSearchItems(UI.SearchOverlay overlay, string query, params Note[] items)
+        {
+            Set(overlay, "_items", items.ToList());
+            Set(overlay, "_cursor", 0);
+            Set(overlay, "_displayedQuery", query);
+            Set(overlay, "_resultsPending", false);
+            ((HashSet<Note>)Get(overlay, "_selected")!).Clear();
+            var queryBox = (TextBox)Get(overlay, "_query")!;
+            queryBox.Text = query;
+            queryBox.SelectionStart = query.Length; queryBox.SelectionEnd = query.Length;
+            queryBox.CaretIndex = query.Length;
+        }
+
+        /// <summary>Sends one key through the search overlay's tunnel handler.</summary>
+        public static void Key(UI.SearchOverlay overlay, Key key, KeyModifiers modifiers)
+        {
+            var args = new KeyEventArgs { Key = key, KeyModifiers = modifiers };
+            typeof(UI.SearchOverlay).GetMethod("OnKey", PrivateInstance)!.Invoke(overlay, [overlay, args]);
+        }
+
+        public string ToastText
+        {
+            get
+            {
+                var toast = (Border)Get(Pad, "_toast")!;
+                return toast.Child is StackPanel row && row.Children.FirstOrDefault() is TextBlock text ? text.Text ?? "" : "";
+            }
+        }
+
+        public void ClickToastAction()
+        {
+            var toast = (Border)Get(Pad, "_toast")!;
+            if (toast.Child is not StackPanel row || row.Children.OfType<Button>().LastOrDefault() is not { } button) return;
+            button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        }
+
+        public static object? Get(object target, string name) => target.GetType().GetField(name, PrivateInstance)!.GetValue(target);
+        public static void Set(object target, string name, object? value) => target.GetType().GetField(name, PrivateInstance)!.SetValue(target, value);
+
+        public void Dispose()
+        {
+            try
+            {
+                Pad.CloseOverlay();
+                foreach (var field in typeof(UI.PadWindow).GetFields(PrivateInstance))
+                    if (field.GetValue(Pad) is DispatcherTimer timer) timer.Stop();
+                ((Editor.PadView)Get(Pad, "_left")!).Release();
+                ((Editor.PadView)Get(Pad, "_right")!).Release();
+            }
+            finally
+            {
+                Anim.Reduced = _reducedMotion;
+                _log.Dispose();
+                try { if (Directory.Exists(_folder)) Directory.Delete(_folder, true); } catch { }
+            }
+        }
+    }
+
+    /// <summary>Checks that query editing wins over destructive trash deletion and that permanent deletion is undoable.</summary>
+    private static bool SearchDeleteSafetyChecks(out string report)
+    {
+        using var fixture = new DataSafetyFixture();
+        var before = new Note { Text = "before" };
+        var target = new Note { Text = "abc" };
+        var after = new Note { Text = "after" };
+        var trash = fixture.Store.Data.Trash;
+        trash.Clear(); trash.AddRange([before, target, after]);
+        var overlay = fixture.Search("abc", true, target);
+        var failures = new List<string>();
+
+        ((TextBox)DataSafetyFixture.Get(overlay, "_query")!).CaretIndex = 1;
+        var plainDelete = new KeyEventArgs { Key = Key.Delete, KeyModifiers = KeyModifiers.None };
+        typeof(UI.SearchOverlay).GetMethod("OnKey", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(overlay, [overlay, plainDelete]);
+        if (plainDelete.Handled || !trash.Contains(target)) failures.Add("plain Delete must edit the query and keep Trash unchanged");
+
+        trash.Clear(); trash.AddRange([before, target, after]);
+        DataSafetyFixture.SetSearchItems(overlay, "abc", target);
+        var middleQuery = (TextBox)DataSafetyFixture.Get(overlay, "_query")!;
+        middleQuery.CaretIndex = 1;
+        var middleDelete = new KeyEventArgs { Key = Key.Delete, KeyModifiers = KeyModifiers.Control };
+        typeof(UI.SearchOverlay).GetMethod("OnKey", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(overlay, [overlay, middleDelete]);
+        if (middleDelete.Handled || !trash.Contains(target)) failures.Add("Ctrl+Delete mid-query must edit the query and keep Trash unchanged");
+
+        DataSafetyFixture.SetSearchItems(overlay, "abc", target);
+        var selectedQuery = (TextBox)DataSafetyFixture.Get(overlay, "_query")!;
+        selectedQuery.SelectionStart = 0; selectedQuery.SelectionEnd = 1; selectedQuery.CaretIndex = 3;
+        var selectedDelete = new KeyEventArgs { Key = Key.Delete, KeyModifiers = KeyModifiers.Control };
+        typeof(UI.SearchOverlay).GetMethod("OnKey", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(overlay, [overlay, selectedDelete]);
+        if (selectedDelete.Handled || !trash.Contains(target)) failures.Add("Ctrl+Delete with selected query text must edit the query and keep Trash unchanged");
+
+        trash.Clear(); trash.AddRange([before, target, after]);
+        DataSafetyFixture.SetSearchItems(overlay, "abc", target);
+        var endDelete = new KeyEventArgs { Key = Key.Delete, KeyModifiers = KeyModifiers.Control };
+        typeof(UI.SearchOverlay).GetMethod("OnKey", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(overlay, [overlay, endDelete]);
+        var undo = DataSafetyFixture.Get(fixture.Pad, "_toastAction") as Action;
+        if (!endDelete.Handled || trash.Contains(target) || undo is null) failures.Add("Ctrl+Delete at query end must delete forever with Undo");
+        else
+        {
+            undo();
+            if (!trash.SequenceEqual([before, target, after])) failures.Add("Undo must restore original trash positions");
+        }
+
+        DataSafetyFixture.SetSearchItems(overlay, "", target);
+        var emptyQueryBackspace = new KeyEventArgs { Key = Key.Back, KeyModifiers = KeyModifiers.Control };
+        typeof(UI.SearchOverlay).GetMethod("OnKey", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(overlay, [overlay, emptyQueryBackspace]);
+        var backspaceUndo = DataSafetyFixture.Get(fixture.Pad, "_toastAction") as Action;
+        if (!emptyQueryBackspace.Handled || trash.Contains(target) || backspaceUndo is null)
+            failures.Add("Ctrl+Backspace on an empty query keeps its existing delete action");
+        else backspaceUndo();
+
+        if (!SearchDeletePersistenceChecks(out var persistenceReport)) failures.Add(persistenceReport);
+
+        report = failures.Count == 0 ? "query Delete routes, Undo positions, and saved-body persistence" : string.Join("; ", failures);
+        return failures.Count == 0;
+    }
+
+    /// <summary>Checks that a cleared slot can be undone before editing, and its toast action is withdrawn after editing.</summary>
+    private static bool SlotClearUndoSafetyChecks(out string report)
+    {
+        using var fixture = new DataSafetyFixture(reducedMotion: false);
+        var slot = fixture.Store.Data.Slots[0];
+        Editor.PadView.DocumentFor(slot).Text = "old slot text";
+        fixture.Pad.OpenSlot(1);
+        fixture.Pad.DeleteCurrent();
+        fixture.ClickToastAction();
+        var restored = Editor.PadView.DocumentFor(slot).Text == "old slot text";
+
+        fixture.Pad.DeleteCurrent();
+        var toast = (Border)DataSafetyFixture.Get(fixture.Pad, "_toast")!;
+        var button = toast.Child is StackPanel row ? row.Children.OfType<Button>().LastOrDefault() : null;
+        Editor.PadView.DocumentFor(slot).Text = "new slot text";
+        var action = DataSafetyFixture.Get(fixture.Pad, "_toastAction");
+        var undoArmed = (bool)DataSafetyFixture.Get(fixture.Pad, "_undoArmed")!;
+        var normalMotion = !Anim.Reduced;
+        button?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        var safe = normalMotion && button is not null && action is null && !undoArmed && Editor.PadView.DocumentFor(slot).Text == "new slot text";
+        report = restored && safe ? "slot clear Undo restores before edit and a withdrawn button cannot overwrite later text" : $"restore={restored}; normal motion={normalMotion}; edited text kept={Editor.PadView.DocumentFor(slot).Text == "new slot text"}; action withdrawn={action is null}; undo disarmed={!undoArmed}; stale button present={button is not null}; toast visible={toast.IsVisible}";
+        return restored && safe;
+    }
+
+    /// <summary>Checks that a repeated save prompt refreshes both actions and Enter dispatches to the focused button.</summary>
+    private static bool SaveFailureEnterChecks(out string report)
+    {
+        using var fixture = new DataSafetyFixture();
+        var show = typeof(UI.PadWindow).GetMethod("ShowSaveFailurePrompt", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var firstRetry = 0; var firstQuit = 0; var retry = 0; var quit = 0;
+        show.Invoke(fixture.Pad, ["first failure", (Action)(() => firstRetry++), (Action)(() => firstQuit++)]);
+        show.Invoke(fixture.Pad, ["repeat failure", (Action)(() => retry++), (Action)(() => quit++)]);
+        var retryAction = DataSafetyFixture.Get(fixture.Pad, "_saveFailureRetryAction") as Action;
+        var quitActionField = typeof(UI.PadWindow).GetField("_saveFailureQuitAction", BindingFlags.Instance | BindingFlags.NonPublic);
+        var quitAction = quitActionField?.GetValue(fixture.Pad) as Action;
+        if (retryAction is not null) retryAction();
+        if (quitAction is not null) quitAction();
+        var retryButton = (Button)DataSafetyFixture.Get(fixture.Pad, "_saveFailureRetryButton")!;
+        var quitButton = (Button)DataSafetyFixture.Get(fixture.Pad, "_saveFailureQuitButton")!;
+        var keyHandler = typeof(UI.PadWindow).GetMethod("OnSaveFailureKeyDown", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var retryEnter = new KeyEventArgs { Key = Key.Enter, Source = retryButton };
+        keyHandler.Invoke(fixture.Pad, [fixture.Pad, retryEnter]);
+        var quitEnter = new KeyEventArgs { Key = Key.Enter, Source = quitButton };
+        keyHandler.Invoke(fixture.Pad, [fixture.Pad, quitEnter]);
+        var passed = firstRetry == 0 && firstQuit == 0 && retry == 2 && quit == 2 && retryAction is not null && quitAction is not null && retryEnter.Handled && quitEnter.Handled;
+        report = passed ? "refreshed prompt actions and focused Retry/Quit Enter routes" : $"latest retry={retryAction is not null}; latest quit={quitAction is not null}; Enter handled={retryEnter.Handled}/{quitEnter.Handled}; calls retry/quit={retry}/{quit}";
+        return passed;
+    }
+
+    /// <summary>Checks slot-only and mixed search-delete notices against the notes actually moved.</summary>
+    private static bool SearchDeleteToastChecks(out string report)
+    {
+        using var fixture = new DataSafetyFixture();
+        var slot = fixture.Store.Data.Slots[0];
+        slot.Text = "slot text";
+        var overlay = fixture.Search("", false, slot);
+        DataSafetyFixture.Key(overlay, Key.Delete, KeyModifiers.Control);
+        var slotsOnlyText = fixture.ToastText;
+        var slotsOnly = slotsOnlyText == "Slots are cleared in the editor";
+
+        var first = new Note { Text = "first" };
+        var second = new Note { Text = "second" };
+        fixture.Store.Data.Stack.Clear(); fixture.Store.Data.Stack.AddRange([first, second]);
+        fixture.Store.Data.Slots[0].Text = "slot text";
+        DataSafetyFixture.SetSearchItems(overlay, "", first, second, fixture.Store.Data.Slots[0]);
+        ((HashSet<Note>)DataSafetyFixture.Get(overlay, "_selected")!).UnionWith([first, second, fixture.Store.Data.Slots[0]]);
+        DataSafetyFixture.Key(overlay, Key.Delete, KeyModifiers.Control);
+        var mixedText = fixture.ToastText;
+        var mixed = mixedText == "2 notes moved to trash · 1 slot skipped";
+        report = slotsOnly && mixed ? "slot-only and mixed delete counts" : $"slots-only='{slotsOnlyText}' expected={slotsOnly}; mixed='{mixedText}' expected={mixed}";
+        return slotsOnly && mixed;
+    }
+
     /// <summary>Checks the Windows motion curves at endpoints and throughout their range.</summary>
     private static bool MotionCurveChecks(out string report)
     {

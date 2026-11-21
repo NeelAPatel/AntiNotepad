@@ -248,7 +248,7 @@ internal sealed partial class PadWindow
             Data.Trash.Insert(0, copy);
             PadView.DocumentFor(note).Text = "";
             CancelNoteSave(note);
-            Toast($"Slot {note.Slot} cleared", "Undo", () => { Data.Trash.Remove(copy); PadView.DocumentFor(note).Text = copy.Text; Edited(note); });
+            Toast($"Slot {note.Slot} cleared", "Undo", () => { Data.Trash.Remove(copy); PadView.DocumentFor(note).Text = copy.Text; Edited(note); }, withdrawUndoOnEdit: note);
             SaveImmediately();
             return;
         }
