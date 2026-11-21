@@ -235,6 +235,7 @@ Done and dropped Plan rows moved out of STATUS by Loop10b-pending-list (2026-11-
 
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
+| T20-install-selftest-root | `tools/install.ps1` runs the installed copy selftest from the repo root, so repo-reading contracts pass (v0.7.0 install had rolled back). Card `.coord/tasks/T20-install-selftest-root.md` | Low | Low | done |
 | A37-version-0-7-0 | Plain 0.7.0 stamp: empty `AppVersionLabel`, version string drops the dash, Settings About row drops empty parentheses; release prep for `v0.7.0`. Card `.coord/tasks/A37-version-0-7-0.md` | Low | Low | done |
 | A36-version-rc4 | Stamp the app as 0.7.0-rc4 (`AppVersionLabel` rc3 to rc4); release prep for `v0.7.0-rc4`. Card `.coord/tasks/A36-version-rc4.md` | Low | Low | done |
 | A34-pill-bar-per-mode | Bottom bar per view: Standard pager only, Permanent dots only; Delete (left) and New note (right) corner buttons; top-right swap button; Settings: show Delete, show New note, Slot dots. Card `.coord/tasks/A34-pill-bar-per-mode.md`; lab approved 2026-11-20 | Medium | Medium | done |

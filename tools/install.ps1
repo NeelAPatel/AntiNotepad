@@ -77,10 +77,10 @@ if ($DryRun) {
 
 if ([string]::IsNullOrWhiteSpace($programsDirectory) -and -not $testMode) { throw 'Windows did not provide a Start menu Programs path.' }
 
-function New-CleanAppProcessInfo([string]$Executable, [string[]]$Arguments, [bool]$CaptureOutput) {
+function New-CleanAppProcessInfo([string]$Executable, [string[]]$Arguments, [bool]$CaptureOutput, [string]$WorkingDirectory = '') {
     $info = [System.Diagnostics.ProcessStartInfo]::new()
     $info.FileName = $Executable
-    $info.WorkingDirectory = Split-Path -Parent $Executable
+    $info.WorkingDirectory = if ($WorkingDirectory) { $WorkingDirectory } else { Split-Path -Parent $Executable }
     $info.UseShellExecute = $false
     $info.CreateNoWindow = $CaptureOutput
     $info.RedirectStandardOutput = $CaptureOutput
@@ -93,8 +93,8 @@ function New-CleanAppProcessInfo([string]$Executable, [string[]]$Arguments, [boo
     return $info
 }
 
-function Invoke-InstalledCommand([string]$Executable, [string]$Argument, [int]$TimeoutSeconds) {
-    $info = New-CleanAppProcessInfo $Executable @($Argument) $true
+function Invoke-InstalledCommand([string]$Executable, [string]$Argument, [int]$TimeoutSeconds, [string]$WorkingDirectory = '') {
+    $info = New-CleanAppProcessInfo $Executable @($Argument) $true $WorkingDirectory
     $process = [System.Diagnostics.Process]::Start($info)
     if ($null -eq $process) { throw "Could not start $Executable $Argument." }
     try {
@@ -251,7 +251,7 @@ try {
     Get-ChildItem -LiteralPath $stageDirectory -Force | Copy-Item -Destination $installDirectory -Recurse -Force
 
     if ($TestFailSelfTest) { throw 'Simulated installed selftest failure requested by -TestFailSelfTest.' }
-    $selftest = Invoke-InstalledCommand $installedExe '--selftest' 60
+    $selftest = Invoke-InstalledCommand $installedExe '--selftest' 60 $repoRoot
     if ($selftest.ExitCode -ne 0 -or $selftest.StandardOutput -notmatch 'SELFTEST PASS') {
         $detail = ($selftest.StandardOutput + $selftest.StandardError).Trim()
         throw "Installed selftest failed (exit $($selftest.ExitCode)): $detail"
