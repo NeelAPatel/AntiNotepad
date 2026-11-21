@@ -130,6 +130,7 @@ internal static partial class SelfTest
         ContractsChecks(failures);
 
         Check(DesignChecks(out var designReport), "design dump: " + designReport);
+        Check(DesignTokenChecks(out var designTokenReport), "design tokens: " + designTokenReport);
         var iconContractPass = IconRegistryContractCheck(out var iconContractReport);
         Console.WriteLine(iconContractPass ? "CONTRACT icon-font-glyph-names " + iconContractReport : "CONTRACT icon-font-glyph-names FAIL " + iconContractReport);
         Check(iconContractPass, "contract icon-font-glyph-names: " + iconContractReport);
