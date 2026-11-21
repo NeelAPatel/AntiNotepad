@@ -148,6 +148,8 @@ Two families, because wash roles differ by theme and strength roles do not.
 - Today's gaps seen in code: Spacing 1, 2 (x5), 3 (x2), 4 (x3), 5 (x3), 6 (x4), 7, 8 (x2), 9, 10 (x2), 12 (x5), 14. Margins/padding mix 1 to 24 plus 28, 30, 36, 37, 46, 52.
 - **Mapping used below:** 1 to 0 or Nudge 2 (optical), 2 Nudge, 3 to 4, 5 to 4, 6 to 8, 7 to 8, 9 to 8, 10 to 12, 14 to 16, 18 to 16, 20 to 24, 22 to 24, 28 to 32. A tie such as 6 or 10 goes up.
 
+Strokes: `Shape.Thin` 1 and `Shape.Thick` 2. Spacing: `Space.Nudge` 2, `Xs` 4, `S` 8, `M` 12, `L` 16, `Xl` 24, `Xxl` 32.
+
 ## 3. Roles to step (every token)
 
 ### 3.1 Typography, Shape, Motion, Paint
@@ -242,7 +244,13 @@ Two families, because wash roles differ by theme and strength roles do not.
 | **PagerDotWidth / PagerDotHeight** | 7 / 7 | S 8 / 8 | +1 / +1 |
 | **PagerDotRadius** | 3.5 (height / 2) | Round 4 (height / 2) | +0.5 |
 | PagerDotSelectedButtonWidth | 24 | XL 24 | 0 |
-| **PagerDotButtonHeight** | 18 | 20 (size) | +2 |
+| **PagerDotButtonHeight** | 32 | 32 (ButtonSize) | 0 |
+| PagerCountButtonHeight | 32 | 32 (ButtonSize) | 0 |
+| BarCornerSize | 42 | 42 (PillHeight) | 0 |
+| PinRingThickness | 4 | exception (stroke) | 0 |
+| DevBadgeLightTextInkMix | .62 | exception (ink mix) | 0 |
+| DeleteDebounceMs | 500 ms | timer | 0 |
+| PlainIconWeight | 0 | exception (font weight) | 0 |
 | **PagerDotBorderThickness** | 1.2 | Thin 1 | -0.2 |
 | **PillBorderAlpha** | .35 | Faint .3 | -.05 |
 | PillCornerRadius | 12 | Lg 12 | 0 |
@@ -305,6 +313,18 @@ R only. "Role" cites the section 3 names. Spacing is `vertical x horizontal` whe
 | 11 | Material picture (no radius), pager `PillHeight` 42 and strip 50 | Sample art; derived from button 32 + inset + border, kept so the lock holds |
 | 12 | Drawn sample and glyph alphas as bytes (220, 110, 90, 40) | Painted into bitmaps and glyph color, not UI washes |
 | 13 | Icon button hover radius Md 8 on a 32 square | Locked hover radii (8, and 9 to 8 under R); bigger than Control 4 on purpose |
+| 14 | `Space.EditorTextInsetLeft` 36, `EditorTextInsetRight` 30 | Moves the user's text position; 30 to 32 would rewrap existing lines |
+| 15 | `Space.EditorHintOffset` 1, `EditorHintTopOffset` 3 | Derives hint placement from editor text inset and top alignment |
+| 16 | `Space.ToggleKnobInset` 3 | Centers the knob in the 40 x 20 track |
+| 17 | `Space.CaretBarWidth` 2, `CaretSampleMargin` 1 | Draws and centers a real caret in the style sample |
+| 18 | `Space.CompletionModeColumnWidth` 70, `CompletionCommandColumnWidth` 86 | Fits the completion keywords without wrapping |
+| 19 | `Space.HelpKeyColumnWidth` 150 | Fits shortcut names without wrapping |
+| 20 | `Space.MotionSampleHeight` 46, `MotionSampleBarWidth` 14, `MotionSampleBarHeight` 3 | Preserves motion preview sample proportions |
+| 21 | `Typography.CapsLetterSpacing` .8 | Extra tracking separates all-caps section labels |
+| 22 | `ChromeTokens.GlyphIconBoxExtra` 2 | Adds optical clearance around the 16 px glyph |
+| 23 | `ChromeTokens.Size` window, panel, popup, row and sample dimensions | Named layout sizes preserve surface geometry on the 4 px grid |
+| 24 | `Paint.DisabledIcon` .5 | Keeps disabled glyphs subdued |
+| 25 | `Typography.UiFamily`, `MonoFamily`, `EditorFallback` | Font fallback lists select installed UI and editor fonts |
 
 ## 7. Visible changes, biggest first (where to look in the lab build)
 
