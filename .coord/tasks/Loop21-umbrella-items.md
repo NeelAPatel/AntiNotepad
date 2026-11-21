@@ -57,3 +57,10 @@ Build the Plan's After, small and fail-open (every hook exits 0 on any error):
 5. `merge-preflight.ps1 -Base <branch>` (default dev): ancestry and `rev-list` use the base, STATUS hints dropped when Base is not dev. `merge-task/SKILL.md` and `branches.md` get "into an umbrella" and "umbrella to dev" variants (no STATUS edits for child merges). `tools/survival.py` (already copied from `a35-survival.py`; generalize: args target, base, subject prefix) and an optional gate step `-Umbrella <branch>` in `gate.ps1`.
 Done means: build 0 warnings is not needed (no product code); every touched script's `-SelfTest` passes; `tools/roadmap-data.ps1 -Check` passes; `pwsh -NoProfile -File tools/gate.ps1 -Task Loop21-umbrella-items -Offline` passes; `docs/loop.md` loop version line bumped to v5.5.0.
 Report sections: 1 Summary; 2 Change list; 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 8 Checks run; 9 Hand checks.
+
+## Rework r2
+Role: quick. Fix the three review findings (`.coord/logs/Loop21-umbrella-items-review.reviewer.last.md` in the main checkout; summary here), minimal, with selftest cases:
+1. `tools/survival.py`: Git quotes non-ASCII paths in diff headers (`+++ "b/product/caf\303\251.cs"`), so the file is skipped and the check falsely passes. Run git with `-c core.quotepath=false` (and handle a quoted header if one still appears); selftest with a non-ASCII filename.
+2. `merge-task/SKILL.md` umbrella variant: `tools/catch-up.ps1` flattens `--no-ff` child merges. For an umbrella, the catch-up step must rebase with `--rebase-merges` (add a `-RebaseMerges` switch to `tools/catch-up.ps1`, default off), or say the umbrella merges dev in; pick the smaller; document it in the skill.
+3. `tools/start-card.ps1`: a director chat (cwd is the main checkout, not a worktree) must not get the item title rule; print the director naming rule from `docs/loop-sessions.md` in one line instead. Selftest.
+Add no other changes. Run each touched script's `-SelfTest` and the gate. Report `.coord/reports/Loop21-umbrella-items-r2.md`. Never edit this card.

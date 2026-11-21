@@ -1,0 +1,4 @@
+# Loop21-umbrella-items-review: read-only review of the branch
+
+Role: reviewer. Read-only: edit nothing except the report. Review `git diff dev...HEAD` in this worktree (tools, hooks, merge skill, docs) against the Plan and Approve in `.coord/tasks/Loop21-umbrella-items.md`.
+Look for proven bugs only: hooks that can crash or print non-ASCII or block a legitimate chat (all must fail open, exit 0), poteto-gate refusing valid briefs or non-item briefs, title-hint changing existing hints, merge-preflight with default base dev changing behavior, survival.py wrongly passing, start-card wrong in a main-checkout director chat, docs contradicting each other (one-level chat rule vs umbrella exception, crosstalk rule). Run the scripts' -SelfTest (offline). For each finding: file:line, failing input, why. Report `.coord/reports/Loop21-umbrella-items-review.md`: verdict PASS or findings list.
