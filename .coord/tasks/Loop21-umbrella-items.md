@@ -30,6 +30,7 @@ User via Loop Hub 4, 2026-11-21, after the audit `.coord/research/A35-chat-famil
 - `tools/poteto-gate.ps1`
 - `tools/start-card.ps1`
 - `tools/merge-preflight.ps1`
+- `tools/catch-up.ps1`
 - `tools/survival.py`
 - `tools/gate.ps1`
 - `tools/roadmap-data.ps1`

@@ -13,7 +13,7 @@ Phase detail: `.claude/skills/merge-task/branches.md`.
 
 ## Into an umbrella
 
-The umbrella chat acts as the director for its children, with the user's go to start them. The child reviews its commits against the parent branch, rebases onto that branch when ready, and runs `tools/gate.ps1 -Task <ID-slug> -Base <parent-branch> -Umbrella <parent-branch>`. It prints `READY: <ID-slug>. Go to <chat> and run /merge-task <ID-slug>`. From the parent worktree, run `tools/merge-preflight.ps1 -Task <ID-slug> -Base <parent-branch>`, review the diff and commits, then merge `--no-ff` and gate the parent. Resolve failures before committing. Do not edit STATUS, archive or lessons in child merges; record queue, order and landed on the shared board. The director merges the accepted umbrella to dev once using the normal steps below, including STATUS and lessons.
+The umbrella chat acts as the director for its children, with the user's go to start them. The child reviews its commits against the parent branch, rebases onto that branch when ready, and runs `tools/gate.ps1 -Task <ID-slug> -Base <parent-branch> -Umbrella <parent-branch>`. It prints `READY: <ID-slug>. Go to <chat> and run /merge-task <ID-slug>`. From the parent worktree, run `tools/merge-preflight.ps1 -Task <ID-slug> -Base <parent-branch>`, review the diff and commits, then merge `--no-ff` and gate the parent. Resolve failures before committing. Do not edit STATUS, archive or lessons in child merges; record queue, order and landed on the shared board. The director merges the accepted umbrella to dev once using the normal steps below, including STATUS and lessons. When catching an umbrella up to dev, use `tools/catch-up.ps1 -Task <ID-slug> -RebaseMerges` to preserve child merge commits.
 
 ## Live facts
 
@@ -33,7 +33,7 @@ The director sets the item chat title to `[Merged] <ID-slug>` when merging.
 0. **Commit review (the item's session, before it asks for this merge).** Ask the item's session whether it has done it;
    if not, it does it now: `git log --oneline dev..<branch>`, fold tiny and back-and-forth commits into the commit they
    belong to (`git commit --fixup <sha>`, then `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash dev`), reword vague
-   messages to `<ID-slug>: <what changed>`, drop lab variants and debug code, then `tools/catch-up.ps1 -Task <ID-slug>` (rebase only; merge runs from the local branch, no force-push) and re-run the gate at the new tip. No fixed
+   messages to `<ID-slug>: <what changed>`, drop lab variants and debug code, then `tools/catch-up.ps1 -Task <ID-slug>` (rebase only; merge runs from the local branch, no force-push; umbrella branches add `-RebaseMerges`) and re-run the gate at the new tip. No fixed
    count: one commit per meaningful change. Never rebase or force-push from the master checkout.
 1. From the master checkout, run `pwsh -NoProfile -File tools/merge-preflight.ps1 -Task <ID-slug>`. It also builds
    each commit of `dev..<branch>` that touches product code and runs `--selftest`; a failure names the commit, and the

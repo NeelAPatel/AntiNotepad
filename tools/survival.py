@@ -36,6 +36,7 @@ def selftest():
         run("git", "init", "-q")
         run("git", "config", "user.name", "Test")
         run("git", "config", "user.email", "test@example.invalid")
+        run("git", "config", "core.quotepath", "true")
         root = Path(folder)
         (root / "product").mkdir()
         (root / "product" / "a.txt").write_text("initial\n", encoding="utf-8")
@@ -49,6 +50,18 @@ def selftest():
         run("git", "merge", "--no-ff", "-qm", "T1-child: merge", "child")
         script = str(Path(__file__).resolve())
         run(sys.executable, "-I", script, "HEAD", "HEAD", "T1")
+        run("git", "checkout", "-q", "child")
+        (root / "product" / "café.cs").write_text("initial\nadded unicode line\n", encoding="utf-8")
+        run("git", "add", ".")
+        run("git", "commit", "-qm", "unicode child")
+        run("git", "checkout", "-q", base)
+        run("git", "merge", "--no-ff", "-qm", "T1-unicode: merge", "child")
+        (root / "product" / "café.cs").write_text("initial\n", encoding="utf-8")
+        run("git", "add", ".")
+        run("git", "commit", "-qm", "unicode remove")
+        unicode_result = subprocess.run([sys.executable, "-I", script, "HEAD", "HEAD", "T1"], cwd=folder, capture_output=True, text=True)
+        if unicode_result.returncode != 1 or "LOST" not in unicode_result.stdout:
+            raise RuntimeError("non-ASCII path was not checked")
         (root / "product" / "a.txt").write_text("initial\n", encoding="utf-8")
         run("git", "commit", "-qam", "remove")
         result = subprocess.run([sys.executable, "-I", script, "HEAD", "HEAD", "T1"], cwd=folder, capture_output=True, text=True)
@@ -63,7 +76,7 @@ if len(sys.argv) > 1 and sys.argv[1] == "--selftest":
 
 
 def git(*args):
-    return subprocess.run(["git", *args], capture_output=True, text=True, encoding="utf-8", check=True).stdout
+    return subprocess.run(["git", "-c", "core.quotepath=false", *args], capture_output=True, text=True, encoding="utf-8", check=True).stdout
 
 
 target = sys.argv[1] if len(sys.argv) > 1 else "HEAD"

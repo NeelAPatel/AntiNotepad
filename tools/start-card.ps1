@@ -24,7 +24,8 @@ function Get-StartCard([string]$Cwd, [string]$Root, [string]$Item = '') {
         }
     }
     "START CARD: $role$(if ($id) { " ($id)" })"
-    'Title: set and update it with the item row and phase; follow title-hint.'
+    if ($role -eq 'director') { 'Title: use the director role/version naming rule in docs/loop-sessions.md.' }
+    else { 'Title: set and update it with the item row and phase; follow title-hint.' }
     $merge
     'Codex implements; item chat briefs and checks. Codex checks are offline.'
     'Read: docs/loop.md, docs/playbook.md, docs/agents.md.'
@@ -32,7 +33,7 @@ function Get-StartCard([string]$Cwd, [string]$Root, [string]$Item = '') {
 if ($SelfTest) {
     try {
         $x = @(Get-StartCard 'C:/repo' 'C:/repo')
-        if ($x.Count -ge 25 -or $x[0] -ne 'START CARD: director') { throw 'director card failed' }
+        if ($x.Count -ge 25 -or $x[0] -ne 'START CARD: director' -or $x[1] -ne 'Title: use the director role/version naming rule in docs/loop-sessions.md.') { throw 'director card failed' }
         'START CARD SELFTEST PASS'; exit 0
     } catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 }
 }
