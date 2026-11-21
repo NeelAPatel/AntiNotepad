@@ -212,7 +212,7 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
         var brush = Brush(color);
         paint = new TimerPaint(
             brush,
-            RenderPaint.Pen(brush, 1, join: PenLineJoin.Round),
+            RenderPaint.Pen(brush, Shape.Thin, join: PenLineJoin.Round),
             RenderPaint.Pen(brush, 1.6, PenLineCap.Round, PenLineJoin.Round));
         _timerPaints.Add(key, paint);
         return paint;
@@ -356,7 +356,7 @@ internal sealed class DividerRenderer(PadView pad) : IBackgroundRenderer
                 var key = new PenKey(pad.Palette.Marker, TopLevel.GetTopLevel(view)?.RenderScaling ?? 1);
                 if (!_pens.TryGet(key, out pen))
                 {
-                    pen = RenderPaint.Pen(RenderPaint.Brush(key.Color, Paint.KeyPen), 1);
+                    pen = RenderPaint.Pen(RenderPaint.Brush(key.Color, Paint.KeyPen), Shape.Thin);
                     _pens.Add(key, pen);
                 }
             }

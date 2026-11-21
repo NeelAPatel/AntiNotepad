@@ -4,6 +4,7 @@ product/AntiNotepad/Editor/Motion.cs	timer	1
 product/AntiNotepad/Editor/PadView.cs	color	1
 product/AntiNotepad/Editor/PadView.cs	timer	1
 product/AntiNotepad/Editor/Renderers.cs	radius	6
+product/AntiNotepad/Editor/Renderers.cs	stroke	1
 product/AntiNotepad/Editor/Structure.cs	stroke	2
 product/AntiNotepad/Model/Store.cs	timer	1
 product/AntiNotepad/Model/Timers.cs	timer	1

@@ -311,9 +311,9 @@ function Find-Hits([string]$code, [string]$file) {
             [pscustomobject]@{ category = $category; file = $file; line = $line; match = ($match.Value -replace '[\t\r\n]+', ' '); code = ($lines[$line - 1].Trim() -replace '\t', ' ') }
         }
     }
-    foreach ($call in [regex]::Matches($masked, '\b(?:new\s+Pen|DrawRectangle|RoundedRect)\s*\(')) {
+    foreach ($call in [regex]::Matches($masked, '\b(?:new\s+Pen|RenderPaint\s*\.\s*Pen|DrawRectangle|RoundedRect)\s*\(')) {
         $args = @(Get-CallArguments $masked ($call.Index + $call.Length - 1))
-        $isPen = $call.Value -match '^new\s+Pen'
+        $isPen = $call.Value -match '^(?:new\s+Pen|RenderPaint\s*\.\s*Pen)'
         $first = if ($isPen) { 1 } elseif ($call.Value -match '^DrawRectangle') { 3 } else { 1 }
         $last = if ($isPen) { 1 } elseif ($call.Value -match '^DrawRectangle') { 4 } else { 2 }
         for ($index = $first; $index -le $last -and $index -lt $args.Count; $index++) {
@@ -375,6 +375,8 @@ var timer = TimeSpan.FromMilliseconds(30);
         @{ Category = 'spacing'; Text = 'Width = 0; Padding = new Thickness(0);'; Count = 0 },
         @{ Category = 'stroke'; Text = 'new Pen(new SolidColorBrush(color), 1.8);'; Count = 1 },
         @{ Category = 'stroke'; Text = 'new Pen(brush, Shape.Thin);'; Count = 0 },
+        @{ Category = 'stroke'; Text = 'RenderPaint.Pen(Brush(color, opacity), 1.6);'; Count = 1 },
+        @{ Category = 'stroke'; Text = 'RenderPaint.Pen(brush, Shape.Thin);'; Count = 0 },
         @{ Category = 'radius'; Text = 'dc.DrawRectangle(brush, pen, new Rect(0, 0, 4, 4), 2, 2);'; Count = 2 },
         @{ Category = 'radius'; Text = 'dc.DrawRectangle(brush, pen, rect, Shape.Control, Shape.Control);'; Count = 0 },
         @{ Category = 'radius'; Text = 'new RoundedRect(new Rect(0, 0, 4, 4), 2, 2);'; Count = 2 },
