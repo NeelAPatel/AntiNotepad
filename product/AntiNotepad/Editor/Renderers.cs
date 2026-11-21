@@ -252,7 +252,7 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
         if (!view.VisualLinesValid || view.Document is null) return;
         var font = pad.Settings.Font;
         var typeface = GetTypeface(font);
-            var size = pad.Settings.FontSize * Typography.EditorChipScale;
+        var size = pad.Settings.FontSize * Typography.EditorChipScale;
         var culture = CultureInfo.CurrentCulture;
         var scale = TopLevel.GetTopLevel(view)?.RenderScaling ?? 1;
         // Pass 1: every visible chip with its line geometry.

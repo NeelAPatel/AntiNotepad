@@ -58,8 +58,12 @@ internal sealed partial class PadWindow
     // The float style's pager lives in its own popup just below the window, centred under it.
     private readonly Avalonia.Controls.Primitives.Popup _floatPager = new()
     {
-        Placement = PlacementMode.Bottom, VerticalOffset = ChromeTokens.FloatGap, IsLightDismissEnabled = false,
-        ShouldUseOverlayLayer = false, Topmost = false, PlacementConstraintAdjustment = PopupPositionerConstraintAdjustment.None,
+        Placement = PlacementMode.Bottom,
+        VerticalOffset = ChromeTokens.FloatGap,
+        IsLightDismissEnabled = false,
+        ShouldUseOverlayLayer = false,
+        Topmost = false,
+        PlacementConstraintAdjustment = PopupPositionerConstraintAdjustment.None,
     };
     private readonly DispatcherTimer _barsSleep = new() { Interval = TimeSpan.FromMilliseconds(450) };
     private readonly DispatcherTimer _chromeSleep = new() { Interval = TimeSpan.FromMilliseconds(1600) };
@@ -764,7 +768,8 @@ internal sealed partial class PadWindow
             IsVisible = message.Length > 0,
             Foreground = new SolidColorBrush(p.Muted),
             FontSize = Typography.Body,
-            TextWrapping = TextWrapping.Wrap, MaxWidth = ChromeTokens.Size.SaveFailureReasonMaxWidth,
+            TextWrapping = TextWrapping.Wrap,
+            MaxWidth = ChromeTokens.Size.SaveFailureReasonMaxWidth,
         };
         Avalonia.Automation.AutomationProperties.SetName(detail, "Save error reason");
 
@@ -778,8 +783,11 @@ internal sealed partial class PadWindow
         quitButton.Click += (_, _) => quitAnyway();
         var buttons = new StackPanel
         {
-            Orientation = Orientation.Horizontal, Spacing = Space.S, HorizontalAlignment = HorizontalAlignment.Right,
-            Margin = new Thickness(0, Space.S, 0, 0), Children = { retryButton, quitButton },
+            Orientation = Orientation.Horizontal,
+            Spacing = Space.S,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, Space.S, 0, 0),
+            Children = { retryButton, quitButton },
         };
         var body = new TextBlock { Text = "Your latest edits aren't on disk yet. Retry tries again. Quit anyway closes AntiNotepad, and those edits may be lost.", Foreground = new SolidColorBrush(p.Ink), FontSize = Typography.Body, TextWrapping = TextWrapping.Wrap, MaxWidth = ChromeTokens.Size.SaveFailureReasonMaxWidth };
         var content = new StackPanel { Spacing = Space.S, Children = { title, body, detail, buttons } };
@@ -795,7 +803,8 @@ internal sealed partial class PadWindow
             BorderBrush = new SolidColorBrush(p.Faint, Paint.PopupBorder),
             BorderThickness = new Thickness(Shape.Thin),
             BoxShadow = PadBar.PillShadow(p),
-            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
         };
         Avalonia.Automation.AutomationProperties.SetName(card, "Save failure prompt");
         var overlay = new Grid { Background = Brushes.Transparent, Children = { card } };

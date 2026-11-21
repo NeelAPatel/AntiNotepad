@@ -220,7 +220,8 @@ internal sealed class MotionPreview : StackPanel
 
     private static Control Key(Color color, string label) => new StackPanel
     {
-        Orientation = Orientation.Horizontal, Spacing = Space.Xs,
+        Orientation = Orientation.Horizontal,
+        Spacing = Space.Xs,
         Children =
         {
             new Border { Width = Space.MotionSampleBarWidth, Height = Space.MotionSampleBarHeight, CornerRadius = new CornerRadius(Shape.Round(Space.MotionSampleBarHeight)), Background = new SolidColorBrush(color), VerticalAlignment = VerticalAlignment.Center },

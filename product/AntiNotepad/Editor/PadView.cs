@@ -128,8 +128,11 @@ internal sealed class PadView : Grid
         view.ElementGenerators.Add(new MarkerGenerator(this));
         _hint = new TextBlock
         {
-            IsHitTestVisible = false, Margin = new Thickness(Space.EditorHintLeftInset, Space.EditorHintTopInset, Space.EditorTextInsetRight, 0), TextWrapping = TextWrapping.Wrap,
-            VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Left,
+            IsHitTestVisible = false,
+            Margin = new Thickness(Space.EditorHintLeftInset, Space.EditorHintTopInset, Space.EditorTextInsetRight, 0),
+            TextWrapping = TextWrapping.Wrap,
+            VerticalAlignment = VerticalAlignment.Top,
+            HorizontalAlignment = HorizontalAlignment.Left,
         };
         _paper = new PaperLayer(this).Init();
         Children.Add(_paper);
@@ -385,7 +388,8 @@ internal sealed class PadView : Grid
 
         var mask = new LinearGradientBrush
         {
-            StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative), EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+            StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+            EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
         };
         foreach (var y in samples)
         {
