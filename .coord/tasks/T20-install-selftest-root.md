@@ -34,7 +34,13 @@ User, 2026-11-20: "Installer runs the check from the repo folder (Recommended)".
 No Codex run: a small script edit, done by the item chat itself.
 
 ## Check
-(pending)
+- Findings confirmed: `New-CleanAppProcessInfo` set the working directory to the exe folder for every call; two selftest contracts look for repo files from there.
+- Change: `New-CleanAppProcessInfo` and `Invoke-InstalledCommand` take an optional working directory (default: exe folder); only the `--selftest` call passes `$repoRoot`. The `--quit` and launch calls are untouched.
+- Proof (test mode, never the installed copy): `install.ps1 -DryRun` ok; `install.ps1 -InstallRoot build/A16-staged-upgrade-rollback-t20` reached `SELFTEST PASS` (CONTRACTS 41 rows, 40 pass, 1 manual) twice, exit 0; temp folders deleted. One earlier run failed `shortcut-map` with a file lock on `index.json.tmp` (not a path error; the two target checks passed in it); two reruns passed.
+- Gate (`pwsh tools/gate.ps1 -Task T20-install-selftest-root`, on the committed tip): GATE: PASS (seam, tokens, format, scope, loop-lint, size, cleanup PASS; loop-lint budget warnings on docs/loop.md and lessons.md are pre-existing).
+- Bounds check: within plan; one file changed, `tools/install.ps1`. Rollback code untouched. No Codex run, so no commit review.
+- Noticed: `shortcut-map` can flake on an `index.json.tmp` lock (seen once); worth a watch if the real install hits it, rerun clears it.
+- Misses: None
 
 ## Hand test
 User runs `pwsh -NoProfile -File tools/install.ps1` after the merge; it must finish and the installed ProductVersion must read `0.7.0`.
