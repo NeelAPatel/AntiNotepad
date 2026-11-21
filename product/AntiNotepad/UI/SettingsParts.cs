@@ -671,7 +671,7 @@ internal sealed partial class SettingsWindow
                 "dropdown" => new Rect(w / 2 - 13, 0, 26, 20),
                 _ => new Rect(12, 10, 26, 20),
             };
-            dc.DrawRectangle(pad, null, r, where == "dropdown" ? 0 : 4, where == "dropdown" ? 0 : 4);
+            dc.DrawRectangle(pad, null, r, where == "dropdown" ? 0 : Shape.Control, where == "dropdown" ? 0 : Shape.Control);
             if (where != "mouse") return;
             var arrow = new StreamGeometry();
             using (var c = arrow.Open())

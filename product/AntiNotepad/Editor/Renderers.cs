@@ -295,7 +295,7 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
         // Baseline-aligned with the line's text.
         var y = c.Baseline - ft.Baseline;
         var rect = new Rect(x - 7, y - 2, width + 14, ft.Height + 4);
-        dc.DrawRectangle(Brush(c.Color, Paint.BadgeFill(pad.Palette.Dark)), null, rect, 4, 4);
+        dc.DrawRectangle(Brush(c.Color, Paint.BadgeFill(pad.Palette.Dark)), null, rect, Shape.Key, Shape.Key);
         if (icon is not null) DrawTimerIcon(dc, icon, new Rect(x, y, ft.Height * 0.62, ft.Height), c.Color, scale);
         dc.DrawText(ft, new Point(x + iconWidth, y));
         Chips.Add(new Chip(rect, c.Line, c.Kind, c.Value));
