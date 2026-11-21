@@ -1,0 +1,71 @@
+# A35-ux-pass-s3a: pad screens
+
+## Summary
+
+**9 findings:** 2 high, 7 medium.
+
+- **A-1:** Undoing a slot clear can overwrite text entered after the clear.
+- **A-2:** Unselected slot dots are 16 px wide and too close together for the 24 px target-spacing exception.
+- **A-3:** Split view has no explicit keyboard command to move focus between panes.
+
+The A34 single-bar and left-pane swap decisions remain represented in code. The item chat should verify their clarity and the other visual behavior in the dev copy.
+
+## Controls checklist
+
+Sizes are logical pixels from code, before UI scaling. “Unbound” means the default binding is empty; a user can configure one. Tooltip and automation names are code evidence, not a live accessibility-tree check.
+
+| Screen | Control | File:line | Hit box | Tooltip + key | Automation name | Keyboard path | Result |
+|---|---|---|---|---|---|---|---|
+| Top bar | Swap view | [PadWindow.Bar.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Bar.cs:54) | 32 × 32 | Destination; unbound by default | Destination | Bindable; button focus path needs hand test | A-6, A-7 |
+| Top bar | Search | [PadWindow.Layout.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Layout.cs:292) | 32 × 32 | Search notes, Ctrl+F | Same as tooltip | Ctrl+F | No issue |
+| Top bar | Split | [PadWindow.Layout.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Layout.cs:293) | 32 × 32 | Split view, Ctrl+\\ | Same as tooltip | Ctrl+\\ | A-3 for pane focus |
+| Top bar | Keep on top | [PadWindow.Layout.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Layout.cs:295) | 32 × 32 | State action, Ctrl+T | Same as tooltip | Ctrl+T | No issue |
+| Top bar | Settings | [PadWindow.Layout.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Layout.cs:297) | 32 × 32 | Settings; unbound by default | Settings | Bindable; button focus path needs hand test | A-7 |
+| Top bar | Hide | [PadWindow.Layout.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Layout.cs:298) | 32 × 32 | Hide, Esc | Same as tooltip | Esc | No issue |
+| Top bar | Dev badge | [PadWindow.Layout.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Layout.cs:425) | Text width + 16 × 20 | None | No explicit name | No expansion key | A-8 |
+| Standard | Delete note | [PadBar.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadBar.cs:150) | 42 × 42; float 32 × 32 | Delete note; unbound by default | Delete note | Bindable; Undo via Ctrl+Z while toast is armed | A-7, A-9 |
+| Permanent | Clear slot | [PadBar.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadBar.cs:152) | 42 × 42; float 32 × 32 | Clear slot N; unbound by default | Clear slot N | Bindable; Undo via Ctrl+Z while toast is armed | A-1, A-7, A-9 |
+| Standard | New note | [PadBar.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadBar.cs:128) | 42 × 42; float 32 × 32 | New note, Ctrl+N | Same as tooltip | Ctrl+N | No issue |
+| Standard | Previous / next | [PadBar.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadBar.cs:210) | 32 × 32 each | Action, Alt+Left / Alt+Right | Same as tooltip | Alt+Left / Alt+Right | No issue |
+| Standard | Count / open search | [PadBar.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadBar.cs:211) | 46 × 32 minimum; grows by digits | None | “Note N of M” | Ctrl+F opens search | A-4 |
+| Permanent | Nine slot dots | [PadBar.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadBar.cs:223) | Selected 24 × 32; others 16 × 32, 4 gap | Slot and title/empty; open-slot unbound by default | Slot N | Bindable digit family; focus path needs hand test | A-2, A-5, A-7 |
+| Split | Editors and active-pane selection | [PadWindow.Layout.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Layout.cs:245) | Pane-sized | N/A | Editor accessibility requires live check | Pointer focus; no explicit F6 route found | A-3 |
+| Split | Single bottom bar | [PadWindow.Bar.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Bar.cs:16) | As above | As active pane above | As active pane above | As above | A-6 |
+| All bar styles | Reveal / fade | [PadWindow.Layout.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Layout.cs:583) | Top 20 px; bottom overlay 20 px, float 8 px reveal zones | N/A | N/A | Individual shortcuts where bound | A-7; hand test reveal |
+| Delete / clear | Toast Undo | [PadWindow.Layout.cs](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Layout.cs:692) | Content-sized × 32 | Visible “Undo” | No explicit name; text content | Ctrl+Z while armed | A-1; live focus and name check |
+
+## Findings
+
+| ID | Screen | Finding | Principle IDs | Evidence | Sev | Fix idea |
+|---|---|---|---|---|---|---|
+| A-1 | Permanent | Clear a slot, type new text, then invoke the still-armed Undo: the callback replaces the new document text with the old text and removes the old copy from trash. | U1, N3, N5 | [PadWindow.Navigation.cs:247](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Navigation.cs:247), [PadWindow.Keys.cs:74](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Keys.cs:74) | High | Preserve subsequent edits and retain the trashed copy if direct restoration would overwrite them. |
+| A-2 | Permanent | Unselected dots are 16 × 32 with 4 px gaps: adjacent centers are 20 px apart, so their 24 px circles overlap. | T1, F1 | [ChromeTokens.cs:48](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/Theme/ChromeTokens.cs:48), [ChromeTokens.cs:60](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/Theme/ChromeTokens.cs:60), [PadBar.cs:230](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadBar.cs:230) | High | Give each dot at least a 24 px-wide target and check the 320 px layout. |
+| A-3 | Split | There is no explicit F6 pane-focus route; editor focus determines the active pane, and Tab is used in the editor. | KB1, KB4 | [PadWindow.Keys.cs:20](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Keys.cs:20), [PadView.cs:149](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/Editor/PadView.cs:149), [PadView.cs:862](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/Editor/PadView.cs:862) | Medium | Add and expose a pane-focus command; hand-test focus in both directions. |
+| A-4 | Standard | The count opens search, but has no tooltip, and its automation name describes the count without saying it opens search. | N6, KB3, I5, DN1 | [PadBar.cs:215](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadBar.cs:215) | Medium | Label the action and Ctrl+F in its tooltip and accessible name. |
+| A-5 | Permanent | Selecting a different dot changes its button width from 16 to 24 px, shifting neighboring dots in the centered row. | L1 | [PadBar.cs:228](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadBar.cs:228), [ChromeTokens.cs:60](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/Theme/ChromeTokens.cs:60) | Medium | Keep targets equal width and change only the dot inside. |
+| A-6 | Split | The shared bar follows the active pane, but swap always changes the left pane; the swap tooltip does not identify that destination in split. The recorded A34 behavior is implemented, but its target can be unclear. | DN2, N6 | [PadWindow.Bar.cs:16](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Bar.cs:16), [PadWindow.Bar.cs:71](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Bar.cs:71), [PadWindow.Bar.cs:111](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Bar.cs:111) | Medium | Clarify the left-pane target in split without changing the A34 mapping. |
+| A-7 | Bars | Swap, Settings, Delete/Clear and direct slot selection have no default shortcut; their tooltips omit a key when unbound. Hidden overlay/float bars also give no persistent cue to their edge reveal. | DN1, N6, KB3 | [Shortcuts.cs:40](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/Shortcuts.cs:40), [PadWindow.Layout.cs:306](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Layout.cs:306), [PadWindow.Layout.cs:564](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Layout.cs:564) | Medium | Make unbound actions discoverable and test a subtle reveal cue; verify keyboard reachability live. |
+| A-8 | Dev badge | Full branch/build information is exposed by pointer hover only; the badge has no explicit accessible name or keyboard expansion. | DN1, KB1, N6 | [PadWindow.Layout.cs:425](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Layout.cs:425), [PadWindow.Layout.cs:472](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Layout.cs:472) | Medium | Expose the full text accessibly and on keyboard focus. |
+| A-9 | Float bar | Delete/Clear is separated from the adjacent pager by a 1 px separator with 4 px margins and row spacing: approximately 13 px between controls. | U2, N5 | [PadBar.cs:207](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadBar.cs:207), [ChromeTokens.cs:48](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/Theme/ChromeTokens.cs:48), [ChromeTokens.cs:52](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/Theme/ChromeTokens.cs:52) | Medium | Assess greater separation in the lab while retaining A34’s single floating pill. |
+
+## No issue
+
+- **U1, N3:** Nonempty stack deletion moves the note to trash and offers Undo; slot clearing also makes a trash copy and offers Undo, subject to A-1.
+- **N5:** The bar disables Delete on a sole blank stack note and Clear on an empty slot; New is disabled on the trailing blank. Bar delete has a repeat-click guard. [PadBar.cs:115](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadBar.cs:115), [PadWindow.Bar.cs:87](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Bar.cs:87)
+- **N1, DN3:** Delete and clear show named Undo toasts; navigation at stack edges and implicit note creation show feedback. [PadWindow.Navigation.cs:73](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Navigation.cs:73)
+- **DN2:** Previous and next route in their expected directions. In split, the shared bar derives its content from the active pane and marks both displayed slots where applicable.
+- **L1:** Docked and overlay corner containers reserve space when New is hidden in slot view. [PadBar.cs:155](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadBar.cs:155)
+- **G2:** Overlay reveal controls the whole bottom layer together; docked fade disables hit testing for the bar roots together. [PadWindow.Layout.cs:608](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Layout.cs:608), [PadWindow.Layout.cs:674](/F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/docs/A35-ux-pass/product/AntiNotepad/UI/PadWindow.Layout.cs:674)
+- **T2:** Top icons, arrows, count and corner buttons meet the 32 px house target in their declared dimensions.
+
+## Not covered
+
+- Live rendering, clipping at 320 px, focus order and focus indicators, screen-reader output, contrast, and behavior over actual desktop backgrounds require the item chat’s hand test.
+- **DN4:** Code establishes separate stack and nine-slot state, but whether the UI alone teaches that model requires a first-use screen check.
+- Search, menus, save-failure card and general toast design belong to their own screen reports. Motion timing and easing are out of scope. Icon inventory issues are already recorded in stage 2, including I-1 and I-3.
+
+## Checks run
+
+Read-only source inspection of the shared brief, principles, A34 decisions, stage 2 report, pad controls, navigation, shortcuts, focus handlers and chrome tokens. No build, launch, file changes or live UI test.
+
+**READY: yes** — code-only report complete; live checks remain for the item chat.
