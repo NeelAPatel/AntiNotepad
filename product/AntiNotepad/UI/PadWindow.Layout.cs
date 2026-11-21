@@ -28,6 +28,8 @@ internal sealed partial class PadWindow
         CornerRadius = new CornerRadius(Shape.Card),
     };
     private Anim.Handle? _pinRingFade;
+    private readonly List<Anim.Handle> _topRevealMotion = [];
+    private readonly List<Anim.Handle> _bottomRevealMotion = [];
     private bool _pinRingInitialized;
     private readonly LayoutTransformControl _scaler = new();
     private readonly Grid _content = new() { RowDefinitions = new RowDefinitions($"{ChromeTokens.DockedRowHeight},*") };
@@ -52,6 +54,8 @@ internal sealed partial class PadWindow
     // The top bar sits on the sampled Canvas blur when the pointer reaches the edge.
     private readonly Panel _topLayer = new() { VerticalAlignment = VerticalAlignment.Top, Height = ChromeTokens.TopBackdrop.ClearStop, IsVisible = false };
     private readonly Panel _bottomLayer = new() { VerticalAlignment = VerticalAlignment.Bottom, Height = ChromeTokens.PagerStripHeight, IsVisible = false };
+    private readonly Border _topHandle = RevealHandle(VerticalAlignment.Top);
+    private readonly Border _bottomHandle = RevealHandle(VerticalAlignment.Bottom);
     private string? _barsMode;
     private bool _topShown, _bottomShown;
     private double _pointerY = double.NaN;
@@ -59,7 +63,7 @@ internal sealed partial class PadWindow
     private readonly Avalonia.Controls.Primitives.Popup _floatPager = new()
     {
         Placement = PlacementMode.Bottom,
-        VerticalOffset = ChromeTokens.FloatGap,
+        VerticalOffset = ChromeTokens.FloatGap - ChromeTokens.PillShadowReach,
         IsLightDismissEnabled = false,
         ShouldUseOverlayLayer = false,
         Topmost = false,
@@ -82,6 +86,19 @@ internal sealed partial class PadWindow
     private Button? _saveFailureRetryButton, _saveFailureQuitButton;
     private Action? _saveFailureRetryAction;
     private Action? _saveFailureQuitAction;
+
+    /// <summary>Marks the edge where hidden chrome can be revealed.</summary>
+    private static Border RevealHandle(VerticalAlignment edge) => new()
+    {
+        Width = ChromeTokens.RevealHandleWidth,
+        Height = ChromeTokens.RevealHandleHeight,
+        CornerRadius = new CornerRadius(Shape.Round(ChromeTokens.RevealHandleHeight)),
+        HorizontalAlignment = HorizontalAlignment.Center,
+        VerticalAlignment = edge,
+        Margin = edge == VerticalAlignment.Top ? new Thickness(0, ChromeTokens.RevealHandleInset, 0, 0) : new Thickness(0, 0, 0, ChromeTokens.RevealHandleInset),
+        IsHitTestVisible = false,
+        IsVisible = false,
+    };
 
     internal static Border CreateSplitDivider() => new()
     {
@@ -178,6 +195,8 @@ internal sealed partial class PadWindow
         _bars.Add(new PadBar(BarPane.Left, BarContextFor(BarPane.Left), BarActionsFor(BarPane.Left)));
         _barsHost = CreateBarsHost();
         AddChromeLayers(root, _topLayer, _bottomLayer, _toast, _barsHost, _floatPager);
+        root.Children.Add(_topHandle);
+        root.Children.Add(_bottomHandle);
         root.Children.Add(_pinRing);
         // The pager can be reparented later; the ring must remain above every chrome layer.
         _pinRing.ZIndex = int.MaxValue;
@@ -539,10 +558,18 @@ internal sealed partial class PadWindow
     private void ApplyBars()
     {
         if (_barsMode == Settings.Bars) return;
+        CancelRevealMotion(_topRevealMotion);
+        CancelRevealMotion(_bottomRevealMotion);
         _barsMode = Settings.Bars;
+        _topHandle.IsVisible = _bottomHandle.IsVisible = Sliding;
+        _topHandle.Background = _bottomHandle.Background = new SolidColorBrush(_palette.Faint);
         var root = (Panel)_scaler.Child!;
         (_top.Parent as Panel)?.Children.Remove(_top);
-        if (ReferenceEquals(_floatPager.Child, _barsHost)) _floatPager.Child = null;
+        if (_floatPager.Child is Border floatPadding)
+        {
+            floatPadding.Child = null;
+            _floatPager.Child = null;
+        }
         (_barsHost.Parent as Panel)?.Children.Remove(_barsHost);
         _floatPager.IsOpen = false;
         _topLayer.IsVisible = _bottomLayer.IsVisible = false;
@@ -559,8 +586,8 @@ internal sealed partial class PadWindow
         }
         if (Settings.Bars == "float")
         {
-            _floatPager.VerticalOffset = ChromeTokens.FloatGap;
-            _floatPager.Child = _barsHost;
+            _floatPager.VerticalOffset = ChromeTokens.FloatGap - ChromeTokens.PillShadowReach;
+            _floatPager.Child = new Border { Padding = new Thickness(ChromeTokens.PillShadowReach), Child = _barsHost };
         }
         else if (Settings.Bars == "overlay") _bottomLayer.Children.Add(_barsHost);
         else root.Children.Add(_barsHost);
@@ -616,10 +643,20 @@ internal sealed partial class PadWindow
         if (!(y > h - BottomZone) && !_bars.Any(bar => bar.Root.IsPointerOver)) SlideBar(top: false, show: false);
     }
 
+    /// <summary>Cancels outstanding reveal frames before changing a bar's state or mode.</summary>
+    internal static void CancelRevealMotion(List<Anim.Handle> motion)
+    {
+        foreach (var handle in motion) handle.Cancel();
+        motion.Clear();
+    }
+
     private void SlideBar(bool top, bool show, bool instant = false)
     {
         if ((top ? _topShown : _bottomShown) == show && !instant) return;
+        var motion = top ? _topRevealMotion : _bottomRevealMotion;
+        CancelRevealMotion(motion);
         if (top) _topShown = show; else _bottomShown = show;
+        var handle = top ? _topHandle : _bottomHandle;
         if (top && show && _active?.Note is { } note) SetSavedText(SavedText(note, DateTime.Now), 0);
         if (!top && Settings.Bars == "float") { FloatPager(show, instant); return; }
         var layer = top ? _topLayer : _bottomLayer;
@@ -628,8 +665,8 @@ internal sealed partial class PadWindow
         var fromY = shift.Y; var toY = show ? 0 : hidden;
         var fromO = layer.Opacity; var toO = show ? 1.0 : 0;
         layer.IsHitTestVisible = show;
-        if (instant || Anim.Reduced) { shift.Y = toY; layer.Opacity = toO; return; }
-        Anim.Run(layer, MotionTokens.BarsReveal, t => { var k = Anim.EaseOut(t); shift.Y = fromY + (toY - fromY) * k; layer.Opacity = fromO + (toO - fromO) * k; }, decorative: false);
+        if (instant || Anim.Reduced) { shift.Y = toY; layer.Opacity = toO; handle.Opacity = 1 - toO; return; }
+        motion.Add(Anim.Run(layer, MotionTokens.BarsReveal, t => { var k = Anim.EaseOut(t); shift.Y = fromY + (toY - fromY) * k; layer.Opacity = fromO + (toO - fromO) * k; handle.Opacity = 1 - layer.Opacity; }, decorative: false));
     }
 
     /// <summary>Fades the floating bars in their popup below the window.</summary>
@@ -643,6 +680,7 @@ internal sealed partial class PadWindow
         if (instant || Anim.Reduced)
         {
             foreach (var bar in _bars) bar.Root.Opacity = show ? 1 : 0;
+            _bottomHandle.Opacity = show ? 0 : 1;
             if (!show) _floatPager.IsOpen = false;
             return;
         }
@@ -652,7 +690,7 @@ internal sealed partial class PadWindow
             var root = _bars[i].Root;
             var from = root.Opacity;
             Action? after = i == _bars.Count - 1 && !show ? () => { if (!_bottomShown) _floatPager.IsOpen = false; } : null;
-            Anim.Run(root, MotionTokens.PillFade, t => root.Opacity = from + (to - from) * Anim.EaseOut(t), after, decorative: false);
+            _bottomRevealMotion.Add(Anim.Run(root, MotionTokens.PillFade, t => { root.Opacity = from + (to - from) * Anim.EaseOut(t); _bottomHandle.Opacity = 1 - root.Opacity; }, after, decorative: false));
         }
     }
 

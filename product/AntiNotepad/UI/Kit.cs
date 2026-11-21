@@ -155,8 +155,8 @@ internal static class Kit
             VerticalContentAlignment = VerticalAlignment.Stretch,
             FocusAdorner = new FuncTemplate<Control>(() => new Border
             {
-                Margin = new Thickness(-Space.Nudge - Shape.Thick),
-                CornerRadius = new CornerRadius(radius + Space.Nudge + Shape.Thick),
+                Margin = new Thickness(Shape.Thin),
+                CornerRadius = new CornerRadius(radius),
                 BorderThickness = new Thickness(Shape.Thick),
                 BorderBrush = new SolidColorBrush(p.Ink, Paint.FocusBorder),
                 IsHitTestVisible = false,

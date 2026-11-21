@@ -16,7 +16,7 @@ namespace AntiNotepad.UI;
 internal static class PadMenu
 {
     private static readonly FontFamily MenuFont = new(Typography.UiFamily);
-    private static readonly string[] ActionLabels = ["Cut", "Copy", "Paste", "Delete"];
+    internal static readonly string[] ActionLabels = ["Delete", "Cut", "Copy", "Paste"];
 
     public static void Show(Control anchor, IReadOnlyList<MenuEntry> entries, Palette p, Settings settings)
     {

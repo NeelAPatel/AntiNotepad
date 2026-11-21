@@ -74,6 +74,8 @@ internal sealed class PadBar
 {
     private readonly Border _root = new() { VerticalAlignment = VerticalAlignment.Bottom };
     private readonly Grid _groups = new();
+    private readonly Border _leftSeparator = new();
+    private readonly Border _rightSeparator = new();
     private readonly Border _barLeft = new() { HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Center };
     private readonly Border _barCenter = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
     private readonly Border _barRight = new() { HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
@@ -89,8 +91,10 @@ internal sealed class PadBar
         Pane = pane;
         _root.Child = _groups;
         _groups.Children.Add(_barLeft);
-        _groups.Children.Add(_barCenter); Grid.SetColumn(_barCenter, 1);
-        _groups.Children.Add(_barRight); Grid.SetColumn(_barRight, 2);
+        _groups.Children.Add(_leftSeparator); Grid.SetColumn(_leftSeparator, 1);
+        _groups.Children.Add(_barCenter); Grid.SetColumn(_barCenter, 2);
+        _groups.Children.Add(_rightSeparator); Grid.SetColumn(_rightSeparator, 3);
+        _groups.Children.Add(_barRight); Grid.SetColumn(_barRight, 4);
         _barCenter.Child = _pager;
         _pager.Margin = default;
         Rebuild(context, actions);
@@ -154,8 +158,10 @@ internal sealed class PadBar
         Avalonia.Automation.AutomationProperties.SetName(_deleteButton, state.DeleteName);
         _newButton.IsVisible = state.ShowNew;
         _newButton.IsEnabled = state.NewEnabled;
-        _barLeft.Width = floating ? (state.ShowDelete ? ChromeTokens.ButtonSize : default) : ChromeTokens.BarCornerSize;
-        _barRight.Width = floating ? (context.ShowNewNoteButton ? ChromeTokens.ButtonSize : default) : ChromeTokens.BarCornerSize;
+        _barLeft.Width = floating ? double.NaN : ChromeTokens.BarCornerSize;
+        _barRight.Width = floating ? double.NaN : ChromeTokens.BarCornerSize;
+        _leftSeparator.IsVisible = floating && state.ShowDelete;
+        _rightSeparator.IsVisible = floating && state.ShowNew;
         _pager.Background = floating || state.Slots && context.SlotDots == "quiet" ? Brushes.Transparent : new SolidColorBrush(p.Surface);
         _pager.BorderBrush = new SolidColorBrush(p.Faint, ChromeTokens.PillBorderAlpha);
         _pager.BorderThickness = new Thickness(floating || state.Slots && context.SlotDots == "quiet" ? default : ChromeTokens.PillBorderThickness);
@@ -187,7 +193,9 @@ internal sealed class PadBar
         var floating = context.Style == BarStyle.Float;
         _root.HorizontalAlignment = floating ? HorizontalAlignment.Center : HorizontalAlignment.Stretch;
         _root.Margin = new Thickness(floating ? default : ChromeTokens.BarEdgeInset, default, floating ? default : ChromeTokens.BarEdgeInset, floating ? default : ChromeTokens.PillBottomInset);
-        _groups.ColumnDefinitions = new ColumnDefinitions(floating ? "Auto,Auto,Auto" : "*,Auto,*");
+        _groups.ColumnDefinitions = new ColumnDefinitions(floating ? "Auto,Auto,Auto,Auto,Auto" : "*,Auto,Auto,Auto,*");
+        ConfigureSeparator(_leftSeparator, context.Palette);
+        ConfigureSeparator(_rightSeparator, context.Palette);
         _root.CornerRadius = new CornerRadius(ChromeTokens.PillCornerRadius);
         _root.Padding = floating ? new Thickness(ChromeTokens.PillInset) : default;
         _root.Background = floating ? new SolidColorBrush(context.Palette.Surface) : null;
@@ -202,9 +210,7 @@ internal sealed class PadBar
     private void BuildPager(BarContext context, BarActions actions, BarContent state)
     {
         var p = context.Palette;
-        var floating = context.Style == BarStyle.Float;
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.PagerRowSpacing, VerticalAlignment = VerticalAlignment.Center };
-        if (floating && state.ShowDelete) row.Children.Add(BarSeparator(p));
         if (!state.Slots)
         {
             row.Children.Add(Kit.IconButton(Icons.Back, context.TooltipFor("Previous note", "previous-note"), p, actions.Previous, radius: ChromeTokens.PagerArrowHoverRadius));
@@ -236,7 +242,6 @@ internal sealed class PadBar
             }
             row.Children.Add(dots);
         }
-        if (floating && context.ShowNewNoteButton) row.Children.Add(BarSeparator(p));
         _pager.Child = row;
     }
 
@@ -299,12 +304,14 @@ internal sealed class PadBar
         else _items[index] = item;
     }
 
-    /// <summary>Creates a separator inside the floating center pill.</summary>
-    private static Border BarSeparator(Palette p) => new()
+    /// <summary>Styles a separator between floating bar groups.</summary>
+    private static void ConfigureSeparator(Border separator, Palette p)
     {
-        Width = ChromeTokens.PagerSeparatorWidth,
-        Height = ChromeTokens.PagerSeparatorHeight,
-        Background = new SolidColorBrush(p.Faint, ChromeTokens.PagerSeparatorAlpha),
-        Margin = new Thickness(ChromeTokens.PagerSeparatorMargin, default),
-    };
+        separator.Width = ChromeTokens.PagerSeparatorWidth;
+        separator.Height = ChromeTokens.PagerSeparatorHeight;
+        separator.Background = new SolidColorBrush(p.Faint, ChromeTokens.PagerSeparatorAlpha);
+        separator.Margin = new Thickness(ChromeTokens.PagerSeparatorMargin, 0);
+        separator.VerticalAlignment = VerticalAlignment.Center;
+        separator.IsHitTestVisible = false;
+    }
 }

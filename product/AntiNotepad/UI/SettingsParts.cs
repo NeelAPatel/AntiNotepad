@@ -46,10 +46,14 @@ internal sealed partial class SettingsWindow
     private Border Card(params Border?[] rows)
     {
         var stack = new StackPanel();
+        var visibleRows = rows.Where(row => row is not null).Cast<Border>().ToArray();
         var first = true;
-        foreach (var row in rows)
+        foreach (var row in visibleRows)
         {
             if (row is null) continue;
+            if (row.Child is Button expander && expander.Content is Border face)
+                face.CornerRadius = new CornerRadius(first ? Shape.Card : default, first ? Shape.Card : default,
+                    ReferenceEquals(row, visibleRows.Last()) ? Shape.Card : default, ReferenceEquals(row, visibleRows.Last()) ? Shape.Card : default);
             row.BorderBrush = Line;
             row.BorderThickness = first ? default : new Thickness(0, Shape.Thin, 0, 0);
             first = false;
@@ -167,7 +171,7 @@ internal sealed partial class SettingsWindow
         row.Child = null;
         var button = Kit.Plain(face, _p, radius: 0);
         button.HorizontalAlignment = HorizontalAlignment.Stretch;
-        button.Margin = new Thickness(-Space.L, -Space.M);
+        row.Padding = default;
         if (button.Content is Border inner) inner.Padding = new Thickness(Space.L, Space.M);
         button.Click += (_, _) =>
         {
@@ -468,7 +472,7 @@ internal sealed partial class SettingsWindow
 
     private Control PaletteChips(bool dark, string current, Action<string> pick)
     {
-        var grid = new UniformGrid { Columns = 4 };
+        var grid = new WrapPanel { ItemSpacing = Space.S, LineSpacing = Space.S, HorizontalAlignment = HorizontalAlignment.Center };
         foreach (var palette in Palette.For(dark))
         {
             var dots = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.Xs, HorizontalAlignment = HorizontalAlignment.Center };
@@ -489,8 +493,7 @@ internal sealed partial class SettingsWindow
                 Cursor = new Cursor(StandardCursorType.Hand),
             };
             var id = palette.Id;
-            var button = Kit.Plain(chip, _p, radius: Shape.Round(18));
-            button.Margin = new Thickness(0, 0, Space.S, 0);
+            var button = Kit.Plain(chip, _p, width: ChromeTokens.Size.PaletteChipWidth, radius: Shape.Round(18));
             button.Click += (_, _) => pick(id);
             Avalonia.Automation.AutomationProperties.SetName(button, palette.Name + (selected ? ", selected" : ""));
             grid.Children.Add(button);

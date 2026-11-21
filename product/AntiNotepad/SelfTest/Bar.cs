@@ -70,7 +70,7 @@ internal static partial class SelfTest
         var twoBarsParented = ReferenceEquals(first.Root.Parent, firstHost)
             && ReferenceEquals(second.Root.Parent, secondHost)
             && first.Pane == BarPane.Left && second.Pane == BarPane.Right;
-        var ok = ButtonWashChecks() && enabledOpacity == 1 && disabledOpacity == Paint.DisabledIcon && restoredOpacity == enabledOpacity
+        var ok = FloatBarLayoutChecks(actions) && ButtonWashChecks() && enabledOpacity == 1 && disabledOpacity == Paint.DisabledIcon && restoredOpacity == enabledOpacity
             && !stack.Slots && stack.ShowNew && stack.NewEnabled && stack.DeleteEnabled
             && slot.Slots && !slot.ShowNew && !slot.DeleteEnabled && slot.DeleteName == "Clear slot 3"
             && !blank.DeleteEnabled && !blank.NewEnabled && !hidden.ShowDelete && !hidden.ShowNew
@@ -86,6 +86,33 @@ internal static partial class SelfTest
             && ShortcutMap.Definitions.Any(d => d.Id == "swap-view" && d.DefaultKey == "");
         report = ok ? "bar decisions and settings" : "bar decisions or settings failed";
         return ok;
+    }
+
+    /// <summary>Checks floating group order and measured gaps for each side-item combination.</summary>
+    private static bool FloatBarLayoutChecks(BarActions actions)
+    {
+        var combinations = from slot in new[] { 0, 1 } from showDelete in new[] { false, true } from showNew in new[] { false, true } select (slot, showDelete, showNew);
+        foreach (var (slot, showDelete, showNew) in combinations)
+        {
+            var context = BarContextForTest(slot, showDelete, showNew, true, 1, true) with { Style = BarStyle.Float };
+            var bar = new PadBar(BarPane.Left, context, actions);
+            var grid = (Grid)((Border)bar.Root).Child!;
+            grid.Measure(new Avalonia.Size(double.PositiveInfinity, double.PositiveInfinity));
+            grid.Arrange(new Avalonia.Rect(grid.DesiredSize));
+            var children = grid.Children.Where(child => child.IsVisible && child.Bounds.Width > 0).ToArray();
+            var expected = new List<Control>();
+            if (showDelete) { expected.Add(bar.Containers[0]); expected.Add(grid.Children[1]); }
+            expected.Add(bar.Containers[1]);
+            if (showNew && slot == 0) { expected.Add(grid.Children[3]); expected.Add(bar.Containers[2]); }
+            if (!children.SequenceEqual(expected)) return false;
+            foreach (var separator in children.OfType<Border>().Where(child => ReferenceEquals(child, grid.Children[1]) || ReferenceEquals(child, grid.Children[3])))
+                if (separator.Width != 1 || separator.Margin != new Avalonia.Thickness(8, 0)) return false;
+            var pager = (StackPanel)bar.Pager.Child!;
+            if (pager.Spacing != 4 || (slot == 0 ? pager.Children.Count != 3 : ((StackPanel)pager.Children[0]).Children.Count != 9)) return false;
+            if (slot != 0 && ((StackPanel)pager.Children[0]).Children.Any(child => child.Width != 24)) return false;
+        }
+        return ChromeTokens.PillShadowReach == ChromeTokens.PillShadowBlur + ChromeTokens.PillShadowOffsetY
+            && ChromeTokens.PillShadowReach == 14;
     }
 
     /// <summary>Checks settled wash states and a caller replacing the face background.</summary>

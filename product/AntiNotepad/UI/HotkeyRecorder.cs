@@ -17,7 +17,7 @@ namespace AntiNotepad.UI;
 /// <summary>Shows the current shortcut and captures a replacement for explicit Save or Cancel.</summary>
 internal sealed class HotkeyRecorder
 {
-    private readonly ContentControl _host = new() { Focusable = true };
+    private readonly ContentControl _host = new() { Focusable = true, IsTabStop = false, FocusAdorner = null };
     internal Control View => _host;
     private readonly Palette _palette;
     private readonly Func<string> _current;
@@ -29,6 +29,7 @@ internal sealed class HotkeyRecorder
     private readonly StackPanel _caps = new() { Orientation = Orientation.Horizontal, Spacing = ChromeTokens.BadgeSpacing, VerticalAlignment = VerticalAlignment.Center };
     private TextBlock _hint;
     private Button? _save;
+    private Button? _change;
     private bool _recording;
     private string? _gesture;
 
@@ -80,7 +81,7 @@ internal sealed class HotkeyRecorder
 
     /// <summary>Recognizes the two unmodified recorder commands before mapping shortcut keys.</summary>
     internal static bool IsCommand(Key key, KeyModifiers modifiers) =>
-        modifiers == KeyModifiers.None && key is Key.Escape or Key.Enter;
+        modifiers == KeyModifiers.None && key is Key.Escape or Key.Enter or Key.Back;
 
     /// <summary>Lets Settings defer its Escape command to an active recorder on the event route.</summary>
     internal static bool IsRecordingSource(object? source) => source is Visual visual
@@ -104,6 +105,7 @@ internal sealed class HotkeyRecorder
     /// <summary>Restores the host's current binding without applying the captured candidate.</summary>
     private void ShowCurrent()
     {
+        var restoreFocus = _recording;
         _recording = false;
         _gesture = null;
         _caps.Children.Clear();
@@ -117,9 +119,14 @@ internal sealed class HotkeyRecorder
             _caps.Children.Remove(cap);
             row.Children.Add(cap);
         }
-        row.Children.Add(MakeButton("Change", Begin));
+        var change = _change = MakeButton("Change", Begin);
+        row.Children.Add(change);
         _host.Content = row;
+        if (restoreFocus) Dispatcher.UIThread.Post(() => change.Focus(NavigationMethod.Tab), DispatcherPriority.Loaded);
     }
+
+    /// <summary>Returns keyboard focus to the current Change action.</summary>
+    internal void FocusChange() => _change?.Focus(NavigationMethod.Tab);
 
     /// <summary>Opens an empty recording session and focuses it after it is attached.</summary>
     private void Begin()
@@ -190,6 +197,7 @@ internal sealed class HotkeyRecorder
         if (IsCommand(e.Key, e.KeyModifiers))
         {
             if (e.Key == Key.Escape) ShowCurrent();
+            else if (e.Key == Key.Back) { if (_allowEmpty) Apply(""); }
             else if (_gesture is { } text) Apply(text);
             return;
         }

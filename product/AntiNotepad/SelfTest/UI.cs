@@ -336,7 +336,9 @@ internal static partial class SelfTest
             settings.Update(s => s.Bars = "overlay");
             Expect(ReferenceEquals(bar.Parent, bottomLayer), "overlay bar parent");
             settings.Update(s => s.Bars = "float");
-            Expect(ReferenceEquals(popup.Child, bar), "floating bar parent");
+            Expect(popup.Child is Border padding && ReferenceEquals(padding.Child, bar)
+                && padding.Padding == new Thickness(ChromeTokens.PillShadowReach) && padding.Background is null
+                && popup.VerticalOffset == ChromeTokens.FloatGap - ChromeTokens.PillShadowReach, "floating bar padding and placement");
             settings.Update(s => s.Bars = "docked");
             Expect(bar.Parent is Panel && !ReferenceEquals(bar.Parent, bottomLayer), "docked bar parent");
             var fade = typeof(UI.PadWindow).GetMethod("FadeChrome", fields)!;
@@ -401,6 +403,7 @@ internal static partial class SelfTest
                     && UI.HotkeyRecorder.GestureText(key, modifier) is not null, $"modified command key {modifier}+{key}");
             }
         }
+        Expect(UI.HotkeyRecorder.IsCommand(Avalonia.Input.Key.Back, Avalonia.Input.KeyModifiers.None), "Backspace is a recorder command");
         Expect(!UI.HotkeyRecorder.IsCommand(Avalonia.Input.Key.K, Avalonia.Input.KeyModifiers.None), "ordinary key is not a command");
         report = failures.Count == 0 ? $"{keys.Length} supported main keys round-trip; modifier order, rejected keys and commands" : string.Join("; ", failures);
         return failures.Count == 0;
@@ -443,10 +446,11 @@ internal static partial class SelfTest
             && text.Height >= ChromeTokens.ButtonSize
             && first.Length == 9 && first.SequenceEqual(second)
             && first.Zip(first.Skip(1), (a, b) => b - a).All(pitch => pitch == ChromeTokens.PagerDotTargetWidth)
-            && chipButtons.Length > 0 && chipButtons.All(b => b.Focusable)
+            && chipButtons.Length > 0 && chipButtons.All(b => b.Focusable && b.Width == ChromeTokens.Size.PaletteChipWidth)
             && swatchButtons.Length > 0 && swatchButtons.All(b => b.Focusable && b.Width == ChromeTokens.ButtonSize && b.Height == ChromeTokens.ButtonSize)
             && plain.Classes.Contains("plain") && ring is not null && ring.BorderThickness == new Thickness(Shape.Thick)
-            && ring.Margin == new Thickness(-Space.Nudge - Shape.Thick);
+            && ring.Margin == new Thickness(Shape.Thin)
+            && ChromeTokens.RevealHandleInset == 3;
         report = ok ? "targets, stable dot pitch, focusable choices and focus adorner hook" : "target or keyboard control check failed";
         return ok;
     }
@@ -463,6 +467,16 @@ internal static partial class SelfTest
         object? Invoke(object obj, string name, params object?[] args) => obj.GetType().GetMethod(name, flags)!.Invoke(obj, args);
         var failures = new List<string>();
         void Check(bool value, string name) { if (!value) failures.Add(name); }
+        var topMotion = (List<Anim.Handle>)DataSafetyFixture.Get(fixture.Pad, "_topRevealMotion")!;
+        var bottomMotion = (List<Anim.Handle>)DataSafetyFixture.Get(fixture.Pad, "_bottomRevealMotion")!;
+        var topReveal = new Anim.Handle();
+        var floatFade = new Anim.Handle();
+        topMotion.Add(topReveal);
+        bottomMotion.Add(floatFade);
+        settings.Current.Bars = settings.Current.Bars == "float" ? "overlay" : "float";
+        Invoke(fixture.Pad, "ApplyBars");
+        Check(topReveal.Cancelled && floatFade.Cancelled && topMotion.Count == 0 && bottomMotion.Count == 0,
+            "bar mode change cancels top reveal and floating fade");
         var swap = (Button)DataSafetyFixture.Get(fixture.Pad, "_swapButton")!;
         settings.Update(s => s.Split = false);
         Invoke(fixture.Pad, "UpdateSwapButton");
@@ -486,6 +500,16 @@ internal static partial class SelfTest
         var option = popup.GetLogicalDescendants().OfType<Button>().First(b => b.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == "Right edge"));
         option.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Check(Avalonia.Automation.AutomationProperties.GetName(dropdown) == "Answer position, Right edge", "dropdown name follows pick");
+
+        window.ShowSection("theme");
+        var scroll = (ScrollViewer)DataSafetyFixture.Get(window, "_scroll")!;
+        var chosenPalette = Palette.For(false).First(p => p.Id != settings.Current.LightPalette);
+        var paletteButton = ((Control)scroll.Content!).GetLogicalDescendants().OfType<Button>()
+            .First(b => Avalonia.Automation.AutomationProperties.GetName(b) == chosenPalette.Name);
+        paletteButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        var refreshed = ((Control)scroll.Content!).GetLogicalDescendants().OfType<Button>()
+            .FirstOrDefault(b => Avalonia.Automation.AutomationProperties.GetName(b) == chosenPalette.Name + ", selected");
+        Check(settings.Current.LightPalette == chosenPalette.Id && refreshed is not null, "palette pick rebuilds selection");
 
         settings.Update(s => { s.ShortcutOverrides["new-note"] = "Ctrl+Q"; s.ShortcutOverrides["search"] = ""; });
         var toastBefore = fixture.ToastText;
@@ -533,6 +557,18 @@ internal static partial class SelfTest
         void Expect(bool ok, string name) { if (!ok) failures.Add(name); }
         var defaults = new Model.Settings();
         var map = new UI.ShortcutMap(defaults);
+        Expect(!map.TryGet(Key.F6, KeyModifiers.None, out _), "F6 has no default shortcut");
+        Expect(UI.PadMenu.ActionLabels.SequenceEqual(["Delete", "Cut", "Copy", "Paste"]), "menu action order");
+        var firstFocus = new Button();
+        var namedFocus = new Button();
+        var unnamedFocus = new Button();
+        Avalonia.Automation.AutomationProperties.SetName(namedFocus, "Example option");
+        Control[] focusOptions = [firstFocus, namedFocus, unnamedFocus];
+        Expect(ReferenceEquals(UI.SettingsWindow.FocusTarget(focusOptions, UI.SettingsWindow.IdentifyFocus(focusOptions, namedFocus)), namedFocus)
+            && ReferenceEquals(UI.SettingsWindow.FocusTarget(focusOptions, UI.SettingsWindow.IdentifyFocus(focusOptions, unnamedFocus)), unnamedFocus)
+            && ReferenceEquals(UI.SettingsWindow.FocusTarget(focusOptions, UI.SettingsWindow.IdentifyFocus(focusOptions, null)), firstFocus)
+            && UI.SettingsWindow.FocusTarget([firstFocus], UI.SettingsWindow.IdentifyFocus(focusOptions, unnamedFocus)) is null
+            && UI.SettingsWindow.FocusTarget([firstFocus], UI.SettingsWindow.IdentifyFocus(focusOptions, namedFocus)) is null, "Settings focus name, index and empty focus");
         var seen = new HashSet<(UI.ShortcutScope Scope, UI.ShortcutGesture Gesture)>();
         foreach (var definition in UI.ShortcutMap.Definitions)
         {
@@ -823,6 +859,7 @@ internal static partial class SelfTest
         var recorder = new UI.HotkeyRecorder(Palette.All[0], () => "Ctrl+Alt+K", _ => true, false,
             (text, action, _) => { actions[text] = action; return new Button { Content = text }; });
         var host = (ContentControl)recorder.View;
+        Expect(!host.IsTabStop && host.FocusAdorner is null, "idle recorder has no tab stop or focus box");
         Expect(!UI.HotkeyRecorder.IsRecordingSource(host), "idle recorder keeps Settings Escape");
         actions["Change"]();
         var row = (StackPanel)((StackPanel)host.Content!).Children[0];
@@ -831,7 +868,17 @@ internal static partial class SelfTest
         Expect(UI.HotkeyRecorder.IsRecordingSource(cancel), "recorder descendants receive Escape");
         Expect(!UI.HotkeyRecorder.IsRecordingSource(new Button()), "outside source keeps Settings Escape");
         Expect(!UI.HotkeyRecorder.IsRecordingSource(null), "missing source keeps Settings Escape");
+        var recordKey = typeof(UI.HotkeyRecorder).GetMethod("RecordKey", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        recordKey.Invoke(recorder, [null, new KeyEventArgs { Key = Key.Back }]);
+        Expect(UI.HotkeyRecorder.IsRecordingSource(host), "Backspace keeps required shortcut");
         actions["Cancel"]();
+        string? applied = null;
+        var optionalActions = new Dictionary<string, Action>();
+        var optional = new UI.HotkeyRecorder(Palette.All[0], () => "Ctrl+K", value => { applied = value; return true; }, true,
+            (text, action, _) => { optionalActions[text] = action; return new Button { Content = text }; });
+        optionalActions["Change"]();
+        recordKey.Invoke(optional, [null, new KeyEventArgs { Key = Key.Back }]);
+        Expect(applied == "" && !UI.HotkeyRecorder.IsRecordingSource(optional.View), "Backspace clears optional shortcut");
         Expect(!UI.HotkeyRecorder.IsRecordingSource(host), "cancel restores Settings Escape");
         report = failures.Count == 0 ? "Escape defers only inside an active recorder" : string.Join("; ", failures);
         return failures.Count == 0;

@@ -51,7 +51,10 @@ internal static class ChromeTokens
     public const double PagerCountDigitWidth = 14;
     public const double PagerSeparatorWidth = Shape.Thin;
     public const double PagerSeparatorHeight = Space.L;
-    public const double PagerSeparatorMargin = Space.Xs;
+    public const double PagerSeparatorMargin = Space.S;
+    public const double RevealHandleWidth = 24;
+    public const double RevealHandleHeight = 2;
+    public const double RevealHandleInset = 3;
     public const double PagerSeparatorAlpha = 0.5;
     public const double PagerDotSelectedWidth = 16;
     public const double PagerDotWidth = 8;
@@ -74,6 +77,7 @@ internal static class ChromeTokens
     public const double PagerStripHeight = PillHeight + 2 * PillBottomInset;
     public const double PillShadowBlur = 12;
     public const double PillShadowOffsetY = 2;
+    public const double PillShadowReach = PillShadowBlur + PillShadowOffsetY;
     public const byte PillShadowDarkAlpha = 90;
     public const byte PillShadowLightAlpha = 28;
     public const double DividerPagerClearance = Space.S;
@@ -109,7 +113,7 @@ internal static class ChromeTokens
         public const double CaretSampleHeight = 16, CaretPictureHeight = 32, MaterialPictureHeight = 48;
         public const double CaretBlockWidth = 8;
         public const double ToggleTrackWidth = 40, ToggleTrackHeight = 20;
-        public const double AccentDotSize = 20, PaletteDotSize = 8;
+        public const double AccentDotSize = 20, PaletteDotSize = 8, PaletteChipWidth = 144;
         public const double PatternPictureHeight = 40, ScreenPictureHeight = 64;
         public const double MotionPreviewPadHeight = 220;
 
