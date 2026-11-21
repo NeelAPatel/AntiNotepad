@@ -18,7 +18,7 @@ The configurable table lives in `product/AntiNotepad/UI/Shortcuts.cs`. The Setti
 | Search notes | Search | Pad | Ctrl+F |
 | Search notes (P alias) | Search | Pad | Unassigned (bindable) |
 | Search notes (K alias) | Search | Pad | Unassigned (bindable) |
-| Settings | Window | Pad | Unassigned (bindable) |
+| Settings | Window | Pad | Ctrl+, |
 | Help | Window | Pad | F1 |
 | Open slot 1–9 | Slots | Pad | Unassigned (bindable) |
 | Keep note in slot 1–9 | Slots | Pad | Unassigned (bindable) |

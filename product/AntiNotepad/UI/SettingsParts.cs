@@ -17,6 +17,7 @@ namespace AntiNotepad.UI;
 /// </summary>
 internal sealed partial class SettingsWindow
 {
+    private string _controlTitle = "";
     private SolidColorBrush Line => new(_p.Ink, _p.Dark ? .09 : .06);
     private Color IconInk => Color.FromArgb(Paint.IconInkAlpha, _p.Ink.R, _p.Ink.G, _p.Ink.B);
 
@@ -94,6 +95,7 @@ internal sealed partial class SettingsWindow
         grid.Children.Add(new Border { Width = 20, Height = 20, Margin = new Thickness(0, 0, 16, 0), Child = icon?.Invoke(), VerticalAlignment = VerticalAlignment.Center });
         var text = Texts(title, shownDescription);
         Grid.SetColumn(text, 1); grid.Children.Add(text);
+        _controlTitle = title;
         var right = control?.Invoke();
         if (right is not null)
         {
@@ -118,6 +120,7 @@ internal sealed partial class SettingsWindow
     {
         var tag = searchTag ?? "sub " + title;
         if (!SearchMatches(tag, _searchQuery)) return null;
+        _controlTitle = title ?? "";
         var content = control();
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
         if (wide) { Grid.SetColumnSpan(content, 2); grid.Children.Add(content); }
@@ -142,7 +145,12 @@ internal sealed partial class SettingsWindow
     {
         var open = Expanded.Contains(key);
         GlyphIcon? chevron = null;
+        var query = _searchQuery;
+        var titleMatches = query is not null && SearchMatches(title, query);
+        if (titleMatches) _searchQuery = null;
         var kids = subs.Where(s => s is not null).Select(s => s!()).Where(s => s is not null).Cast<Border>().ToArray();
+        _searchQuery = query;
+        if (titleMatches) foreach (var kid in kids) kid.Tag += " " + title;
         var row = Row(icon, title, description, () =>
         {
             chevron = new GlyphIcon(Icons.SettingsChevron, _p.Muted, Typography.IconMedium) { RenderTransform = new RotateTransform(open ? 180 : 0), VerticalAlignment = VerticalAlignment.Center };
@@ -351,6 +359,7 @@ internal sealed partial class SettingsWindow
     /// <summary>A dropdown in the pad's own colours: the current choice and a chevron, opening a short list.</summary>
     private Control Dropdown(IReadOnlyList<(string Value, string Label)> options, string current, Action<string> pick, double minWidth = 160)
     {
+        var title = _controlTitle;
         var label = Kit.Text(options.FirstOrDefault(o => o.Value == current).Label ?? current, _p.Ink, Typography.Body);
         var face = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(12, 12) };
         face.Children.Add(label);
@@ -382,11 +391,11 @@ internal sealed partial class SettingsWindow
             row.HorizontalAlignment = HorizontalAlignment.Stretch;
             if (value == current && row.Content is Border b) b.Background = new SolidColorBrush(_p.Accent, Paint.Selected(_p.Dark));
             var v = value;
-            row.Click += (_, _) => { popup.IsOpen = false; label.Text = text; pick(v); };
+            row.Click += (_, _) => { popup.IsOpen = false; label.Text = text; Avalonia.Automation.AutomationProperties.SetName(button, title + ", " + text); pick(v); };
             list.Children.Add(row);
         }
         button.Click += (_, _) => popup.IsOpen = !popup.IsOpen;
-        Avalonia.Automation.AutomationProperties.SetName(button, label.Text);
+        Avalonia.Automation.AutomationProperties.SetName(button, title + ", " + label.Text);
         return new Panel { Children = { button, popup } };
     }
 

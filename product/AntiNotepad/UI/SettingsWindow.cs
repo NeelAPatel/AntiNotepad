@@ -461,15 +461,15 @@ internal sealed partial class SettingsWindow : Window
         if (withPreview) page.Children.Add(Preview(feel: true));
         page.Children.Add(Group("Scrolling"));
         page.Children.Add(Card([
-            .. Expander("scrolling", () => Fl(Icons.VerticalScroll), "Vertical Scroll Style", ScrollHint(S.Scrolling), ScrollName(S.Scrolling),
+            .. Expander("scrolling", () => Fl(Icons.VerticalScroll), "Vertical scroll style", ScrollHint(S.Scrolling), ScrollName(S.Scrolling),
                 [() => SubRow("Style", () => Seg([("lines", "Lines"), ("free", "Free"), ("rate", "Rate-matched"), ("wheel", "Wheel-driven")], S.Scrolling, v => Set(() => S.Scrolling = v, rows: true))),
                  .. TuningRows()]),
         ]));
 
         page.Children.Add(Group("Switching between notes"));
         page.Children.Add(Card([
-            .. Expander("switching", () => Fl(Icons.HorizontalScroll), "Horizontal Scroll Style",
-                "Follows input, with projection-based switching and spring edge pulls",
+            .. Expander("switching", () => Fl(Icons.HorizontalScroll), "Horizontal scroll style",
+                "Swipe sideways to change notes. The page follows your swipe and springs back at the first and last note.",
                 "Follow-through",
                 () => SubRow("Style", () => Seg([("follow", "Follow-through")], S.HorizontalScrollStyle,
                     v => Set(() => S.Swipe = v, rows: true)))),
@@ -578,17 +578,36 @@ internal sealed partial class SettingsWindow : Window
     /// <summary>Removes a saved override so one action returns to its default.</summary>
     private void ResetShortcut(string id)
     {
+        var hadOverride = S.ShortcutOverrides.TryGetValue(id, out var previous);
         _settings.Update(settings => settings.ShortcutOverrides.Remove(id));
         _shortcuts.Refresh(S);
         AfterSet(rows: true);
+        var name = ShortcutMap.Definitions.First(item => item.Id == id).Name;
+        _host.Toast($"{name} reset to its default", "Undo", () =>
+        {
+            _settings.Update(settings => { if (hadOverride) settings.ShortcutOverrides[id] = previous!; else settings.ShortcutOverrides.Remove(id); });
+            _shortcuts.Refresh(S);
+            AfterSet(rows: true);
+        });
     }
 
     /// <summary>Removes every saved override so all actions return to their defaults.</summary>
     private void ResetAllShortcuts()
     {
+        var previous = new Dictionary<string, string>(S.ShortcutOverrides, StringComparer.Ordinal);
         _settings.Update(settings => settings.ShortcutOverrides.Clear());
         _shortcuts.Refresh(S);
         AfterSet(rows: true);
+        _host.Toast("Shortcuts reset to defaults", "Undo", () =>
+        {
+            _settings.Update(settings =>
+            {
+                settings.ShortcutOverrides.Clear();
+                foreach (var (key, value) in previous) settings.ShortcutOverrides[key] = value;
+            });
+            _shortcuts.Refresh(S);
+            AfterSet(rows: true);
+        });
     }
 
     /// <summary>Asks before moving a key from its current action to another action.</summary>

@@ -435,6 +435,8 @@ internal sealed partial class PadWindow
             ? MixColor(selected, _palette.Ink, ChromeTokens.DevBadgeLightTextInkMix)
             : badgeColor;
         var chip = Chip(shortText, badgeColor, textColor);
+        ToolTip.SetTip(chip, fullText);
+        Avalonia.Automation.AutomationProperties.SetName(chip, fullText);
         if (shortText == "dev") return chip;
 
         var glyphFont = FindDevBadgeGlyphFont();
@@ -743,10 +745,11 @@ internal sealed partial class PadWindow
 
     private void ShowSaveFailurePrompt(string? reason, Action retry, Action quitAnyway)
     {
-        var message = string.IsNullOrWhiteSpace(reason) ? "The notes could not be written to disk." : reason;
+        var message = string.IsNullOrWhiteSpace(reason) ? "" : "Details: " + reason;
         if (_saveFailureOverlay is { } current && IsOverlay(current))
         {
             _saveFailureReason!.Text = message;
+            _saveFailureReason.IsVisible = message.Length > 0;
             _saveFailureRetryAction = retry;
             _saveFailureQuitAction = quitAnyway;
             return;
@@ -758,6 +761,7 @@ internal sealed partial class PadWindow
         var detail = new TextBlock
         {
             Text = message,
+            IsVisible = message.Length > 0,
             Foreground = new SolidColorBrush(p.Muted),
             FontSize = Typography.Body,
             TextWrapping = TextWrapping.Wrap, MaxWidth = 380,
@@ -777,7 +781,8 @@ internal sealed partial class PadWindow
             Orientation = Orientation.Horizontal, Spacing = 6, HorizontalAlignment = HorizontalAlignment.Right,
             Margin = new Thickness(0, 6, 0, 0), Children = { retryButton, quitButton },
         };
-        var content = new StackPanel { Spacing = 9, Children = { title, detail, buttons } };
+        var body = new TextBlock { Text = "Your latest edits aren't on disk yet. Retry tries again. Quit anyway closes AntiNotepad, and those edits may be lost.", Foreground = new SolidColorBrush(p.Ink), FontSize = Typography.Body, TextWrapping = TextWrapping.Wrap, MaxWidth = 380 };
+        var content = new StackPanel { Spacing = 9, Children = { title, body, detail, buttons } };
         var card = new Border
         {
             Child = content,
