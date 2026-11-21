@@ -1,9 +1,9 @@
 # A35f-contrast: text and controls that meet WCAG contrast in both themes
 
-Item card (`docs/loop.md`). Batch 4 of `A35-ux-pass`; step 2 after [A35e-targets-keyboard](A35e-targets-keyboard.md); branch `fix/A35f-contrast`, created from the A35e tip when A35e builds.
+Item card (`docs/loop.md`). Batch 4 of `A35-ux-pass`; step 2 after [A35e-targets-keyboard](A35e-targets-keyboard.md); branch `fix/A35f-contrast`, from the A35e tip 4c4d98b, in `.claude/worktrees/fix/A35f-contrast`.
 
 Tier: Medium · theme-tokens (palette colors and control paints)
-State: approved (builds after A35e)
+State: done, merged into docs/A35-ux-pass
 
 ## Request
 Parent chat (A35-ux-pass), 2026-11-21: D-3, D-5, D-7, D-2, D-6, plus a live measure for D-1/D-4. Findings: `.coord/reports/A35-ux-pass-s3.md`, `-s3d.codex.md`.
@@ -23,7 +23,27 @@ Parent chat (A35-ux-pass), 2026-11-21: D-3, D-5, D-7, D-2, D-6, plus a live meas
 - **Needs from you:** lab approval; the D-1/D-4 measure (go-ahead or screenshots); hand test.
 
 ## Files
-Fixed after the lab; likely `Theme/Palette.cs`, `UI/Kit.cs`, `UI/SettingsParts.cs`, `UI/PadBar.cs`, `UI/PadWindow.Layout.cs`, `SelfTest/UI.cs`, `SelfTest/Contracts.cs`, `docs/design-scale.md`.
+- `product/AntiNotepad/Theme/Contrast.cs`
+- `product/AntiNotepad/Theme/Paint.cs`
+- `product/AntiNotepad/Editor/Elements.cs` (bullet glyph)
+- `product/AntiNotepad/UI/Kit.cs`
+- `product/AntiNotepad/UI/SettingsParts.cs`
+- `product/AntiNotepad/UI/PadBar.cs`
+- `product/AntiNotepad/UI/PadWindow.Layout.cs`
+- `product/AntiNotepad/SelfTest/Contrast.cs`
+- `product/AntiNotepad/SelfTest/UI.cs`
+- `product/AntiNotepad/SelfTest/Contracts.cs`
+- `product/AntiNotepad/SelfTest/Design.cs`
+- `docs/design-scale.md`
+
+## Live measure (D-1/D-4)
+User go-ahead for desktop control, 2026-11-21. Red dev copy at Clear tint over a white wing, dark Ink palette, empty slot: hint text 1.24:1 against the glass (needs 4.5). A fix that raised the hint and markdown markers to meet contrast was built and shown; the user: "its readable but now it looks bad. just revert to how it was before i complained". Reverted; nothing changed for the editor hint or markers. D-1/D-4 stay model-only; a denser minimum tint is a product call left open.
 
 ## Approve
 User, 2026-11-21, after the lab: "lab is approved" (one Approve for both items).
+
+## For Codex
+One run: `.coord/tasks/A35f-contrast.build.md`.
+
+## Hand test
+User, 2026-11-21, red dev copy relaunched from ba6d954 after the revert: "all good, hand test passes".
