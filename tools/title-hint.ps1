@@ -101,6 +101,32 @@ function Get-Hints([string]$Base, [string]$Cwd) {
     }
 }
 
+function Get-SessionInfo([string]$Path) {
+    $title = ''; $item = ''
+    if (-not $Path -or -not (Test-Path -LiteralPath $Path -PathType Leaf)) { return @{ title=''; item='' } }
+    foreach ($line in [IO.File]::ReadLines($Path)) {
+        try { $entry = $line | ConvertFrom-Json } catch { continue }
+        if ($entry.type -eq 'custom-title' -and $entry.customTitle) { $title = [string]$entry.customTitle }
+        if (-not $item -and $entry.type -eq 'user') {
+            $content = if ($entry.message.content -is [string]) { $entry.message.content } else { (@($entry.message.content | Where-Object type -eq 'text' | ForEach-Object text) -join ' ') }
+            if ($content -match '(?i)you are the item chat for\s+`?(?<id>[A-Z][A-Za-z0-9]*(?:-[a-z0-9]+)+)') { $item = $Matches.id }
+        }
+    }
+    return @{ title=$title; item=$item }
+}
+
+function Test-Title([string]$Title, [string]$Hint) {
+    if ($Hint -notmatch '^title-hint (\S+): me=(\S+) codex=(\S+) dev=(\S+) phase=(\S+)') { return $true }
+    $id,$me,$codex,$dev,$phase = $Matches[1..5]
+    $parts = @()
+    if ($me -eq 'needs-you') { $parts += [char]0x2049 + [string][char]0xFE0F }
+    if ($codex -ne 'none') { $parts += switch ($codex) { codexing { '[Codexing]' } failed { '[Codex failed]' } stalled { '[Codex stalled]' } } }
+    if ($dev -ne 'none') { $parts += '[' + (Get-Culture).TextInfo.ToTitleCase($dev) + ']' }
+    $parts += $id
+    if ($phase -ne 'none') { $parts += [string][char]0x25C6; $parts += $phase }
+    return $Title -ceq ($parts -join ' ')
+}
+
 function Invoke-SelfTest {
     $base = Join-Path ([IO.Path]::GetTempPath()) ('title-hint-' + [guid]::NewGuid().ToString('N'))
     try {
@@ -144,6 +170,11 @@ function Invoke-SelfTest {
         [IO.File]::WriteAllText($workCard, "## Build`nBuilt`n")
         [IO.File]::WriteAllText($pending, "| $id | scope | Medium | Small | parked |`n")
         Check 'worktree parked' 'me=none codex=none dev=parked phase=build'
+        $sessionFile = Join-Path $base 'session.jsonl'
+        [IO.File]::WriteAllLines($sessionFile, @('{"type":"custom-title","customTitle":"wrong"}', '{"type":"user","message":{"content":"You are the item chat for `A28-emoji-render-gaps`"}}'))
+        $info = Get-SessionInfo $sessionFile
+        if ($info.item -cne $id -or $info.title -cne 'wrong' -or (Test-Title 'wrong' "title-hint ${id}: me=none codex=none dev=none phase=build")) { throw 'session title check failed' }
+        if (-not (Test-Title "$id $([char]0x25C6) build" "title-hint ${id}: me=none codex=none dev=none phase=build")) { throw 'matching title failed' }
         $shell = (Get-Process -Id $PID).Path
         $oldLoop = $env:ANTINOTEPAD_LOOP
         try {
@@ -162,6 +193,18 @@ try {
         $common = & git -C $Root rev-parse --path-format=absolute --git-common-dir 2>$null
         if ($LASTEXITCODE -eq 0 -and $common) { $Root = Split-Path $common.Trim() -Parent }
     }
-    Get-Hints $Root ([string]$hook.cwd)
+    $session = Get-SessionInfo ([string]$hook.transcript_path)
+    $item = $session.item
+    if (-not $item -and $hook.cwd -match '(?i)[\\/]\.claude[\\/]worktrees[\\/][^\\/]+[\\/]([^\\/]+)') { $item = $Matches[1] }
+    $hints = @(Get-Hints $Root ([string]$hook.cwd))
+    $hints
+    if ($item) {
+        $own = @($hints | Where-Object { $_.StartsWith("title-hint ${item}: ") })
+        if (-not $own.Count) {
+            $phase = Get-CardPhase $Root ([string]$hook.cwd) $item
+            $cardPaths = @((Join-Path $Root ".coord/tasks/$item.md"), (Join-Path ([string]$hook.cwd) ".coord/tasks/$item.md"))
+            if ($phase -ne 'none' -or @($cardPaths | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf }).Count) { "title-hint ${item}: NO ROW (card phase=$phase); ask the director to add the row" }
+        } elseif ($session.title -and -not (Test-Title $session.title $own[0])) { 'title-hint WARN: real title differs' }
+    }
 } catch { }
 exit 0
