@@ -3,7 +3,7 @@
 Item card (`docs/loop.md`).
 
 Tier: Medium · settings-sections (corner override restyles Fluent controls app-wide; Settings rows move)
-State: building
+State: hand test
 Branch: `refactor/A35d-spacing-tokens` in `.claude/worktrees/refactor/A35d-spacing-tokens` (from and back into `docs/A35-ux-pass`)
 
 ## Request
