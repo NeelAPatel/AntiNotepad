@@ -27,6 +27,12 @@ internal static partial class SelfTest
         ContractRow[] rows =
         [
             new(
+                "contrast-approved-roles",
+                "Primary text, field borders, toast text, failure details and state marks meet their contrast minimums across palettes and accents.",
+                "A35f-contrast",
+                () => RunExistingCheck(ContrastChecks, "contrast: "),
+                "Dev copy: check toast action, fields, toggle and pager states in light and dark palettes."),
+            new(
                 "recovered-folder-ensure",
                 "Recovery storage is created idempotently only under an existing notes folder.",
                 "A27-recovered-folder-always-open",

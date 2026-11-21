@@ -1,0 +1,15 @@
+# A35f build: WCAG contrast for text, borders and state marks
+
+Role: terra, because color logic across several UI files with a palette sweep. Read `AGENTS.md`, `.claude/rules/coding.md`, `.coord/tasks/A35f-contrast.md`, `.coord/reports/A35-ux-pass-s3d.codex.md` (the ratios), `Theme/Palette.cs`, `Theme/Paint.cs`. The lab (kept outside the repo) showed these After values; the user approved them 2026-11-21. Never commit or switch branches; never launch the app. Tokens only.
+
+Add `Theme/Contrast.cs`: WCAG relative luminance and ratio of two opaque colors, `Over(fg, alpha, bg)` compositing, `BestText(fill)` choosing white or `#111111` by higher ratio, and `EnsureOn(fg, bg, min)` that mixes fg toward Ink-extreme (black on light backgrounds, white on dark) in 1% steps until the ratio is at least `min`. Then:
+1. **D-3** `SettingsParts.cs` `TextButton` primary: text color = `BestText(accent)` (replaces the brightness formula). Every accent and palette-default accent must reach 4.5:1 (Red 4.82, Pink 4.58 with `#111111`).
+2. **D-5** `Kit.InputStyles` and `Paint`: resting field border = Ink at `Paint.RestBorder` raised to .55 (3:1 on all eight palettes over `Surface`); focus border = Accent at full alpha when its ratio on `Surface` is at least 3:1, else Ink. Update `Paint.FocusBorder` accordingly (rename if its meaning changes; grep every use and keep the others unchanged).
+3. **D-7** `PadWindow.Layout.cs` toast: the action label uses the toast's own text color (the toast fill is Ink at `Paint.Toast`; text is Canvas) with Strong weight and an underline, not the accent. Ratio at least 4.5 on every palette.
+4. **D-2** save-failure card detail: `EnsureOn(Muted, card surface, 4.5)`.
+5. **D-6** pager dots (`PadBar.cs`) and Settings toggle (`SettingsParts.cs` `Toggle`): empty-dot outline, filled dot, and toggle-off edge each at least 3:1 against the surface they sit on via `EnsureOn`; toggle-on fill at least 3:1 against surface via `EnsureOn(accent, surface, 3)` when needed; the selected dot keeps its wider shape and its accent color (ensure at least 3:1 on the bar surface). State stays readable by width and fill, not color alone.
+6. **Selftest** (`SelfTest/Contrast.cs`, registered like the others, plus rows in `Contracts.cs`): sweep all 8 palettes and all 8 accents plus the palette default for each pair above and fail with the pair name, palette, and ratio when below its minimum (4.5 text, 3 non-text). This is the check that would have caught D-3. Re-pin the design hash if the dump changes.
+7. `docs/design-scale.md`: add a "Contrast" section: the helper, the minimums (4.5 text, 3 non-text), which roles use `EnsureOn`, and that D-1/D-4 (Clear tint over a desktop) are model-only, unmeasured.
+Do not touch D-1/D-4 behavior.
+
+Done means: build 0 warnings, `--selftest` passes (`AVALONIA_TELEMETRY_OPTOUT=1`, into `build/A35f-contrast-check`), `pwsh -NoProfile -File tools/gate.ps1 -Task A35f-contrast -Offline -Base fix/A35e-targets-keyboard` passes. Report `.coord/reports/A35f-contrast.md` (1-9, short; list the final ratios per role and any pair that could not reach its minimum).

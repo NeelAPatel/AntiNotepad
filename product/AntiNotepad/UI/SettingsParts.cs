@@ -298,9 +298,10 @@ internal sealed partial class SettingsWindow
     private Control Toggle(bool on, Action<bool> set, string name)
     {
         var word = Kit.Text(on ? "On" : "Off", _p.Muted, Typography.Body);
+        var surface = Contrast.SettingsCard(_p);
         var knob = new Border { Width = MotionTokens.ToggleRest, Height = MotionTokens.ToggleRest, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Center };
-        var outline = new Border { CornerRadius = new CornerRadius(Shape.Round(ChromeTokens.Size.ToggleTrackHeight)), BorderBrush = new SolidColorBrush(_p.Faint), BorderThickness = new Thickness(Shape.Thin), Opacity = on ? 0 : 1 };
-        var fill = new Border { CornerRadius = new CornerRadius(Shape.Round(ChromeTokens.Size.ToggleTrackHeight)), Background = new SolidColorBrush(_p.Accent), Opacity = on ? 1 : 0 };
+        var outline = new Border { CornerRadius = new CornerRadius(Shape.Round(ChromeTokens.Size.ToggleTrackHeight)), BorderBrush = new SolidColorBrush(Contrast.EnsureOn(_p.Faint, surface, Contrast.Mark)), BorderThickness = new Thickness(Shape.Thin), Opacity = on ? 0 : 1 };
+        var fill = new Border { CornerRadius = new CornerRadius(Shape.Round(ChromeTokens.Size.ToggleTrackHeight)), Background = new SolidColorBrush(Contrast.EnsureOn(_p.Accent, surface, Contrast.Mark)), Opacity = on ? 1 : 0 };
         var track = new Grid { Width = ChromeTokens.Size.ToggleTrackWidth, Height = ChromeTokens.Size.ToggleTrackHeight, VerticalAlignment = VerticalAlignment.Center, Children = { outline, fill, knob } };
         var position = on ? 1.0 : 0.0;
         var hovering = false;
@@ -407,9 +408,8 @@ internal sealed partial class SettingsWindow
     /// <summary>A small text button (Change, Restore, Show). <paramref name="primary"/> fills it with the accent for the one action that changes something.</summary>
     private Button TextButton(string text, System.Action click, bool primary = false)
     {
-        // Dark text on a light accent, white on a dark one.
         var a = _p.Accent;
-        var onAccent = 0.2126 * a.R + 0.7152 * a.G + 0.0722 * a.B > 150 ? Color.FromRgb(0x1A, 0x1A, 0x1A) : Colors.White;
+        var onAccent = Contrast.BestText(a);
         var label = Kit.Text(text, primary ? onAccent : _p.Ink, Typography.Body, primary ? Typography.Strong : Typography.Regular);
         label.Margin = new Thickness(Space.M, Space.Xs);
         var face = primary

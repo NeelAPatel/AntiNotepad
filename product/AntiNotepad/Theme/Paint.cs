@@ -25,7 +25,7 @@ internal static class Paint
     public const double Dimmed = .5;
     public const double DisabledIcon = .5;
     public const double FocusBorder = .9;
-    public const double RestBorder = .5;
+    public const double RestBorder = .55;
     public const double ErrorHint = .8;
     public const double Toast = .9;
     public const double GlassScrim = .5;
