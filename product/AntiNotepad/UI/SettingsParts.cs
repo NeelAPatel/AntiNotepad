@@ -254,8 +254,8 @@ internal sealed partial class SettingsWindow
         {
             var text = Kit.Text(label, _p.Muted, Typography.Body);
             text.Margin = new Thickness(Space.M, Space.Xs);
-            var button = Kit.Plain(text, _p, radius: Shape.Control);
-            button.Margin = new Thickness(0, 0, Space.Nudge, 0);
+            var button = Kit.Plain(text, _p, height: ChromeTokens.ButtonSize, radius: Shape.Control);
+            button.Margin = new Thickness(0, 0, Space.Xs, 0);
             var face = (Border)button.Content!;
             items.Add((value, face, text));
             var hover = new Border { Background = new SolidColorBrush(_p.Ink, AntiNotepad.Theme.Paint.Hover(_p.Dark)), CornerRadius = new CornerRadius(Shape.Control), Opacity = 0, IsHitTestVisible = false };
@@ -411,7 +411,7 @@ internal sealed partial class SettingsWindow
         var face = primary
             ? new Border { Background = new SolidColorBrush(a), CornerRadius = new CornerRadius(Shape.Control), Child = label }
             : new Border { BorderBrush = Line, BorderThickness = new Thickness(Shape.Thin), CornerRadius = new CornerRadius(Shape.Control), Child = label };
-        var button = Kit.Plain(face, _p, radius: Shape.Control);
+        var button = Kit.Plain(face, _p, height: ChromeTokens.ButtonSize, radius: Shape.Control);
         if (primary)
         {
             // The filled face hides Plain's hover tint, so it lightens a little instead.
@@ -482,7 +482,6 @@ internal sealed partial class SettingsWindow
             {
                 Background = new SolidColorBrush(palette.Canvas),
                 CornerRadius = new CornerRadius(Shape.Round(18)),
-                Margin = new Thickness(0, 0, Space.S, 0),
                 Child = face,
                 BackgroundSizing = BackgroundSizing.InnerBorderEdge,
                 BorderBrush = selected ? new SolidColorBrush(_p.Accent) : new SolidColorBrush(_p.Faint, Paint.CardBorderOff),
@@ -490,16 +489,18 @@ internal sealed partial class SettingsWindow
                 Cursor = new Cursor(StandardCursorType.Hand),
             };
             var id = palette.Id;
-            chip.PointerPressed += (_, e) => { e.Handled = true; pick(id); };
-            Avalonia.Automation.AutomationProperties.SetName(chip, palette.Name);
-            grid.Children.Add(chip);
+            var button = Kit.Plain(chip, _p, radius: Shape.Round(18));
+            button.Margin = new Thickness(0, 0, Space.S, 0);
+            button.Click += (_, _) => pick(id);
+            Avalonia.Automation.AutomationProperties.SetName(button, palette.Name + (selected ? ", selected" : ""));
+            grid.Children.Add(button);
         }
         return grid;
     }
 
     private Control AccentDots()
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.S };
+        var row = new StackPanel { Orientation = Orientation.Horizontal };
         void Add(string? hex, Color color, string name)
         {
             var selected = S.Accent == hex;
@@ -513,10 +514,13 @@ internal sealed partial class SettingsWindow
                 BorderBrush = new SolidColorBrush(selected ? _p.Ink : _p.Faint, selected ? Paint.CardBorderOn : Paint.CardBorderOff),
                 BorderThickness = new Thickness(selected ? Shape.Thick : Shape.Thin),
             };
-            ToolTip.SetTip(dot, name);
-            Avalonia.Automation.AutomationProperties.SetName(dot, "Accent " + name);
-            dot.PointerPressed += (_, e) => { e.Handled = true; Set(() => S.Accent = hex); };
-            row.Children.Add(dot);
+            dot.HorizontalAlignment = HorizontalAlignment.Center;
+            dot.VerticalAlignment = VerticalAlignment.Center;
+            var button = Kit.Plain(dot, _p, ChromeTokens.ButtonSize, ChromeTokens.ButtonSize, Shape.Round(ChromeTokens.ButtonSize));
+            ToolTip.SetTip(button, name);
+            Avalonia.Automation.AutomationProperties.SetName(button, "Accent " + name + (selected ? ", selected" : ""));
+            button.Click += (_, _) => Set(() => S.Accent = hex);
+            row.Children.Add(button);
         }
         var basePalette = Palette.Get(_p.Dark ? S.DarkPalette : S.LightPalette, _p.Dark);
         Add(null, basePalette.Accent, "Palette default");

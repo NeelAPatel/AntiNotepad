@@ -260,6 +260,9 @@ internal static partial class SelfTest
             new("settings-labels-reset-search", "Dropdown names track their choices; shortcut resets can be undone; matched expanders show their rows; swap labels follow split view.",
                 "A35g-labels-tooltips", () => RunExistingCheck(LabelsAndSettingsChecks, "labels and Settings: "),
                 "Dev copy: check swap, dropdown names, Reset all Undo, and search for vertical."),
+            new("targets-keyboard", "Settings targets, stable slot pitch, keyboard choices and the shared focus adorner are present.",
+                "A35e-targets-keyboard", () => RunExistingCheck(TargetKeyboardChecks, "targets and keyboard: "),
+                "Dev copy: Tab and pointer through controls, check focus rings and 320 px pager fit."),
             IconRegistryContractRow(),
             new(
                 "search-delete-undo",

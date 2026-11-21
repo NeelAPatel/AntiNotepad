@@ -1,6 +1,7 @@
 // Shared controls for palette-aware application chrome.
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -142,9 +143,24 @@ internal static class Kit
         var border = new Border { CornerRadius = new CornerRadius(radius), Background = Brushes.Transparent, Child = content, Padding = new Thickness(0) };
         var button = new Button
         {
-            Content = border, Padding = new Thickness(0), Background = Brushes.Transparent, BorderThickness = new Thickness(0),
-            Width = width, Height = height, Cursor = new Cursor(StandardCursorType.Hand), Focusable = true,
-            HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch,
+            Content = border,
+            Padding = new Thickness(0),
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Width = width,
+            Height = height,
+            Cursor = new Cursor(StandardCursorType.Hand),
+            Focusable = true,
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            VerticalContentAlignment = VerticalAlignment.Stretch,
+            FocusAdorner = new FuncTemplate<Control>(() => new Border
+            {
+                Margin = new Thickness(-Space.Nudge - Shape.Thick),
+                CornerRadius = new CornerRadius(radius + Space.Nudge + Shape.Thick),
+                BorderThickness = new Thickness(Shape.Thick),
+                BorderBrush = new SolidColorBrush(p.Ink, Paint.FocusBorder),
+                IsHitTestVisible = false,
+            }),
         };
         button.Classes.Add("plain");
         var wash = new SolidColorBrush(p.Ink, 0);
@@ -185,7 +201,7 @@ internal static class Kit
             var on = isOn(value);
             var text = Text(label, on ? p.Ink : p.Faint, Typography.Body, on ? Typography.Strong : Typography.Regular);
             text.Margin = new Thickness(Space.S, Space.Xs);
-            var button = Plain(text, p, radius: 4);
+            var button = Plain(text, p, height: ChromeTokens.ButtonSize, radius: Shape.Control);
             button.Margin = new Thickness(0, 0, Space.Xs, Space.Xs);
             if (on && button.Content is Border b)
             {

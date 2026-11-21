@@ -41,7 +41,7 @@ internal static partial class SelfTest
         lazyBar.Rebuild(stackContext, actions);
         var stackTitlesLazy = titleCalls == 0;
         lazyBar.Update(stackContext with { ViewKind = BarViewKind.Slot, ViewSlot = 1 }, actions);
-        var dots = ((StackPanel)lazyBar.Pager.Child!).Children;
+        var dots = ((StackPanel)((StackPanel)lazyBar.Pager.Child!).Children[0]).Children;
         var slotTitles = titleCalls == 8 && Enumerable.Range(1, 9).All(i =>
             Equals(ToolTip.GetTip(dots[i - 1]), $"Slot {i} · {(i == 9 ? "empty" : $"Title {i}")}"));
         var first = new PadBar(BarPane.Left, BarContextForTest(0, true, true, false, 2, false), actions);

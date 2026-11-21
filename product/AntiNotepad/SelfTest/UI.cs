@@ -406,6 +406,51 @@ internal static partial class SelfTest
         return failures.Count == 0;
     }
 
+    /// <summary>Checks target geometry, selectable Settings controls and the shared focus adorner hook.</summary>
+    private static bool TargetKeyboardChecks(out string report)
+    {
+        using var fixture = new DataSafetyFixture();
+        using var log = new RuntimeLog();
+        var settings = fixture.Store.SettingsService;
+        var notes = new NotesSession(fixture.Store, fixture.Folder, fixture.Folder, null, log.Write);
+        var window = new UI.SettingsWindow(settings, fixture.Pad, true, notes);
+        object Invoke(string name, params object?[] args) => typeof(UI.SettingsWindow)
+            .GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, args)!;
+        var options = new List<(string Value, string Label)> { ("a", "A"), ("b", "B") };
+        var segment = (Control)Invoke("Seg", options, "a", (Action<string>)(_ => { }));
+        var segments = segment.GetLogicalDescendants().OfType<Button>().ToArray();
+        var text = (Button)Invoke("TextButton", "Test", (Action)(() => { }), false);
+        var chips = (Control)Invoke("PaletteChips", false, Palette.For(false).First().Id, (Action<string>)(_ => { }));
+        var swatches = (Control)Invoke("AccentDots");
+        var chipButtons = chips.GetLogicalDescendants().OfType<Button>().ToArray();
+        var swatchButtons = swatches.GetLogicalDescendants().OfType<Button>().ToArray();
+        var actions = new UI.BarActions(() => { }, () => { }, () => { }, () => { }, () => { }, _ => { });
+        var context = BarContextForTest(1, true, true, false, 2, false);
+        var bar = new UI.PadBar(UI.BarPane.Left, context, actions);
+        double[] Positions()
+        {
+            var row = (StackPanel)((StackPanel)bar.Pager.Child!).Children[0];
+            row.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            row.Arrange(new Rect(row.DesiredSize));
+            return row.Children.Select(child => child.Bounds.X).ToArray();
+        }
+        var first = Positions();
+        bar.Update(context with { ViewSlot = 2 }, actions);
+        var second = Positions();
+        var plain = UI.Kit.Plain(new TextBlock(), Palette.All[0]);
+        var ring = plain.FocusAdorner?.Build() as Border;
+        var ok = segments.Length == 2 && segments.All(b => b.Height >= ChromeTokens.ButtonSize)
+            && text.Height >= ChromeTokens.ButtonSize
+            && first.Length == 9 && first.SequenceEqual(second)
+            && first.Zip(first.Skip(1), (a, b) => b - a).All(pitch => pitch == ChromeTokens.PagerDotTargetWidth)
+            && chipButtons.Length > 0 && chipButtons.All(b => b.Focusable)
+            && swatchButtons.Length > 0 && swatchButtons.All(b => b.Focusable && b.Width == ChromeTokens.ButtonSize && b.Height == ChromeTokens.ButtonSize)
+            && plain.Classes.Contains("plain") && ring is not null && ring.BorderThickness == new Thickness(Shape.Thick)
+            && ring.Margin == new Thickness(-Space.Nudge - Shape.Thick);
+        report = ok ? "targets, stable dot pitch, focusable choices and focus adorner hook" : "target or keyboard control check failed";
+        return ok;
+    }
+
     /// <summary>Checks Settings names, search, reset Undo, and the split-aware swap label.</summary>
     private static bool LabelsAndSettingsChecks(out string report)
     {

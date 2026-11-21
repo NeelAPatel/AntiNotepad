@@ -220,6 +220,7 @@ internal sealed class PadBar
         }
         else
         {
+            var dots = new StackPanel { Orientation = Orientation.Horizontal };
             for (var i = 1; i <= 9; i++)
             {
                 var target = i;
@@ -227,12 +228,13 @@ internal sealed class PadBar
                 var filled = !slot.IsEmpty;
                 var current = context.ViewSlot == i || context.OtherPaneSlot == i;
                 var dot = new Border { Width = current ? ChromeTokens.PagerDotSelectedWidth : ChromeTokens.PagerDotWidth, Height = ChromeTokens.PagerDotHeight, CornerRadius = new CornerRadius(ChromeTokens.PagerDotRadius), Background = current ? new SolidColorBrush(p.Accent) : filled ? new SolidColorBrush(p.Muted) : Brushes.Transparent, BorderBrush = new SolidColorBrush(current ? p.Accent : p.Faint), BorderThickness = new Thickness(filled || current ? default : ChromeTokens.PagerDotBorderThickness), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
-                var button = Kit.Plain(dot, p, current ? ChromeTokens.PagerDotSelectedButtonWidth : ChromeTokens.PagerDotButtonWidth, ChromeTokens.PagerDotButtonHeight, ChromeTokens.PagerDotHoverRadius);
+                var button = Kit.Plain(dot, p, ChromeTokens.PagerDotTargetWidth, ChromeTokens.PagerDotButtonHeight, ChromeTokens.PagerDotHoverRadius);
                 button.Click += (_, _) => actions.SelectSlot(target);
                 ToolTip.SetTip(button, context.TooltipFor($"Slot {i} · {(filled ? slot.Title() : "empty")}", "open-slot"));
                 Avalonia.Automation.AutomationProperties.SetName(button, $"Slot {i}");
-                row.Children.Add(button);
+                dots.Children.Add(button);
             }
+            row.Children.Add(dots);
         }
         if (floating && context.ShowNewNoteButton) row.Children.Add(BarSeparator(p));
         _pager.Child = row;
