@@ -25,7 +25,7 @@ internal static partial class SelfTest
         settings.ShowDeleteButton = false;
         settings.SlotDots = "quiet";
         var round = JsonSerializer.Deserialize<Settings>(JsonSerializer.Serialize(settings))!;
-        var iconButton = Kit.IconButton(Glyph.Delete, "Delete", Palette.All[0], () => { }, hoverColor: Palette.All[0].Error);
+        var iconButton = Kit.IconButton(Icons.Delete, "Delete", Palette.All[0], () => { }, hoverColor: Palette.All[0].Error);
         var face = (Avalonia.Controls.Border)iconButton.Content!;
         var enabledOpacity = face.Opacity * ((GlyphIcon)face.Child!).Opacity;
         iconButton.IsEnabled = false;

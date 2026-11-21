@@ -31,6 +31,8 @@ $patterns = [ordered]@{
     'timer' = "\bTimeSpan\.From(?:Milliseconds|Seconds|Minutes|Hours)\s*\(\s*$number"
     # Literal dimensions, spacing properties, and thickness constructors.
     'spacing' = "\b(?:MinWidth|MinHeight|MaxWidth|MaxHeight|Width|Height|Spacing|LetterSpacing|Margin|Padding|BorderThickness)\s*=\s*(?!new\s+Thickness\b)[^;\r\n,}]*?$number|\bnew\s+Thickness\s*\([^)]*?$number"
+    # Icon code points belong in the icon registry; bare hexadecimal values remain legal elsewhere.
+    'icon-code' = '[\uE000-\uF8FF]|\\u[EeFf][0-9a-fA-F]{3}|ConvertFromUtf32\s*\(|\(char\)\s*0[xX][EeFf][0-9a-fA-F]{3}\b'
 }
 
 # Reject native interop tokens in AntiNotepad C# source outside Platform/, while ignoring comments and literal text.
@@ -261,13 +263,23 @@ function Find-Hits([string]$code, [string]$file) {
     $fontMasked = Mask-DesignCode $code $true
     $lines = $code -split "`n"
     foreach ($category in $patterns.Keys) {
-        $searchText = if ($category -eq 'font-family') { $fontMasked } else { $masked }
+        if ($category -eq 'icon-code' -and $file -eq 'product/AntiNotepad/Icons.cs') { continue }
+        $searchText = if ($category -eq 'icon-code') { $code }
+            elseif ($category -eq 'font-family') { $fontMasked }
+            else { $masked }
+        if ($category -eq 'icon-code' -and $file -eq 'product/AntiNotepad/AppInfo.cs') {
+            $badgeLine = '(?m)^[ \t]*internal const string DevBadgeGlyph = "\\uE0A0";[^\r\n]*'
+            $searchText = [regex]::Replace($searchText, $badgeLine, [System.Text.RegularExpressions.MatchEvaluator]{
+                param($match)
+                [regex]::Replace($match.Value, '[^\r\n]', ' ')
+            })
+        }
         foreach ($match in [regex]::Matches($searchText, $patterns[$category])) {
             if ($category -eq 'timer') {
                 $prefix = $masked.Substring([Math]::Max(0, $match.Index - 80), [Math]::Min(80, $match.Index))
                 if ($prefix -match '(?s)(?:(?:Duration|AnimationDuration)\s*=\s*|\b(?:Anim\.Run|Tween\w*)\s*\([^,;\r\n]+,\s*)$') { continue }
             }
-            $line = 1 + ([regex]::Matches($masked.Substring(0, $match.Index), "`n")).Count
+            $line = 1 + ([regex]::Matches($searchText.Substring(0, $match.Index), "`n")).Count
             [pscustomobject]@{ category = $category; file = $file; line = $line; match = ($match.Value -replace '[\t\r\n]+', ' '); code = ($lines[$line - 1].Trim() -replace '\t', ' ') }
         }
     }
@@ -323,6 +335,28 @@ var timer = TimeSpan.FromMilliseconds(30);
     }
     foreach ($fixture in @('Color.FromArgb(220, c.R, c.G, c.B)', 'Color.FromArgb(dark ? (byte)110 : (byte)40, 0, 0, 0)')) {
         if (@(Find-Hits $fixture 'fixture.cs' | Where-Object category -eq 'alpha').Count -ne 1) { throw "Alpha fixture failed: $fixture" }
+    }
+    $iconFixtures = @(
+        @{ Text = ('var glyph = "' + [string][char]0xE123 + '";'); File = 'fixture.cs' },
+        @{ Text = ('var glyph = "' + [string][char]0xE8B3 + '";'); File = 'fixture.cs' },
+        @{ Text = 'var glyph = "\uF6ED";'; File = 'fixture.cs' },
+        @{ Text = 'var glyph = char.ConvertFromUtf32(0xF6ED);'; File = 'fixture.cs' },
+        @{ Text = 'var glyph = new string((char)0xE0A0, 1);'; File = 'fixture.cs' },
+        @{ Text = 'var glyph = "";'; File = 'fixture.cs' },
+        @{ Text = 'var glyph = new string((char)0Xe8b3, 1);'; File = 'fixture.cs' }
+    )
+    foreach ($fixture in $iconFixtures) {
+        if (@(Find-Hits $fixture.Text $fixture.File | Where-Object category -eq 'icon-code').Count -eq 0) { throw 'Icon-code fixture failed to detect a code point.' }
+    }
+    $allowedIconFixtures = @(
+        @{ Text = 'const int win32 = 0xF120;'; File = 'fixture.cs' },
+        @{ Text = 'const int mask = 0xFFFF;'; File = 'fixture.cs' },
+        @{ Text = 'ContainsGlyph(0xE0A0);'; File = 'fixture.cs' },
+        @{ Text = '    internal const string DevBadgeGlyph = "\uE0A0";'; File = 'product/AntiNotepad/AppInfo.cs' },
+        @{ Text = ('var glyph = "' + [string][char]0xE123 + '";'); File = 'product/AntiNotepad/Icons.cs' }
+    )
+    foreach ($fixture in $allowedIconFixtures) {
+        if (@(Find-Hits $fixture.Text $fixture.File | Where-Object category -eq 'icon-code').Count -ne 0) { throw "Allowed icon-code fixture failed: $($fixture.File)" }
     }
     foreach ($fixture in @('Brush(color, Token.Opacity)', 'new SolidColorBrush(color, 0)', 'Brush(color, 1.0)', 'Color.FromArgb(0, c.R, c.G, c.B)', 'Color.FromArgb(1, c.R, c.G, c.B)', 'Color.FromArgb(255, c.R, c.G, c.B)', 'Color.FromArgb(dark ? (byte)0 : (byte)255, 0, 0, 0)', 'Color.FromArgb(Token.Alpha, 0, 0, 0)')) {
         if (@(Find-Hits $fixture 'fixture.cs' | Where-Object { $_.category -in @('opacity', 'alpha') }).Count -ne 0) { throw "Endpoint fixture failed: $fixture" }

@@ -124,8 +124,8 @@ internal sealed class PadBar
     internal void Rebuild(BarContext context, BarActions actions)
     {
         var size = context.Style == BarStyle.Float ? ChromeTokens.ButtonSize : ChromeTokens.BarCornerSize;
-        _deleteButton = Kit.IconButton(Glyph.Delete, "Delete note", context.Palette, actions.Delete, size: size, hoverColor: context.Palette.Error);
-        _newButton = Kit.IconButton(Glyph.Add, context.TooltipFor("New note", "new-note"), context.Palette, actions.NewNote, size: size, hoverColor: context.Palette.Accent);
+        _deleteButton = Kit.IconButton(Icons.Delete, "Delete note", context.Palette, actions.Delete, size: size, hoverColor: context.Palette.Error);
+        _newButton = Kit.IconButton(Icons.NewNote, context.TooltipFor("New note", "new-note"), context.Palette, actions.NewNote, size: size, hoverColor: context.Palette.Accent);
         ReplaceItem(new("delete", BarItemContainer.Left, 0, _deleteButton,
             static state => state.ShowDeleteButton,
             static state => !state.IsBlank || state.ViewKind == BarViewKind.Stack && state.StackCount > 1));
@@ -207,7 +207,7 @@ internal sealed class PadBar
         if (floating && state.ShowDelete) row.Children.Add(BarSeparator(p));
         if (!state.Slots)
         {
-            row.Children.Add(Kit.IconButton(Glyph.Back, context.TooltipFor("Previous note", "previous-note"), p, actions.Previous, radius: ChromeTokens.PagerArrowHoverRadius));
+            row.Children.Add(Kit.IconButton(Icons.Back, context.TooltipFor("Previous note", "previous-note"), p, actions.Previous, radius: ChromeTokens.PagerArrowHoverRadius));
             var count = Kit.Text($"{context.CurrentIndex + 1} / {context.StackCount}", p.Muted, ChromeTokens.PagerCountFontSize, Typography.Strong);
             count.TextAlignment = TextAlignment.Center; count.HorizontalAlignment = HorizontalAlignment.Center; count.VerticalAlignment = VerticalAlignment.Center;
             count.FontFeatures = new FontFeatureCollection { new FontFeature { Tag = "tnum", Value = 1 } };
@@ -216,7 +216,7 @@ internal sealed class PadBar
             countButton.Click += (_, _) => actions.OpenSearch();
             Avalonia.Automation.AutomationProperties.SetName(countButton, $"Note {context.CurrentIndex + 1} of {context.StackCount}");
             row.Children.Add(countButton);
-            row.Children.Add(Kit.IconButton(Glyph.Forward, context.TooltipFor("Next note · past the last one starts a new note", "next-note"), p, actions.Next, radius: ChromeTokens.PagerArrowHoverRadius));
+            row.Children.Add(Kit.IconButton(Icons.Forward, context.TooltipFor("Next note · past the last one starts a new note", "next-note"), p, actions.Next, radius: ChromeTokens.PagerArrowHoverRadius));
         }
         else
         {

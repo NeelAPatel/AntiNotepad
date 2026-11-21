@@ -63,7 +63,6 @@ internal static class ChromeTokens
     public const double PagerCountButtonHeight = ButtonSize;
     public const double BarCornerSize = PillHeight;
     public const int DeleteDebounceMs = 500;
-    public const double PlainIconWeight = 0;
     public const double PagerDotBorderThickness = 1;
 
     public const double PillInset = 4;

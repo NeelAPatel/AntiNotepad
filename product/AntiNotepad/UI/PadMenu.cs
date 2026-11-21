@@ -268,16 +268,16 @@ internal static class PadMenu
         return button;
     }
 
-    private static Control Icon(string? glyph, Palette p, bool colored)
+    private static Control Icon(global::AntiNotepad.Icon? icon, Palette p, bool colored)
     {
-        if (glyph is null) return new Border { Width = 18, Height = 18, VerticalAlignment = VerticalAlignment.Center };
-        var color = colored ? glyph switch
+        if (icon is null) return new Border { Width = 18, Height = 18, VerticalAlignment = VerticalAlignment.Center };
+        var color = colored ? icon switch
         {
-            MenuGlyphs.NewNote or MenuGlyphs.Pin => p.Accent,
-            MenuGlyphs.Delete => p.Error,
+            { } value when ReferenceEquals(value, Icons.NewNote) || ReferenceEquals(value, Icons.KeepOnTop) => p.Accent,
+            { } value when ReferenceEquals(value, Icons.Delete) => p.Error,
             _ => p.Ink,
         } : p.Ink;
-        return new GlyphIcon(glyph, color, Typography.IconMedium, 0)
+        return new GlyphIcon(icon, color, Typography.IconMedium)
         {
             Width = 28,
             HorizontalAlignment = HorizontalAlignment.Center,

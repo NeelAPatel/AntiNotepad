@@ -53,7 +53,7 @@ internal sealed partial class PadWindow
     /// <summary>Builds the persistent top-row button that switches the left pane's view.</summary>
     private void BuildSwapButton()
     {
-        _swapButton = Kit.IconButton(Glyph.List, "Show slots", _palette, () => SwapView(BarPane.Left));
+        _swapButton = Kit.IconButton(Icons.Grid, "Show slots", _palette, () => SwapView(BarPane.Left));
         _swapIconSlot = -1;
     }
 
@@ -62,8 +62,8 @@ internal sealed partial class PadWindow
     {
         if (_swapButton?.Content is not Border face || _swapIconSlot == Data.ViewSlot) return;
         _swapIconSlot = Data.ViewSlot;
-        var glyph = Data.ViewSlot == 0 ? Glyph.List : Glyph.Grid;
-        face.Child = new GlyphIcon(glyph, _palette.Ink, ChromeTokens.IconGlyphSize, ChromeTokens.PlainIconWeight)
+        var glyph = Data.ViewSlot == 0 ? Icons.Grid : Icons.Stack;
+        face.Child = new GlyphIcon(glyph, _palette.Ink, ChromeTokens.IconGlyphSize)
         {
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,

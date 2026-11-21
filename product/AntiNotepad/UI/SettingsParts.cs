@@ -145,7 +145,7 @@ internal sealed partial class SettingsWindow
         var kids = subs.Where(s => s is not null).Select(s => s!()).Where(s => s is not null).Cast<Border>().ToArray();
         var row = Row(icon, title, description, () =>
         {
-            chevron = new GlyphIcon(char.ConvertFromUtf32(0xf2a3), _p.Muted, Typography.IconMedium, 0, Glyph.Fluent) { RenderTransform = new RotateTransform(open ? 180 : 0), VerticalAlignment = VerticalAlignment.Center };
+            chevron = new GlyphIcon(Icons.SettingsChevron, _p.Muted, Typography.IconMedium) { RenderTransform = new RotateTransform(open ? 180 : 0), VerticalAlignment = VerticalAlignment.Center };
             var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
             right.Children.Add(Kit.Text(value, _p.Muted, Typography.Body));
             right.Children.Add(chevron);
@@ -354,7 +354,7 @@ internal sealed partial class SettingsWindow
         var label = Kit.Text(options.FirstOrDefault(o => o.Value == current).Label ?? current, _p.Ink, Typography.Body);
         var face = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(12, 12) };
         face.Children.Add(label);
-        var chevron = new GlyphIcon(char.ConvertFromUtf32(0xf2a3), _p.Muted, Typography.IconSmall, 0, Glyph.Fluent) { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0) };
+        var chevron = new GlyphIcon(Icons.SettingsChevron, _p.Muted, Typography.IconSmall) { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0) };
         Grid.SetColumn(chevron, 1); face.Children.Add(chevron);
         var box = new Border { Height = 48, MinWidth = minWidth, CornerRadius = new CornerRadius(Shape.Control), BorderBrush = Line, BorderThickness = new Thickness(1), Background = new SolidColorBrush(_p.Surface), Child = face };
         var button = Kit.Plain(box, _p, radius: Shape.Control);
@@ -554,8 +554,8 @@ internal sealed partial class SettingsWindow
 
     // ---------- icons ----------
 
-    /// <summary>A Fluent UI System Icons glyph by codepoint (the bundled font, regular weight at its 20 px design size).</summary>
-    private Control Fl(int codepoint) => new GlyphIcon(char.ConvertFromUtf32(codepoint), IconInk, Typography.IconXLarge, 0, Glyph.Fluent)
+    /// <summary>Draws a registered Fluent icon in the Settings row color.</summary>
+    private Control Fl(Icon icon) => new GlyphIcon(icon, IconInk, Typography.IconXLarge)
     {
         HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
     };

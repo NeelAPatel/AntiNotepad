@@ -234,12 +234,12 @@ internal sealed partial class PadWindow
         pane.ShowMenu = (anchor, entries) => PadMenu.Show(anchor, entries, _palette, Settings);
         pane.AppMenu = () =>
         [
-            new("New note", _shortcuts.GetLabel("new-note"), MenuGlyphs.NewNote, NewNote),
-            new("Search notes", _shortcuts.GetLabel("search"), MenuGlyphs.Search, () => OpenSearch()),
-            new(Settings.Split ? "Close split view" : "Split view", _shortcuts.GetLabel("split"), MenuGlyphs.Split, ToggleSplit),
-            new(Settings.Pinned ? "Unpin" : "Keep on top", _shortcuts.GetLabel("keep-on-top"), MenuGlyphs.Pin, TogglePin),
+            new("New note", _shortcuts.GetLabel("new-note"), Icons.NewNote, NewNote),
+            new("Search notes", _shortcuts.GetLabel("search"), Icons.Search, () => OpenSearch()),
+            new(Settings.Split ? "Close split view" : "Split view", _shortcuts.GetLabel("split"), Icons.Split, ToggleSplit),
+            new(Settings.Pinned ? "Unpin" : "Keep on top", _shortcuts.GetLabel("keep-on-top"), Icons.KeepOnTop, TogglePin),
             MenuEntry.Separator,
-            new("Settings", _shortcuts.GetLabel("settings"), MenuGlyphs.Settings, OpenSettings),
+            new("Settings", _shortcuts.GetLabel("settings"), Icons.Settings, OpenSettings),
             new($"Hide {AppInfo.Name}", "Escape", null, HideResident),
         ];
         pane.FocusedPane += () => HandlePaneFocused(pane);
@@ -289,13 +289,13 @@ internal sealed partial class PadWindow
         foreach (var bar in _bars) bar.Rebuild(BarContextFor(bar.Pane), BarActionsFor(bar.Pane));
         BuildSwapButton();
         _icons.Children.Add(_swapButton!);
-        _icons.Children.Add(Kit.IconButton(Glyph.Search, ShortcutTooltip("Search notes", _shortcuts.GetLabel("search")), p, ToggleSearch));
-        _icons.Children.Add(Kit.IconButton(Glyph.Split, ShortcutTooltip("Split view with a slot", _shortcuts.GetLabel("split")), p, ToggleSplit));
+        _icons.Children.Add(Kit.IconButton(Icons.Search, ShortcutTooltip("Search notes", _shortcuts.GetLabel("search")), p, ToggleSearch));
+        _icons.Children.Add(Kit.IconButton(Icons.Split, ShortcutTooltip("Split view with a slot", _shortcuts.GetLabel("split")), p, ToggleSplit));
         // Pinned: the pin is filled with the accent, so the state reads at a glance.
-        _icons.Children.Add(Kit.IconButton(Glyph.Pin, ShortcutTooltip(Settings.Pinned ? "Unpin" : "Keep on top", _shortcuts.GetLabel("keep-on-top")), p, TogglePin,
+        _icons.Children.Add(Kit.IconButton(Icons.KeepOnTop, ShortcutTooltip(Settings.Pinned ? "Unpin" : "Keep on top", _shortcuts.GetLabel("keep-on-top")), p, TogglePin,
             filled: Settings.Pinned, color: Settings.Pinned ? p.Accent : null));
-        _icons.Children.Add(Kit.IconButton(Glyph.Settings, ShortcutTooltip("Settings", _shortcuts.GetLabel("settings")), p, OpenSettings));
-        _icons.Children.Add(Kit.IconButton(Glyph.Hide, "Hide (Esc)", p, HideResident));
+        _icons.Children.Add(Kit.IconButton(Icons.Settings, ShortcutTooltip("Settings", _shortcuts.GetLabel("settings")), p, OpenSettings));
+        _icons.Children.Add(Kit.IconButton(Icons.Hide, "Hide (Esc)", p, HideResident));
         _divider.Background = new SolidColorBrush(p.Faint, ChromeTokens.DividerAlpha);
         _toast.Background = new SolidColorBrush(p.Ink, Paint.Toast);
         _toast.BoxShadow = PadBar.PillShadow(p);
@@ -484,9 +484,10 @@ internal sealed partial class PadWindow
         text.VerticalAlignment = VerticalAlignment.Center;
         text.IsHitTestVisible = false;
         text.Inlines!.Clear();
-        if (value.StartsWith("\uE0A0 ", StringComparison.Ordinal))
+        const string badgeGlyph = AppInfo.DevBadgeGlyph;
+        if (value.StartsWith(badgeGlyph + " ", StringComparison.Ordinal))
         {
-            text.Inlines.Add(new Avalonia.Controls.Documents.Run(glyphFont is null ? "\u2387" : "\uE0A0")
+            text.Inlines.Add(new Avalonia.Controls.Documents.Run(glyphFont is null ? "\u2387" : badgeGlyph)
             {
                 FontFamily = glyphFont ?? text.FontFamily,
                 FontWeight = Typography.Regular
