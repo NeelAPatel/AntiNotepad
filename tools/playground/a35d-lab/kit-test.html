@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>A35d kit test</title><link rel="stylesheet" href="core.css">
+<style>body{padding:24px}main{display:grid;grid-template-columns:repeat(2,minmax(400px,1fr));gap:24px}.test-column{padding:20px;border:1px solid #555;border-radius:8px}.test-column h1{font-size:20px}.sample{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0}.kit-frame{padding:12px}</style></head>
+<body class="lab-backdrop"><main id="tests"></main><script src="core.js"></script><script>
+'use strict';
+const host=document.getElementById('tests'), S=LAB.kit.settings, P=LAB.kit.pad;
+for(const mode of ['before','after']){
+ const col=document.createElement('section');col.className='test-column';LAB.applySnaps(col,mode);
+ const add=(...items)=>items.forEach(item=>col.append(item));
+ const sample=(...items)=>{const d=document.createElement('div');d.className='sample';d.append(...items);return d;};
+ const icon=()=>LAB.glyph('\uE713',20);
+ const opts=[['system','System'],['light','Light'],['dark','Dark']];
+ const heading=document.createElement('h1');heading.textContent=mode.toUpperCase();add(heading,S.heading('Settings builders'),S.group('Controls'),S.section('Section'));
+ const segments=S.segments(opts,'system');
+ const rows=[S.row(icon(),'Mode','Follow Windows, or stay light or dark',segments),S.row(icon(),'Blink','Animate the caret',S.toggle(true,()=>{},'Blink')),S.row(icon(),'Scale','Toolbar, panels and text together',S.dropdown([['100','100%'],['125','125%'],['150','150%']],'100')),S.row(icon(),'Accent','Caret, selection, headings and switches',S.accentDots()),S.row(icon(),'Button','A text action',S.textButton('Change')),S.expander(icon(),'More options','Click to expand','On',[S.subRow('Sub row',S.toggle(false))],true)];
+ add(S.card(rows),sample(S.pictureChoice([{value:'acrylic',label:'Acrylic',picture:S.materialPicture('acrylic')},{value:'mica',label:'Mica',picture:S.materialPicture('mica')}],'acrylic'),S.tile(S.caretPicture(false),'Bar',true)),S.paletteChips(false,'paper'),sample(S.textBox('Editable text'),S.readOnlyPath('C:\\Notes'),S.textButton('Restore'),S.textButton('Save',()=>{},true)));
+ const fluentButton=document.createElement('button');fluentButton.className='fl-button';fluentButton.textContent='Fluent button';LAB.mark(fluentButton,19);
+ const combo=document.createElement('select');combo.className='fl-combo';for(const x of ['First','Second']){const o=document.createElement('option');o.textContent=x;combo.append(o);}add(sample(fluentButton,combo),S.group('Pad builders'));
+ add(P.windowFrame(P.panelHeader('Search'),sample(P.iconButton('\uE721','Search'),P.pill(P.iconButton('\uE76B','Previous'),P.metaText('1 / 3'),P.iconButton('\uE76C','Next')),P.badge('slot 5'),P.metaText('Saved 23:10')),P.toast('Moved to trash','Undo',()=>{})));
+ add(sample(P.plain('Plain button'),P.text('Text'),P.toggles(opts,['light'])));host.append(col);
+}
+</script></body></html>
