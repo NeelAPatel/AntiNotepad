@@ -452,14 +452,36 @@ internal static partial class SelfTest
         Check(Avalonia.Automation.AutomationProperties.GetName(dropdown) == "Answer position, Right edge", "dropdown name follows pick");
 
         settings.Update(s => { s.ShortcutOverrides["new-note"] = "Ctrl+Q"; s.ShortcutOverrides["search"] = ""; });
+        var toastBefore = fixture.ToastText;
+        StackPanel ShortcutsPage() => (StackPanel)Invoke(window, "BuildSection", "shortcuts", false, null)!;
+        static string ButtonText(Button button) => button.GetLogicalDescendants().OfType<TextBlock>().FirstOrDefault()?.Text ?? "";
+        static Button? UndoBeside(StackPanel page, string label) => page.GetLogicalDescendants().OfType<StackPanel>()
+            .FirstOrDefault(row => row.Children.OfType<Button>().Any(b => ButtonText(b) == label)
+                && row.Children.OfType<Button>().Any(b => ButtonText(b) == "Undo"))?.Children.OfType<Button>().First(b => ButtonText(b) == "Undo");
         Invoke(window, "ResetAllShortcuts");
-        Check(settings.Current.ShortcutOverrides.Count == 0 && fixture.ToastText == "Shortcuts reset to defaults", "reset all clears overrides and shows toast");
-        fixture.ClickToastAction();
+        var undo = UndoBeside(ShortcutsPage(), "Reset all");
+        Check(settings.Current.ShortcutOverrides.Count == 0 && undo is not null && fixture.ToastText == toastBefore, "reset all shows adjacent Undo without a pad toast");
+        Invoke(window, "AfterSet", true);
+        undo = UndoBeside(ShortcutsPage(), "Reset all");
+        Check(undo is not null, "reset all Undo survives rebuild");
+        undo?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Check(settings.Current.ShortcutOverrides.TryGetValue("new-note", out var key) && key == "Ctrl+Q"
-            && settings.Current.ShortcutOverrides.TryGetValue("search", out var empty) && empty == "", "reset all Undo restores overrides");
+            && settings.Current.ShortcutOverrides.TryGetValue("search", out var empty) && empty == ""
+            && UndoBeside(ShortcutsPage(), "Reset all") is null, "reset all Undo restores overrides and disappears");
         Invoke(window, "ResetShortcut", "new-note");
-        fixture.ClickToastAction();
+        undo = UndoBeside(ShortcutsPage(), "Reset");
+        Check(undo is not null && fixture.ToastText == toastBefore, "single reset shows adjacent Undo without a pad toast");
+        undo?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Check(settings.Current.ShortcutOverrides.TryGetValue("new-note", out key) && key == "Ctrl+Q", "single reset Undo restores override");
+        Invoke(window, "ResetShortcut", "new-note");
+        Invoke(window, "ResetShortcut", "new-note");
+        Check(UndoBeside(ShortcutsPage(), "Reset") is null, "unchanged reset clears pending Undo");
+        Invoke(window, "ResetAllShortcuts");
+        window.Refresh();
+        Check(UndoBeside(ShortcutsPage(), "Reset all") is not null, "unrelated refresh preserves pending Undo");
+        settings.Update(s => s.ShortcutOverrides["search"] = "Ctrl+Q");
+        window.Refresh();
+        Check(UndoBeside(ShortcutsPage(), "Reset all") is null, "replacing settings clears pending Undo");
         Check(new UI.ShortcutMap(new Model.Settings()).GetLabel("settings") == "Ctrl+,", "Settings default key");
         Check(UI.HelpOverlay.ListDescription("bullet") == "Every line gets a bullet"
             && UI.HelpOverlay.ListDescription("check") == "Every line gets a checkbox"
