@@ -45,7 +45,7 @@ Source: `.coord/reports/A35-ux-pass-s3.md` (Codex audit), code re-read here 2026
 User, 2026-11-20 (verbatim): "Approve"
 
 ## For Codex
-Role: terra (`docs/agents.md`), because four clear fixes across a few files. The branch is checked out: never switch, merge or commit. Read `AGENTS.md`, then the Files.
+Role: worker (`docs/agents.md`); a terra run stopped after reading, with no changes. Work through to the report; do not stop early. The branch is checked out: never switch, merge or commit. Read `AGENTS.md`, then the Files.
 - Build exactly the Plan's "After"; no drive-by changes. If the Findings are wrong, stop and report.
 - Write each repro selftest first, run it on unchanged code, paste FAIL lines; then fix and paste PASS.
 - Build into `build/A35a-data-safety-check` with `AVALONIA_TELEMETRY_OPTOUT=1`, run `--selftest`, delete the folder. Gate: `pwsh -NoProfile -File tools/gate.ps1 -Task A35a-data-safety -Offline`.

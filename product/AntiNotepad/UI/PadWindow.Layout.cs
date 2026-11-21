@@ -68,6 +68,7 @@ internal sealed partial class PadWindow
     private Anim.Handle? _chromeAnim;
     private Anim.Handle? _toastAnim;
     private Action? _toastAction;
+    private Note? _withdrawToastUndoOnEdit;
     /// <summary>Ctrl+Z undoes the toast's action (a delete) until the user types something.</summary>
     private bool _undoArmed;
     private Control? _saveFailureOverlay;
@@ -75,6 +76,7 @@ internal sealed partial class PadWindow
     private TextBlock? _saveFailureReason;
     private Button? _saveFailureRetryButton, _saveFailureQuitButton;
     private Action? _saveFailureRetryAction;
+    private Action? _saveFailureQuitAction;
 
     internal static Border CreateSplitDivider() => new()
     {
@@ -265,6 +267,7 @@ internal sealed partial class PadWindow
     private void OnPaneEdited(PadView pane)
     {
         _undoArmed = false;
+        if (_withdrawToastUndoOnEdit is { } slotUndoNote && ReferenceEquals(pane.Note, slotUndoNote)) HideToast();
         if (pane.Note is { } note) ScheduleNoteSave(note, IsBlankDocument(pane.Editor.Document));
         UpdateChrome();
         SleepChrome(soon: false);
@@ -690,13 +693,14 @@ internal sealed partial class PadWindow
 
     // ---------- toast ----------
 
-    internal void Toast(string text, string? action = null, Action? onAction = null, bool brief = false)
+    internal void Toast(string text, string? action = null, Action? onAction = null, bool brief = false, Note? withdrawUndoOnEdit = null)
     {
         var p = _palette;
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
         row.Children.Add(new TextBlock { Text = text, Foreground = new SolidColorBrush(p.Canvas), FontSize = Typography.Caption, TextWrapping = TextWrapping.Wrap, MaxWidth = 300, VerticalAlignment = VerticalAlignment.Center });
         _toastAction = onAction;
         _undoArmed = onAction is not null;
+        _withdrawToastUndoOnEdit = onAction is null ? null : withdrawUndoOnEdit;
         if (action is not null && onAction is not null)
         {
             var label = Kit.Text(action, p.Accent, Typography.Body, Typography.Strong);
@@ -722,7 +726,7 @@ internal sealed partial class PadWindow
 
     private void HideToast()
     {
-        _toastAction = null; _undoArmed = false;
+        _toastAction = null; _undoArmed = false; _withdrawToastUndoOnEdit = null;
         _toastAnim?.Cancel();
         var startOpacity = _toast.Opacity;
         _toastAnim = Anim.Run(_toast, MotionTokens.OverlayOut, t => _toast.Opacity = startOpacity * (1 - t),
@@ -736,6 +740,7 @@ internal sealed partial class PadWindow
         {
             _saveFailureReason!.Text = message;
             _saveFailureRetryAction = retry;
+            _saveFailureQuitAction = quitAnyway;
             return;
         }
 
@@ -788,6 +793,7 @@ internal sealed partial class PadWindow
         _saveFailureRetryButton = retryButton;
         _saveFailureQuitButton = quitButton;
         _saveFailureRetryAction = retry;
+        _saveFailureQuitAction = quitAnyway;
         ShowOverlay(overlay);
         Dispatcher.UIThread.Post(() => { if (IsOverlay(overlay)) retryButton.Focus(); });
     }
@@ -799,7 +805,8 @@ internal sealed partial class PadWindow
         if (e.Key == Key.Enter)
         {
             e.Handled = true;
-            _saveFailureRetryAction?.Invoke();
+            InvokeSaveFailureEnter(_saveFailureQuitButton?.IsFocused == true || ReferenceEquals(e.Source, _saveFailureQuitButton),
+                _saveFailureRetryAction, _saveFailureQuitAction);
             return;
         }
         if (e.Key == Key.Tab)
@@ -812,6 +819,9 @@ internal sealed partial class PadWindow
         if (e.Key is Key.Space or Key.LeftShift or Key.RightShift or Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt) return;
         e.Handled = true;
     }
+
+    private static void InvokeSaveFailureEnter(bool quitFocused, Action? retry, Action? quitAnyway) =>
+        (quitFocused ? quitAnyway : retry)?.Invoke();
 
     private void OnSaveFailurePointerPressed(object? sender, PointerPressedEventArgs e)
     {

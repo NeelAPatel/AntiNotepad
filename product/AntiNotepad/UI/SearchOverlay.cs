@@ -176,7 +176,7 @@ internal sealed class SearchOverlay : Grid
 
     private void UpdateStatus()
     {
-        var hint = ShowingTrash ? "Enter restores · Delete removes forever" : "Enter opens · Ctrl+Delete moves to trash · Ctrl+click selects several";
+        var hint = ShowingTrash ? "Enter restores · Ctrl+Delete removes forever" : "Enter opens · Ctrl+Delete moves to trash · Ctrl+click selects several";
         _status.Text = $"{_items.Count} {(ShowingTrash ? "in trash" : _items.Count == 1 ? "note" : "notes")}{(_selected.Count > 0 ? $" · {_selected.Count} selected" : "")} · {hint}";
     }
 
@@ -334,7 +334,10 @@ internal sealed class SearchOverlay : Grid
             case Key.Left when e.KeyModifiers == KeyModifiers.None && GridView && _query.CaretIndex == 0: Move(-1); break;
             case Key.Enter when e.KeyModifiers == KeyModifiers.None: Open(); break;
             case Key.Space when e.KeyModifiers == KeyModifiers.Control: if (_items.Count > 0 && !_selected.Add(_items[_cursor])) _selected.Remove(_items[_cursor]); UpdateCardStates(); UpdateStatus(); break;
-            case Key.Delete when e.KeyModifiers == KeyModifiers.Control || e.KeyModifiers == KeyModifiers.None && ShowingTrash: DeleteSelected(); break;
+            case Key.Delete when e.KeyModifiers == KeyModifiers.Control
+                && _query.SelectionStart == _query.SelectionEnd
+                && _query.CaretIndex == (_query.Text?.Length ?? 0):
+                DeleteSelected(); break;
             case Key.Back when e.KeyModifiers == KeyModifiers.Control && (_query.Text?.Length ?? 0) == 0: DeleteSelected(); break;
             default: return;
         }
@@ -375,11 +378,23 @@ internal sealed class SearchOverlay : Grid
         var d = _window.Data;
         if (ShowingTrash)
         {
-            foreach (var n in targets) d.Trash.Remove(n);
-            _window.Toast(targets.Count == 1 ? "Deleted forever" : $"{targets.Count} notes deleted forever");
+            var removed = targets.Where(n => d.Trash.Contains(n))
+                .Select(n => (Note: n, Index: d.Trash.IndexOf(n)))
+                .OrderBy(item => item.Index)
+                .ToList();
+            foreach (var (note, _) in removed) d.Trash.Remove(note);
+            if (removed.Count > 0)
+                _window.Toast(removed.Count == 1 ? "Deleted forever" : $"{removed.Count} notes deleted forever", "Undo", () =>
+                {
+                    foreach (var (note, index) in removed)
+                        d.Trash.Insert(Math.Clamp(index, 0, d.Trash.Count), note);
+                    _window.SearchChangedData();
+                    if (_window.IsOverlay(this)) StartSearch();
+                });
         }
         else
         {
+            var skippedSlots = targets.Count(n => n.Slot > 0);
             var removed = targets.Where(n => n.Slot == 0).Select(n => (Note: n, Index: d.Stack.IndexOf(n))).OrderBy(x => x.Index).ToList();
             foreach (var n in targets)
             {
@@ -391,7 +406,12 @@ internal sealed class SearchOverlay : Grid
             }
             if (d.Stack.Count == 0) d.Stack.Add(new Note());
             d.Current = Math.Clamp(d.Current, 0, d.Stack.Count - 1);
-            _window.Toast(removed.Count == 1 ? "Moved to trash" : $"{removed.Count} notes moved to trash", "Undo", () =>
+            var notice = removed.Count == 0 ? "Slots are cleared in the editor"
+                : removed.Count == 1 ? "Moved to trash"
+                : $"{removed.Count} notes moved to trash";
+            if (removed.Count > 0 && skippedSlots > 0)
+                notice += $" · {skippedSlots} {(skippedSlots == 1 ? "slot" : "slots")} skipped";
+            _window.Toast(notice, removed.Count > 0 ? "Undo" : null, removed.Count > 0 ? () =>
             {
                 // Back where they were, oldest index first so later indexes stay valid.
                 foreach (var (n, index) in removed)
@@ -403,7 +423,8 @@ internal sealed class SearchOverlay : Grid
                 d.Current = Math.Clamp(d.Current, 0, d.Stack.Count - 1);
                 _window.SearchChangedData();
                 if (_window.IsOverlay(this)) StartSearch();
-            });
+            }
+            : null);
         }
         _selected.Clear();
         _window.SearchChangedData();
