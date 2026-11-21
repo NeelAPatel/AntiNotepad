@@ -1,7 +1,7 @@
-// Shared chrome measurements and the save timer's default interval.
+// Shared chrome measurements, interface sizes and the save timer's default interval.
 namespace AntiNotepad.Theme;
 
-/// <summary>Shared values for the pad's chrome and save timer.</summary>
+/// <summary>Shared measurements for interface chrome and its save timer.</summary>
 internal static class ChromeTokens
 {
     public const int SaveDelayDefaultMs = 400;
@@ -18,16 +18,16 @@ internal static class ChromeTokens
     public const double TopScrollableWhitespace = DockedRowHeight;
     public const double ButtonSize = 32;
     public const double IconGlyphSize = 16;
-    public const double GlyphIconBoxExtra = 2;
-    public const double BarEdgeInset = 4;
-    public const double FirstItemInset = 12;
+    public const double GlyphIconBoxExtra = Space.Nudge;
+    public const double BarEdgeInset = Space.Xs;
+    public const double FirstItemInset = Space.M;
     public const double BadgeHeight = 20;
-    public const double BadgeSpacing = 4;
-    public const double BadgeRightInset = 8;
-    public const double MetaSpacing = 8;
-    public const double IconSpacing = 4;
-    public const double BadgeCornerRadius = 4;
-    public const double BadgeHorizontalPadding = 8;
+    public const double BadgeSpacing = Space.Xs;
+    public const double BadgeRightInset = Space.S;
+    public const double MetaSpacing = Space.S;
+    public const double IconSpacing = Space.Xs;
+    public const double BadgeCornerRadius = Shape.Key;
+    public const double BadgeHorizontalPadding = Space.S;
     public const double BadgeTopPadding = 1;
     public const double BadgeBottomPadding = 2;
     public const double BadgeDarkFillAlpha = .15;
@@ -36,7 +36,7 @@ internal static class ChromeTokens
     public const double BadgeFontSize = 12;
     public const double SavedLabelFontSize = 12;
     public const double RunningTimerFontSize = 12;
-    public const double TextEdgeFadeBand = 12;
+    public const double TextEdgeFadeBand = Space.M;
     public const double TopRevealZone = DockedRowHeight / 2;
     public const double OverlayPagerRevealZone = 20;
     public const double FloatPagerRevealZone = FloatGap;
@@ -45,13 +45,13 @@ internal static class ChromeTokens
     public const double PagerArrowHoverRadius = 8;
     public const double PagerCountHoverRadius = 8;
     public const double PagerDotHoverRadius = 8;
-    public const double PagerRowSpacing = 4;
+    public const double PagerRowSpacing = Space.Xs;
     public const double PagerCountFontSize = 12;
     public const double PagerCountBaseWidth = 32;
     public const double PagerCountDigitWidth = 14;
-    public const double PagerSeparatorWidth = 1;
-    public const double PagerSeparatorHeight = 16;
-    public const double PagerSeparatorMargin = 4;
+    public const double PagerSeparatorWidth = Shape.Thin;
+    public const double PagerSeparatorHeight = Space.L;
+    public const double PagerSeparatorMargin = Space.Xs;
     public const double PagerSeparatorAlpha = 0.5;
     public const double PagerDotSelectedWidth = 16;
     public const double PagerDotWidth = 8;
@@ -63,27 +63,60 @@ internal static class ChromeTokens
     public const double PagerCountButtonHeight = ButtonSize;
     public const double BarCornerSize = PillHeight;
     public const int DeleteDebounceMs = 500;
-    public const double PagerDotBorderThickness = 1;
+    public const double PagerDotBorderThickness = Shape.Thin;
 
-    public const double PillInset = 4;
-    public const double PillBorderThickness = 1;
+    public const double PillInset = Space.Xs;
+    public const double PillBorderThickness = Shape.Thin;
     public const double PillBorderAlpha = .3;
     public const double PillCornerRadius = 12;
-    public const double PillBottomInset = 4;
-    public const double FloatGap = 8;
+    public const double PillBottomInset = Space.Xs;
+    public const double FloatGap = Space.S;
     public const double PillHeight = ButtonSize + 2 * PillInset + 2 * PillBorderThickness;
     public const double PagerStripHeight = PillHeight + 2 * PillBottomInset;
     public const double PillShadowBlur = 12;
     public const double PillShadowOffsetY = 2;
     public const byte PillShadowDarkAlpha = 90;
     public const byte PillShadowLightAlpha = 28;
-    public const double DividerPagerClearance = 8;
-    public const double DividerWidth = 1;
-    public const double DividerTopMargin = 8;
+    public const double DividerPagerClearance = Space.S;
+    public const double DividerWidth = Shape.Thin;
+    public const double DividerTopMargin = Space.S;
     public const double DividerAlpha = .5;
-    public const double ToastPagerClearance = 2;
+    public const double ToastPagerClearance = Space.Nudge;
     public const double DividerBottomMargin = PagerStripHeight + DividerPagerClearance;
     public const double ToastBottomMargin = PagerStripHeight + ToastPagerClearance;
+    public const double SearchOverlayBottomMargin = PagerStripHeight - PillInset;
+    public const double HelpOverlayBottomMargin = DockedRowHeight;
+
+    /// <summary>Stable window, popup, panel and row sizes named from the current layout.</summary>
+    internal static class Size
+    {
+        public const double SettingsWindowWidth = 900, SettingsWindowHeight = 720;
+        public const double SettingsWindowMinWidth = 640, SettingsWindowMinHeight = 460;
+        public const double SettingsPageMaxWidth = 780;
+        public const double ShortcutDialogWidth = 420;
+        public const double SettingsSearchFieldHeight = 32;
+        public const double CompletionWindowMinWidth = 300, CompletionWindowWidth = 340;
+        public const double MenuPopupMinWidth = 224;
+        public const double MenuActionRowHeight = 52, MenuRowHeight = 32, MenuIconColumnWidth = 28;
+        public const double PadWindowMinWidth = 320, PadWindowMinHeight = 260;
+        public const double ToastMaxWidth = 380, ToastTextMaxWidth = 300, SaveFailureReasonMaxWidth = 380;
+        public const double SaveFailureCardMaxWidth = 420, SaveFailureCardMinWidth = 240;
+        public const double SearchResultCardHeight = 152;
+        public const double SettingsPrimaryRowMinHeight = 64, SettingsSecondaryRowMinHeight = 56;
+        public const double SettingsSubrowIndent = 48;
+        public const double SettingsTextBoxMinHeight = 40, SettingsTextBoxMaxHeight = 68;
+        public const double SettingsDropdownHeight = 48;
+        public const double SettingsIconBoxSize = 20;
+        public const double CaretSampleHeight = 16, CaretPictureHeight = 32, MaterialPictureHeight = 48;
+        public const double CaretBlockWidth = 8;
+        public const double ToggleTrackWidth = 40, ToggleTrackHeight = 20;
+        public const double AccentDotSize = 20, PaletteDotSize = 8;
+        public const double PatternPictureHeight = 40, ScreenPictureHeight = 64;
+        public const double MotionPreviewPadHeight = 220;
+
+        // This transparent helper window exists only for taskbar presence and is never drawn.
+        public const double HiddenTaskbarHelperSize = 1;
+    }
 
     internal static class TopBackdrop
     {

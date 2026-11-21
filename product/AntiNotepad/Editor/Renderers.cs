@@ -251,7 +251,7 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
         if (!view.VisualLinesValid || view.Document is null) return;
         var font = pad.Settings.Font;
         var typeface = GetTypeface(font);
-        var size = pad.Settings.FontSize * 0.93;
+            var size = pad.Settings.FontSize * Typography.EditorChipScale;
         var culture = CultureInfo.CurrentCulture;
         var scale = TopLevel.GetTopLevel(view)?.RenderScaling ?? 1;
         // Pass 1: every visible chip with its line geometry.
@@ -396,13 +396,13 @@ internal sealed class CheckboxRenderer(PadView pad) : IBackgroundRenderer
     {
         if (!view.VisualLinesValid || view.Document is null || !pad.Decorate) return;
         var p = pad.Palette;
-        var size = Math.Round(pad.Settings.FontSize * 0.86);
+        var size = Math.Round(pad.Settings.FontSize * Shape.CheckboxSizeScale);
         var key = new PaintKey(p.Accent, p.Canvas, p.Done, TopLevel.GetTopLevel(view)?.RenderScaling ?? 1);
         if (!_paints.TryGet(key, out var paint))
         {
             paint = new Paint(
-                RenderPaint.Pen(RenderPaint.Brush(p.Accent, AntiNotepad.Theme.Paint.AccentPen), 1.6),
-                RenderPaint.Pen(RenderPaint.Brush(p.Canvas), 1.9, PenLineCap.Round, PenLineJoin.Round),
+                RenderPaint.Pen(RenderPaint.Brush(p.Accent, AntiNotepad.Theme.Paint.AccentPen), Shape.CheckboxAccentPen),
+                RenderPaint.Pen(RenderPaint.Brush(p.Canvas), Shape.CheckboxCheckPen, PenLineCap.Round, PenLineJoin.Round),
                 RenderPaint.Brush(p.Done));
             _paints.Add(key, paint);
         }
@@ -418,10 +418,10 @@ internal sealed class CheckboxRenderer(PadView pad) : IBackgroundRenderer
             var cx = (left.X + right.X) / 2 - view.HorizontalOffset;
             var cy = left.Y - view.VerticalOffset;
             var rect = new Rect(cx - size / 2, cy - size / 2 + 0.5, size, size);
-            if (m.Groups[2].Value == " ") dc.DrawRectangle(null, paint.Stroke, rect.Deflate(0.8), size * .28, size * .28);
+            if (m.Groups[2].Value == " ") dc.DrawRectangle(null, paint.Stroke, rect.Deflate(0.8), size * Shape.CheckboxRadiusScale, size * Shape.CheckboxRadiusScale);
             else
             {
-                dc.DrawRectangle(paint.Fill, null, rect, size * .28, size * .28);
+                dc.DrawRectangle(paint.Fill, null, rect, size * Shape.CheckboxRadiusScale, size * Shape.CheckboxRadiusScale);
                 using (dc.PushTransform(Matrix.CreateTranslation(rect.X, rect.Y)))
                     dc.DrawGeometry(null, paint.Check, CheckMark(size, key.Scale));
             }

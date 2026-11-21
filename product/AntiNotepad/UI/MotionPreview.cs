@@ -105,11 +105,11 @@ internal sealed class MotionPreview : StackPanel
     {
         _p = palette; _s = settings;
         Spacing = 6;
-        Margin = new Thickness(0, 0, 0, 4);
+        Margin = new Thickness(0, 0, 0, Space.Xs);
         // Same size and place on both pages, so switching tabs never moves it.
         _timers = new Timers();
-        _pad = new PadView(palette, settings, _timers, notesLocation) { Height = 220, ClipToBounds = true, Private = true };
-        _frame = new Border { Child = _pad, CornerRadius = new CornerRadius(Shape.Card), ClipToBounds = true, BorderThickness = new Thickness(1) };
+        _pad = new PadView(palette, settings, _timers, notesLocation) { Height = ChromeTokens.Size.MotionPreviewPadHeight, ClipToBounds = true, Private = true };
+        _frame = new Border { Child = _pad, CornerRadius = new CornerRadius(Shape.Card), ClipToBounds = true, BorderThickness = new Thickness(Shape.Thin) };
         Children.Add(_frame);
 
         _swipe = new NoteSwipe(_pad, () => _pad,
@@ -132,7 +132,7 @@ internal sealed class MotionPreview : StackPanel
             _swipe.Input(units);
         }, RoutingStrategies.Tunnel, handledEventsToo: true);
 
-        _trace = new Trace(palette) { Height = 46 };
+        _trace = new Trace(palette) { Height = Space.MotionSampleHeight };
         Children.Add(_trace);
         Children.Add(_legend);
         ApplyLook(palette, settings);
@@ -213,7 +213,7 @@ internal sealed class MotionPreview : StackPanel
         _legend.Children.Add(Key(palette.Number, "note"));
         _legend.Children.Add(Kit.Text("last 2 seconds", palette.Muted, Typography.Caption));
         var hint = Kit.Text(_feel ? "Scroll or pull past either edge; swipe sideways between notes" : "Type, scroll or switch notes here", palette.Muted, Typography.Caption);
-        hint.Margin = new Thickness(12, 0, 0, 0);
+        hint.Margin = new Thickness(Space.M, 0, 0, 0);
         _legend.Children.Add(hint);
         _trace.InvalidateVisual();
     }
@@ -223,7 +223,7 @@ internal sealed class MotionPreview : StackPanel
         Orientation = Orientation.Horizontal, Spacing = 5,
         Children =
         {
-            new Border { Width = 14, Height = 3, CornerRadius = new CornerRadius(Shape.Round(3)), Background = new SolidColorBrush(color), VerticalAlignment = VerticalAlignment.Center },
+            new Border { Width = Space.MotionSampleBarWidth, Height = Space.MotionSampleBarHeight, CornerRadius = new CornerRadius(Shape.Round(Space.MotionSampleBarHeight)), Background = new SolidColorBrush(color), VerticalAlignment = VerticalAlignment.Center },
             Kit.Text(label, color, Typography.Caption),
         }
     };

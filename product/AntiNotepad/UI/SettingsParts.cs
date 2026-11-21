@@ -29,7 +29,7 @@ internal sealed partial class SettingsWindow
         FontSize = Typography.Display,
         FontWeight = Typography.Strong,
         Foreground = new SolidColorBrush(_p.Heading),
-        Margin = new Thickness(2, 0, 0, 12)
+        Margin = new Thickness(Space.Nudge, 0, 0, Space.M)
     };
 
     private Control Group(string text) => new TextBlock
@@ -38,7 +38,7 @@ internal sealed partial class SettingsWindow
         FontSize = Typography.Body,
         FontWeight = Typography.Strong,
         Foreground = new SolidColorBrush(_p.Ink),
-        Margin = new Thickness(2, 24, 0, 8)
+        Margin = new Thickness(Space.Nudge, Space.Xl, 0, Space.S)
     };
 
     /// <summary>A rounded card; rows inside are divided by hairlines.</summary>
@@ -50,7 +50,7 @@ internal sealed partial class SettingsWindow
         {
             if (row is null) continue;
             row.BorderBrush = Line;
-            row.BorderThickness = first ? default : new Thickness(0, 1, 0, 0);
+            row.BorderThickness = first ? default : new Thickness(0, Shape.Thin, 0, 0);
             first = false;
             stack.Children.Add(row);
         }
@@ -58,7 +58,7 @@ internal sealed partial class SettingsWindow
         {
             Background = new SolidColorBrush(_p.Surface, Paint.CardSurface(_p.Dark)),
             BorderBrush = Line,
-            BorderThickness = new Thickness(1),
+            BorderThickness = new Thickness(Shape.Thin),
             CornerRadius = new CornerRadius(Shape.Card),
             ClipToBounds = true,
             Child = stack,
@@ -92,23 +92,23 @@ internal sealed partial class SettingsWindow
         if (describe is not null) shownDescription = ResolveDescription();
 
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto") };
-        grid.Children.Add(new Border { Width = 20, Height = 20, Margin = new Thickness(0, 0, 16, 0), Child = icon?.Invoke(), VerticalAlignment = VerticalAlignment.Center });
+        grid.Children.Add(new Border { Width = ChromeTokens.Size.SettingsIconBoxSize, Height = ChromeTokens.Size.SettingsIconBoxSize, Margin = new Thickness(0, 0, Space.L, 0), Child = icon?.Invoke(), VerticalAlignment = VerticalAlignment.Center });
         var text = Texts(title, shownDescription);
         Grid.SetColumn(text, 1); grid.Children.Add(text);
         _controlTitle = title;
         var right = control?.Invoke();
         if (right is not null)
         {
-            right.Margin = new Thickness(16, 0, 0, 0);
+            right.Margin = new Thickness(Space.L, 0, 0, 0);
             right.VerticalAlignment = VerticalAlignment.Center;
             Grid.SetColumn(right, 2); grid.Children.Add(right);
         }
-        return new Border { MinHeight = 64, Padding = new Thickness(16, 12), Child = grid, Tag = title + " " + shownDescription };
+        return new Border { MinHeight = ChromeTokens.Size.SettingsPrimaryRowMinHeight, Padding = new Thickness(Space.L, Space.M), Child = grid, Tag = title + " " + shownDescription };
     }
 
     private StackPanel Texts(string title, string? description)
     {
-        var text = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
+        var text = new StackPanel { Spacing = Space.Nudge, VerticalAlignment = VerticalAlignment.Center };
         text.Children.Add(new TextBlock { Text = title, FontSize = Typography.Large, FontWeight = Typography.Strong, Foreground = new SolidColorBrush(_p.Ink), TextWrapping = TextWrapping.Wrap });
         if (!string.IsNullOrEmpty(description))
             text.Children.Add(new TextBlock { Text = description, FontSize = Typography.Small, Foreground = new SolidColorBrush(_p.Muted), TextWrapping = TextWrapping.Wrap });
@@ -127,14 +127,14 @@ internal sealed partial class SettingsWindow
         else
         {
             grid.Children.Add(Texts(title ?? "", null));
-            content.Margin = new Thickness(16, 0, 0, 0);
+            content.Margin = new Thickness(Space.L, 0, 0, 0);
             content.VerticalAlignment = VerticalAlignment.Center;
             Grid.SetColumn(content, 1); grid.Children.Add(content);
         }
         return new Border
         {
-            MinHeight = 56,
-            Padding = new Thickness(48, 12, 16, 12),
+            MinHeight = ChromeTokens.Size.SettingsSecondaryRowMinHeight,
+            Padding = new Thickness(ChromeTokens.Size.SettingsSubrowIndent, Space.M, Space.L, Space.M),
             Background = new SolidColorBrush(_p.Ink, Paint.RowWash(_p.Dark)),
             Child = grid, Tag = tag,
         };
@@ -154,7 +154,7 @@ internal sealed partial class SettingsWindow
         var row = Row(icon, title, description, () =>
         {
             chevron = new GlyphIcon(Icons.SettingsChevron, _p.Muted, Typography.IconMedium) { RenderTransform = new RotateTransform(open ? 180 : 0), VerticalAlignment = VerticalAlignment.Center };
-            var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
+            var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M };
             right.Children.Add(Kit.Text(value, _p.Muted, Typography.Body));
             right.Children.Add(chevron);
             return right;
@@ -166,8 +166,8 @@ internal sealed partial class SettingsWindow
         row.Child = null;
         var button = Kit.Plain(face, _p, radius: 0);
         button.HorizontalAlignment = HorizontalAlignment.Stretch;
-        button.Margin = new Thickness(-16, -12);
-        if (button.Content is Border inner) inner.Padding = new Thickness(16, 12);
+        button.Margin = new Thickness(-Space.L, -Space.M);
+        if (button.Content is Border inner) inner.Padding = new Thickness(Space.L, Space.M);
         button.Click += (_, _) =>
         {
             open = !open;
@@ -252,9 +252,9 @@ internal sealed partial class SettingsWindow
         foreach (var (value, label) in options)
         {
             var text = Kit.Text(label, _p.Muted, Typography.Body);
-            text.Margin = new Thickness(12, 4);
+            text.Margin = new Thickness(Space.M, Space.Xs);
             var button = Kit.Plain(text, _p, radius: Shape.Control);
-            button.Margin = new Thickness(0, 0, 2, 0);
+            button.Margin = new Thickness(0, 0, Space.Nudge, 0);
             var face = (Border)button.Content!;
             items.Add((value, face, text));
             var hover = new Border { Background = new SolidColorBrush(_p.Ink, AntiNotepad.Theme.Paint.Hover(_p.Dark)), CornerRadius = new CornerRadius(Shape.Control), Opacity = 0, IsHitTestVisible = false };
@@ -294,16 +294,16 @@ internal sealed partial class SettingsWindow
     {
         var word = Kit.Text(on ? "On" : "Off", _p.Muted, Typography.Body);
         var knob = new Border { Width = MotionTokens.ToggleRest, Height = MotionTokens.ToggleRest, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Center };
-        var outline = new Border { CornerRadius = new CornerRadius(Shape.Round(20)), BorderBrush = new SolidColorBrush(_p.Faint), BorderThickness = new Thickness(1), Opacity = on ? 0 : 1 };
-        var fill = new Border { CornerRadius = new CornerRadius(Shape.Round(20)), Background = new SolidColorBrush(_p.Accent), Opacity = on ? 1 : 0 };
-        var track = new Grid { Width = 40, Height = 20, VerticalAlignment = VerticalAlignment.Center, Children = { outline, fill, knob } };
+        var outline = new Border { CornerRadius = new CornerRadius(Shape.Round(ChromeTokens.Size.ToggleTrackHeight)), BorderBrush = new SolidColorBrush(_p.Faint), BorderThickness = new Thickness(Shape.Thin), Opacity = on ? 0 : 1 };
+        var fill = new Border { CornerRadius = new CornerRadius(Shape.Round(ChromeTokens.Size.ToggleTrackHeight)), Background = new SolidColorBrush(_p.Accent), Opacity = on ? 1 : 0 };
+        var track = new Grid { Width = ChromeTokens.Size.ToggleTrackWidth, Height = ChromeTokens.Size.ToggleTrackHeight, VerticalAlignment = VerticalAlignment.Center, Children = { outline, fill, knob } };
         var position = on ? 1.0 : 0.0;
         var hovering = false;
         var pressed = false;
         Anim.Handle? slide = null, resize = null, fade = null;
         void Place()
         {
-            knob.Margin = new Thickness(3 + (36 - knob.Width - 3) * position, 0, 0, 0);
+            knob.Margin = new Thickness(Space.ToggleKnobInset + (ChromeTokens.Size.ToggleTrackWidth - Space.Xs - knob.Width - Space.ToggleKnobInset) * position, 0, 0, 0);
             knob.CornerRadius = new CornerRadius(Shape.Round(knob.Height));
         }
         void Resize()
@@ -322,7 +322,7 @@ internal sealed partial class SettingsWindow
         }
         knob.Background = new SolidColorBrush(on ? _p.Surface : _p.Muted);
         Place();
-        var face = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(8, 4) };
+        var face = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M, Margin = new Thickness(Space.S, Space.Xs) };
         face.Children.Add(word);
         face.Children.Add(track);
         var button = Kit.Plain(face, _p, radius: Shape.Popup);
@@ -361,11 +361,11 @@ internal sealed partial class SettingsWindow
     {
         var title = _controlTitle;
         var label = Kit.Text(options.FirstOrDefault(o => o.Value == current).Label ?? current, _p.Ink, Typography.Body);
-        var face = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(12, 12) };
+        var face = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(Space.M, Space.M) };
         face.Children.Add(label);
-        var chevron = new GlyphIcon(Icons.SettingsChevron, _p.Muted, Typography.IconSmall) { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0) };
+        var chevron = new GlyphIcon(Icons.SettingsChevron, _p.Muted, Typography.IconSmall) { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(Space.M, 0, 0, 0) };
         Grid.SetColumn(chevron, 1); face.Children.Add(chevron);
-        var box = new Border { Height = 48, MinWidth = minWidth, CornerRadius = new CornerRadius(Shape.Control), BorderBrush = Line, BorderThickness = new Thickness(1), Background = new SolidColorBrush(_p.Surface), Child = face };
+        var box = new Border { Height = ChromeTokens.Size.SettingsDropdownHeight, MinWidth = minWidth, CornerRadius = new CornerRadius(Shape.Control), BorderBrush = Line, BorderThickness = new Thickness(Shape.Thin), Background = new SolidColorBrush(_p.Surface), Child = face };
         var button = Kit.Plain(box, _p, radius: Shape.Control);
         var list = new StackPanel { Spacing = 1 };
         var popup = new Popup
@@ -375,9 +375,9 @@ internal sealed partial class SettingsWindow
             {
                 Background = new SolidColorBrush(_p.Surface),
                 BorderBrush = new SolidColorBrush(_p.Faint, Paint.PopupBorder),
-                BorderThickness = new Thickness(1),
+                BorderThickness = new Thickness(Shape.Thin),
                 CornerRadius = new CornerRadius(Shape.Popup),
-                Padding = new Thickness(4),
+                Padding = new Thickness(Space.Xs),
                 MinWidth = minWidth,
                 Child = list,
                 BoxShadow = new BoxShadows(new BoxShadow { Blur = Shape.DropdownShadowBlur, OffsetY = Shape.PopupShadowOffsetY, Color = Color.FromArgb(_p.Dark ? Shape.PopupShadowDarkAlpha : Shape.PopupShadowLightAlpha, 0, 0, 0) }),
@@ -386,7 +386,7 @@ internal sealed partial class SettingsWindow
         foreach (var (value, text) in options)
         {
             var item = Kit.Text(text, value == current ? _p.Ink : _p.Muted, Typography.Body, value == current ? Typography.Strong : Typography.Regular);
-            item.Margin = new Thickness(12, 8);
+            item.Margin = new Thickness(Space.M, Space.S);
             var row = Kit.Plain(item, _p, radius: 4);
             row.HorizontalAlignment = HorizontalAlignment.Stretch;
             if (value == current && row.Content is Border b) b.Background = new SolidColorBrush(_p.Accent, Paint.Selected(_p.Dark));
@@ -406,10 +406,10 @@ internal sealed partial class SettingsWindow
         var a = _p.Accent;
         var onAccent = 0.2126 * a.R + 0.7152 * a.G + 0.0722 * a.B > 150 ? Color.FromRgb(0x1A, 0x1A, 0x1A) : Colors.White;
         var label = Kit.Text(text, primary ? onAccent : _p.Ink, Typography.Body, primary ? Typography.Strong : Typography.Regular);
-        label.Margin = new Thickness(12, 4);
+        label.Margin = new Thickness(Space.M, Space.Xs);
         var face = primary
             ? new Border { Background = new SolidColorBrush(a), CornerRadius = new CornerRadius(Shape.Control), Child = label }
-            : new Border { BorderBrush = Line, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(Shape.Control), Child = label };
+            : new Border { BorderBrush = Line, BorderThickness = new Thickness(Shape.Thin), CornerRadius = new CornerRadius(Shape.Control), Child = label };
         var button = Kit.Plain(face, _p, radius: Shape.Control);
         if (primary)
         {
@@ -428,10 +428,10 @@ internal sealed partial class SettingsWindow
         IsReadOnly = true,
         AcceptsReturn = true,
         TextWrapping = TextWrapping.Wrap,
-        MinHeight = 40,
-        MaxHeight = 68,
+        MinHeight = ChromeTokens.Size.SettingsTextBoxMinHeight,
+        MaxHeight = ChromeTokens.Size.SettingsTextBoxMaxHeight,
         FontSize = Typography.Body,
-        Padding = new Thickness(12, 8),
+        Padding = new Thickness(Space.M, Space.S),
         Foreground = new SolidColorBrush(_p.Ink),
         CaretBrush = new SolidColorBrush(_p.Caret),
         CornerRadius = new CornerRadius(Shape.Control),
@@ -442,7 +442,7 @@ internal sealed partial class SettingsWindow
     /// <summary>A picture with its label under it; the chosen one wears an accent ring.</summary>
     private Control Tile(Control picture, string label, bool selected, System.Action click, double width)
     {
-        var ring = selected ? 2 : 1;
+        var ring = selected ? Shape.Thick : Shape.Thin;
         var frame = new Border
         {
             Width = width,
@@ -459,7 +459,7 @@ internal sealed partial class SettingsWindow
         text.TextAlignment = TextAlignment.Center;
         stack.Children.Add(text);
         var button = Kit.Plain(stack, _p, radius: Shape.Popup);
-        if (button.Content is Border b) b.Padding = new Thickness(4);
+        if (button.Content is Border b) b.Padding = new Thickness(Space.Xs);
         button.Click += (_, _) => click();
         Avalonia.Automation.AutomationProperties.SetName(button, label);
         return button;
@@ -470,10 +470,10 @@ internal sealed partial class SettingsWindow
         var grid = new UniformGrid { Columns = 4 };
         foreach (var palette in Palette.For(dark))
         {
-            var dots = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, HorizontalAlignment = HorizontalAlignment.Center };
+            var dots = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.Xs, HorizontalAlignment = HorizontalAlignment.Center };
             foreach (var c in new[] { palette.Keyword, palette.Identifier, palette.Result })
-                dots.Children.Add(new Border { Width = 8, Height = 8, CornerRadius = new CornerRadius(Shape.Round(8)), Background = new SolidColorBrush(c) });
-            var face = new StackPanel { Spacing = 8, Margin = new Thickness(8, 8) };
+                dots.Children.Add(new Border { Width = ChromeTokens.Size.PaletteDotSize, Height = ChromeTokens.Size.PaletteDotSize, CornerRadius = new CornerRadius(Shape.Round(ChromeTokens.Size.PaletteDotSize)), Background = new SolidColorBrush(c) });
+            var face = new StackPanel { Spacing = Space.S, Margin = new Thickness(Space.S, Space.S) };
             face.Children.Add(new TextBlock { Text = palette.Name, FontSize = Typography.Small, Foreground = new SolidColorBrush(palette.Ink), HorizontalAlignment = HorizontalAlignment.Center });
             face.Children.Add(dots);
             var selected = palette.Id == current;
@@ -481,11 +481,11 @@ internal sealed partial class SettingsWindow
             {
                 Background = new SolidColorBrush(palette.Canvas),
                 CornerRadius = new CornerRadius(Shape.Round(18)),
-                Margin = new Thickness(0, 0, 8, 0),
+                Margin = new Thickness(0, 0, Space.S, 0),
                 Child = face,
                 BackgroundSizing = BackgroundSizing.InnerBorderEdge,
                 BorderBrush = selected ? new SolidColorBrush(_p.Accent) : new SolidColorBrush(_p.Faint, Paint.CardBorderOff),
-                BorderThickness = new Thickness(selected ? 2 : 1),
+                BorderThickness = new Thickness(selected ? Shape.Thick : Shape.Thin),
                 Cursor = new Cursor(StandardCursorType.Hand),
             };
             var id = palette.Id;
@@ -498,19 +498,19 @@ internal sealed partial class SettingsWindow
 
     private Control AccentDots()
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.S };
         void Add(string? hex, Color color, string name)
         {
             var selected = S.Accent == hex;
             var dot = new Border
             {
-                Width = 20,
-                Height = 20,
-                CornerRadius = new CornerRadius(Shape.Round(20)),
+                Width = ChromeTokens.Size.AccentDotSize,
+                Height = ChromeTokens.Size.AccentDotSize,
+                CornerRadius = new CornerRadius(Shape.Round(ChromeTokens.Size.AccentDotSize)),
                 Background = new SolidColorBrush(color),
                 Cursor = new Cursor(StandardCursorType.Hand),
                 BorderBrush = new SolidColorBrush(selected ? _p.Ink : _p.Faint, selected ? Paint.CardBorderOn : Paint.CardBorderOff),
-                BorderThickness = new Thickness(selected ? 2 : 1),
+                BorderThickness = new Thickness(selected ? Shape.Thick : Shape.Thin),
             };
             ToolTip.SetTip(dot, name);
             Avalonia.Automation.AutomationProperties.SetName(dot, "Accent " + name);
@@ -530,14 +530,14 @@ internal sealed partial class SettingsWindow
         row.Children.Add(new TextBlock { Text = "a", FontFamily = new FontFamily(Typography.MonoFamily), FontSize = Typography.Large, Foreground = new SolidColorBrush(_p.Ink), VerticalAlignment = VerticalAlignment.Center });
         row.Children.Add(new Border
         {
-            Width = block ? 8 : 2,
-            Height = 16,
-            Margin = new Thickness(1, 0, 0, 0),
+            Width = block ? ChromeTokens.Size.CaretBlockWidth : Space.CaretBarWidth,
+            Height = ChromeTokens.Size.CaretSampleHeight,
+            Margin = new Thickness(Space.CaretSampleMargin, 0, 0, 0),
             CornerRadius = new CornerRadius(Shape.Hairline),
             Background = new SolidColorBrush(_p.Caret, block ? Paint.CaretBlock : 1),
             VerticalAlignment = VerticalAlignment.Center,
         });
-        return new Border { Height = 32, Background = new SolidColorBrush(_p.Canvas), Child = row };
+        return new Border { Height = ChromeTokens.Size.CaretPictureHeight, Background = new SolidColorBrush(_p.Canvas), Child = row };
     }
 
     private Control MaterialPicture(string material)
@@ -558,7 +558,7 @@ internal sealed partial class SettingsWindow
             },
             _ => new SolidColorBrush(_p.Canvas),
         };
-        return new Border { Height = 48, Background = new SolidColorBrush(_p.Canvas), Child = new Border { Background = fill } };
+        return new Border { Height = ChromeTokens.Size.MaterialPictureHeight, Background = new SolidColorBrush(_p.Canvas), Child = new Border { Background = fill } };
     }
 
     // ---------- icons ----------
@@ -628,7 +628,7 @@ internal sealed partial class SettingsWindow
         {
             var w = Bounds.Width; var h = Bounds.Height;
             dc.DrawRectangle(new SolidColorBrush(p.Canvas), null, new Rect(0, 0, w, h));
-            var pen = new Pen(new SolidColorBrush(p.Paper, kind == "biggrid" ? 1 : Paint.GridPen), 1);
+            var pen = new Pen(new SolidColorBrush(p.Paper, kind == "biggrid" ? 1 : Paint.GridPen), Shape.Thin);
             switch (kind)
             {
                 case "lined": for (var y = 8.5; y < h; y += 8) dc.DrawLine(pen, new Point(0, y), new Point(w, y)); break;
@@ -673,7 +673,7 @@ internal sealed partial class SettingsWindow
                 foreach (var (x, y) in new[] { (0, 10.0), (3, 7), (5.5, 11.5), (7, 10.7), (4.6, 6.4), (8.5, 6.4) }) c.LineTo(new Point(o.X + x, o.Y + y));
                 c.EndFigure(true);
             }
-            dc.DrawGeometry(new SolidColorBrush(p.Ink), new Pen(new SolidColorBrush(p.Surface), 1), arrow);
+            dc.DrawGeometry(new SolidColorBrush(p.Ink), new Pen(new SolidColorBrush(p.Surface), Shape.Thin), arrow);
         }
     }
 

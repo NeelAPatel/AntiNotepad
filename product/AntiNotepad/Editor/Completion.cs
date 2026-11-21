@@ -96,7 +96,7 @@ internal static class Completion
         {
             StartOffset = start, CloseWhenCaretAtBeginning = true, CloseAutomatically = true,
 
-            MinWidth = 300, Width = 340,
+            MinWidth = ChromeTokens.Size.CompletionWindowMinWidth, Width = ChromeTokens.Size.CompletionWindowWidth,
         };
         window.CompletionList.Foreground = new SolidColorBrush(p.Ink);
         window.CompletionList.Background = new SolidColorBrush(p.Surface);
@@ -116,7 +116,7 @@ internal static class Completion
             Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10,
             Children =
             {
-                new TextBlock { Text = word, FontWeight = Typography.Strong, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = 70 },
+                new TextBlock { Text = word, FontWeight = Typography.Strong, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = Space.CompletionModeColumnWidth },
                 new TextBlock { Text = name, Foreground = new SolidColorBrush(pad.Palette.Muted), FontSize = Typography.Small, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center },
             }
         };
@@ -143,7 +143,7 @@ internal static class Completion
             Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10,
             Children =
             {
-                new TextBlock { Text = text, FontWeight = Typography.Strong, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = 86 },
+                new TextBlock { Text = text, FontWeight = Typography.Strong, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = Space.CompletionCommandColumnWidth },
                 new TextBlock { Text = summary, Foreground = new SolidColorBrush(pad.Palette.Muted), FontSize = Typography.Small, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center },
             }
         };

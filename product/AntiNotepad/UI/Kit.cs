@@ -183,9 +183,9 @@ internal static class Kit
         {
             var on = isOn(value);
             var text = Text(label, on ? p.Ink : p.Faint, Typography.Body, on ? Typography.Strong : Typography.Regular);
-            text.Margin = new Thickness(8, 4);
+            text.Margin = new Thickness(Space.S, Space.Xs);
             var button = Plain(text, p, radius: 4);
-            button.Margin = new Thickness(0, 0, 4, 4);
+            button.Margin = new Thickness(0, 0, Space.Xs, Space.Xs);
             if (on && button.Content is Border b)
             {
                 b.Background = new SolidColorBrush(p.Accent, Paint.Selected(p.Dark));
@@ -202,7 +202,7 @@ internal static class Kit
     /// <summary>Panel title with a close button at the right (Esc does the same).</summary>
     public static Control PanelHeader(string title, Palette p, Action close)
     {
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(8, 0, 0, 0) };
+        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(Space.S, 0, 0, 0) };
         var text = Text(title, p.Ink, Typography.PanelTitle, Typography.Strong);
         grid.Children.Add(text);
         var x = IconButton(Icons.Close, "Close (Esc)", p, close);
@@ -213,7 +213,7 @@ internal static class Kit
     }
 
     public static Control Section(Palette p, string title) =>
-        new TextBlock { Text = title.ToUpperInvariant(), Foreground = new SolidColorBrush(p.Faint), FontSize = Typography.Micro, FontWeight = Typography.Strong, LetterSpacing = 0.8, Margin = new Thickness(8, 24, 0, 2) };
+        new TextBlock { Text = title.ToUpperInvariant(), Foreground = new SolidColorBrush(p.Faint), FontSize = Typography.Micro, FontWeight = Typography.Strong, LetterSpacing = Typography.CapsLetterSpacing, Margin = new Thickness(Space.S, Space.Xl, 0, Space.Nudge) };
 
     /// <summary>The window material as a transparency request, best first.</summary>
     public static WindowTransparencyLevel[] Material(string material) => material switch
@@ -232,7 +232,7 @@ internal static class Kit
             var style = new Avalonia.Styling.Style(x => (state.Length == 0 ? x.OfType<TextBox>() : x.OfType<TextBox>().Class(state)).Template().OfType<Border>().Name("PART_BorderElement"));
             style.Setters.Add(new Avalonia.Styling.Setter(Border.BackgroundProperty, new SolidColorBrush(p.Surface)));
             style.Setters.Add(new Avalonia.Styling.Setter(Border.BorderBrushProperty, new SolidColorBrush(state == ":focus" ? p.Accent : p.Faint, state == ":focus" ? Paint.FocusBorder : Paint.RestBorder)));
-            style.Setters.Add(new Avalonia.Styling.Setter(Border.BorderThicknessProperty, new Thickness(state == ":focus" ? 2 : 1)));
+            style.Setters.Add(new Avalonia.Styling.Setter(Border.BorderThicknessProperty, new Thickness(state == ":focus" ? Shape.Thick : Shape.Thin)));
             styles.Add(style);
         }
         var fg = new Avalonia.Styling.Style(x => x.OfType<TextBox>().Class(":focus"));

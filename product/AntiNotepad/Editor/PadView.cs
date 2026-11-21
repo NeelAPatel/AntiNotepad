@@ -97,7 +97,7 @@ internal sealed class PadView : Grid
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             Padding = new Thickness(0),
             Background = Brushes.Transparent,
-            Margin = new Thickness(36, 4, 30, ChromeTokens.PagerStripHeight),
+            Margin = new Thickness(Space.EditorTextInsetLeft, Space.Xs, Space.EditorTextInsetRight, ChromeTokens.PagerStripHeight),
         };
         Editor.Options.EnableHyperlinks = false;
         Editor.Options.EnableEmailHyperlinks = false;
@@ -128,7 +128,7 @@ internal sealed class PadView : Grid
         view.ElementGenerators.Add(new MarkerGenerator(this));
         _hint = new TextBlock
         {
-            IsHitTestVisible = false, Margin = new Thickness(37, 7, 30, 0), TextWrapping = TextWrapping.Wrap,
+            IsHitTestVisible = false, Margin = new Thickness(Space.EditorHintLeftInset, Space.EditorHintTopInset, Space.EditorTextInsetRight, 0), TextWrapping = TextWrapping.Wrap,
             VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Left,
         };
         _paper = new PaperLayer(this).Init();
@@ -1023,7 +1023,7 @@ internal sealed class PadView : Grid
     /// </summary>
     private void ApplyMargins()
     {
-        double left = 36, right = 30;
+        double left = Space.EditorTextInsetLeft, right = Space.EditorTextInsetRight;
         if (Settings.TextWidth > 0 && Bounds.Width > 0)
         {
             var glyph = new FormattedText("0", System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
@@ -1034,10 +1034,10 @@ internal sealed class PadView : Grid
         }
         // Docked keeps text above the reserved pager strip; sliding bars and private previews keep their current inset.
         var bottom = Private ? 6 : Settings.Bars is "overlay" or "float" ? 10 : ChromeTokens.PagerStripHeight;
-        Editor.Margin = new Thickness(_gutter is not null ? left - 16 : left, 4, right, bottom);
+        Editor.Margin = new Thickness(_gutter is not null ? left - Space.L : left, Space.Xs, right, bottom);
         if (Editor is ScrollableTopInsetTextEditor insetEditor) UpdateTopInset(insetEditor);
         UpdateEdgeFade();
-        _hint.Margin = new Thickness(left + 1, 7, right, 0);
+        _hint.Margin = new Thickness(left + Space.EditorHintOffset, Space.EditorHintTopInset, right, 0);
     }
 
     private void UpdateTopInset(ScrollableTopInsetTextEditor editor) =>

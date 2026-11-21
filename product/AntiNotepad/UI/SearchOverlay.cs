@@ -44,7 +44,7 @@ internal sealed class SearchOverlay : Grid
         _debounce.Tick += (_, _) => { _debounce.Stop(); StartSearch(); };
         DetachedFromVisualTree += (_, _) => { _disposed = true; _debounce.Stop(); _searchGeneration.Dispose(); };
         RowDefinitions = new RowDefinitions("Auto,*,Auto");
-        Margin = new Thickness(14, 14, 14, 46);
+        Margin = new Thickness(14, 14, 14, ChromeTokens.SearchOverlayBottomMargin);
 
         _query = new TextBox
         {
@@ -53,15 +53,15 @@ internal sealed class SearchOverlay : Grid
             FontSize = Typography.Input,
             Background = new SolidColorBrush(_p.Surface),
             Foreground = new SolidColorBrush(_p.Ink),
-            BorderThickness = new Thickness(1),
+            BorderThickness = new Thickness(Shape.Thin),
             BorderBrush = new SolidColorBrush(_p.Faint, Paint.FieldBorder),
             CornerRadius = new CornerRadius(Shape.Card),
-            Padding = new Thickness(12, 8),
+            Padding = new Thickness(Space.M, Space.S),
             CaretBrush = new SolidColorBrush(_p.Caret), SelectionBrush = new SolidColorBrush(_p.Selection),
         };
         Avalonia.Automation.AutomationProperties.SetName(_query, "Search notes");
         _status = Kit.Text("", _p.Faint, Typography.Caption);
-        _status.Margin = new Thickness(4, 8, 0, 0);
+        _status.Margin = new Thickness(Space.Xs, Space.S, 0, 0);
         _query.TextChanged += (_, _) =>
         {
             if (_disposed) return;
@@ -75,18 +75,18 @@ internal sealed class SearchOverlay : Grid
         };
         _query.AddHandler(KeyDownEvent, OnKey, RoutingStrategies.Tunnel);
 
-        var tools = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, Margin = new Thickness(6, 0, 0, 0) };
+        var tools = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.Nudge, Margin = new Thickness(6, 0, 0, 0) };
         tools.Children.Add(Kit.IconButton(GridView ? Icons.List : Icons.Grid,
             ShortcutTooltip(GridView ? "List view" : "Card grid", window.Shortcuts.GetLabel("grid")), _p, ToggleGrid, 32));
         tools.Children.Add(Kit.IconButton(trash ? Icons.Back : Icons.OpenTrash,
             ShortcutTooltip(trash ? "Back to notes" : $"Trash · {window.Data.Trash.Count}", window.Shortcuts.GetLabel("trash")), _p, ToggleTrash, 32));
         tools.Children.Add(Kit.IconButton(Icons.Close, "Close (Esc)", _p, window.CloseOverlay, 32));
-        var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(0, 0, 0, 8) };
+        var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(0, 0, 0, Space.S) };
         header.Children.Add(_query);
         Grid.SetColumn(tools, 1); header.Children.Add(tools);
         Children.Add(header);
 
-        _results = GridView ? new WrapPanel { Orientation = Orientation.Horizontal } : new StackPanel { Spacing = 2 };
+        _results = GridView ? new WrapPanel { Orientation = Orientation.Horizontal } : new StackPanel { Spacing = Space.Nudge };
         _scroll = new ScrollViewer { Content = _results, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled };
         Grid.SetRow(_scroll, 1); Children.Add(_scroll);
 
@@ -169,7 +169,7 @@ internal sealed class SearchOverlay : Grid
             _results.Children.Add(card);
         }
         if (_items.Count == 0)
-            _results.Children.Add(new TextBlock { Text = ShowingTrash ? "The trash is empty." : query.Length > 0 ? "No notes match." : "No notes yet.", Foreground = new SolidColorBrush(_p.Faint), Margin = new Thickness(6, 16) });
+            _results.Children.Add(new TextBlock { Text = ShowingTrash ? "The trash is empty." : query.Length > 0 ? "No notes match." : "No notes yet.", Foreground = new SolidColorBrush(_p.Faint), Margin = new Thickness(6, Space.L) });
         UpdateCardStates();
         UpdateStatus();
     }
@@ -194,7 +194,7 @@ internal sealed class SearchOverlay : Grid
             FontFamily = new FontFamily(Typography.MonoFamily),
         };
         Highlight(snippet, match.Snippet, terms);
-        var meta = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        var meta = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.S };
         if (note.Slot > 0) meta.Children.Add(Kit.Text($"slot {note.Slot}", _p.Accent, Typography.Micro, Typography.Strong));
         if (match.Mode != NoteMode.Plain) meta.Children.Add(Kit.Text(Modes.Label(match.Mode, match.ModeArgument), _p.Keyword, Typography.Micro, Typography.Strong));
         meta.Children.Add(Kit.Text(ShowingTrash && note.Deleted is { } del ? "deleted " + Kit.Ago(del) : Kit.Ago(note.Modified), _p.Faint, Typography.Micro));
@@ -202,14 +202,14 @@ internal sealed class SearchOverlay : Grid
         var border = new Border
         {
             Child = body,
-            Padding = new Thickness(12, 8),
+            Padding = new Thickness(Space.M, Space.S),
             CornerRadius = new CornerRadius(Shape.Card),
             Background = new SolidColorBrush(_p.Surface, Paint.ResultSurface),
             BorderBrush = new SolidColorBrush(_p.Faint, Paint.ResultBorder),
-            BorderThickness = new Thickness(1),
+            BorderThickness = new Thickness(Shape.Thin),
             Width = GridView ? CardWidth() : double.NaN,
-            Height = GridView ? 152 : double.NaN,
-            Margin = GridView ? new Thickness(0, 0, 8, 8) : new Thickness(0),
+            Height = GridView ? ChromeTokens.Size.SearchResultCardHeight : double.NaN,
+            Margin = GridView ? new Thickness(0, 0, Space.S, Space.S) : new Thickness(0),
             Cursor = new Cursor(StandardCursorType.Hand),
         };
         border.PointerPressed += (_, e) =>
@@ -254,7 +254,7 @@ internal sealed class SearchOverlay : Grid
             var picked = _selected.Contains(_items[i]);
             border.Background = new SolidColorBrush(picked ? _p.Selection : _p.Surface, picked || current ? 1 : Paint.ResultSurface);
             border.BorderBrush = new SolidColorBrush(current ? _p.Accent : _p.Faint, current ? Paint.ResultCurrent : Paint.ResultBorder);
-            border.BorderThickness = new Thickness(current ? 2 : 1);
+            border.BorderThickness = new Thickness(current ? Shape.Thick : Shape.Thin);
         }
     }
 

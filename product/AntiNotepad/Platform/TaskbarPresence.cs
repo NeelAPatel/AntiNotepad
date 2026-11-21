@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using AntiNotepad;
+using AntiNotepad.Theme;
 
 namespace AntiNotepad.Platform;
 
@@ -140,10 +141,10 @@ internal sealed class TaskbarProxy : IDisposable
         {
             Title = title,
             Icon = icon,
-            Width = 1,
-            Height = 1,
-            MinWidth = 1,
-            MinHeight = 1,
+            Width = ChromeTokens.Size.HiddenTaskbarHelperSize,
+            Height = ChromeTokens.Size.HiddenTaskbarHelperSize,
+            MinWidth = ChromeTokens.Size.HiddenTaskbarHelperSize,
+            MinHeight = ChromeTokens.Size.HiddenTaskbarHelperSize,
             Opacity = 0,
             ShowInTaskbar = true,
             ShowActivated = false,
