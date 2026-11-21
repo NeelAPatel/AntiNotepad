@@ -18,7 +18,16 @@ User via Master 7, 2026-11-20 (condensed from the chat):
 0 research (`.coord/research/ux-principles.md`) > 1 token audit > 2 icon inventory and contact sheet > 3 per-screen findings > 4 fixes: picked findings only, small lab-first batches, hand test per batch.
 
 ## Needs from you
-Which stage 4 batch goes first. Visible changes are lab-first (`AGENTS.md`).
+Each step's own Approve, in its side chat. Order: 1 data safety and 2 icons together, then 5 spacing tokens, 3 targets and keyboard, 4 contrast (one lab with 3), 6 labels, then `A35c-design-contract` last.
+
+## Steps (stage 4)
+- `A35a-data-safety`: `fix/A35a-data-safety`, worktree `.claude/worktrees/fix/A35a-data-safety`.
+- `A35b-icon-registry`: `feat/A35b-icon-registry`, worktree `.claude/worktrees/feat/A35b-icon-registry`. Adds: drop the unused faux-bold path in `GlyphIcon`; evaluate Microsoft Codicons (user, 2026-11-20).
+- `A35d-spacing-tokens` (batch 5): `refactor/A35d-spacing-tokens`; plan now, build after A35b merges here (shares `UI/Kit.cs`).
+- `A35g-labels-tooltips` (batch 6): `fix/A35g-labels-tooltips`; plan now, rebase before hand-back. Later: `A35e-targets-keyboard` and `A35f-contrast` (one lab) after A35d lands. User, 2026-11-20: "kick off anything else you want".
+- For `pending.md` (Master 7): user idea during the A35a hand test, Undo toasts (7 s) show a countdown, the toast background draining right to left until it hides. Motion, so outside this pass; lab-first.
+- For `pending.md` (Master 7): `note-stats-popup`. User, 2026-11-21 (A35g chat): "Let click show a pop up with note stats: # chars # words # lines # paragraphs etc things that are useful for people to keep track of somtimes in word, notepad, etc." Clicking the pager count opens it instead of search; lab-first. A35g drops its count tooltip for it.
+- `A35c-design-contract`: one design contract doc plus enforcing checks (source ratchet to zero, rendered-tree, contrast, doc sync); gate for the dev merge. User, 2026-11-20: "After batches 1-2", then "move esign contract at the end." So it runs last, after batches 3-6, and gates the dev merge. Merge order: A35a, then A35b rebases.
 
 ## Files
 Stages 0-3 (stage 4 files are listed at its Approve):
@@ -51,7 +60,7 @@ Stages 0-3 (stage 4 files are listed at its Approve):
 - `.coord/tasks/A35-ux-pass.md`
 
 ## Approve
-User, 2026-11-20: stage 0-3 scope approved ("kick off ux-pass on its own branch/worktree only after 0.7.0 is live and confirmed on main + installed"); 2026-11-20 after install: "it works 0.7.0 is on main and installed". Stage 4 needs its own Approve. Overrides granted by the user, 2026-11-20: this chat runs on Opus, medium effort; it may start its own side chats; Codex role `terra` (medium) for its tasks; internet research is done by this chat, not Codex (Codex's sandbox has no network, tested 2026-11-20). `AGENTS.md` "never starts other chats" is waived for this item only. User, 2026-11-20 after the stage 0 gate: "going forward no need to wait for my approval , you may proceed through all the stages and make subchats on your own accord for this chat and model. I will await your final report and how we want to apply your findings to the project" (stage gates 1-3 waived; stage 4 still waits for the final report).
+User, 2026-11-20: stage 0-3 scope approved ("kick off ux-pass on its own branch/worktree only after 0.7.0 is live and confirmed on main + installed"); 2026-11-20 after install: "it works 0.7.0 is on main and installed". Stage 4 needs its own Approve. Overrides granted by the user, 2026-11-20: this chat runs on Opus, medium effort; it may start its own side chats; Codex role `terra` (medium) for its tasks; internet research is done by this chat, not Codex (Codex's sandbox has no network, tested 2026-11-20). `AGENTS.md` "never starts other chats" is waived for this item only. User, 2026-11-20 after the stage 0 gate: "going forward no need to wait for my approval , you may proceed through all the stages and make subchats on your own accord for this chat and model. I will await your final report and how we want to apply your findings to the project" (stage gates 1-3 waived; stage 4 still waits for the final report). User, 2026-11-20 after the report: "Yes both" (batch 1 data safety and batch 2 icons start now) and "I want you to treat THIS branch as a temporary "dev" so anything you kick off from here merges back here, including becoming a subchat of this chat." So stage 4 steps branch from `docs/A35-ux-pass`, run as side chats of this chat, and this chat merges them back here `--no-ff`; `tools/approve.ps1` (dev-only) is not used for them, and Master 7 merges this branch to dev later.
 
 ## Findings
 Stages 0-3 done 2026-11-20, report-only. Reports `.coord/reports/A35-ux-pass-s1.md` (tokens), `-s2.md` (icons; A29 cause: bundled U+F6ED is `person_subtract`), `-s3.md` (13 high, 23 medium, 9 low; six-batch stage 4 proposal). Live focus and contrast checks open.
