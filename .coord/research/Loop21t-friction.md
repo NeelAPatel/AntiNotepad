@@ -1,0 +1,13 @@
+- Loop21t-a: (a) START CARD first line: "START CARD: umbrella child (Loop21t-a)". (b) title-hint: "Loop21t-a: me=none codex=none dev=none phase=build". (c) title set: "🔗 Loop21t-a ◆ build".
+- Loop21t-a: friction: Skill tool said "Unknown skill: pstack:poteto-mode" (brief's first action fails); continued without it.
+- Loop21t-a: friction: my own cd depth mistake only (worktree first created under .claude/.claude); fixed, no rule gap.
+- Loop21t-a: BLOCKER: start_session (user_asked, fresh, cwd child worktree) refused twice: 1st "Start sessions only on the user's own words... this turn runs ... the task another session gave you" (despite the start card/prompt saying a session-given task may start named children); 2nd (with background added) denied by the auto-mode classifier. Child Loop21t-b NOT started; its STATUS row, worktree chore/Loop21t-b (cut from chore/Loop21t-a at 0a7b276) and card Children entry exist. Chain stops here until the user starts Loop21t-b or allows it.
+- Loop21t-c: (a) START CARD first line: "START CARD: umbrella child (Loop21t-c)". (b) title-hint: "Loop21t-c: me=none codex=none dev=none phase=build". (c) title set: "🔗 Loop21t-c ◆ build".
+- Loop21t-c: friction: Skill tool said "Unknown skill: pstack:poteto-mode"; continued without it.
+- Loop21t-c: friction: hook says "WARNING: 5 items past Approve (cap 3)" (chain test rows count against cap).
+- Loop21t-c: friction: gate Scope looked for .coord/tasks/Loop21t-c.md (bare ID, no slug) and failed on my first card name; the brief says "<ID-slug>" but these items have no slug. Renamed card to match. Also: no .coord/STATUS.md edit needed in worktree (row exists in main).
+- Loop21t-b: (a) START CARD first line: "START CARD: umbrella child (Loop21t-b)". (b) title-hint: "Loop21t-b: me=none codex=none dev=none phase=build". (c) title set: "🔗 Loop21t-b ◆ build".
+- Loop21t-b: friction: Skill tool said "Unknown skill: pstack:poteto-mode"; continued without it.
+- Loop21t-b: friction: hook says "WARNING: 5 items past Approve (cap 3)" (chain test rows count).
+- Loop21t-b: friction: gate Scope reported '0 changed file(s)' though my 2 commits add note+card vs base chore/Loop21t-a (maybe the .coord paths are exempt); and LF->CRLF warnings on commit.
+- Loop21t-c: catch-up.ps1 -Task Loop21t-c -Base chore/Loop21t-b worked: CLEAN rebase, 2 incoming files, RETEST: no; gate re-run PASS. No friction.
