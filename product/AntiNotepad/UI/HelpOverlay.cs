@@ -12,8 +12,15 @@ internal sealed class HelpOverlay : ScrollViewer
 {
     private static readonly (string Section, (string Keys, string What)[] Rows)[] Modes =
     [
-        ("Line 1 modes", [("math", "Live answers, variables, units, %, sum"), ("list", "Every line is a checkbox"), ("timer", "25m focus · Enter starts"), ("code py", "Syntax colors"), ("clipboard", "Collects what you copy")]),
+        ("Line 1 modes", [("math", "Live answers, variables, units, %, sum"), ("list", ""), ("timer", "25m focus · Enter starts"), ("code py", "Syntax colors"), ("clipboard", "Collects what you copy")]),
     ];
+
+    internal static string ListDescription(string value) => value switch
+    {
+        "check" => "Every line gets a checkbox",
+        "number" => "Every line is numbered",
+        _ => "Every line gets a bullet",
+    };
 
     public HelpOverlay(PadWindow window, Palette p)
     {
@@ -67,7 +74,7 @@ internal sealed class HelpOverlay : ScrollViewer
                         Foreground = new SolidColorBrush(p.Ink)
                     }
                 };
-                var text = new TextBlock { Text = what, Foreground = new SolidColorBrush(p.Muted), FontSize = Typography.Label, Margin = new Thickness(ChromeTokens.FirstItemInset, 0, 0, 0), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
+                var text = new TextBlock { Text = keys == "list" ? ListDescription(window.Settings.ListDefault) : what, Foreground = new SolidColorBrush(p.Muted), FontSize = Typography.Label, Margin = new Thickness(ChromeTokens.FirstItemInset, 0, 0, 0), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
                 grid.Children.Add(key);
                 Grid.SetColumn(text, 1); grid.Children.Add(text);
                 panel.Children.Add(grid);

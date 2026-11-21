@@ -9,6 +9,7 @@ internal sealed partial class PadWindow
 {
     private Button? _swapButton;
     private int _swapIconSlot = -1;
+    private bool _swapSplit;
     private long _lastBarDelete = long.MinValue;
     private int _lastSlot;
 
@@ -60,15 +61,16 @@ internal sealed partial class PadWindow
     /// <summary>Refreshes the swap button's glyph and destination label for the left pane.</summary>
     private void UpdateSwapButton()
     {
-        if (_swapButton?.Content is not Border face || _swapIconSlot == Data.ViewSlot) return;
+        if (_swapButton?.Content is not Border face || _swapIconSlot == Data.ViewSlot && _swapSplit == Settings.Split) return;
         _swapIconSlot = Data.ViewSlot;
+        _swapSplit = Settings.Split;
         var glyph = Data.ViewSlot == 0 ? Icons.Grid : Icons.Stack;
         face.Child = new GlyphIcon(glyph, _palette.Ink, ChromeTokens.IconGlyphSize)
         {
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
         };
-        var destination = Data.ViewSlot == 0 ? "Show slots" : "Show stack";
+        var destination = (Data.ViewSlot == 0 ? "Show slots" : "Show stack") + (Settings.Split ? " in the left pane" : "");
         ToolTip.SetTip(_swapButton, ShortcutTooltip(destination, _shortcuts.GetLabel("swap-view")));
         Avalonia.Automation.AutomationProperties.SetName(_swapButton, destination);
     }

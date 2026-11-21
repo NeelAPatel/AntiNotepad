@@ -3,6 +3,7 @@ using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.LogicalTree;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media;
@@ -411,6 +412,81 @@ internal static partial class SelfTest
         }
         Expect(!UI.HotkeyRecorder.IsCommand(Avalonia.Input.Key.K, Avalonia.Input.KeyModifiers.None), "ordinary key is not a command");
         report = failures.Count == 0 ? $"{keys.Length} supported main keys round-trip; modifier order, rejected keys and commands" : string.Join("; ", failures);
+        return failures.Count == 0;
+    }
+
+    /// <summary>Checks Settings names, search, reset Undo, and the split-aware swap label.</summary>
+    private static bool LabelsAndSettingsChecks(out string report)
+    {
+        using var fixture = new DataSafetyFixture();
+        using var log = new RuntimeLog();
+        var settings = fixture.Store.SettingsService;
+        var notes = new NotesSession(fixture.Store, fixture.Folder, fixture.Folder, null, log.Write);
+        var window = new UI.SettingsWindow(settings, fixture.Pad, true, notes);
+        var flags = BindingFlags.Instance | BindingFlags.NonPublic;
+        object? Invoke(object obj, string name, params object?[] args) => obj.GetType().GetMethod(name, flags)!.Invoke(obj, args);
+        var failures = new List<string>();
+        void Check(bool value, string name) { if (!value) failures.Add(name); }
+        var swap = (Button)DataSafetyFixture.Get(fixture.Pad, "_swapButton")!;
+        settings.Update(s => s.Split = false);
+        Invoke(fixture.Pad, "UpdateSwapButton");
+        var single = Avalonia.Automation.AutomationProperties.GetName(swap);
+        settings.Update(s => s.Split = true);
+        Invoke(fixture.Pad, "UpdateSwapButton");
+        Check(Avalonia.Automation.AutomationProperties.GetName(swap) == single + " in the left pane"
+            && (ToolTip.GetTip(swap)?.ToString() ?? "").Contains(" in the left pane", StringComparison.Ordinal), "split swap label refreshes");
+        settings.Update(s => s.Split = false);
+        Invoke(fixture.Pad, "UpdateSwapButton");
+        Check(Avalonia.Automation.AutomationProperties.GetName(swap) == single, "single swap label refreshes");
+
+        var results = (StackPanel)Invoke(window, "BuildSearchResults", "scroll style")!;
+        var tags = results.GetLogicalDescendants().OfType<Border>().Select(b => b.Tag as string).Where(t => t is not null).ToArray();
+        Check(tags.Any(t => t!.Contains("sub Style", StringComparison.Ordinal) && t.Contains("Vertical scroll style", StringComparison.Ordinal))
+            && tags.Any(t => t!.Contains("sub Style", StringComparison.Ordinal) && t.Contains("Horizontal scroll style", StringComparison.Ordinal)), "matched expanders include rows");
+        var editor = (StackPanel)Invoke(window, "BuildSection", "editor", false, null)!;
+        var dropdown = editor.GetLogicalDescendants().OfType<Button>().First(b => Avalonia.Automation.AutomationProperties.GetName(b) == "Answer position, One column");
+        var panel = (Panel)dropdown.Parent!;
+        var popup = panel.Children.OfType<Avalonia.Controls.Primitives.Popup>().Single();
+        var option = popup.GetLogicalDescendants().OfType<Button>().First(b => b.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == "Right edge"));
+        option.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Check(Avalonia.Automation.AutomationProperties.GetName(dropdown) == "Answer position, Right edge", "dropdown name follows pick");
+
+        settings.Update(s => { s.ShortcutOverrides["new-note"] = "Ctrl+Q"; s.ShortcutOverrides["search"] = ""; });
+        var toastBefore = fixture.ToastText;
+        StackPanel ShortcutsPage() => (StackPanel)Invoke(window, "BuildSection", "shortcuts", false, null)!;
+        static string ButtonText(Button button) => button.GetLogicalDescendants().OfType<TextBlock>().FirstOrDefault()?.Text ?? "";
+        static Button? UndoBeside(StackPanel page, string label) => page.GetLogicalDescendants().OfType<StackPanel>()
+            .FirstOrDefault(row => row.Children.OfType<Button>().Any(b => ButtonText(b) == label)
+                && row.Children.OfType<Button>().Any(b => ButtonText(b) == "Undo"))?.Children.OfType<Button>().First(b => ButtonText(b) == "Undo");
+        Invoke(window, "ResetAllShortcuts");
+        var undo = UndoBeside(ShortcutsPage(), "Reset all");
+        Check(settings.Current.ShortcutOverrides.Count == 0 && undo is not null && fixture.ToastText == toastBefore, "reset all shows adjacent Undo without a pad toast");
+        Invoke(window, "AfterSet", true);
+        undo = UndoBeside(ShortcutsPage(), "Reset all");
+        Check(undo is not null, "reset all Undo survives rebuild");
+        undo?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Check(settings.Current.ShortcutOverrides.TryGetValue("new-note", out var key) && key == "Ctrl+Q"
+            && settings.Current.ShortcutOverrides.TryGetValue("search", out var empty) && empty == ""
+            && UndoBeside(ShortcutsPage(), "Reset all") is null, "reset all Undo restores overrides and disappears");
+        Invoke(window, "ResetShortcut", "new-note");
+        undo = UndoBeside(ShortcutsPage(), "Reset");
+        Check(undo is not null && fixture.ToastText == toastBefore, "single reset shows adjacent Undo without a pad toast");
+        undo?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Check(settings.Current.ShortcutOverrides.TryGetValue("new-note", out key) && key == "Ctrl+Q", "single reset Undo restores override");
+        Invoke(window, "ResetShortcut", "new-note");
+        Invoke(window, "ResetShortcut", "new-note");
+        Check(UndoBeside(ShortcutsPage(), "Reset") is null, "unchanged reset clears pending Undo");
+        Invoke(window, "ResetAllShortcuts");
+        window.Refresh();
+        Check(UndoBeside(ShortcutsPage(), "Reset all") is not null, "unrelated refresh preserves pending Undo");
+        settings.Update(s => s.ShortcutOverrides["search"] = "Ctrl+Q");
+        window.Refresh();
+        Check(UndoBeside(ShortcutsPage(), "Reset all") is null, "replacing settings clears pending Undo");
+        Check(new UI.ShortcutMap(new Model.Settings()).GetLabel("settings") == "Ctrl+,", "Settings default key");
+        Check(UI.HelpOverlay.ListDescription("bullet") == "Every line gets a bullet"
+            && UI.HelpOverlay.ListDescription("check") == "Every line gets a checkbox"
+            && UI.HelpOverlay.ListDescription("number") == "Every line is numbered", "Help list descriptions");
+        report = failures.Count == 0 ? "split labels, dropdown name, search rows, reset Undo, Settings key and Help list" : string.Join("; ", failures);
         return failures.Count == 0;
     }
 

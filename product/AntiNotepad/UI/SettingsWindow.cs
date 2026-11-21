@@ -55,6 +55,9 @@ internal sealed partial class SettingsWindow : Window
     private bool _notesFolderRestartPending;
     private Palette? _stylesPalette;
     private string? _searchQuery;
+    private string? _shortcutUndoTarget;
+    private Dictionary<string, string>? _shortcutUndoOverrides;
+    private Dictionary<string, string>? _shortcutResetOverrides;
     private readonly Dictionary<string, SegmentPosition> _segmentPositions = new();
     private Settings S => _settings.Current;
 
@@ -123,6 +126,9 @@ internal sealed partial class SettingsWindow : Window
     /// <summary>Settings were replaced wholesale (restore defaults, undo): rebuild what's on screen.</summary>
     public void Refresh()
     {
+        if (_shortcutResetOverrides is not null && (S.ShortcutOverrides.Count != _shortcutResetOverrides.Count
+            || _shortcutResetOverrides.Any(pair => !S.ShortcutOverrides.TryGetValue(pair.Key, out var value) || value != pair.Value)))
+            ClearShortcutUndo();
         _p = _host.CurrentPalette;
         _shortcuts.Refresh(S);
         Restyle();
@@ -461,15 +467,15 @@ internal sealed partial class SettingsWindow : Window
         if (withPreview) page.Children.Add(Preview(feel: true));
         page.Children.Add(Group("Scrolling"));
         page.Children.Add(Card([
-            .. Expander("scrolling", () => Fl(Icons.VerticalScroll), "Vertical Scroll Style", ScrollHint(S.Scrolling), ScrollName(S.Scrolling),
+            .. Expander("scrolling", () => Fl(Icons.VerticalScroll), "Vertical scroll style", ScrollHint(S.Scrolling), ScrollName(S.Scrolling),
                 [() => SubRow("Style", () => Seg([("lines", "Lines"), ("free", "Free"), ("rate", "Rate-matched"), ("wheel", "Wheel-driven")], S.Scrolling, v => Set(() => S.Scrolling = v, rows: true))),
                  .. TuningRows()]),
         ]));
 
         page.Children.Add(Group("Switching between notes"));
         page.Children.Add(Card([
-            .. Expander("switching", () => Fl(Icons.HorizontalScroll), "Horizontal Scroll Style",
-                "Follows input, with projection-based switching and spring edge pulls",
+            .. Expander("switching", () => Fl(Icons.HorizontalScroll), "Horizontal scroll style",
+                "Swipe sideways to change notes. The page follows your swipe and springs back at the first and last note.",
                 "Follow-through",
                 () => SubRow("Style", () => Seg([("follow", "Follow-through")], S.HorizontalScrollStyle,
                     v => Set(() => S.Swipe = v, rows: true)))),
@@ -511,7 +517,7 @@ internal sealed partial class SettingsWindow : Window
     {
         page.Children.Add(Group("Shortcut map"));
         page.Children.Add(Card(Row(() => Fl(Icons.Keyboard), "Reset all shortcuts", "Restore every action to its default key.",
-            () => TextButton("Reset all", ResetAllShortcuts))));
+            () => ShortcutResetControl("Reset all", ResetAllShortcuts, "all"))));
         foreach (var section in new[] { "Notes", "Search", "Window", "Slots", "Writing" })
         {
             var definitions = ShortcutMap.Definitions.Where(definition => definition.Section == section).ToArray();
@@ -534,7 +540,16 @@ internal sealed partial class SettingsWindow : Window
             TextButton,
             ShortcutMap.RecorderGestureText,
             text => ShortcutMap.BlockedReason(text, S, definition)).View);
-        row.Children.Add(TextButton("Reset", () => ResetShortcut(definition.Id)));
+        row.Children.Add(ShortcutResetControl("Reset", () => ResetShortcut(definition.Id), definition.Id));
+        return row;
+    }
+
+    /// <summary>Places the pending Undo beside the reset that created it.</summary>
+    private Control ShortcutResetControl(string label, Action reset, string target)
+    {
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+        row.Children.Add(TextButton(label, reset));
+        if (_shortcutUndoTarget == target) row.Children.Add(TextButton("Undo", UndoShortcutReset));
         return row;
     }
 
@@ -559,6 +574,7 @@ internal sealed partial class SettingsWindow : Window
     /// <summary>Saves one shortcut change and optionally clears the previous owner.</summary>
     private void SaveShortcut(string id, string text, string? clearId = null)
     {
+        ClearShortcutUndo();
         _settings.Update(settings =>
         {
             if (clearId is not null)
@@ -578,7 +594,10 @@ internal sealed partial class SettingsWindow : Window
     /// <summary>Removes a saved override so one action returns to its default.</summary>
     private void ResetShortcut(string id)
     {
+        _shortcutUndoTarget = S.ShortcutOverrides.ContainsKey(id) ? id : null;
+        _shortcutUndoOverrides = _shortcutUndoTarget is null ? null : new(S.ShortcutOverrides, StringComparer.Ordinal);
         _settings.Update(settings => settings.ShortcutOverrides.Remove(id));
+        _shortcutResetOverrides = _shortcutUndoTarget is null ? null : new(S.ShortcutOverrides, StringComparer.Ordinal);
         _shortcuts.Refresh(S);
         AfterSet(rows: true);
     }
@@ -586,9 +605,35 @@ internal sealed partial class SettingsWindow : Window
     /// <summary>Removes every saved override so all actions return to their defaults.</summary>
     private void ResetAllShortcuts()
     {
+        var previous = new Dictionary<string, string>(S.ShortcutOverrides, StringComparer.Ordinal);
+        _shortcutUndoTarget = previous.Count > 0 ? "all" : null;
+        _shortcutUndoOverrides = previous.Count > 0 ? previous : null;
         _settings.Update(settings => settings.ShortcutOverrides.Clear());
+        _shortcutResetOverrides = _shortcutUndoTarget is null ? null : new(S.ShortcutOverrides, StringComparer.Ordinal);
         _shortcuts.Refresh(S);
         AfterSet(rows: true);
+    }
+
+    /// <summary>Restores the overrides saved by the most recent reset.</summary>
+    private void UndoShortcutReset()
+    {
+        var previous = _shortcutUndoOverrides;
+        ClearShortcutUndo();
+        if (previous is null) return;
+        _settings.Update(settings =>
+        {
+            settings.ShortcutOverrides.Clear();
+            foreach (var (key, value) in previous) settings.ShortcutOverrides[key] = value;
+        });
+        _shortcuts.Refresh(S);
+        AfterSet(rows: true);
+    }
+
+    private void ClearShortcutUndo()
+    {
+        _shortcutUndoTarget = null;
+        _shortcutUndoOverrides = null;
+        _shortcutResetOverrides = null;
     }
 
     /// <summary>Asks before moving a key from its current action to another action.</summary>

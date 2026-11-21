@@ -138,6 +138,7 @@ internal static class PadMenu
             });
             var hit = MenuButton(face, p, entry.Enabled, 52, 4,
                 new Thickness(i == 0 ? 0 : 2, 0, i == actions.Length - 1 ? 0 : 2, 0));
+            ToolTip.SetTip(hit, entry.Header + (string.IsNullOrEmpty(entry.Keys) ? "" : " (" + Display(entry.Keys) + ")"));
             if (entry.Enabled) hit.Click += (_, _) => { entry.Click?.Invoke(); close(); };
             Grid.SetColumn(hit, i);
             row.Children.Add(hit);

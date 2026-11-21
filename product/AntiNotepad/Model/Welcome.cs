@@ -122,6 +122,6 @@ internal static class Welcome
 
         ## Help
         - `Ctrl+,` opens Settings. `F1` shows all shortcuts.
-        - To clear a demo, open its slot and press `Ctrl+Shift+Backspace`; the note moves to Trash.
+        - To clear a demo, open its slot and click **Clear slot** at the bottom; the note moves to Trash.
         """;
 }

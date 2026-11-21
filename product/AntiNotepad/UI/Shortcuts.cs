@@ -41,7 +41,7 @@ internal sealed class ShortcutMap
         new("search", "Search notes", "Search", ShortcutScope.Pad, ShortcutAction.Search, "Ctrl+F", "Toggle Search."),
         new("search-alias-p", "Search notes (P alias)", "Search", ShortcutScope.Pad, ShortcutAction.SearchAliasP, "", "Another key to toggle Search."),
         new("search-alias-k", "Search notes (K alias)", "Search", ShortcutScope.Pad, ShortcutAction.SearchAliasK, "", "Another key to toggle Search."),
-        new("settings", "Settings", "Window", ShortcutScope.Pad, ShortcutAction.Settings, "", "Open Settings."),
+        new("settings", "Settings", "Window", ShortcutScope.Pad, ShortcutAction.Settings, "Ctrl+,", "Open Settings."),
         new("help", "Help", "Window", ShortcutScope.Pad, ShortcutAction.Help, "F1", "Show this shortcut list."),
         new("open-slot", "Open slot 1–9", "Slots", ShortcutScope.Pad, ShortcutAction.OpenSlot, "", "Open the numbered slot; use the same key again to return to the stack.", true),
         new("keep-slot", "Keep note in slot 1–9", "Slots", ShortcutScope.Pad, ShortcutAction.KeepSlot, "", "Move the current note into the numbered slot.", true),
