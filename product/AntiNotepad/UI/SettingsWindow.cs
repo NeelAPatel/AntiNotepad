@@ -185,7 +185,7 @@ internal sealed partial class SettingsWindow : Window
         Grid.SetColumnSpan(drag, 2);
         top.Children.Add(drag);
         var title = Kit.Text($"{AppInfo.Name} Settings", _p.Muted, Typography.Small);
-        title.Margin = new Thickness(18, 0, 0, 0);
+        title.Margin = new Thickness(Space.L, 0, 0, 0);
         title.IsHitTestVisible = false;
         top.Children.Add(title);
         var close = Kit.IconButton(Icons.Close, "Close (Esc)", _p, Close, 32);
@@ -196,7 +196,7 @@ internal sealed partial class SettingsWindow : Window
 
         var body = new Grid { ColumnDefinitions = new ColumnDefinitions("214,*") };
         Grid.SetRow(body, 1);
-        var railHost = new StackPanel { Margin = new Thickness(10, Space.Xs, 10, 10), Spacing = Space.M };
+        var railHost = new StackPanel { Margin = new Thickness(Space.M, Space.Xs, Space.M, Space.M), Spacing = Space.M };
         _find = new TextBox
         {
             PlaceholderText = "Find a setting",
@@ -206,7 +206,7 @@ internal sealed partial class SettingsWindow : Window
             Padding = new Thickness(Space.S, Space.S, Space.S, 0),
             Foreground = new SolidColorBrush(_p.Ink),
             CaretBrush = new SolidColorBrush(_p.Caret),
-            InnerLeftContent = new GlyphIcon(Icons.SettingsSearch, _p.Muted, Typography.IconInput) { Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center },
+            InnerLeftContent = new GlyphIcon(Icons.SettingsSearch, _p.Muted, Typography.IconInput) { Margin = new Thickness(Space.M, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center },
         };
         Avalonia.Automation.AutomationProperties.SetName(_find, "Find a setting");
         // Results build matching rows, so they wait for a pause in typing; clearing the box is instant.
@@ -261,7 +261,7 @@ internal sealed partial class SettingsWindow : Window
 
     // ---------- pages ----------
 
-    private StackPanel NewPage() => new() { Margin = new Thickness(Space.L, Space.Nudge, 28, Space.Xxl), MaxWidth = ChromeTokens.Size.SettingsPageMaxWidth, HorizontalAlignment = HorizontalAlignment.Stretch };
+    private StackPanel NewPage() => new() { Margin = new Thickness(Space.L, Space.Nudge, Space.Xxl, Space.Xxl), MaxWidth = ChromeTokens.Size.SettingsPageMaxWidth, HorizontalAlignment = HorizontalAlignment.Stretch };
 
     private void Show(string section, bool animate = true, bool keepScroll = false)
     {
@@ -349,7 +349,7 @@ internal sealed partial class SettingsWindow : Window
         page.Children.Add(Group("Caret"));
         Control CaretStyles()
         {
-            var cells = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+            var cells = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.S };
             cells.Children.Add(Tile(CaretPicture(false), "Bar", S.CaretStyle != "block", () => Set(() => S.CaretStyle = "bar", rows: true), 56));
             cells.Children.Add(Tile(CaretPicture(true), "Block", S.CaretStyle == "block", () => Set(() => S.CaretStyle = "block", rows: true), 56));
             return cells;
@@ -533,7 +533,7 @@ internal sealed partial class SettingsWindow : Window
     /// <summary>Builds the recorder and reset control for one shortcut action.</summary>
     private Control ShortcutControl(ShortcutDefinition definition)
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.S };
         row.Children.Add(new HotkeyRecorder(_p,
             () => _shortcuts.GetRecordedValue(definition.Id),
             text => ApplyShortcut(definition, text),
@@ -755,7 +755,7 @@ internal sealed partial class SettingsWindow : Window
             if (!string.IsNullOrWhiteSpace(_notesSuccess)) details.Children.Add(InlineNote(_notesSuccess, _p.Confirm));
             if (!string.IsNullOrWhiteSpace(_notesNotice)) details.Children.Add(InlineNote(_notesNotice, _p.Muted));
 
-            var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+            var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.S };
             if (_pendingNotesFolder is { } destination)
             {
                 // The pending folder action: Cancel, then the accent action button at the right edge.

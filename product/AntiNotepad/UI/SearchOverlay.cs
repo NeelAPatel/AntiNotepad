@@ -44,7 +44,7 @@ internal sealed class SearchOverlay : Grid
         _debounce.Tick += (_, _) => { _debounce.Stop(); StartSearch(); };
         DetachedFromVisualTree += (_, _) => { _disposed = true; _debounce.Stop(); _searchGeneration.Dispose(); };
         RowDefinitions = new RowDefinitions("Auto,*,Auto");
-        Margin = new Thickness(14, 14, 14, ChromeTokens.SearchOverlayBottomMargin);
+        Margin = new Thickness(Space.L, Space.L, Space.L, ChromeTokens.SearchOverlayBottomMargin);
 
         _query = new TextBox
         {
@@ -75,7 +75,7 @@ internal sealed class SearchOverlay : Grid
         };
         _query.AddHandler(KeyDownEvent, OnKey, RoutingStrategies.Tunnel);
 
-        var tools = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.Nudge, Margin = new Thickness(6, 0, 0, 0) };
+        var tools = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.Nudge, Margin = new Thickness(Space.S, 0, 0, 0) };
         tools.Children.Add(Kit.IconButton(GridView ? Icons.List : Icons.Grid,
             ShortcutTooltip(GridView ? "List view" : "Card grid", window.Shortcuts.GetLabel("grid")), _p, ToggleGrid, 32));
         tools.Children.Add(Kit.IconButton(trash ? Icons.Back : Icons.OpenTrash,
@@ -169,7 +169,7 @@ internal sealed class SearchOverlay : Grid
             _results.Children.Add(card);
         }
         if (_items.Count == 0)
-            _results.Children.Add(new TextBlock { Text = ShowingTrash ? "The trash is empty." : query.Length > 0 ? "No notes match." : "No notes yet.", Foreground = new SolidColorBrush(_p.Faint), Margin = new Thickness(6, Space.L) });
+            _results.Children.Add(new TextBlock { Text = ShowingTrash ? "The trash is empty." : query.Length > 0 ? "No notes match." : "No notes yet.", Foreground = new SolidColorBrush(_p.Faint), Margin = new Thickness(Space.S, Space.L) });
         UpdateCardStates();
         UpdateStatus();
     }
@@ -198,7 +198,7 @@ internal sealed class SearchOverlay : Grid
         if (note.Slot > 0) meta.Children.Add(Kit.Text($"slot {note.Slot}", _p.Accent, Typography.Micro, Typography.Strong));
         if (match.Mode != NoteMode.Plain) meta.Children.Add(Kit.Text(Modes.Label(match.Mode, match.ModeArgument), _p.Keyword, Typography.Micro, Typography.Strong));
         meta.Children.Add(Kit.Text(ShowingTrash && note.Deleted is { } del ? "deleted " + Kit.Ago(del) : Kit.Ago(note.Modified), _p.Faint, Typography.Micro));
-        var body = new StackPanel { Spacing = 3, Children = { title, snippet, meta } };
+        var body = new StackPanel { Spacing = Space.Xs, Children = { title, snippet, meta } };
         var border = new Border
         {
             Child = body,

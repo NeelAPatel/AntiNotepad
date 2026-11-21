@@ -778,11 +778,11 @@ internal sealed partial class PadWindow
         quitButton.Click += (_, _) => quitAnyway();
         var buttons = new StackPanel
         {
-            Orientation = Orientation.Horizontal, Spacing = 6, HorizontalAlignment = HorizontalAlignment.Right,
-            Margin = new Thickness(0, 6, 0, 0), Children = { retryButton, quitButton },
+            Orientation = Orientation.Horizontal, Spacing = Space.S, HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, Space.S, 0, 0), Children = { retryButton, quitButton },
         };
-        var body = new TextBlock { Text = "Your latest edits aren't on disk yet. Retry tries again. Quit anyway closes AntiNotepad, and those edits may be lost.", Foreground = new SolidColorBrush(p.Ink), FontSize = Typography.Body, TextWrapping = TextWrapping.Wrap, MaxWidth = 380 };
-        var content = new StackPanel { Spacing = 9, Children = { title, body, detail, buttons } };
+        var body = new TextBlock { Text = "Your latest edits aren't on disk yet. Retry tries again. Quit anyway closes AntiNotepad, and those edits may be lost.", Foreground = new SolidColorBrush(p.Ink), FontSize = Typography.Body, TextWrapping = TextWrapping.Wrap, MaxWidth = ChromeTokens.Size.SaveFailureReasonMaxWidth };
+        var content = new StackPanel { Spacing = Space.S, Children = { title, body, detail, buttons } };
         var card = new Border
         {
             Child = content,

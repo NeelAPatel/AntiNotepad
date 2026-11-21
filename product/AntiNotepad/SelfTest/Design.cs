@@ -12,14 +12,13 @@ using Avalonia.Controls;
 using Avalonia.Controls.Chrome;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
-using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media;
 
 namespace AntiNotepad;
 
 internal static partial class SelfTest
 {
-    private const string DesignHash = "eab0a1acf5b71b93ed6167cafca21bd9c188bb3eb6669d67876ffca43ee43d5e";
+    private const string DesignHash = "40aa4d67373fa5f983d3a8d5a1a40f4f9403c6009ef8157d20c90ad507c24df0";
     private static readonly string[] DesignProperties = ["FontSize", "FontWeight", "FontFamily", "FontStyle", "CornerRadius", "Opacity", "Background", "Foreground", "BorderBrush", "BorderThickness", "BoxShadow", "Margin", "Padding"];
 
     /// <summary>Writes the same design snapshot used by the selftest.</summary>
@@ -136,11 +135,7 @@ internal static partial class SelfTest
     private static string DesignDump()
     {
         if (Application.Current is null) AppBuilder.Configure<Application>().UsePlatformDetect().SetupWithoutStarting();
-        if (!Application.Current!.Styles.OfType<Avalonia.Themes.Fluent.FluentTheme>().Any())
-        {
-            Application.Current.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
-            Application.Current.Styles.Add(new StyleInclude(new Uri(AppInfo.ResourceUri)) { Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml") });
-        }
+        App.ConfigureFluentStyles(Application.Current!);
         var dir = Path.Combine(Path.GetTempPath(), $"antinotepad-design-{Guid.NewGuid():N}");
         var lines = new List<string>();
         try

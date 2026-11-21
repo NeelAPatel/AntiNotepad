@@ -5,6 +5,7 @@ using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Threading;
 using AntiNotepad.Model;
 using AntiNotepad.Platform;
+using AntiNotepad.Theme;
 using AntiNotepad.UI;
 
 namespace AntiNotepad;
@@ -202,10 +203,21 @@ public sealed class App : Application
         _notes = notes;
     }
 
+    /// <summary>Installs Fluent and AvaloniaEdit styles with the app's shared control corner radius.</summary>
+    internal static void ConfigureFluentStyles(Application application)
+    {
+        if (!application.Styles.OfType<Avalonia.Themes.Fluent.FluentTheme>().Any())
+        {
+            application.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
+            application.Styles.Add(new StyleInclude(new Uri(AppInfo.ResourceUri)) { Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml") });
+        }
+
+        application.Resources["ControlCornerRadius"] = new CornerRadius(Shape.Control);
+    }
+
     public override void Initialize()
     {
-        Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
-        Styles.Add(new StyleInclude(new Uri(AppInfo.ResourceUri)) { Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml") });
+        ConfigureFluentStyles(this);
     }
 
     public override void OnFrameworkInitializationCompleted()

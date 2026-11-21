@@ -24,9 +24,9 @@ internal sealed class HelpOverlay : ScrollViewer
 
     public HelpOverlay(PadWindow window, Palette p)
     {
-        Margin = new Thickness(10, 14, 10, ChromeTokens.HelpOverlayBottomMargin);
+        Margin = new Thickness(Space.M, Space.L, Space.M, ChromeTokens.HelpOverlayBottomMargin);
         HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled;
-        var panel = new StackPanel { Margin = new Thickness(Space.S, 0, 14, Space.M) };
+        var panel = new StackPanel { Margin = new Thickness(Space.S, 0, Space.L, Space.M) };
         panel.Children.Add(Kit.PanelHeader("Shortcuts", p, window.CloseOverlay));
         foreach (var group in ShortcutMap.HelpRows(window.Shortcuts).GroupBy(row => row.Section))
         {

@@ -98,7 +98,7 @@ internal sealed class PaperLayer(PadView pad) : Avalonia.Controls.Control
             if (double.IsNaN(top)) continue;
             // Wide enough to hold the fold chevrons, which sit in the 16 px just left of the text.
             var left = origin.X - 20;
-            dc.DrawRectangle(fill, null, new Rect(left, top - 2, Bounds.Width - 2 * left, bottom - top + 4), 9, 9);
+            dc.DrawRectangle(fill, null, new Rect(left, top - 2, Bounds.Width - 2 * left, bottom - top + 4), Shape.Popup, Shape.Popup);
         }
     }
 

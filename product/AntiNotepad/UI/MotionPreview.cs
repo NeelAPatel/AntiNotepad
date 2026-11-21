@@ -82,7 +82,7 @@ internal sealed class MotionPreview : StackPanel
     private readonly PadView _pad;
     private readonly Border _frame;
     private readonly Trace _trace;
-    private readonly StackPanel _legend = new() { Orientation = Orientation.Horizontal, Spacing = 14 };
+    private readonly StackPanel _legend = new() { Orientation = Orientation.Horizontal, Spacing = Space.L };
     private readonly NoteSwipe _swipe;
     private bool _sampling;      // sampling once per displayed frame, only while something is moving
     private bool _attached;
@@ -104,7 +104,7 @@ internal sealed class MotionPreview : StackPanel
     public MotionPreview(Palette palette, Settings settings, INotesLocation notesLocation)
     {
         _p = palette; _s = settings;
-        Spacing = 6;
+        Spacing = Space.S;
         Margin = new Thickness(0, 0, 0, Space.Xs);
         // Same size and place on both pages, so switching tabs never moves it.
         _timers = new Timers();
@@ -220,7 +220,7 @@ internal sealed class MotionPreview : StackPanel
 
     private static Control Key(Color color, string label) => new StackPanel
     {
-        Orientation = Orientation.Horizontal, Spacing = 5,
+        Orientation = Orientation.Horizontal, Spacing = Space.Xs,
         Children =
         {
             new Border { Width = Space.MotionSampleBarWidth, Height = Space.MotionSampleBarHeight, CornerRadius = new CornerRadius(Shape.Round(Space.MotionSampleBarHeight)), Background = new SolidColorBrush(color), VerticalAlignment = VerticalAlignment.Center },
@@ -268,8 +268,8 @@ internal sealed class MotionPreview : StackPanel
             if (_well is null)
             {
                 _well = new SolidColorBrush(_palette.Ink, Paint.PreviewWell(_palette.Dark));
-                _scrollPen = new Pen(new SolidColorBrush(_palette.Accent), 1.8, lineCap: PenLineCap.Round);
-                _notePen = new Pen(new SolidColorBrush(_palette.Number), 1.8, lineCap: PenLineCap.Round);
+                _scrollPen = new Pen(new SolidColorBrush(_palette.Accent), Shape.Thick, lineCap: PenLineCap.Round);
+                _notePen = new Pen(new SolidColorBrush(_palette.Number), Shape.Thick, lineCap: PenLineCap.Round);
             }
             var w = Bounds.Width; var h = Bounds.Height;
             dc.DrawRectangle(_well, null, new Rect(0, 0, w, h), 8, 8);

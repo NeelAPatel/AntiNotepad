@@ -367,7 +367,7 @@ internal sealed partial class SettingsWindow
         Grid.SetColumn(chevron, 1); face.Children.Add(chevron);
         var box = new Border { Height = ChromeTokens.Size.SettingsDropdownHeight, MinWidth = minWidth, CornerRadius = new CornerRadius(Shape.Control), BorderBrush = Line, BorderThickness = new Thickness(Shape.Thin), Background = new SolidColorBrush(_p.Surface), Child = face };
         var button = Kit.Plain(box, _p, radius: Shape.Control);
-        var list = new StackPanel { Spacing = 1 };
+        var list = new StackPanel { Spacing = Space.Nudge };
         var popup = new Popup
         {
             PlacementTarget = button, Placement = PlacementMode.BottomEdgeAlignedLeft, IsLightDismissEnabled = true, VerticalOffset = 4,
@@ -452,7 +452,7 @@ internal sealed partial class SettingsWindow
             // The picture is clipped to the ring's inner curve, so its corners never show outside the frame.
             Child = new Border { CornerRadius = new CornerRadius(Shape.Popup - ring), ClipToBounds = true, Child = picture },
         };
-        var stack = new StackPanel { Spacing = 5, HorizontalAlignment = HorizontalAlignment.Center };
+        var stack = new StackPanel { Spacing = Space.Xs, HorizontalAlignment = HorizontalAlignment.Center };
         stack.Children.Add(frame);
         var text = Kit.Text(label, selected ? _p.Ink : _p.Muted, Typography.Small, selected ? Typography.Strong : Typography.Regular);
         text.HorizontalAlignment = HorizontalAlignment.Center;
@@ -615,7 +615,7 @@ internal sealed partial class SettingsWindow
             new Typeface(Typography.UiFamily, FontStyle.Normal, Typography.Strong), Typography.Label, ink);
         dc.DrawText(text, new Point(4.5, 10 - text.Height / 2));
         if (!clock) return;
-        var thin = new Pen(ink, 1.1);
+        var thin = new Pen(ink, Shape.Thin);
         dc.DrawEllipse(new SolidColorBrush(_p.Surface), thin, new Point(15, 14.5), 3.7, 3.7);
         dc.DrawLine(thin, new Point(15, 12.6), new Point(15, 14.6));
         dc.DrawLine(thin, new Point(15, 14.6), new Point(16.3, 15.4));
@@ -684,7 +684,7 @@ internal sealed partial class SettingsWindow
         public override void Render(DrawingContext dc)
         {
             var brush = new SolidColorBrush(ink);
-            draw(dc, new Pen(brush, 1.4, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round), brush);
+            draw(dc, new Pen(brush, Shape.Thin, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round), brush);
         }
     }
 }

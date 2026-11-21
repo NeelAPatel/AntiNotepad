@@ -113,7 +113,7 @@ internal static class Completion
         public string Text => word;
         public object Content => new StackPanel
         {
-            Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10,
+            Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = Space.M,
             Children =
             {
                 new TextBlock { Text = word, FontWeight = Typography.Strong, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = Space.CompletionModeColumnWidth },
@@ -140,7 +140,7 @@ internal static class Completion
         public string Text => text;
         public object Content => new StackPanel
         {
-            Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10,
+            Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = Space.M,
             Children =
             {
                 new TextBlock { Text = text, FontWeight = Typography.Strong, Foreground = new SolidColorBrush(pad.Palette.Keyword), MinWidth = Space.CompletionCommandColumnWidth },
