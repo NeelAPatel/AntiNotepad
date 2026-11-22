@@ -33,7 +33,11 @@ User, 2026-11-22: "Start 0.7.1".
 No Codex run: a one-line edit, done by the item chat itself.
 
 ## Check
-(pending)
+- Method: `AppInfo.props` `AppVersion` 0.7.0 to 0.7.1; label stays empty, so `InformationalVersion` is `0.7.1`. Re-grep of docs and tools: only generic `v0.7.0` examples (dev-loop, glossary) and the a35d lab mockup remain; none need to follow.
+- Release build: 0 warnings, 0 errors; `--selftest`: `SELFTEST PASS` (own data folder); built exe ProductVersion `0.7.1`, FileVersion `0.7.1.0` (read, not run); build folder deleted.
+- Gate (`pwsh tools/gate.ps1 -Task A38-version-0-7-1`, online, clean tree): GATE: PASS (build, selftest, seam, tokens, contract, format, scope, size, cleanup PASS; LoopLint skipped).
+- Bounds check: within plan; one file (`AppInfo.props`), one code commit.
+- Misses: None
 
 ## Hand test
 None (not visible).
