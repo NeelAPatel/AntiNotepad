@@ -1,6 +1,7 @@
-// Shared controls and glyphs for palette-aware application chrome.
+// Shared controls for palette-aware application chrome.
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -12,23 +13,11 @@ using AntiNotepad.Motion;
 
 namespace AntiNotepad.UI;
 
-/// <summary>Segoe Fluent Icons code points used by the chrome.</summary>
-internal static class Glyph
+/// <summary>Draws a registered icon with its declared font and palette color.</summary>
+internal sealed class GlyphIcon(Icon icon, Color color, double size = Typography.IconBody) : Control
 {
-    public const string Search = "", Pin = "", PinFilled = "", Settings = "", Close = "",
-        Split = "", Delete = "", Back = "", Forward = "", Grid = "",
-        List = "", Add = "", Restore = "", Hide = "";
-    public static readonly FontFamily Font = new("Segoe Fluent Icons, Segoe MDL2 Assets");
-    /// <summary>The bundled Fluent UI System Icons font (named icons; regular weight, drawn at 20 px).</summary>
-    public static readonly FontFamily Fluent = new($"{AppInfo.ResourceUri}Assets/Fonts#FluentSystemIcons-Regular");
-}
-
-/// <summary>
-/// A Segoe Fluent Icons glyph. Weight 0 draws it once; positive weights add four offset copies for faux bold.
-/// </summary>
-internal sealed class GlyphIcon(string glyph, Color color, double size = Typography.IconBody, double weight = 0.15, FontFamily? font = null) : Control
-{
-    private readonly Typeface _face = new(font ?? Glyph.Font);
+    private readonly string _glyph = icon.Character;
+    private readonly Typeface _face = new(Icons.FontFamily(icon.Font));
     private readonly IBrush _brush = new ImmutableSolidColorBrush(color);
     private Geometry? _geometry;
     private Rect _inkBounds;
@@ -41,10 +30,11 @@ internal sealed class GlyphIcon(string glyph, Color color, double size = Typogra
         set { _highlightOpacity = value; InvalidateVisual(); }
     }
 
+    /// <summary>Caches the icon outline for the current scale so repeated draws can reuse it.</summary>
     private Geometry Geometry(double scale)
     {
         if (_geometry is not null && _textScale.Equals(scale)) return _geometry;
-        var text = new FormattedText(glyph, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+        var text = new FormattedText(_glyph, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
             _face, size, new ImmutableSolidColorBrush(color));
         _geometry = text.BuildGeometry(default)!;
         _inkBounds = _geometry.Bounds;
@@ -62,23 +52,13 @@ internal sealed class GlyphIcon(string glyph, Color color, double size = Typogra
         var inkCenter = DevicePixelCenter(localCenter);
         var origin = inkCenter - _inkBounds.Center;
 
-        // Natural weight: one copy. (Five copies on the same spot stack their antialiased edges into a fuzzy outline.)
-        if (weight <= 0)
-        {
-            Draw(context, geometry, origin);
-            if (Highlight is { } highlight && HighlightOpacity > 0)
-            {
-                using (context.PushOpacity(HighlightOpacity))
-                using (context.PushTransform(Matrix.CreateTranslation(origin.X, origin.Y)))
-                    context.DrawGeometry(new ImmutableSolidColorBrush(highlight), null, geometry);
-            }
-            return;
-        }
-        Draw(context, geometry, new Point(origin.X - weight, origin.Y));
-        Draw(context, geometry, new Point(origin.X + weight, origin.Y));
-        Draw(context, geometry, new Point(origin.X, origin.Y - weight));
-        Draw(context, geometry, new Point(origin.X, origin.Y + weight));
         Draw(context, geometry, origin);
+        if (Highlight is { } highlight && HighlightOpacity > 0)
+        {
+            using (context.PushOpacity(HighlightOpacity))
+            using (context.PushTransform(Matrix.CreateTranslation(origin.X, origin.Y)))
+                context.DrawGeometry(new ImmutableSolidColorBrush(highlight), null, geometry);
+        }
     }
 
     private Point DevicePixelCenter(Point localCenter)
@@ -106,20 +86,20 @@ internal sealed class GlyphIcon(string glyph, Color color, double size = Typogra
 /// <summary>Small hand-built controls so the chrome follows the palette exactly (no Fluent theme chrome).</summary>
 internal static class Kit
 {
-    public static Button IconButton(string glyph, string name, Palette p, Action click, double size = ChromeTokens.ButtonSize, bool filled = false, Color? color = null, double radius = ChromeTokens.TopIconHoverRadius, Color? hoverColor = null)
+    public static Button IconButton(Icon icon, string name, Palette p, Action click, double size = ChromeTokens.ButtonSize, bool filled = false, Color? color = null, double radius = ChromeTokens.TopIconHoverRadius, Color? hoverColor = null)
     {
         var ink = color ?? p.Ink;
-        var glyphIcon = new GlyphIcon(glyph, ink, ChromeTokens.IconGlyphSize, 0) { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Highlight = hoverColor };
-        Control icon = glyphIcon;
+        var glyphIcon = new GlyphIcon(icon, ink, ChromeTokens.IconGlyphSize) { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Highlight = hoverColor };
+        Control content = glyphIcon;
         // Filled: a soft fill under the outline glyph, so the shape still reads (a solid fill alone is a blob).
-        if (filled && glyph == Glyph.Pin)
-            icon = new Panel
+        if (filled && ReferenceEquals(icon, Icons.KeepOnTop))
+            content = new Panel
             {
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
-                Children = { new GlyphIcon(Glyph.PinFilled, Color.FromArgb(Paint.PinnedGlyphAlpha, ink.R, ink.G, ink.B), ChromeTokens.IconGlyphSize, 0), icon },
+                Children = { new GlyphIcon(Icons.KeepOnTopFilled, Color.FromArgb(Paint.PinnedGlyphAlpha, ink.R, ink.G, ink.B), ChromeTokens.IconGlyphSize), glyphIcon },
             };
-        var button = Plain(icon, p, size, size, radius: radius);
+        var button = Plain(content, p, size, size, radius: radius);
         if (hoverColor is not null)
         {
             Anim.Handle? highlightFade = null;
@@ -163,9 +143,24 @@ internal static class Kit
         var border = new Border { CornerRadius = new CornerRadius(radius), Background = Brushes.Transparent, Child = content, Padding = new Thickness(0) };
         var button = new Button
         {
-            Content = border, Padding = new Thickness(0), Background = Brushes.Transparent, BorderThickness = new Thickness(0),
-            Width = width, Height = height, Cursor = new Cursor(StandardCursorType.Hand), Focusable = true,
-            HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch,
+            Content = border,
+            Padding = new Thickness(0),
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Width = width,
+            Height = height,
+            Cursor = new Cursor(StandardCursorType.Hand),
+            Focusable = true,
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            VerticalContentAlignment = VerticalAlignment.Stretch,
+            FocusAdorner = new FuncTemplate<Control>(() => new Border
+            {
+                Margin = new Thickness(Shape.Thin),
+                CornerRadius = new CornerRadius(radius),
+                BorderThickness = new Thickness(Shape.Thick),
+                BorderBrush = new SolidColorBrush(p.Ink, Paint.FocusBorder),
+                IsHitTestVisible = false,
+            }),
         };
         button.Classes.Add("plain");
         var wash = new SolidColorBrush(p.Ink, 0);
@@ -205,9 +200,9 @@ internal static class Kit
         {
             var on = isOn(value);
             var text = Text(label, on ? p.Ink : p.Faint, Typography.Body, on ? Typography.Strong : Typography.Regular);
-            text.Margin = new Thickness(8, 4);
-            var button = Plain(text, p, radius: 4);
-            button.Margin = new Thickness(0, 0, 4, 4);
+            text.Margin = new Thickness(Space.S, Space.Xs);
+            var button = Plain(text, p, height: ChromeTokens.ButtonSize, radius: Shape.Control);
+            button.Margin = new Thickness(0, 0, Space.Xs, Space.Xs);
             if (on && button.Content is Border b)
             {
                 b.Background = new SolidColorBrush(p.Accent, Paint.Selected(p.Dark));
@@ -224,10 +219,10 @@ internal static class Kit
     /// <summary>Panel title with a close button at the right (Esc does the same).</summary>
     public static Control PanelHeader(string title, Palette p, Action close)
     {
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(8, 0, 0, 0) };
+        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(Space.S, 0, 0, 0) };
         var text = Text(title, p.Ink, Typography.PanelTitle, Typography.Strong);
         grid.Children.Add(text);
-        var x = IconButton(Glyph.Close, "Close (Esc)", p, close);
+        var x = IconButton(Icons.Close, "Close (Esc)", p, close);
         x.VerticalAlignment = VerticalAlignment.Center;
         Grid.SetColumn(x, 1);
         grid.Children.Add(x);
@@ -235,7 +230,7 @@ internal static class Kit
     }
 
     public static Control Section(Palette p, string title) =>
-        new TextBlock { Text = title.ToUpperInvariant(), Foreground = new SolidColorBrush(p.Faint), FontSize = Typography.Micro, FontWeight = Typography.Strong, LetterSpacing = 0.8, Margin = new Thickness(8, 24, 0, 2) };
+        new TextBlock { Text = title.ToUpperInvariant(), Foreground = new SolidColorBrush(p.Faint), FontSize = Typography.Micro, FontWeight = Typography.Strong, LetterSpacing = Typography.CapsLetterSpacing, Margin = new Thickness(Space.S, Space.Xl, 0, Space.Nudge) };
 
     /// <summary>The window material as a transparency request, best first.</summary>
     public static WindowTransparencyLevel[] Material(string material) => material switch
@@ -253,8 +248,8 @@ internal static class Kit
         {
             var style = new Avalonia.Styling.Style(x => (state.Length == 0 ? x.OfType<TextBox>() : x.OfType<TextBox>().Class(state)).Template().OfType<Border>().Name("PART_BorderElement"));
             style.Setters.Add(new Avalonia.Styling.Setter(Border.BackgroundProperty, new SolidColorBrush(p.Surface)));
-            style.Setters.Add(new Avalonia.Styling.Setter(Border.BorderBrushProperty, new SolidColorBrush(state == ":focus" ? p.Accent : p.Faint, state == ":focus" ? Paint.FocusBorder : Paint.RestBorder)));
-            style.Setters.Add(new Avalonia.Styling.Setter(Border.BorderThicknessProperty, new Thickness(state == ":focus" ? 2 : 1)));
+            style.Setters.Add(new Avalonia.Styling.Setter(Border.BorderBrushProperty, new SolidColorBrush(state == ":focus" ? Contrast.FieldFocus(p) : p.Ink, state == ":focus" ? 1 : Paint.RestBorder)));
+            style.Setters.Add(new Avalonia.Styling.Setter(Border.BorderThicknessProperty, new Thickness(state == ":focus" ? Shape.Thick : Shape.Thin)));
             styles.Add(style);
         }
         var fg = new Avalonia.Styling.Style(x => x.OfType<TextBox>().Class(":focus"));

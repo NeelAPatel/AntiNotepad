@@ -77,8 +77,8 @@ internal sealed partial class PadWindow : Window, ISettingsHost
         Anim.Reduced = Settings.ReduceMotion;
         _saveTimer.Interval = SaveDelayInterval(Settings);
         _palette = ResolvePalette();
-        Width = Math.Max(320, Settings.Width) * (Settings.Split ? 2 : 1); Height = Math.Max(260, Settings.Height);
-        MinWidth = 320; MinHeight = 260;
+        Width = Math.Max(ChromeTokens.Size.PadWindowMinWidth, Settings.Width) * (Settings.Split ? 2 : 1); Height = Math.Max(ChromeTokens.Size.PadWindowMinHeight, Settings.Height);
+        MinWidth = ChromeTokens.Size.PadWindowMinWidth; MinHeight = ChromeTokens.Size.PadWindowMinHeight;
         if (Settings.X is { } x && Settings.Y is { } y && OnAnyScreen(x, y)) { Position = new PixelPoint(x, y); WindowStartupLocation = WindowStartupLocation.Manual; }
         else WindowStartupLocation = WindowStartupLocation.CenterScreen;
         WindowDecorations = WindowDecorations.BorderOnly;

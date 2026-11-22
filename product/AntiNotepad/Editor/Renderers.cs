@@ -1,3 +1,4 @@
+// Draws the editor paper and decorations, including result chips, dividers, and checkboxes.
 using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
@@ -98,7 +99,7 @@ internal sealed class PaperLayer(PadView pad) : Avalonia.Controls.Control
             if (double.IsNaN(top)) continue;
             // Wide enough to hold the fold chevrons, which sit in the 16 px just left of the text.
             var left = origin.X - 20;
-            dc.DrawRectangle(fill, null, new Rect(left, top - 2, Bounds.Width - 2 * left, bottom - top + 4), 9, 9);
+            dc.DrawRectangle(fill, null, new Rect(left, top - 2, Bounds.Width - 2 * left, bottom - top + 4), Shape.Popup, Shape.Popup);
         }
     }
 
@@ -212,7 +213,7 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
         var brush = Brush(color);
         paint = new TimerPaint(
             brush,
-            RenderPaint.Pen(brush, 1, join: PenLineJoin.Round),
+            RenderPaint.Pen(brush, Shape.Thin, join: PenLineJoin.Round),
             RenderPaint.Pen(brush, 1.6, PenLineCap.Round, PenLineJoin.Round));
         _timerPaints.Add(key, paint);
         return paint;
@@ -251,7 +252,7 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
         if (!view.VisualLinesValid || view.Document is null) return;
         var font = pad.Settings.Font;
         var typeface = GetTypeface(font);
-        var size = pad.Settings.FontSize * 0.93;
+        var size = pad.Settings.FontSize * Typography.EditorChipScale;
         var culture = CultureInfo.CurrentCulture;
         var scale = TopLevel.GetTopLevel(view)?.RenderScaling ?? 1;
         // Pass 1: every visible chip with its line geometry.
@@ -294,7 +295,7 @@ internal sealed class ResultRenderer(PadView pad) : IBackgroundRenderer
         // Baseline-aligned with the line's text.
         var y = c.Baseline - ft.Baseline;
         var rect = new Rect(x - 7, y - 2, width + 14, ft.Height + 4);
-        dc.DrawRectangle(Brush(c.Color, Paint.BadgeFill(pad.Palette.Dark)), null, rect, 4, 4);
+        dc.DrawRectangle(Brush(c.Color, Paint.BadgeFill(pad.Palette.Dark)), null, rect, Shape.Key, Shape.Key);
         if (icon is not null) DrawTimerIcon(dc, icon, new Rect(x, y, ft.Height * 0.62, ft.Height), c.Color, scale);
         dc.DrawText(ft, new Point(x + iconWidth, y));
         Chips.Add(new Chip(rect, c.Line, c.Kind, c.Value));
@@ -356,7 +357,7 @@ internal sealed class DividerRenderer(PadView pad) : IBackgroundRenderer
                 var key = new PenKey(pad.Palette.Marker, TopLevel.GetTopLevel(view)?.RenderScaling ?? 1);
                 if (!_pens.TryGet(key, out pen))
                 {
-                    pen = RenderPaint.Pen(RenderPaint.Brush(key.Color, Paint.KeyPen), 1);
+                    pen = RenderPaint.Pen(RenderPaint.Brush(key.Color, Paint.KeyPen), Shape.Thin);
                     _pens.Add(key, pen);
                 }
             }
@@ -396,13 +397,13 @@ internal sealed class CheckboxRenderer(PadView pad) : IBackgroundRenderer
     {
         if (!view.VisualLinesValid || view.Document is null || !pad.Decorate) return;
         var p = pad.Palette;
-        var size = Math.Round(pad.Settings.FontSize * 0.86);
+        var size = Math.Round(pad.Settings.FontSize * Shape.CheckboxSizeScale);
         var key = new PaintKey(p.Accent, p.Canvas, p.Done, TopLevel.GetTopLevel(view)?.RenderScaling ?? 1);
         if (!_paints.TryGet(key, out var paint))
         {
             paint = new Paint(
-                RenderPaint.Pen(RenderPaint.Brush(p.Accent, AntiNotepad.Theme.Paint.AccentPen), 1.6),
-                RenderPaint.Pen(RenderPaint.Brush(p.Canvas), 1.9, PenLineCap.Round, PenLineJoin.Round),
+                RenderPaint.Pen(RenderPaint.Brush(p.Accent, AntiNotepad.Theme.Paint.AccentPen), Shape.CheckboxAccentPen),
+                RenderPaint.Pen(RenderPaint.Brush(p.Canvas), Shape.CheckboxCheckPen, PenLineCap.Round, PenLineJoin.Round),
                 RenderPaint.Brush(p.Done));
             _paints.Add(key, paint);
         }
@@ -418,10 +419,10 @@ internal sealed class CheckboxRenderer(PadView pad) : IBackgroundRenderer
             var cx = (left.X + right.X) / 2 - view.HorizontalOffset;
             var cy = left.Y - view.VerticalOffset;
             var rect = new Rect(cx - size / 2, cy - size / 2 + 0.5, size, size);
-            if (m.Groups[2].Value == " ") dc.DrawRectangle(null, paint.Stroke, rect.Deflate(0.8), size * .28, size * .28);
+            if (m.Groups[2].Value == " ") dc.DrawRectangle(null, paint.Stroke, rect.Deflate(0.8), size * Shape.CheckboxRadiusScale, size * Shape.CheckboxRadiusScale);
             else
             {
-                dc.DrawRectangle(paint.Fill, null, rect, size * .28, size * .28);
+                dc.DrawRectangle(paint.Fill, null, rect, size * Shape.CheckboxRadiusScale, size * Shape.CheckboxRadiusScale);
                 using (dc.PushTransform(Matrix.CreateTranslation(rect.X, rect.Y)))
                     dc.DrawGeometry(null, paint.Check, CheckMark(size, key.Scale));
             }

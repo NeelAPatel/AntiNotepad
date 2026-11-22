@@ -28,6 +28,8 @@ internal sealed partial class PadWindow
         CornerRadius = new CornerRadius(Shape.Card),
     };
     private Anim.Handle? _pinRingFade;
+    private readonly List<Anim.Handle> _topRevealMotion = [];
+    private readonly List<Anim.Handle> _bottomRevealMotion = [];
     private bool _pinRingInitialized;
     private readonly LayoutTransformControl _scaler = new();
     private readonly Grid _content = new() { RowDefinitions = new RowDefinitions($"{ChromeTokens.DockedRowHeight},*") };
@@ -46,20 +48,26 @@ internal sealed partial class PadWindow
     private Border _leftHost = null!, _rightHost = null!;
     private readonly List<PadBar> _bars = [];
     private Control _barsHost = null!;
-    private readonly Border _toast = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(16, 0, 16, ChromeTokens.ToastBottomMargin), CornerRadius = new CornerRadius(Shape.Card), Padding = new Thickness(12, 8), IsVisible = false, MaxWidth = 380 };
+    private readonly Border _toast = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(Space.L, 0, Space.L, ChromeTokens.ToastBottomMargin), CornerRadius = new CornerRadius(Shape.Card), Padding = new Thickness(Space.M, Space.S), IsVisible = false, MaxWidth = ChromeTokens.Size.ToastMaxWidth };
     private readonly Panel _overlayHost = new() { IsVisible = false };
     private Border _overlayDragBand = null!;
     // The top bar sits on the sampled Canvas blur when the pointer reaches the edge.
     private readonly Panel _topLayer = new() { VerticalAlignment = VerticalAlignment.Top, Height = ChromeTokens.TopBackdrop.ClearStop, IsVisible = false };
     private readonly Panel _bottomLayer = new() { VerticalAlignment = VerticalAlignment.Bottom, Height = ChromeTokens.PagerStripHeight, IsVisible = false };
+    private readonly Border _topHandle = RevealHandle(VerticalAlignment.Top);
+    private readonly Border _bottomHandle = RevealHandle(VerticalAlignment.Bottom);
     private string? _barsMode;
     private bool _topShown, _bottomShown;
     private double _pointerY = double.NaN;
     // The float style's pager lives in its own popup just below the window, centred under it.
     private readonly Avalonia.Controls.Primitives.Popup _floatPager = new()
     {
-        Placement = PlacementMode.Bottom, VerticalOffset = ChromeTokens.FloatGap, IsLightDismissEnabled = false,
-        ShouldUseOverlayLayer = false, Topmost = false, PlacementConstraintAdjustment = PopupPositionerConstraintAdjustment.None,
+        Placement = PlacementMode.Bottom,
+        VerticalOffset = ChromeTokens.FloatGap - ChromeTokens.PillShadowReach,
+        IsLightDismissEnabled = false,
+        ShouldUseOverlayLayer = false,
+        Topmost = false,
+        PlacementConstraintAdjustment = PopupPositionerConstraintAdjustment.None,
     };
     private readonly DispatcherTimer _barsSleep = new() { Interval = TimeSpan.FromMilliseconds(450) };
     private readonly DispatcherTimer _chromeSleep = new() { Interval = TimeSpan.FromMilliseconds(1600) };
@@ -68,6 +76,8 @@ internal sealed partial class PadWindow
     private Anim.Handle? _chromeAnim;
     private Anim.Handle? _toastAnim;
     private Action? _toastAction;
+    private long _toastGeneration;
+    private Note? _withdrawToastUndoOnEdit;
     /// <summary>Ctrl+Z undoes the toast's action (a delete) until the user types something.</summary>
     private bool _undoArmed;
     private Control? _saveFailureOverlay;
@@ -75,6 +85,20 @@ internal sealed partial class PadWindow
     private TextBlock? _saveFailureReason;
     private Button? _saveFailureRetryButton, _saveFailureQuitButton;
     private Action? _saveFailureRetryAction;
+    private Action? _saveFailureQuitAction;
+
+    /// <summary>Marks the edge where hidden chrome can be revealed.</summary>
+    private static Border RevealHandle(VerticalAlignment edge) => new()
+    {
+        Width = ChromeTokens.RevealHandleWidth,
+        Height = ChromeTokens.RevealHandleHeight,
+        CornerRadius = new CornerRadius(Shape.Round(ChromeTokens.RevealHandleHeight)),
+        HorizontalAlignment = HorizontalAlignment.Center,
+        VerticalAlignment = edge,
+        Margin = edge == VerticalAlignment.Top ? new Thickness(0, ChromeTokens.RevealHandleInset, 0, 0) : new Thickness(0, 0, 0, ChromeTokens.RevealHandleInset),
+        IsHitTestVisible = false,
+        IsVisible = false,
+    };
 
     internal static Border CreateSplitDivider() => new()
     {
@@ -171,6 +195,8 @@ internal sealed partial class PadWindow
         _bars.Add(new PadBar(BarPane.Left, BarContextFor(BarPane.Left), BarActionsFor(BarPane.Left)));
         _barsHost = CreateBarsHost();
         AddChromeLayers(root, _topLayer, _bottomLayer, _toast, _barsHost, _floatPager);
+        root.Children.Add(_topHandle);
+        root.Children.Add(_bottomHandle);
         root.Children.Add(_pinRing);
         // The pager can be reparented later; the ring must remain above every chrome layer.
         _pinRing.ZIndex = int.MaxValue;
@@ -234,12 +260,12 @@ internal sealed partial class PadWindow
         pane.ShowMenu = (anchor, entries) => PadMenu.Show(anchor, entries, _palette, Settings);
         pane.AppMenu = () =>
         [
-            new("New note", _shortcuts.GetLabel("new-note"), MenuGlyphs.NewNote, NewNote),
-            new("Search notes", _shortcuts.GetLabel("search"), MenuGlyphs.Search, () => OpenSearch()),
-            new(Settings.Split ? "Close split view" : "Split view", _shortcuts.GetLabel("split"), MenuGlyphs.Split, ToggleSplit),
-            new(Settings.Pinned ? "Unpin" : "Keep on top", _shortcuts.GetLabel("keep-on-top"), MenuGlyphs.Pin, TogglePin),
+            new("New note", _shortcuts.GetLabel("new-note"), Icons.NewNote, NewNote),
+            new("Search notes", _shortcuts.GetLabel("search"), Icons.Search, () => OpenSearch()),
+            new(Settings.Split ? "Close split view" : "Split view", _shortcuts.GetLabel("split"), Icons.Split, ToggleSplit),
+            new(Settings.Pinned ? "Unpin" : "Keep on top", _shortcuts.GetLabel("keep-on-top"), Icons.KeepOnTop, TogglePin),
             MenuEntry.Separator,
-            new("Settings", _shortcuts.GetLabel("settings"), MenuGlyphs.Settings, OpenSettings),
+            new("Settings", _shortcuts.GetLabel("settings"), Icons.Settings, OpenSettings),
             new($"Hide {AppInfo.Name}", "Escape", null, HideResident),
         ];
         pane.FocusedPane += () => HandlePaneFocused(pane);
@@ -265,6 +291,7 @@ internal sealed partial class PadWindow
     private void OnPaneEdited(PadView pane)
     {
         _undoArmed = false;
+        if (_withdrawToastUndoOnEdit is { } slotUndoNote && ReferenceEquals(pane.Note, slotUndoNote)) HideToast();
         if (pane.Note is { } note) ScheduleNoteSave(note, IsBlankDocument(pane.Editor.Document));
         UpdateChrome();
         SleepChrome(soon: false);
@@ -289,13 +316,13 @@ internal sealed partial class PadWindow
         foreach (var bar in _bars) bar.Rebuild(BarContextFor(bar.Pane), BarActionsFor(bar.Pane));
         BuildSwapButton();
         _icons.Children.Add(_swapButton!);
-        _icons.Children.Add(Kit.IconButton(Glyph.Search, ShortcutTooltip("Search notes", _shortcuts.GetLabel("search")), p, ToggleSearch));
-        _icons.Children.Add(Kit.IconButton(Glyph.Split, ShortcutTooltip("Split view with a slot", _shortcuts.GetLabel("split")), p, ToggleSplit));
+        _icons.Children.Add(Kit.IconButton(Icons.Search, ShortcutTooltip("Search notes", _shortcuts.GetLabel("search")), p, ToggleSearch));
+        _icons.Children.Add(Kit.IconButton(Icons.Split, ShortcutTooltip("Split view with a slot", _shortcuts.GetLabel("split")), p, ToggleSplit));
         // Pinned: the pin is filled with the accent, so the state reads at a glance.
-        _icons.Children.Add(Kit.IconButton(Glyph.Pin, ShortcutTooltip(Settings.Pinned ? "Unpin" : "Keep on top", _shortcuts.GetLabel("keep-on-top")), p, TogglePin,
+        _icons.Children.Add(Kit.IconButton(Icons.KeepOnTop, ShortcutTooltip(Settings.Pinned ? "Unpin" : "Keep on top", _shortcuts.GetLabel("keep-on-top")), p, TogglePin,
             filled: Settings.Pinned, color: Settings.Pinned ? p.Accent : null));
-        _icons.Children.Add(Kit.IconButton(Glyph.Settings, ShortcutTooltip("Settings", _shortcuts.GetLabel("settings")), p, OpenSettings));
-        _icons.Children.Add(Kit.IconButton(Glyph.Hide, "Hide (Esc)", p, HideResident));
+        _icons.Children.Add(Kit.IconButton(Icons.Settings, ShortcutTooltip("Settings", _shortcuts.GetLabel("settings")), p, OpenSettings));
+        _icons.Children.Add(Kit.IconButton(Icons.Hide, "Hide (Esc)", p, HideResident));
         _divider.Background = new SolidColorBrush(p.Faint, ChromeTokens.DividerAlpha);
         _toast.Background = new SolidColorBrush(p.Ink, Paint.Toast);
         _toast.BoxShadow = PadBar.PillShadow(p);
@@ -431,6 +458,8 @@ internal sealed partial class PadWindow
             ? MixColor(selected, _palette.Ink, ChromeTokens.DevBadgeLightTextInkMix)
             : badgeColor;
         var chip = Chip(shortText, badgeColor, textColor);
+        ToolTip.SetTip(chip, fullText);
+        Avalonia.Automation.AutomationProperties.SetName(chip, fullText);
         if (shortText == "dev") return chip;
 
         var glyphFont = FindDevBadgeGlyphFont();
@@ -484,9 +513,10 @@ internal sealed partial class PadWindow
         text.VerticalAlignment = VerticalAlignment.Center;
         text.IsHitTestVisible = false;
         text.Inlines!.Clear();
-        if (value.StartsWith("\uE0A0 ", StringComparison.Ordinal))
+        const string badgeGlyph = AppInfo.DevBadgeGlyph;
+        if (value.StartsWith(badgeGlyph + " ", StringComparison.Ordinal))
         {
-            text.Inlines.Add(new Avalonia.Controls.Documents.Run(glyphFont is null ? "\u2387" : "\uE0A0")
+            text.Inlines.Add(new Avalonia.Controls.Documents.Run(glyphFont is null ? "\u2387" : badgeGlyph)
             {
                 FontFamily = glyphFont ?? text.FontFamily,
                 FontWeight = Typography.Regular
@@ -528,10 +558,18 @@ internal sealed partial class PadWindow
     private void ApplyBars()
     {
         if (_barsMode == Settings.Bars) return;
+        CancelRevealMotion(_topRevealMotion);
+        CancelRevealMotion(_bottomRevealMotion);
         _barsMode = Settings.Bars;
+        _topHandle.IsVisible = _bottomHandle.IsVisible = Sliding;
+        _topHandle.Background = _bottomHandle.Background = new SolidColorBrush(_palette.Faint);
         var root = (Panel)_scaler.Child!;
         (_top.Parent as Panel)?.Children.Remove(_top);
-        if (ReferenceEquals(_floatPager.Child, _barsHost)) _floatPager.Child = null;
+        if (_floatPager.Child is Border floatPadding)
+        {
+            floatPadding.Child = null;
+            _floatPager.Child = null;
+        }
         (_barsHost.Parent as Panel)?.Children.Remove(_barsHost);
         _floatPager.IsOpen = false;
         _topLayer.IsVisible = _bottomLayer.IsVisible = false;
@@ -548,8 +586,8 @@ internal sealed partial class PadWindow
         }
         if (Settings.Bars == "float")
         {
-            _floatPager.VerticalOffset = ChromeTokens.FloatGap;
-            _floatPager.Child = _barsHost;
+            _floatPager.VerticalOffset = ChromeTokens.FloatGap - ChromeTokens.PillShadowReach;
+            _floatPager.Child = new Border { Padding = new Thickness(ChromeTokens.PillShadowReach), Child = _barsHost };
         }
         else if (Settings.Bars == "overlay") _bottomLayer.Children.Add(_barsHost);
         else root.Children.Add(_barsHost);
@@ -605,10 +643,20 @@ internal sealed partial class PadWindow
         if (!(y > h - BottomZone) && !_bars.Any(bar => bar.Root.IsPointerOver)) SlideBar(top: false, show: false);
     }
 
+    /// <summary>Cancels outstanding reveal frames before changing a bar's state or mode.</summary>
+    internal static void CancelRevealMotion(List<Anim.Handle> motion)
+    {
+        foreach (var handle in motion) handle.Cancel();
+        motion.Clear();
+    }
+
     private void SlideBar(bool top, bool show, bool instant = false)
     {
         if ((top ? _topShown : _bottomShown) == show && !instant) return;
+        var motion = top ? _topRevealMotion : _bottomRevealMotion;
+        CancelRevealMotion(motion);
         if (top) _topShown = show; else _bottomShown = show;
+        var handle = top ? _topHandle : _bottomHandle;
         if (top && show && _active?.Note is { } note) SetSavedText(SavedText(note, DateTime.Now), 0);
         if (!top && Settings.Bars == "float") { FloatPager(show, instant); return; }
         var layer = top ? _topLayer : _bottomLayer;
@@ -617,8 +665,8 @@ internal sealed partial class PadWindow
         var fromY = shift.Y; var toY = show ? 0 : hidden;
         var fromO = layer.Opacity; var toO = show ? 1.0 : 0;
         layer.IsHitTestVisible = show;
-        if (instant || Anim.Reduced) { shift.Y = toY; layer.Opacity = toO; return; }
-        Anim.Run(layer, MotionTokens.BarsReveal, t => { var k = Anim.EaseOut(t); shift.Y = fromY + (toY - fromY) * k; layer.Opacity = fromO + (toO - fromO) * k; }, decorative: false);
+        if (instant || Anim.Reduced) { shift.Y = toY; layer.Opacity = toO; handle.Opacity = 1 - toO; return; }
+        motion.Add(Anim.Run(layer, MotionTokens.BarsReveal, t => { var k = Anim.EaseOut(t); shift.Y = fromY + (toY - fromY) * k; layer.Opacity = fromO + (toO - fromO) * k; handle.Opacity = 1 - layer.Opacity; }, decorative: false));
     }
 
     /// <summary>Fades the floating bars in their popup below the window.</summary>
@@ -632,6 +680,7 @@ internal sealed partial class PadWindow
         if (instant || Anim.Reduced)
         {
             foreach (var bar in _bars) bar.Root.Opacity = show ? 1 : 0;
+            _bottomHandle.Opacity = show ? 0 : 1;
             if (!show) _floatPager.IsOpen = false;
             return;
         }
@@ -641,7 +690,7 @@ internal sealed partial class PadWindow
             var root = _bars[i].Root;
             var from = root.Opacity;
             Action? after = i == _bars.Count - 1 && !show ? () => { if (!_bottomShown) _floatPager.IsOpen = false; } : null;
-            Anim.Run(root, MotionTokens.PillFade, t => root.Opacity = from + (to - from) * Anim.EaseOut(t), after, decorative: false);
+            _bottomRevealMotion.Add(Anim.Run(root, MotionTokens.PillFade, t => { root.Opacity = from + (to - from) * Anim.EaseOut(t); _bottomHandle.Opacity = 1 - root.Opacity; }, after, decorative: false));
         }
     }
 
@@ -689,19 +738,27 @@ internal sealed partial class PadWindow
 
     // ---------- toast ----------
 
-    internal void Toast(string text, string? action = null, Action? onAction = null, bool brief = false)
+    internal void Toast(string text, string? action = null, Action? onAction = null, bool brief = false, Note? withdrawUndoOnEdit = null)
     {
         var p = _palette;
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
-        row.Children.Add(new TextBlock { Text = text, Foreground = new SolidColorBrush(p.Canvas), FontSize = Typography.Caption, TextWrapping = TextWrapping.Wrap, MaxWidth = 300, VerticalAlignment = VerticalAlignment.Center });
+        var generation = ++_toastGeneration;
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M };
+        row.Children.Add(new TextBlock { Text = text, Foreground = new SolidColorBrush(p.Canvas), FontSize = Typography.Caption, TextWrapping = TextWrapping.Wrap, MaxWidth = ChromeTokens.Size.ToastTextMaxWidth, VerticalAlignment = VerticalAlignment.Center });
         _toastAction = onAction;
         _undoArmed = onAction is not null;
+        _withdrawToastUndoOnEdit = onAction is null ? null : withdrawUndoOnEdit;
         if (action is not null && onAction is not null)
         {
-            var label = Kit.Text(action, p.Accent, Typography.Body, Typography.Strong);
-            label.Margin = new Thickness(8, 2);
-            var button = Kit.Plain(label, p with { Ink = p.Canvas }, height: 32);
-            button.Click += (_, _) => { onAction(); HideToast(); };
+            var label = Kit.Text(action, p.Canvas, Typography.Body, Typography.Strong);
+            label.TextDecorations = TextDecorations.Underline;
+            label.Margin = new Thickness(Space.S, Space.Nudge);
+            var button = Kit.Plain(label, p with { Ink = p.Canvas }, height: ChromeTokens.ButtonSize);
+            button.Click += (_, _) =>
+            {
+                if (_toastGeneration != generation || !ReferenceEquals(_toastAction, onAction)) return;
+                onAction();
+                if (_toastGeneration == generation) HideToast();
+            };
             row.Children.Add(button);
         }
         _toast.Child = row;
@@ -721,7 +778,8 @@ internal sealed partial class PadWindow
 
     private void HideToast()
     {
-        _toastAction = null; _undoArmed = false;
+        _toastGeneration++;
+        _toastAction = null; _undoArmed = false; _withdrawToastUndoOnEdit = null;
         _toastAnim?.Cancel();
         var startOpacity = _toast.Opacity;
         _toastAnim = Anim.Run(_toast, MotionTokens.OverlayOut, t => _toast.Opacity = startOpacity * (1 - t),
@@ -730,11 +788,13 @@ internal sealed partial class PadWindow
 
     private void ShowSaveFailurePrompt(string? reason, Action retry, Action quitAnyway)
     {
-        var message = string.IsNullOrWhiteSpace(reason) ? "The notes could not be written to disk." : reason;
+        var message = string.IsNullOrWhiteSpace(reason) ? "" : "Details: " + reason;
         if (_saveFailureOverlay is { } current && IsOverlay(current))
         {
             _saveFailureReason!.Text = message;
+            _saveFailureReason.IsVisible = message.Length > 0;
             _saveFailureRetryAction = retry;
+            _saveFailureQuitAction = quitAnyway;
             return;
         }
 
@@ -744,39 +804,46 @@ internal sealed partial class PadWindow
         var detail = new TextBlock
         {
             Text = message,
-            Foreground = new SolidColorBrush(p.Muted),
+            IsVisible = message.Length > 0,
+            Foreground = new SolidColorBrush(Contrast.EnsureOn(p.Muted, p.Surface, Contrast.Text)),
             FontSize = Typography.Body,
-            TextWrapping = TextWrapping.Wrap, MaxWidth = 380,
+            TextWrapping = TextWrapping.Wrap,
+            MaxWidth = ChromeTokens.Size.SaveFailureReasonMaxWidth,
         };
         Avalonia.Automation.AutomationProperties.SetName(detail, "Save error reason");
 
-        var retryButton = Kit.Plain(Kit.Text("Retry", p.Accent, Typography.Body, Typography.Strong), p, 88, 32);
-        if (retryButton.Content is Border retryFace) retryFace.Padding = new Thickness(8, 2);
+        var retryButton = Kit.Plain(Kit.Text("Retry", p.Accent, Typography.Body, Typography.Strong), p, 88, ChromeTokens.ButtonSize);
+        if (retryButton.Content is Border retryFace) retryFace.Padding = new Thickness(Space.S, Space.Nudge);
         Avalonia.Automation.AutomationProperties.SetName(retryButton, "Retry");
         retryButton.Click += (_, _) => retry();
-        var quitButton = Kit.Plain(Kit.Text("Quit anyway", p.Muted, Typography.Body), p, 104, 32);
-        if (quitButton.Content is Border quitFace) quitFace.Padding = new Thickness(8, 2);
+        var quitButton = Kit.Plain(Kit.Text("Quit anyway", p.Muted, Typography.Body), p, 104, ChromeTokens.ButtonSize);
+        if (quitButton.Content is Border quitFace) quitFace.Padding = new Thickness(Space.S, Space.Nudge);
         Avalonia.Automation.AutomationProperties.SetName(quitButton, "Quit anyway");
         quitButton.Click += (_, _) => quitAnyway();
         var buttons = new StackPanel
         {
-            Orientation = Orientation.Horizontal, Spacing = 6, HorizontalAlignment = HorizontalAlignment.Right,
-            Margin = new Thickness(0, 6, 0, 0), Children = { retryButton, quitButton },
+            Orientation = Orientation.Horizontal,
+            Spacing = Space.S,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, Space.S, 0, 0),
+            Children = { retryButton, quitButton },
         };
-        var content = new StackPanel { Spacing = 9, Children = { title, detail, buttons } };
+        var body = new TextBlock { Text = "Your latest edits aren't on disk yet. Retry tries again. Quit anyway closes AntiNotepad, and those edits may be lost.", Foreground = new SolidColorBrush(p.Ink), FontSize = Typography.Body, TextWrapping = TextWrapping.Wrap, MaxWidth = ChromeTokens.Size.SaveFailureReasonMaxWidth };
+        var content = new StackPanel { Spacing = Space.S, Children = { title, body, detail, buttons } };
         var card = new Border
         {
             Child = content,
-            MaxWidth = 420,
-            MinWidth = 240,
-            Margin = new Thickness(12),
-            Padding = new Thickness(16),
+            MaxWidth = ChromeTokens.Size.SaveFailureCardMaxWidth,
+            MinWidth = ChromeTokens.Size.SaveFailureCardMinWidth,
+            Margin = new Thickness(Space.M),
+            Padding = new Thickness(Space.L),
             CornerRadius = new CornerRadius(Shape.Dialog),
             Background = new SolidColorBrush(p.Surface),
             BorderBrush = new SolidColorBrush(p.Faint, Paint.PopupBorder),
-            BorderThickness = new Thickness(1),
+            BorderThickness = new Thickness(Shape.Thin),
             BoxShadow = PadBar.PillShadow(p),
-            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
         };
         Avalonia.Automation.AutomationProperties.SetName(card, "Save failure prompt");
         var overlay = new Grid { Background = Brushes.Transparent, Children = { card } };
@@ -787,6 +854,7 @@ internal sealed partial class PadWindow
         _saveFailureRetryButton = retryButton;
         _saveFailureQuitButton = quitButton;
         _saveFailureRetryAction = retry;
+        _saveFailureQuitAction = quitAnyway;
         ShowOverlay(overlay);
         Dispatcher.UIThread.Post(() => { if (IsOverlay(overlay)) retryButton.Focus(); });
     }
@@ -798,7 +866,8 @@ internal sealed partial class PadWindow
         if (e.Key == Key.Enter)
         {
             e.Handled = true;
-            _saveFailureRetryAction?.Invoke();
+            InvokeSaveFailureEnter(_saveFailureQuitButton?.IsFocused == true || ReferenceEquals(e.Source, _saveFailureQuitButton),
+                _saveFailureRetryAction, _saveFailureQuitAction);
             return;
         }
         if (e.Key == Key.Tab)
@@ -811,6 +880,9 @@ internal sealed partial class PadWindow
         if (e.Key is Key.Space or Key.LeftShift or Key.RightShift or Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt) return;
         e.Handled = true;
     }
+
+    private static void InvokeSaveFailureEnter(bool quitFocused, Action? retry, Action? quitAnyway) =>
+        (quitFocused ? quitAnyway : retry)?.Invoke();
 
     private void OnSaveFailurePointerPressed(object? sender, PointerPressedEventArgs e)
     {

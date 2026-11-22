@@ -1,3 +1,4 @@
+// Presents keyboard shortcuts and modes in the pad so users can find commands without leaving it.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
@@ -12,14 +13,21 @@ internal sealed class HelpOverlay : ScrollViewer
 {
     private static readonly (string Section, (string Keys, string What)[] Rows)[] Modes =
     [
-        ("Line 1 modes", [("math", "Live answers, variables, units, %, sum"), ("list", "Every line is a checkbox"), ("timer", "25m focus · Enter starts"), ("code py", "Syntax colors"), ("clipboard", "Collects what you copy")]),
+        ("Line 1 modes", [("math", "Live answers, variables, units, %, sum"), ("list", ""), ("timer", "25m focus · Enter starts"), ("code py", "Syntax colors"), ("clipboard", "Collects what you copy")]),
     ];
+
+    internal static string ListDescription(string value) => value switch
+    {
+        "check" => "Every line gets a checkbox",
+        "number" => "Every line is numbered",
+        _ => "Every line gets a bullet",
+    };
 
     public HelpOverlay(PadWindow window, Palette p)
     {
-        Margin = new Thickness(10, 14, 10, 40);
+        Margin = new Thickness(Space.M, Space.L, Space.M, ChromeTokens.HelpOverlayBottomMargin);
         HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled;
-        var panel = new StackPanel { Margin = new Thickness(8, 0, 14, 12) };
+        var panel = new StackPanel { Margin = new Thickness(Space.S, 0, Space.L, Space.M) };
         panel.Children.Add(Kit.PanelHeader("Shortcuts", p, window.CloseOverlay));
         foreach (var group in ShortcutMap.HelpRows(window.Shortcuts).GroupBy(row => row.Section))
         {
@@ -32,7 +40,7 @@ internal sealed class HelpOverlay : ScrollViewer
                     Background = new SolidColorBrush(p.Ink, Paint.HelpWash(p.Dark)),
                     CornerRadius = new CornerRadius(Shape.Key),
                     Padding = new Thickness(ChromeTokens.BadgeHorizontalPadding, ChromeTokens.BadgeBottomPadding),
-                    MinWidth = 150,
+                    MinWidth = Space.HelpKeyColumnWidth,
                     Child = new TextBlock
                     {
                         Text = row.Keys,
@@ -58,7 +66,7 @@ internal sealed class HelpOverlay : ScrollViewer
                     Background = new SolidColorBrush(p.Ink, Paint.HelpWash(p.Dark)),
                     CornerRadius = new CornerRadius(Shape.Key),
                     Padding = new Thickness(ChromeTokens.BadgeHorizontalPadding, ChromeTokens.BadgeBottomPadding),
-                    MinWidth = 150,
+                    MinWidth = Space.HelpKeyColumnWidth,
                     Child = new TextBlock
                     {
                         Text = keys,
@@ -67,7 +75,7 @@ internal sealed class HelpOverlay : ScrollViewer
                         Foreground = new SolidColorBrush(p.Ink)
                     }
                 };
-                var text = new TextBlock { Text = what, Foreground = new SolidColorBrush(p.Muted), FontSize = Typography.Label, Margin = new Thickness(ChromeTokens.FirstItemInset, 0, 0, 0), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
+                var text = new TextBlock { Text = keys == "list" ? ListDescription(window.Settings.ListDefault) : what, Foreground = new SolidColorBrush(p.Muted), FontSize = Typography.Label, Margin = new Thickness(ChromeTokens.FirstItemInset, 0, 0, 0), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
                 grid.Children.Add(key);
                 Grid.SetColumn(text, 1); grid.Children.Add(text);
                 panel.Children.Add(grid);

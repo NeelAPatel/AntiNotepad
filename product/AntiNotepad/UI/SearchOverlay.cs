@@ -1,3 +1,4 @@
+// Presents note and trash search inside the pad, with navigation and selection of results.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -44,7 +45,7 @@ internal sealed class SearchOverlay : Grid
         _debounce.Tick += (_, _) => { _debounce.Stop(); StartSearch(); };
         DetachedFromVisualTree += (_, _) => { _disposed = true; _debounce.Stop(); _searchGeneration.Dispose(); };
         RowDefinitions = new RowDefinitions("Auto,*,Auto");
-        Margin = new Thickness(14, 14, 14, 46);
+        Margin = new Thickness(Space.L, Space.L, Space.L, ChromeTokens.SearchOverlayBottomMargin);
 
         _query = new TextBox
         {
@@ -53,15 +54,15 @@ internal sealed class SearchOverlay : Grid
             FontSize = Typography.Input,
             Background = new SolidColorBrush(_p.Surface),
             Foreground = new SolidColorBrush(_p.Ink),
-            BorderThickness = new Thickness(1),
+            BorderThickness = new Thickness(Shape.Thin),
             BorderBrush = new SolidColorBrush(_p.Faint, Paint.FieldBorder),
             CornerRadius = new CornerRadius(Shape.Card),
-            Padding = new Thickness(12, 8),
+            Padding = new Thickness(Space.M, Space.S),
             CaretBrush = new SolidColorBrush(_p.Caret), SelectionBrush = new SolidColorBrush(_p.Selection),
         };
         Avalonia.Automation.AutomationProperties.SetName(_query, "Search notes");
         _status = Kit.Text("", _p.Faint, Typography.Caption);
-        _status.Margin = new Thickness(4, 8, 0, 0);
+        _status.Margin = new Thickness(Space.Xs, Space.S, 0, 0);
         _query.TextChanged += (_, _) =>
         {
             if (_disposed) return;
@@ -75,18 +76,18 @@ internal sealed class SearchOverlay : Grid
         };
         _query.AddHandler(KeyDownEvent, OnKey, RoutingStrategies.Tunnel);
 
-        var tools = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, Margin = new Thickness(6, 0, 0, 0) };
-        tools.Children.Add(Kit.IconButton(GridView ? Glyph.List : Glyph.Grid,
+        var tools = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.Nudge, Margin = new Thickness(Space.S, 0, 0, 0) };
+        tools.Children.Add(Kit.IconButton(GridView ? Icons.List : Icons.Grid,
             ShortcutTooltip(GridView ? "List view" : "Card grid", window.Shortcuts.GetLabel("grid")), _p, ToggleGrid, 32));
-        tools.Children.Add(Kit.IconButton(trash ? Glyph.Back : Glyph.Delete,
+        tools.Children.Add(Kit.IconButton(trash ? Icons.Back : Icons.OpenTrash,
             ShortcutTooltip(trash ? "Back to notes" : $"Trash · {window.Data.Trash.Count}", window.Shortcuts.GetLabel("trash")), _p, ToggleTrash, 32));
-        tools.Children.Add(Kit.IconButton(Glyph.Close, "Close (Esc)", _p, window.CloseOverlay, 32));
-        var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(0, 0, 0, 8) };
+        tools.Children.Add(Kit.IconButton(Icons.Close, "Close (Esc)", _p, window.CloseOverlay, 32));
+        var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(0, 0, 0, Space.S) };
         header.Children.Add(_query);
         Grid.SetColumn(tools, 1); header.Children.Add(tools);
         Children.Add(header);
 
-        _results = GridView ? new WrapPanel { Orientation = Orientation.Horizontal } : new StackPanel { Spacing = 2 };
+        _results = GridView ? new WrapPanel { Orientation = Orientation.Horizontal } : new StackPanel { Spacing = Space.Nudge };
         _scroll = new ScrollViewer { Content = _results, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled };
         Grid.SetRow(_scroll, 1); Children.Add(_scroll);
 
@@ -108,6 +109,7 @@ internal sealed class SearchOverlay : Grid
         return Enumerable.Reverse(d.Stack).Where(n => !n.IsEmpty).Concat(d.Slots.Where(s => !s.IsEmpty));
     }
 
+    /// <summary>Starts a search against a snapshot of the current notes so results match the requested query.</summary>
     private void StartSearch()
     {
         if (_disposed || !_window.IsOverlay(this)) return;
@@ -169,14 +171,14 @@ internal sealed class SearchOverlay : Grid
             _results.Children.Add(card);
         }
         if (_items.Count == 0)
-            _results.Children.Add(new TextBlock { Text = ShowingTrash ? "The trash is empty." : query.Length > 0 ? "No notes match." : "No notes yet.", Foreground = new SolidColorBrush(_p.Faint), Margin = new Thickness(6, 16) });
+            _results.Children.Add(new TextBlock { Text = ShowingTrash ? "The trash is empty." : query.Length > 0 ? "No notes match." : "No notes yet.", Foreground = new SolidColorBrush(_p.Faint), Margin = new Thickness(Space.S, Space.L) });
         UpdateCardStates();
         UpdateStatus();
     }
 
     private void UpdateStatus()
     {
-        var hint = ShowingTrash ? "Enter restores · Delete removes forever" : "Enter opens · Ctrl+Delete moves to trash · Ctrl+click selects several";
+        var hint = ShowingTrash ? "Enter restores · Ctrl+Delete removes forever" : "Enter opens · Ctrl+Delete moves to trash · Ctrl+click selects several";
         _status.Text = $"{_items.Count} {(ShowingTrash ? "in trash" : _items.Count == 1 ? "note" : "notes")}{(_selected.Count > 0 ? $" · {_selected.Count} selected" : "")} · {hint}";
     }
 
@@ -194,22 +196,22 @@ internal sealed class SearchOverlay : Grid
             FontFamily = new FontFamily(Typography.MonoFamily),
         };
         Highlight(snippet, match.Snippet, terms);
-        var meta = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        var meta = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.S };
         if (note.Slot > 0) meta.Children.Add(Kit.Text($"slot {note.Slot}", _p.Accent, Typography.Micro, Typography.Strong));
         if (match.Mode != NoteMode.Plain) meta.Children.Add(Kit.Text(Modes.Label(match.Mode, match.ModeArgument), _p.Keyword, Typography.Micro, Typography.Strong));
         meta.Children.Add(Kit.Text(ShowingTrash && note.Deleted is { } del ? "deleted " + Kit.Ago(del) : Kit.Ago(note.Modified), _p.Faint, Typography.Micro));
-        var body = new StackPanel { Spacing = 3, Children = { title, snippet, meta } };
+        var body = new StackPanel { Spacing = Space.Xs, Children = { title, snippet, meta } };
         var border = new Border
         {
             Child = body,
-            Padding = new Thickness(12, 8),
+            Padding = new Thickness(Space.M, Space.S),
             CornerRadius = new CornerRadius(Shape.Card),
             Background = new SolidColorBrush(_p.Surface, Paint.ResultSurface),
             BorderBrush = new SolidColorBrush(_p.Faint, Paint.ResultBorder),
-            BorderThickness = new Thickness(1),
+            BorderThickness = new Thickness(Shape.Thin),
             Width = GridView ? CardWidth() : double.NaN,
-            Height = GridView ? 152 : double.NaN,
-            Margin = GridView ? new Thickness(0, 0, 8, 8) : new Thickness(0),
+            Height = GridView ? ChromeTokens.Size.SearchResultCardHeight : double.NaN,
+            Margin = GridView ? new Thickness(0, 0, Space.S, Space.S) : new Thickness(0),
             Cursor = new Cursor(StandardCursorType.Hand),
         };
         border.PointerPressed += (_, e) =>
@@ -254,7 +256,7 @@ internal sealed class SearchOverlay : Grid
             var picked = _selected.Contains(_items[i]);
             border.Background = new SolidColorBrush(picked ? _p.Selection : _p.Surface, picked || current ? 1 : Paint.ResultSurface);
             border.BorderBrush = new SolidColorBrush(current ? _p.Accent : _p.Faint, current ? Paint.ResultCurrent : Paint.ResultBorder);
-            border.BorderThickness = new Thickness(current ? 2 : 1);
+            border.BorderThickness = new Thickness(current ? Shape.Thick : Shape.Thin);
         }
     }
 
@@ -334,7 +336,10 @@ internal sealed class SearchOverlay : Grid
             case Key.Left when e.KeyModifiers == KeyModifiers.None && GridView && _query.CaretIndex == 0: Move(-1); break;
             case Key.Enter when e.KeyModifiers == KeyModifiers.None: Open(); break;
             case Key.Space when e.KeyModifiers == KeyModifiers.Control: if (_items.Count > 0 && !_selected.Add(_items[_cursor])) _selected.Remove(_items[_cursor]); UpdateCardStates(); UpdateStatus(); break;
-            case Key.Delete when e.KeyModifiers == KeyModifiers.Control || e.KeyModifiers == KeyModifiers.None && ShowingTrash: DeleteSelected(); break;
+            case Key.Delete when e.KeyModifiers == KeyModifiers.Control
+                && _query.SelectionStart == _query.SelectionEnd
+                && _query.CaretIndex == (_query.Text?.Length ?? 0):
+                DeleteSelected(); break;
             case Key.Back when e.KeyModifiers == KeyModifiers.Control && (_query.Text?.Length ?? 0) == 0: DeleteSelected(); break;
             default: return;
         }
@@ -375,11 +380,30 @@ internal sealed class SearchOverlay : Grid
         var d = _window.Data;
         if (ShowingTrash)
         {
-            foreach (var n in targets) d.Trash.Remove(n);
-            _window.Toast(targets.Count == 1 ? "Deleted forever" : $"{targets.Count} notes deleted forever");
+            var removed = targets.Where(n => d.Trash.Contains(n))
+                .Select(n =>
+                {
+                    var body = n.Text;
+                    return (Note: n, Index: d.Trash.IndexOf(n), Body: body, BodyAvailable: !n.BodyUnavailable);
+                })
+                .OrderBy(item => item.Index)
+                .ToList();
+            foreach (var item in removed) d.Trash.Remove(item.Note);
+            if (removed.Count > 0)
+                _window.Toast(removed.Count == 1 ? "Deleted forever" : $"{removed.Count} notes deleted forever", "Undo", () =>
+                {
+                    foreach (var item in removed)
+                    {
+                        d.Trash.Insert(Math.Clamp(item.Index, 0, d.Trash.Count), item.Note);
+                        if (item.BodyAvailable) item.Note.Text = item.Body;
+                    }
+                    _window.SearchChangedData();
+                    if (_window.IsOverlay(this)) StartSearch();
+                });
         }
         else
         {
+            var skippedSlots = targets.Count(n => n.Slot > 0);
             var removed = targets.Where(n => n.Slot == 0).Select(n => (Note: n, Index: d.Stack.IndexOf(n))).OrderBy(x => x.Index).ToList();
             foreach (var n in targets)
             {
@@ -391,7 +415,12 @@ internal sealed class SearchOverlay : Grid
             }
             if (d.Stack.Count == 0) d.Stack.Add(new Note());
             d.Current = Math.Clamp(d.Current, 0, d.Stack.Count - 1);
-            _window.Toast(removed.Count == 1 ? "Moved to trash" : $"{removed.Count} notes moved to trash", "Undo", () =>
+            var notice = removed.Count == 0 ? "Slots are cleared in the editor"
+                : removed.Count == 1 ? "Moved to trash"
+                : $"{removed.Count} notes moved to trash";
+            if (removed.Count > 0 && skippedSlots > 0)
+                notice += $" · {skippedSlots} {(skippedSlots == 1 ? "slot" : "slots")} skipped";
+            _window.Toast(notice, removed.Count > 0 ? "Undo" : null, removed.Count > 0 ? () =>
             {
                 // Back where they were, oldest index first so later indexes stay valid.
                 foreach (var (n, index) in removed)
@@ -403,7 +432,8 @@ internal sealed class SearchOverlay : Grid
                 d.Current = Math.Clamp(d.Current, 0, d.Stack.Count - 1);
                 _window.SearchChangedData();
                 if (_window.IsOverlay(this)) StartSearch();
-            });
+            }
+            : null);
         }
         _selected.Clear();
         _window.SearchChangedData();

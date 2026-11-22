@@ -22,4 +22,8 @@ internal static class Typography
 
     /// <summary>Glyph sizes used by interface icons.</summary>
     public const double IconBody = 14, IconSmall = 14, IconInput = 16, IconMedium = 16, IconLarge = 20, IconXLarge = 20;
+
+    /// <summary>Typography values for caps labels and editor result chips.</summary>
+    public const double CapsLetterSpacing = 0.8; // Extra tracking separates all-caps section labels.
+    public const double EditorChipScale = 0.93; // Chip text tracks the user's editor font size.
 }

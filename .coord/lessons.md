@@ -49,6 +49,7 @@ One row per merged item: what each check found. Empty rows on items that later h
 | 2026-11-20 | A36-version-rc4 | Low | 0 | 0 | 0 | - | 0 | - |
 | 2026-11-20 | A37-version-0-7-0 | Low | 0 | 1 | 0 | - | 0 | - |
 | 2026-11-20 | T20-install-selftest-root | Low | 0 | 0 | 0 | - | 0 | - |
+| 2026-11-22 | A35-ux-pass | High | 8 (A35a 1, A35b 2, A35c 4, A35g 1) | - | - | - | 1 (A35g) | - |
 | 2026-11-19 | A32-selection-convert-menu | Medium | 4 | 1 | 1 | - | 0 | - |
 | 2026-11-19 | Loop17-chat-title-selfheal | Medium | 1 | 0 | 2 | - | 0 | - |
 | 2026-11-19 | Loop20-codex-labs-and-scout | Medium | 0 | 0 | 0 | - | 0 | - |

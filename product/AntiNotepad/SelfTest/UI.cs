@@ -3,7 +3,8 @@ using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Markup.Xaml.Styling;
+using Avalonia.LogicalTree;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using AntiNotepad.Editor;
@@ -15,6 +16,241 @@ namespace AntiNotepad;
 
 internal static partial class SelfTest
 {
+    /// <summary>Builds a pad with temporary storage for data-safety UI checks.</summary>
+    private sealed class DataSafetyFixture : IDisposable
+    {
+        private const BindingFlags PrivateInstance = BindingFlags.Instance | BindingFlags.NonPublic;
+        private readonly string _folder = Path.Combine(Path.GetTempPath(), "AntiNotepad-data-safety-" + Guid.NewGuid().ToString("N"));
+        private readonly RuntimeLog _log = new();
+        private readonly bool _reducedMotion = Anim.Reduced;
+
+        public Store Store { get; }
+        public UI.PadWindow Pad { get; }
+        public string Folder => _folder;
+
+        public DataSafetyFixture(bool reducedMotion = true)
+        {
+            if (Application.Current is null) AppBuilder.Configure<Application>().UsePlatformDetect().SetupWithoutStarting();
+            App.ConfigureFluentStyles(Application.Current!);
+
+            var palette = Palette.All[0];
+            Store = new Store(_folder);
+            Store.Load();
+            var settings = Store.SettingsService;
+            settings.Current.Theme = palette.Dark ? "dark" : "light";
+            if (palette.Dark) settings.Current.DarkPalette = palette.Id; else settings.Current.LightPalette = palette.Id;
+            settings.Current.ReduceMotion = reducedMotion;
+            Anim.Reduced = reducedMotion;
+            Welcome.SeedIfNew(Store.Data, settings);
+            var notes = new NotesSession(Store, _folder, _folder, null, _log.Write);
+            Pad = new UI.PadWindow(Store, settings, _log, false, true, notes);
+        }
+
+        /// <summary>Attaches a search overlay seeded with synchronous result state.</summary>
+        public UI.SearchOverlay Search(string query, bool trash, params Note[] items)
+        {
+            var overlay = new UI.SearchOverlay(Pad, Pad.CurrentPalette, Store, query, trash);
+            typeof(UI.PadWindow).GetMethod("ShowOverlay", PrivateInstance)!.Invoke(Pad, [overlay]);
+            Set(overlay, "_items", items.ToList());
+            Set(overlay, "_cursor", 0);
+            Set(overlay, "_displayedQuery", query);
+            Set(overlay, "_resultsPending", false);
+            var queryBox = (TextBox)Get(overlay, "_query")!;
+            queryBox.SelectionStart = query.Length; queryBox.SelectionEnd = query.Length;
+            queryBox.CaretIndex = query.Length;
+            return overlay;
+        }
+
+        /// <summary>Resets query and result state between key-route checks.</summary>
+        public static void SetSearchItems(UI.SearchOverlay overlay, string query, params Note[] items)
+        {
+            Set(overlay, "_items", items.ToList());
+            Set(overlay, "_cursor", 0);
+            Set(overlay, "_displayedQuery", query);
+            Set(overlay, "_resultsPending", false);
+            ((HashSet<Note>)Get(overlay, "_selected")!).Clear();
+            var queryBox = (TextBox)Get(overlay, "_query")!;
+            queryBox.Text = query;
+            queryBox.SelectionStart = query.Length; queryBox.SelectionEnd = query.Length;
+            queryBox.CaretIndex = query.Length;
+        }
+
+        /// <summary>Sends one key through the search overlay's tunnel handler.</summary>
+        public static void Key(UI.SearchOverlay overlay, Key key, KeyModifiers modifiers)
+        {
+            var args = new KeyEventArgs { Key = key, KeyModifiers = modifiers };
+            typeof(UI.SearchOverlay).GetMethod("OnKey", PrivateInstance)!.Invoke(overlay, [overlay, args]);
+        }
+
+        public string ToastText
+        {
+            get
+            {
+                var toast = (Border)Get(Pad, "_toast")!;
+                return toast.Child is StackPanel row && row.Children.FirstOrDefault() is TextBlock text ? text.Text ?? "" : "";
+            }
+        }
+
+        public void ClickToastAction()
+        {
+            var toast = (Border)Get(Pad, "_toast")!;
+            if (toast.Child is not StackPanel row || row.Children.OfType<Button>().LastOrDefault() is not { } button) return;
+            button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        }
+
+        public static object? Get(object target, string name) => target.GetType().GetField(name, PrivateInstance)!.GetValue(target);
+        public static void Set(object target, string name, object? value) => target.GetType().GetField(name, PrivateInstance)!.SetValue(target, value);
+
+        public void Dispose()
+        {
+            try
+            {
+                Pad.CloseOverlay();
+                foreach (var field in typeof(UI.PadWindow).GetFields(PrivateInstance))
+                    if (field.GetValue(Pad) is DispatcherTimer timer) timer.Stop();
+                ((Editor.PadView)Get(Pad, "_left")!).Release();
+                ((Editor.PadView)Get(Pad, "_right")!).Release();
+            }
+            finally
+            {
+                Anim.Reduced = _reducedMotion;
+                _log.Dispose();
+                try { if (Directory.Exists(_folder)) Directory.Delete(_folder, true); } catch { }
+            }
+        }
+    }
+
+    /// <summary>Checks that query editing wins over destructive trash deletion and that permanent deletion is undoable.</summary>
+    private static bool SearchDeleteSafetyChecks(out string report)
+    {
+        using var fixture = new DataSafetyFixture();
+        var before = new Note { Text = "before" };
+        var target = new Note { Text = "abc" };
+        var after = new Note { Text = "after" };
+        var trash = fixture.Store.Data.Trash;
+        trash.Clear(); trash.AddRange([before, target, after]);
+        var overlay = fixture.Search("abc", true, target);
+        var failures = new List<string>();
+
+        ((TextBox)DataSafetyFixture.Get(overlay, "_query")!).CaretIndex = 1;
+        var plainDelete = new KeyEventArgs { Key = Key.Delete, KeyModifiers = KeyModifiers.None };
+        typeof(UI.SearchOverlay).GetMethod("OnKey", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(overlay, [overlay, plainDelete]);
+        if (plainDelete.Handled || !trash.Contains(target)) failures.Add("plain Delete must edit the query and keep Trash unchanged");
+
+        trash.Clear(); trash.AddRange([before, target, after]);
+        DataSafetyFixture.SetSearchItems(overlay, "abc", target);
+        var middleQuery = (TextBox)DataSafetyFixture.Get(overlay, "_query")!;
+        middleQuery.CaretIndex = 1;
+        var middleDelete = new KeyEventArgs { Key = Key.Delete, KeyModifiers = KeyModifiers.Control };
+        typeof(UI.SearchOverlay).GetMethod("OnKey", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(overlay, [overlay, middleDelete]);
+        if (middleDelete.Handled || !trash.Contains(target)) failures.Add("Ctrl+Delete mid-query must edit the query and keep Trash unchanged");
+
+        DataSafetyFixture.SetSearchItems(overlay, "abc", target);
+        var selectedQuery = (TextBox)DataSafetyFixture.Get(overlay, "_query")!;
+        selectedQuery.SelectionStart = 0; selectedQuery.SelectionEnd = 1; selectedQuery.CaretIndex = 3;
+        var selectedDelete = new KeyEventArgs { Key = Key.Delete, KeyModifiers = KeyModifiers.Control };
+        typeof(UI.SearchOverlay).GetMethod("OnKey", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(overlay, [overlay, selectedDelete]);
+        if (selectedDelete.Handled || !trash.Contains(target)) failures.Add("Ctrl+Delete with selected query text must edit the query and keep Trash unchanged");
+
+        trash.Clear(); trash.AddRange([before, target, after]);
+        DataSafetyFixture.SetSearchItems(overlay, "abc", target);
+        var endDelete = new KeyEventArgs { Key = Key.Delete, KeyModifiers = KeyModifiers.Control };
+        typeof(UI.SearchOverlay).GetMethod("OnKey", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(overlay, [overlay, endDelete]);
+        var undo = DataSafetyFixture.Get(fixture.Pad, "_toastAction") as Action;
+        if (!endDelete.Handled || trash.Contains(target) || undo is null) failures.Add("Ctrl+Delete at query end must delete forever with Undo");
+        else
+        {
+            undo();
+            if (!trash.SequenceEqual([before, target, after])) failures.Add("Undo must restore original trash positions");
+        }
+
+        DataSafetyFixture.SetSearchItems(overlay, "", target);
+        var emptyQueryBackspace = new KeyEventArgs { Key = Key.Back, KeyModifiers = KeyModifiers.Control };
+        typeof(UI.SearchOverlay).GetMethod("OnKey", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(overlay, [overlay, emptyQueryBackspace]);
+        var backspaceUndo = DataSafetyFixture.Get(fixture.Pad, "_toastAction") as Action;
+        if (!emptyQueryBackspace.Handled || trash.Contains(target) || backspaceUndo is null)
+            failures.Add("Ctrl+Backspace on an empty query keeps its existing delete action");
+        else backspaceUndo();
+
+        if (!SearchDeletePersistenceChecks(out var persistenceReport)) failures.Add(persistenceReport);
+
+        report = failures.Count == 0 ? "query Delete routes, Undo positions, and saved-body persistence" : string.Join("; ", failures);
+        return failures.Count == 0;
+    }
+
+    /// <summary>Checks that a cleared slot can be undone before editing, and its toast action is withdrawn after editing.</summary>
+    private static bool SlotClearUndoSafetyChecks(out string report)
+    {
+        using var fixture = new DataSafetyFixture(reducedMotion: false);
+        var slot = fixture.Store.Data.Slots[0];
+        Editor.PadView.DocumentFor(slot).Text = "old slot text";
+        fixture.Pad.OpenSlot(1);
+        fixture.Pad.DeleteCurrent();
+        fixture.ClickToastAction();
+        var restored = Editor.PadView.DocumentFor(slot).Text == "old slot text";
+
+        fixture.Pad.DeleteCurrent();
+        var toast = (Border)DataSafetyFixture.Get(fixture.Pad, "_toast")!;
+        var button = toast.Child is StackPanel row ? row.Children.OfType<Button>().LastOrDefault() : null;
+        Editor.PadView.DocumentFor(slot).Text = "new slot text";
+        var action = DataSafetyFixture.Get(fixture.Pad, "_toastAction");
+        var undoArmed = (bool)DataSafetyFixture.Get(fixture.Pad, "_undoArmed")!;
+        var normalMotion = !Anim.Reduced;
+        button?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        var safe = normalMotion && button is not null && action is null && !undoArmed && Editor.PadView.DocumentFor(slot).Text == "new slot text";
+        report = restored && safe ? "slot clear Undo restores before edit and a withdrawn button cannot overwrite later text" : $"restore={restored}; normal motion={normalMotion}; edited text kept={Editor.PadView.DocumentFor(slot).Text == "new slot text"}; action withdrawn={action is null}; undo disarmed={!undoArmed}; stale button present={button is not null}; toast visible={toast.IsVisible}";
+        return restored && safe;
+    }
+
+    /// <summary>Checks that a repeated save prompt refreshes both actions and Enter dispatches to the focused button.</summary>
+    private static bool SaveFailureEnterChecks(out string report)
+    {
+        using var fixture = new DataSafetyFixture();
+        var show = typeof(UI.PadWindow).GetMethod("ShowSaveFailurePrompt", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var firstRetry = 0; var firstQuit = 0; var retry = 0; var quit = 0;
+        show.Invoke(fixture.Pad, ["first failure", (Action)(() => firstRetry++), (Action)(() => firstQuit++)]);
+        show.Invoke(fixture.Pad, ["repeat failure", (Action)(() => retry++), (Action)(() => quit++)]);
+        var retryAction = DataSafetyFixture.Get(fixture.Pad, "_saveFailureRetryAction") as Action;
+        var quitActionField = typeof(UI.PadWindow).GetField("_saveFailureQuitAction", BindingFlags.Instance | BindingFlags.NonPublic);
+        var quitAction = quitActionField?.GetValue(fixture.Pad) as Action;
+        if (retryAction is not null) retryAction();
+        if (quitAction is not null) quitAction();
+        var retryButton = (Button)DataSafetyFixture.Get(fixture.Pad, "_saveFailureRetryButton")!;
+        var quitButton = (Button)DataSafetyFixture.Get(fixture.Pad, "_saveFailureQuitButton")!;
+        var keyHandler = typeof(UI.PadWindow).GetMethod("OnSaveFailureKeyDown", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var retryEnter = new KeyEventArgs { Key = Key.Enter, Source = retryButton };
+        keyHandler.Invoke(fixture.Pad, [fixture.Pad, retryEnter]);
+        var quitEnter = new KeyEventArgs { Key = Key.Enter, Source = quitButton };
+        keyHandler.Invoke(fixture.Pad, [fixture.Pad, quitEnter]);
+        var passed = firstRetry == 0 && firstQuit == 0 && retry == 2 && quit == 2 && retryAction is not null && quitAction is not null && retryEnter.Handled && quitEnter.Handled;
+        report = passed ? "refreshed prompt actions and focused Retry/Quit Enter routes" : $"latest retry={retryAction is not null}; latest quit={quitAction is not null}; Enter handled={retryEnter.Handled}/{quitEnter.Handled}; calls retry/quit={retry}/{quit}";
+        return passed;
+    }
+
+    /// <summary>Checks slot-only and mixed search-delete notices against the notes actually moved.</summary>
+    private static bool SearchDeleteToastChecks(out string report)
+    {
+        using var fixture = new DataSafetyFixture();
+        var slot = fixture.Store.Data.Slots[0];
+        slot.Text = "slot text";
+        var overlay = fixture.Search("", false, slot);
+        DataSafetyFixture.Key(overlay, Key.Delete, KeyModifiers.Control);
+        var slotsOnlyText = fixture.ToastText;
+        var slotsOnly = slotsOnlyText == "Slots are cleared in the editor";
+
+        var first = new Note { Text = "first" };
+        var second = new Note { Text = "second" };
+        fixture.Store.Data.Stack.Clear(); fixture.Store.Data.Stack.AddRange([first, second]);
+        fixture.Store.Data.Slots[0].Text = "slot text";
+        DataSafetyFixture.SetSearchItems(overlay, "", first, second, fixture.Store.Data.Slots[0]);
+        ((HashSet<Note>)DataSafetyFixture.Get(overlay, "_selected")!).UnionWith([first, second, fixture.Store.Data.Slots[0]]);
+        DataSafetyFixture.Key(overlay, Key.Delete, KeyModifiers.Control);
+        var mixedText = fixture.ToastText;
+        var mixed = mixedText == "2 notes moved to trash · 1 slot skipped";
+        report = slotsOnly && mixed ? "slot-only and mixed delete counts" : $"slots-only='{slotsOnlyText}' expected={slotsOnly}; mixed='{mixedText}' expected={mixed}";
+        return slotsOnly && mixed;
+    }
+
     /// <summary>Checks the Windows motion curves at endpoints and throughout their range.</summary>
     private static bool MotionCurveChecks(out string report)
     {
@@ -32,11 +268,7 @@ internal static partial class SelfTest
     private static bool PinRingChecks(out string report)
     {
         if (Application.Current is null) AppBuilder.Configure<Application>().UsePlatformDetect().SetupWithoutStarting();
-        if (!Application.Current!.Styles.OfType<Avalonia.Themes.Fluent.FluentTheme>().Any())
-        {
-            Application.Current.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
-            Application.Current.Styles.Add(new StyleInclude(new Uri(AppInfo.ResourceUri)) { Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml") });
-        }
+        App.ConfigureFluentStyles(Application.Current!);
         var failures = new List<string>();
         void Expect(bool ok, string name) { if (!ok) failures.Add(name); }
         Expect(MotionCurveChecks(out _), "Windows motion curves");
@@ -104,7 +336,9 @@ internal static partial class SelfTest
             settings.Update(s => s.Bars = "overlay");
             Expect(ReferenceEquals(bar.Parent, bottomLayer), "overlay bar parent");
             settings.Update(s => s.Bars = "float");
-            Expect(ReferenceEquals(popup.Child, bar), "floating bar parent");
+            Expect(popup.Child is Border padding && ReferenceEquals(padding.Child, bar)
+                && padding.Padding == new Thickness(ChromeTokens.PillShadowReach) && padding.Background is null
+                && popup.VerticalOffset == ChromeTokens.FloatGap - ChromeTokens.PillShadowReach, "floating bar padding and placement");
             settings.Update(s => s.Bars = "docked");
             Expect(bar.Parent is Panel && !ReferenceEquals(bar.Parent, bottomLayer), "docked bar parent");
             var fade = typeof(UI.PadWindow).GetMethod("FadeChrome", fields)!;
@@ -169,8 +403,150 @@ internal static partial class SelfTest
                     && UI.HotkeyRecorder.GestureText(key, modifier) is not null, $"modified command key {modifier}+{key}");
             }
         }
+        Expect(UI.HotkeyRecorder.IsCommand(Avalonia.Input.Key.Back, Avalonia.Input.KeyModifiers.None), "Backspace is a recorder command");
         Expect(!UI.HotkeyRecorder.IsCommand(Avalonia.Input.Key.K, Avalonia.Input.KeyModifiers.None), "ordinary key is not a command");
         report = failures.Count == 0 ? $"{keys.Length} supported main keys round-trip; modifier order, rejected keys and commands" : string.Join("; ", failures);
+        return failures.Count == 0;
+    }
+
+    /// <summary>Checks target geometry, selectable Settings controls and the shared focus adorner hook.</summary>
+    private static bool TargetKeyboardChecks(out string report)
+    {
+        using var fixture = new DataSafetyFixture();
+        using var log = new RuntimeLog();
+        var settings = fixture.Store.SettingsService;
+        var notes = new NotesSession(fixture.Store, fixture.Folder, fixture.Folder, null, log.Write);
+        var window = new UI.SettingsWindow(settings, fixture.Pad, true, notes);
+        object Invoke(string name, params object?[] args) => typeof(UI.SettingsWindow)
+            .GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, args)!;
+        var options = new List<(string Value, string Label)> { ("a", "A"), ("b", "B") };
+        var segment = (Control)Invoke("Seg", options, "a", (Action<string>)(_ => { }));
+        var segments = segment.GetLogicalDescendants().OfType<Button>().ToArray();
+        var text = (Button)Invoke("TextButton", "Test", (Action)(() => { }), false);
+        var chips = (Control)Invoke("PaletteChips", false, Palette.For(false).First().Id, (Action<string>)(_ => { }));
+        var swatches = (Control)Invoke("AccentDots");
+        var chipButtons = chips.GetLogicalDescendants().OfType<Button>().ToArray();
+        var swatchButtons = swatches.GetLogicalDescendants().OfType<Button>().ToArray();
+        var actions = new UI.BarActions(() => { }, () => { }, () => { }, () => { }, () => { }, _ => { });
+        var context = BarContextForTest(1, true, true, false, 2, false);
+        var bar = new UI.PadBar(UI.BarPane.Left, context, actions);
+        double[] Positions()
+        {
+            var row = (StackPanel)((StackPanel)bar.Pager.Child!).Children[0];
+            row.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            row.Arrange(new Rect(row.DesiredSize));
+            return row.Children.Select(child => child.Bounds.X).ToArray();
+        }
+        var first = Positions();
+        bar.Update(context with { ViewSlot = 2 }, actions);
+        var second = Positions();
+        var plain = UI.Kit.Plain(new TextBlock(), Palette.All[0]);
+        var ring = plain.FocusAdorner?.Build() as Border;
+        var ok = segments.Length == 2 && segments.All(b => b.Height >= ChromeTokens.ButtonSize)
+            && text.Height >= ChromeTokens.ButtonSize
+            && first.Length == 9 && first.SequenceEqual(second)
+            && first.Zip(first.Skip(1), (a, b) => b - a).All(pitch => pitch == ChromeTokens.PagerDotTargetWidth)
+            && chipButtons.Length > 0 && chipButtons.All(b => b.Focusable && b.Width == ChromeTokens.Size.PaletteChipWidth)
+            && swatchButtons.Length > 0 && swatchButtons.All(b => b.Focusable && b.Width == ChromeTokens.ButtonSize && b.Height == ChromeTokens.ButtonSize)
+            && plain.Classes.Contains("plain") && ring is not null && ring.BorderThickness == new Thickness(Shape.Thick)
+            && ring.Margin == new Thickness(Shape.Thin)
+            && ChromeTokens.RevealHandleInset == 3;
+        report = ok ? "targets, stable dot pitch, focusable choices and focus adorner hook" : "target or keyboard control check failed";
+        return ok;
+    }
+
+    /// <summary>Checks Settings names, search, reset Undo, and the split-aware swap label.</summary>
+    private static bool LabelsAndSettingsChecks(out string report)
+    {
+        using var fixture = new DataSafetyFixture();
+        using var log = new RuntimeLog();
+        var settings = fixture.Store.SettingsService;
+        var notes = new NotesSession(fixture.Store, fixture.Folder, fixture.Folder, null, log.Write);
+        var window = new UI.SettingsWindow(settings, fixture.Pad, true, notes);
+        var flags = BindingFlags.Instance | BindingFlags.NonPublic;
+        object? Invoke(object obj, string name, params object?[] args) => obj.GetType().GetMethod(name, flags)!.Invoke(obj, args);
+        var failures = new List<string>();
+        void Check(bool value, string name) { if (!value) failures.Add(name); }
+        var topMotion = (List<Anim.Handle>)DataSafetyFixture.Get(fixture.Pad, "_topRevealMotion")!;
+        var bottomMotion = (List<Anim.Handle>)DataSafetyFixture.Get(fixture.Pad, "_bottomRevealMotion")!;
+        var topReveal = new Anim.Handle();
+        var floatFade = new Anim.Handle();
+        topMotion.Add(topReveal);
+        bottomMotion.Add(floatFade);
+        settings.Current.Bars = settings.Current.Bars == "float" ? "overlay" : "float";
+        Invoke(fixture.Pad, "ApplyBars");
+        Check(topReveal.Cancelled && floatFade.Cancelled && topMotion.Count == 0 && bottomMotion.Count == 0,
+            "bar mode change cancels top reveal and floating fade");
+        var swap = (Button)DataSafetyFixture.Get(fixture.Pad, "_swapButton")!;
+        settings.Update(s => s.Split = false);
+        Invoke(fixture.Pad, "UpdateSwapButton");
+        var single = Avalonia.Automation.AutomationProperties.GetName(swap);
+        settings.Update(s => s.Split = true);
+        Invoke(fixture.Pad, "UpdateSwapButton");
+        Check(Avalonia.Automation.AutomationProperties.GetName(swap) == single + " in the left pane"
+            && (ToolTip.GetTip(swap)?.ToString() ?? "").Contains(" in the left pane", StringComparison.Ordinal), "split swap label refreshes");
+        settings.Update(s => s.Split = false);
+        Invoke(fixture.Pad, "UpdateSwapButton");
+        Check(Avalonia.Automation.AutomationProperties.GetName(swap) == single, "single swap label refreshes");
+
+        var results = (StackPanel)Invoke(window, "BuildSearchResults", "scroll style")!;
+        var tags = results.GetLogicalDescendants().OfType<Border>().Select(b => b.Tag as string).Where(t => t is not null).ToArray();
+        Check(tags.Any(t => t!.Contains("sub Style", StringComparison.Ordinal) && t.Contains("Vertical scroll style", StringComparison.Ordinal))
+            && tags.Any(t => t!.Contains("sub Style", StringComparison.Ordinal) && t.Contains("Horizontal scroll style", StringComparison.Ordinal)), "matched expanders include rows");
+        var editor = (StackPanel)Invoke(window, "BuildSection", "editor", false, null)!;
+        var dropdown = editor.GetLogicalDescendants().OfType<Button>().First(b => Avalonia.Automation.AutomationProperties.GetName(b) == "Answer position, One column");
+        var panel = (Panel)dropdown.Parent!;
+        var popup = panel.Children.OfType<Avalonia.Controls.Primitives.Popup>().Single();
+        var option = popup.GetLogicalDescendants().OfType<Button>().First(b => b.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == "Right edge"));
+        option.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Check(Avalonia.Automation.AutomationProperties.GetName(dropdown) == "Answer position, Right edge", "dropdown name follows pick");
+
+        window.ShowSection("theme");
+        var scroll = (ScrollViewer)DataSafetyFixture.Get(window, "_scroll")!;
+        var chosenPalette = Palette.For(false).First(p => p.Id != settings.Current.LightPalette);
+        var paletteButton = ((Control)scroll.Content!).GetLogicalDescendants().OfType<Button>()
+            .First(b => Avalonia.Automation.AutomationProperties.GetName(b) == chosenPalette.Name);
+        paletteButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        var refreshed = ((Control)scroll.Content!).GetLogicalDescendants().OfType<Button>()
+            .FirstOrDefault(b => Avalonia.Automation.AutomationProperties.GetName(b) == chosenPalette.Name + ", selected");
+        Check(settings.Current.LightPalette == chosenPalette.Id && refreshed is not null, "palette pick rebuilds selection");
+
+        settings.Update(s => { s.ShortcutOverrides["new-note"] = "Ctrl+Q"; s.ShortcutOverrides["search"] = ""; });
+        var toastBefore = fixture.ToastText;
+        StackPanel ShortcutsPage() => (StackPanel)Invoke(window, "BuildSection", "shortcuts", false, null)!;
+        static string ButtonText(Button button) => button.GetLogicalDescendants().OfType<TextBlock>().FirstOrDefault()?.Text ?? "";
+        static Button? UndoBeside(StackPanel page, string label) => page.GetLogicalDescendants().OfType<StackPanel>()
+            .FirstOrDefault(row => row.Children.OfType<Button>().Any(b => ButtonText(b) == label)
+                && row.Children.OfType<Button>().Any(b => ButtonText(b) == "Undo"))?.Children.OfType<Button>().First(b => ButtonText(b) == "Undo");
+        Invoke(window, "ResetAllShortcuts");
+        var undo = UndoBeside(ShortcutsPage(), "Reset all");
+        Check(settings.Current.ShortcutOverrides.Count == 0 && undo is not null && fixture.ToastText == toastBefore, "reset all shows adjacent Undo without a pad toast");
+        Invoke(window, "AfterSet", true);
+        undo = UndoBeside(ShortcutsPage(), "Reset all");
+        Check(undo is not null, "reset all Undo survives rebuild");
+        undo?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Check(settings.Current.ShortcutOverrides.TryGetValue("new-note", out var key) && key == "Ctrl+Q"
+            && settings.Current.ShortcutOverrides.TryGetValue("search", out var empty) && empty == ""
+            && UndoBeside(ShortcutsPage(), "Reset all") is null, "reset all Undo restores overrides and disappears");
+        Invoke(window, "ResetShortcut", "new-note");
+        undo = UndoBeside(ShortcutsPage(), "Reset");
+        Check(undo is not null && fixture.ToastText == toastBefore, "single reset shows adjacent Undo without a pad toast");
+        undo?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Check(settings.Current.ShortcutOverrides.TryGetValue("new-note", out key) && key == "Ctrl+Q", "single reset Undo restores override");
+        Invoke(window, "ResetShortcut", "new-note");
+        Invoke(window, "ResetShortcut", "new-note");
+        Check(UndoBeside(ShortcutsPage(), "Reset") is null, "unchanged reset clears pending Undo");
+        Invoke(window, "ResetAllShortcuts");
+        window.Refresh();
+        Check(UndoBeside(ShortcutsPage(), "Reset all") is not null, "unrelated refresh preserves pending Undo");
+        settings.Update(s => s.ShortcutOverrides["search"] = "Ctrl+Q");
+        window.Refresh();
+        Check(UndoBeside(ShortcutsPage(), "Reset all") is null, "replacing settings clears pending Undo");
+        Check(new UI.ShortcutMap(new Model.Settings()).GetLabel("settings") == "Ctrl+,", "Settings default key");
+        Check(UI.HelpOverlay.ListDescription("bullet") == "Every line gets a bullet"
+            && UI.HelpOverlay.ListDescription("check") == "Every line gets a checkbox"
+            && UI.HelpOverlay.ListDescription("number") == "Every line is numbered", "Help list descriptions");
+        report = failures.Count == 0 ? "split labels, dropdown name, search rows, reset Undo, Settings key and Help list" : string.Join("; ", failures);
         return failures.Count == 0;
     }
 
@@ -181,6 +557,18 @@ internal static partial class SelfTest
         void Expect(bool ok, string name) { if (!ok) failures.Add(name); }
         var defaults = new Model.Settings();
         var map = new UI.ShortcutMap(defaults);
+        Expect(!map.TryGet(Key.F6, KeyModifiers.None, out _), "F6 has no default shortcut");
+        Expect(UI.PadMenu.ActionLabels.SequenceEqual(["Delete", "Cut", "Copy", "Paste"]), "menu action order");
+        var firstFocus = new Button();
+        var namedFocus = new Button();
+        var unnamedFocus = new Button();
+        Avalonia.Automation.AutomationProperties.SetName(namedFocus, "Example option");
+        Control[] focusOptions = [firstFocus, namedFocus, unnamedFocus];
+        Expect(ReferenceEquals(UI.SettingsWindow.FocusTarget(focusOptions, UI.SettingsWindow.IdentifyFocus(focusOptions, namedFocus)), namedFocus)
+            && ReferenceEquals(UI.SettingsWindow.FocusTarget(focusOptions, UI.SettingsWindow.IdentifyFocus(focusOptions, unnamedFocus)), unnamedFocus)
+            && ReferenceEquals(UI.SettingsWindow.FocusTarget(focusOptions, UI.SettingsWindow.IdentifyFocus(focusOptions, null)), firstFocus)
+            && UI.SettingsWindow.FocusTarget([firstFocus], UI.SettingsWindow.IdentifyFocus(focusOptions, unnamedFocus)) is null
+            && UI.SettingsWindow.FocusTarget([firstFocus], UI.SettingsWindow.IdentifyFocus(focusOptions, namedFocus)) is null, "Settings focus name, index and empty focus");
         var seen = new HashSet<(UI.ShortcutScope Scope, UI.ShortcutGesture Gesture)>();
         foreach (var definition in UI.ShortcutMap.Definitions)
         {
@@ -369,11 +757,7 @@ internal static partial class SelfTest
         Expect(GC.GetAllocatedBytesForCurrentThread() == before, "key lookup allocates nothing");
 
         if (Application.Current is null) AppBuilder.Configure<Application>().UsePlatformDetect().SetupWithoutStarting();
-        if (!Application.Current!.Styles.OfType<Avalonia.Themes.Fluent.FluentTheme>().Any())
-        {
-            Application.Current.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
-            Application.Current.Styles.Add(new StyleInclude(new Uri(AppInfo.ResourceUri)) { Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml") });
-        }
+        App.ConfigureFluentStyles(Application.Current!);
         var folder = Path.Combine(Path.GetTempPath(), "AntiNotepad-shortcuts-" + Guid.NewGuid().ToString("N"));
         using var log = new RuntimeLog();
         var store = new Store(folder);
@@ -475,6 +859,7 @@ internal static partial class SelfTest
         var recorder = new UI.HotkeyRecorder(Palette.All[0], () => "Ctrl+Alt+K", _ => true, false,
             (text, action, _) => { actions[text] = action; return new Button { Content = text }; });
         var host = (ContentControl)recorder.View;
+        Expect(!host.IsTabStop && host.FocusAdorner is null, "idle recorder has no tab stop or focus box");
         Expect(!UI.HotkeyRecorder.IsRecordingSource(host), "idle recorder keeps Settings Escape");
         actions["Change"]();
         var row = (StackPanel)((StackPanel)host.Content!).Children[0];
@@ -483,7 +868,17 @@ internal static partial class SelfTest
         Expect(UI.HotkeyRecorder.IsRecordingSource(cancel), "recorder descendants receive Escape");
         Expect(!UI.HotkeyRecorder.IsRecordingSource(new Button()), "outside source keeps Settings Escape");
         Expect(!UI.HotkeyRecorder.IsRecordingSource(null), "missing source keeps Settings Escape");
+        var recordKey = typeof(UI.HotkeyRecorder).GetMethod("RecordKey", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        recordKey.Invoke(recorder, [null, new KeyEventArgs { Key = Key.Back }]);
+        Expect(UI.HotkeyRecorder.IsRecordingSource(host), "Backspace keeps required shortcut");
         actions["Cancel"]();
+        string? applied = null;
+        var optionalActions = new Dictionary<string, Action>();
+        var optional = new UI.HotkeyRecorder(Palette.All[0], () => "Ctrl+K", value => { applied = value; return true; }, true,
+            (text, action, _) => { optionalActions[text] = action; return new Button { Content = text }; });
+        optionalActions["Change"]();
+        recordKey.Invoke(optional, [null, new KeyEventArgs { Key = Key.Back }]);
+        Expect(applied == "" && !UI.HotkeyRecorder.IsRecordingSource(optional.View), "Backspace clears optional shortcut");
         Expect(!UI.HotkeyRecorder.IsRecordingSource(host), "cancel restores Settings Escape");
         report = failures.Count == 0 ? "Escape defers only inside an active recorder" : string.Join("; ", failures);
         return failures.Count == 0;
@@ -655,11 +1050,7 @@ internal static partial class SelfTest
     {
         var app = Application.Current ?? throw new InvalidOperationException(
             "shortened-link-opens must initialize Avalonia before save-delay UI checks.");
-        if (!app.Styles.OfType<Avalonia.Themes.Fluent.FluentTheme>().Any())
-        {
-            app.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
-            app.Styles.Add(new StyleInclude(new Uri(AppInfo.ResourceUri)) { Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml") });
-        }
+        App.ConfigureFluentStyles(app);
 
         var failures = new List<string>();
         void CheckCase(bool passed, string name) { if (!passed) failures.Add(name); }

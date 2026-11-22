@@ -5,8 +5,9 @@ param([switch]$Update, [string]$Inventory, [switch]$SelfCheck)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
-$baselinePath = Join-Path $PSScriptRoot 'design-tokens-baseline.tsv'
+$baselinePath = Join-Path $PSScriptRoot 'design-exceptions.tsv'
 $number = '(?<![\w.])(?:0x[\da-fA-F]+|(?:\d+(?:\.\d+)?|\.\d+)[dfm]?)(?![\w.])'
+$nonzero = '(?!(?:0x0+|0+(?:\.0+)?|\.0+)[dfm]?(?![\w.]))' + $number
 $byteAlpha = '(?<![\w.])(?:[2-9]|[1-9]\d|1\d\d|2[0-4]\d|25[0-4])(?![\w.])'
 $patterns = [ordered]@{
     # Literal corner radii.
@@ -30,7 +31,11 @@ $patterns = [ordered]@{
     # Time spans outside animation duration properties.
     'timer' = "\bTimeSpan\.From(?:Milliseconds|Seconds|Minutes|Hours)\s*\(\s*$number"
     # Literal dimensions, spacing properties, and thickness constructors.
-    'spacing' = "\b(?:MinWidth|MinHeight|MaxWidth|MaxHeight|Width|Height|Spacing|LetterSpacing|Margin|Padding|BorderThickness)\s*=\s*(?!new\s+Thickness\b)[^;\r\n,}]*?$number|\bnew\s+Thickness\s*\([^)]*?$number"
+    'spacing' = "\b(?:MinWidth|MinHeight|MaxWidth|MaxHeight|Width|Height|Spacing|LetterSpacing|Margin|Padding|BorderThickness)\s*=\s*(?!new\s+Thickness\b)[^;\r\n,}]*?$nonzero|\bnew\s+Thickness\s*\([^)]*?$nonzero"
+    # Pen thickness and drawing radii are inspected by argument below.
+    'stroke' = ''
+    # Icon code points belong in the icon registry; bare hexadecimal values remain legal elsewhere.
+    'icon-code' = '[\uE000-\uF8FF]|\\u[EeFf][0-9a-fA-F]{3}|ConvertFromUtf32\s*\(|\(char\)\s*0[xX][EeFf][0-9a-fA-F]{3}\b'
 }
 
 # Reject native interop tokens in AntiNotepad C# source outside Platform/, while ignoring comments and literal text.
@@ -255,20 +260,68 @@ function Read-CSharpCode([int] $Start, [int] $InterpolationBraceCount, [bool] $R
 }
 
 
+# Finds top-level argument ranges while respecting nested constructor calls.
+function Get-CallArguments([string]$text, [int]$open) {
+    $depth = 0; $start = $open + 1
+    for ($i = $start; $i -lt $text.Length; $i++) {
+        switch ($text[$i]) {
+            '(' { $depth++ }
+            ')' {
+                if ($depth -eq 0) {
+                    [pscustomobject]@{ Start = $start; Text = $text.Substring($start, $i - $start) }
+                    return
+                }
+                $depth--
+            }
+            ',' {
+                if ($depth -eq 0) {
+                    [pscustomobject]@{ Start = $start; Text = $text.Substring($start, $i - $start) }
+                    $start = $i + 1
+                }
+            }
+            ';' { if ($depth -eq 0) { return } }
+        }
+    }
+}
+
 # Extracts hits with stable source locations and readable source lines.
 function Find-Hits([string]$code, [string]$file) {
     $masked = Mask-DesignCode $code $false
     $fontMasked = Mask-DesignCode $code $true
     $lines = $code -split "`n"
     foreach ($category in $patterns.Keys) {
-        $searchText = if ($category -eq 'font-family') { $fontMasked } else { $masked }
+        if ($category -eq 'icon-code' -and $file -eq 'product/AntiNotepad/Icons.cs') { continue }
+        $searchText = if ($category -eq 'icon-code') { $code }
+            elseif ($category -eq 'font-family') { $fontMasked }
+            else { $masked }
+        if ($category -eq 'icon-code' -and $file -eq 'product/AntiNotepad/AppInfo.cs') {
+            $badgeLine = '(?m)^[ \t]*internal const string DevBadgeGlyph = "\\uE0A0";[^\r\n]*'
+            $searchText = [regex]::Replace($searchText, $badgeLine, [System.Text.RegularExpressions.MatchEvaluator]{
+                param($match)
+                [regex]::Replace($match.Value, '[^\r\n]', ' ')
+            })
+        }
+        if ($category -eq 'stroke') { continue }
         foreach ($match in [regex]::Matches($searchText, $patterns[$category])) {
             if ($category -eq 'timer') {
                 $prefix = $masked.Substring([Math]::Max(0, $match.Index - 80), [Math]::Min(80, $match.Index))
                 if ($prefix -match '(?s)(?:(?:Duration|AnimationDuration)\s*=\s*|\b(?:Anim\.Run|Tween\w*)\s*\([^,;\r\n]+,\s*)$') { continue }
             }
-            $line = 1 + ([regex]::Matches($masked.Substring(0, $match.Index), "`n")).Count
+            $line = 1 + ([regex]::Matches($searchText.Substring(0, $match.Index), "`n")).Count
             [pscustomobject]@{ category = $category; file = $file; line = $line; match = ($match.Value -replace '[\t\r\n]+', ' '); code = ($lines[$line - 1].Trim() -replace '\t', ' ') }
+        }
+    }
+    foreach ($call in [regex]::Matches($masked, '\b(?:new\s+Pen|RenderPaint\s*\.\s*Pen|DrawRectangle|RoundedRect)\s*\(')) {
+        $args = @(Get-CallArguments $masked ($call.Index + $call.Length - 1))
+        $isPen = $call.Value -match '^(?:new\s+Pen|RenderPaint\s*\.\s*Pen)'
+        $first = if ($isPen) { 1 } elseif ($call.Value -match '^DrawRectangle') { 3 } else { 1 }
+        $last = if ($isPen) { 1 } elseif ($call.Value -match '^DrawRectangle') { 4 } else { 2 }
+        for ($index = $first; $index -le $last -and $index -lt $args.Count; $index++) {
+            $argument = $args[$index]
+            if ($argument.Text -notmatch $number) { continue }
+            $line = 1 + ([regex]::Matches($masked.Substring(0, $argument.Start), "`n")).Count
+            $category = if ($isPen) { 'stroke' } else { 'radius' }
+            [pscustomobject]@{ category = $category; file = $file; line = $line; match = $argument.Text.Trim(); code = ($lines[$line - 1].Trim() -replace '\t', ' ') }
         }
     }
 }
@@ -317,12 +370,48 @@ var timer = TimeSpan.FromMilliseconds(30);
 '@
     $hits = @(Find-Hits $sample 'fixture.cs')
     if (@($hits | Where-Object category -eq 'radius').Count -ne 2 -or @($hits | Where-Object category -eq 'font-family').Count -ne 1 -or @($hits | Where-Object category -eq 'color').Count -ne 1 -or @($hits | Where-Object category -eq 'font-weight').Count -ne 1 -or @($hits | Where-Object category -eq 'opacity').Count -ne 1 -or @($hits | Where-Object category -eq 'shadow').Count -ne 1 -or @($hits | Where-Object category -eq 'spacing').Count -ne 1 -or @($hits | Where-Object category -eq 'tween').Count -ne 1 -or @($hits | Where-Object category -eq 'timer').Count -ne 1) { throw 'Scanner fixture failed.' }
+    foreach ($fixture in @(
+        @{ Category = 'spacing'; Text = 'Margin = new Thickness(0, 4, 0, 0);'; Count = 1 },
+        @{ Category = 'spacing'; Text = 'Width = 0; Padding = new Thickness(0);'; Count = 0 },
+        @{ Category = 'stroke'; Text = 'new Pen(new SolidColorBrush(color), 1.8);'; Count = 1 },
+        @{ Category = 'stroke'; Text = 'new Pen(brush, Shape.Thin);'; Count = 0 },
+        @{ Category = 'stroke'; Text = 'RenderPaint.Pen(Brush(color, opacity), 1.6);'; Count = 1 },
+        @{ Category = 'stroke'; Text = 'RenderPaint.Pen(brush, Shape.Thin);'; Count = 0 },
+        @{ Category = 'radius'; Text = 'dc.DrawRectangle(brush, pen, new Rect(0, 0, 4, 4), 2, 2);'; Count = 2 },
+        @{ Category = 'radius'; Text = 'dc.DrawRectangle(brush, pen, rect, Shape.Control, Shape.Control);'; Count = 0 },
+        @{ Category = 'radius'; Text = 'new RoundedRect(new Rect(0, 0, 4, 4), 2, 2);'; Count = 2 },
+        @{ Category = 'radius'; Text = 'new RoundedRect(rect, Shape.Control, Shape.Control);'; Count = 0 }
+    )) {
+        if (@(Find-Hits $fixture.Text 'fixture.cs' | Where-Object category -eq $fixture.Category).Count -ne $fixture.Count) { throw "Argument fixture failed: $($fixture.Text)" }
+    }
     $brushFixtures = @('new SolidColorBrush(color, .45)', 'RenderPaint.Brush(color, 0.3)', 'Brush(color, dark ? .2 : .1)')
     foreach ($fixture in $brushFixtures) {
         if (@(Find-Hits $fixture 'fixture.cs' | Where-Object category -eq 'opacity').Count -ne 1) { throw "Brush fixture failed: $fixture" }
     }
     foreach ($fixture in @('Color.FromArgb(220, c.R, c.G, c.B)', 'Color.FromArgb(dark ? (byte)110 : (byte)40, 0, 0, 0)')) {
         if (@(Find-Hits $fixture 'fixture.cs' | Where-Object category -eq 'alpha').Count -ne 1) { throw "Alpha fixture failed: $fixture" }
+    }
+    $iconFixtures = @(
+        @{ Text = ('var glyph = "' + [string][char]0xE123 + '";'); File = 'fixture.cs' },
+        @{ Text = ('var glyph = "' + [string][char]0xE8B3 + '";'); File = 'fixture.cs' },
+        @{ Text = 'var glyph = "\uF6ED";'; File = 'fixture.cs' },
+        @{ Text = 'var glyph = char.ConvertFromUtf32(0xF6ED);'; File = 'fixture.cs' },
+        @{ Text = 'var glyph = new string((char)0xE0A0, 1);'; File = 'fixture.cs' },
+        @{ Text = 'var glyph = "";'; File = 'fixture.cs' },
+        @{ Text = 'var glyph = new string((char)0Xe8b3, 1);'; File = 'fixture.cs' }
+    )
+    foreach ($fixture in $iconFixtures) {
+        if (@(Find-Hits $fixture.Text $fixture.File | Where-Object category -eq 'icon-code').Count -eq 0) { throw 'Icon-code fixture failed to detect a code point.' }
+    }
+    $allowedIconFixtures = @(
+        @{ Text = 'const int win32 = 0xF120;'; File = 'fixture.cs' },
+        @{ Text = 'const int mask = 0xFFFF;'; File = 'fixture.cs' },
+        @{ Text = 'ContainsGlyph(0xE0A0);'; File = 'fixture.cs' },
+        @{ Text = '    internal const string DevBadgeGlyph = "\uE0A0";'; File = 'product/AntiNotepad/AppInfo.cs' },
+        @{ Text = ('var glyph = "' + [string][char]0xE123 + '";'); File = 'product/AntiNotepad/Icons.cs' }
+    )
+    foreach ($fixture in $allowedIconFixtures) {
+        if (@(Find-Hits $fixture.Text $fixture.File | Where-Object category -eq 'icon-code').Count -ne 0) { throw "Allowed icon-code fixture failed: $($fixture.File)" }
     }
     foreach ($fixture in @('Brush(color, Token.Opacity)', 'new SolidColorBrush(color, 0)', 'Brush(color, 1.0)', 'Color.FromArgb(0, c.R, c.G, c.B)', 'Color.FromArgb(1, c.R, c.G, c.B)', 'Color.FromArgb(255, c.R, c.G, c.B)', 'Color.FromArgb(dark ? (byte)0 : (byte)255, 0, 0, 0)', 'Color.FromArgb(Token.Alpha, 0, 0, 0)')) {
         if (@(Find-Hits $fixture 'fixture.cs' | Where-Object { $_.category -in @('opacity', 'alpha') }).Count -ne 0) { throw "Endpoint fixture failed: $fixture" }
@@ -342,19 +431,27 @@ if ($Inventory) {
     $rows = @("category`tfile`tline`tmatched text`tcode") + @($hits | Sort-Object file, line, category | ForEach-Object { "$($_.category)`t$($_.file)`t$($_.line)`t$($_.match)`t$($_.code)" })
     [IO.File]::WriteAllLines([IO.Path]::GetFullPath($Inventory), [string[]]$rows)
 }
-if ($Update) {
-    $rows = @("file`tcategory`tcount") + @($counts.Keys | Sort-Object | ForEach-Object { "$_`t$($counts[$_])" })
-    [IO.File]::WriteAllLines($baselinePath, [string[]]$rows)
-    Write-Output 'TOKENS baseline updated'; exit 0
-}
-if (-not (Test-Path $baselinePath)) { throw 'Tokens baseline is missing; run -Update.' }
+if ($Update) { throw 'Edit design-exceptions.tsv explicitly and supply a reason for each exception.' }
+if (-not (Test-Path $baselinePath)) { throw 'Design exceptions file is missing.' }
 $old = @{}
-foreach ($row in Import-Csv -Delimiter "`t" $baselinePath) { $old["$($row.file)`t$($row.category)"] = [int]$row.count }
-$comparison = Compare-Counts $old $counts
-if ($comparison.Errors.Count) {
-    $comparison.Errors | ForEach-Object { Write-Output "TOKENS FAIL: $_" }
-    Write-Output 'Use a token from Theme/ or Motion/, or raise the baseline with -Update and give the reason on the item card.'
-    exit 1
+foreach ($row in Import-Csv -Delimiter "`t" $baselinePath) {
+    if (-not $row.file -or -not $row.category -or -not $row.reason -or $row.reason.Trim().Length -eq 0) { throw 'Every exception requires a file, category, count, and reason.' }
+    $key = "$($row.file)`t$($row.category)"
+    if ($old.ContainsKey($key)) { throw "Duplicate exception: $key" }
+    if ($row.category -notin $patterns.Keys -or [int]$row.count -lt 0 -or ([int]$row.count -eq 0 -and $row.file -ne '*')) { throw "Invalid exception: $key" }
+    $old[$key] = [int]$row.count
 }
-if ($comparison.Lower) { Write-Output 'TOKENS baseline can be lowered: run -Update' }
+$errors = [Collections.Generic.List[string]]::new()
+foreach ($key in $counts.Keys) {
+    $category = $key.Split("`t")[1]
+    $allowedKey = if ($category -in @('timer', 'tween')) { "*`t$category" } else { $key }
+    if (-not $old.ContainsKey($allowedKey)) { $errors.Add("$key : no named exception") }
+    elseif ($allowedKey -eq $key -and $counts[$key] -gt $old[$key]) { $errors.Add("$key : $($counts[$key]) exceeds $($old[$key])") }
+}
+foreach ($category in @('timer', 'tween')) {
+    $total = @($hits | Where-Object category -eq $category).Count
+    $key = "*`t$category"
+    if ($total -gt 0 -and (-not $old.ContainsKey($key) -or $total -gt $old[$key])) { $errors.Add("$category : $total exceeds blanket exception") }
+}
+if ($errors.Count) { $errors | ForEach-Object { Write-Output "TOKENS FAIL: $_" }; exit 1 }
 Write-Output 'TOKENS PASS'

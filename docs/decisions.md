@@ -25,7 +25,7 @@ Newest first. History before 2026-10-23 (overnight build log and write-up) is in
 - **Note navigation keys** (user, 2026-11-18): Alt+Left and Alt+Right switch notes, previous and next. They stay as they are; Ctrl+[ and Ctrl+] change list level; the shortcut cleanup item decides the remaining navigation keys.
 
 ## 2026-11-15
-- **Scroll feel** (A20-overscroll-speed): Settings calls the four existing vertical modes **Vertical Scroll Style** and adds a one-option **Horizontal Scroll Style**, Follow-through. Rate-matched remains the default inside notes; Follow-through is the horizontal default. On 2026-11-15, after the round 2 hand test, the user asked to remove vertical overscroll and keep the existing Windows 11 style smooth scrolling; vertical scrolling stops at note ends with no carry-over. Horizontal paging uses projection-based commit and spring return, with edge resistance only at the first and last notes. Locked horizontal values are in `docs/scroll-feel.md`.
+- **Scroll feel** (A20-overscroll-speed): Settings calls the four existing vertical modes **Vertical scroll style** and adds a one-option **Horizontal scroll style**, Follow-through. Rate-matched remains the default inside notes; Follow-through is the horizontal default. On 2026-11-15, after the round 2 hand test, the user asked to remove vertical overscroll and keep the existing Windows 11 style smooth scrolling; vertical scrolling stops at note ends with no carry-over. Horizontal paging uses projection-based commit and spring return, with edge resistance only at the first and last notes. Locked horizontal values are in `docs/scroll-feel.md`.
 
 ## 2026-11-12
 - **Motion reference:** User approved the lab on 2026-11-12. Overlay entry uses 167 ms and cubic-bezier(0, 0, 0, 1); exit uses 83 ms and cubic-bezier(1, 0, 1, 1). The reusable Windows 11 durations are 83, 167 and 250 ms. The 16 px slide is our choice; Microsoft does not prescribe a popup offset. Later Settings and window-motion items reuse the `Win11*` tokens. Sources: Microsoft Learn [Timing and easing](https://learn.microsoft.com/en-us/windows/apps/design/motion/timing-and-easing) and [Motion in practice](https://learn.microsoft.com/en-us/windows/apps/design/motion/motion-in-practice).
@@ -86,8 +86,8 @@ Newest first. History before 2026-10-23 (overnight build log and write-up) is in
   are centered by their ink. Rejected in the lab: an Acrylic popup window for the pill (glitchy, wrong corners), the
   feathered gradient, Mica for the pill, and blur behind the pill (user picked solid; A36 removed the lab).
   Values updated by A4n-scale-lab (user, 2026-11-05: "Use Recommended, everythign looks good"; hand test "looks good"):
-  where the numbers above differ, the Recommended column of `docs/design-scale.md` section 3.2 wins (for example
-  leftmost item 12, dot hover radius 8, dots 8, dot hit height 20, dividers 8). ChromeTokens stays the one owner;
+  where the numbers above differ, the current values in `docs/design-contract.md` and `ChromeTokens` win (for example
+  leftmost item 12, dot hover radius 8, dots 8, dot hit height 32, dividers 8). ChromeTokens stays the one owner;
   pill bottom gap stays 4 (user tried 8, then "Reduce to 4 and 4").
 - **Native window** (user decision; implementation reverted): the pad is the product and must meet every native Windows 11
   window expectation, while its top stays chrome-free (no title text or caption buttons): Windows-drawn rounded corners,

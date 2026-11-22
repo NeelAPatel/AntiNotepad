@@ -12,15 +12,18 @@ using Avalonia.Controls;
 using Avalonia.Controls.Chrome;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
-using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media;
 
 namespace AntiNotepad;
 
 internal static partial class SelfTest
 {
-    private const string DesignHash = "f08e0c448f3f7a400dd73fe7710bd51e05f6545782c40b3caa6ed5c24466aa79";
+    private const string DesignHash = "ac08aea9779b8398a054f60b94cc833a9d28df467850dd5e9d662d7b3f012c22";
     private static readonly string[] DesignProperties = ["FontSize", "FontWeight", "FontFamily", "FontStyle", "CornerRadius", "Opacity", "Background", "Foreground", "BorderBrush", "BorderThickness", "BoxShadow", "Margin", "Padding"];
+    private static readonly DesignTokenAllowance[] DesignTokenAllowList = [];
+
+    private sealed record DesignTokenValue(string Path, string Property, double Value);
+    private sealed record DesignTokenAllowance(string Property, double Value, string Reason);
 
     /// <summary>Writes the same design snapshot used by the selftest.</summary>
     internal static int WriteDesignDump(string path)
@@ -48,6 +51,85 @@ internal static partial class SelfTest
         }
         catch (Exception ex) { report = ex.ToString(); Console.WriteLine("DESIGN dump FAIL " + report); return false; }
     }
+
+    /// <summary>Checks live pad, settings, search and help geometry against reflected theme tokens.</summary>
+    private static bool DesignTokenChecks(out string report)
+    {
+        try
+        {
+            var values = new List<DesignTokenValue>();
+            _ = DesignDump(values);
+            var tokens = DesignTokenValueSet();
+            var failures = new List<DesignTokenValue>();
+            var allowed = new List<(DesignTokenValue Value, DesignTokenAllowance Allowance)>();
+            foreach (var value in values)
+            {
+                if (tokens.Contains(TokenKey(value.Value))) continue;
+                var exception = DesignTokenAllowList.FirstOrDefault(row => row.Property == value.Property && Near(row.Value, value.Value));
+                if (exception is null) failures.Add(value);
+                else allowed.Add((value, exception));
+            }
+
+            if (failures.Count == 0)
+            {
+                report = $"{values.Count} values, {allowed.Count} allowed";
+                Console.WriteLine("DESIGN-TOKENS " + report);
+                return true;
+            }
+
+            var details = failures
+                .GroupBy(value => (value.Property, Key: TokenKey(value.Value)))
+                .OrderBy(group => group.Key.Property, StringComparer.Ordinal)
+                .ThenBy(group => group.Key.Key)
+                .Take(12)
+                .Select(group => $"{group.Key.Property}={FormatTokenValue(group.First().Value)} at {group.First().Path} ({group.Count()} occurrence(s))");
+            report = $"FAIL {failures.Count} of {values.Count} values: " + string.Join("; ", details);
+            Console.WriteLine("DESIGN-TOKENS " + report);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            report = ex.ToString();
+            Console.WriteLine("DESIGN-TOKENS FAIL " + report);
+            return false;
+        }
+    }
+
+    /// <summary>Builds the numeric token set, including reflected composite constants and common half-size geometry.</summary>
+    private static HashSet<long> DesignTokenValueSet()
+    {
+        var direct = new HashSet<double> { 0 };
+        var visited = new HashSet<Type>();
+        void AddType(Type type)
+        {
+            if (!visited.Add(type)) return;
+            foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly))
+            {
+                if (!field.IsLiteral || !IsNumericType(field.FieldType)) continue;
+                if (field.GetRawConstantValue() is { } raw) direct.Add(Convert.ToDouble(raw, CultureInfo.InvariantCulture));
+            }
+            foreach (var nested in type.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic)) AddType(nested);
+        }
+
+        AddType(typeof(Space));
+        AddType(typeof(Shape));
+        AddType(typeof(Typography));
+        AddType(typeof(ChromeTokens));
+        AddType(typeof(Paint));
+
+        var tokens = direct.Select(TokenKey).ToHashSet();
+        var numbers = direct.Where(double.IsFinite).ToArray();
+        foreach (var value in numbers) tokens.Add(TokenKey(value / 2));
+        return tokens;
+    }
+
+    private static bool IsNumericType(Type type) => Type.GetTypeCode(type) is
+        TypeCode.Byte or TypeCode.SByte or TypeCode.Int16 or TypeCode.UInt16 or TypeCode.Int32 or TypeCode.UInt32 or
+        TypeCode.Int64 or TypeCode.UInt64 or TypeCode.Single or TypeCode.Double or TypeCode.Decimal;
+
+    private static long TokenKey(double value) => (long)Math.Round(value * 1000, MidpointRounding.AwayFromZero);
+    private static bool Near(double first, double second) => TokenKey(first) == TokenKey(second);
+    private static string FormatTokenValue(double value) => value.ToString("0.###", CultureInfo.InvariantCulture);
 
     /// <summary>Checks whether a rebuilt selector resumes only from a recent different choice.</summary>
     private static bool SegmentStartChecks()
@@ -133,14 +215,10 @@ internal static partial class SelfTest
     }
 
     /// <summary>Builds the hidden controls with isolated data and snapshots each palette.</summary>
-    private static string DesignDump()
+    private static string DesignDump(List<DesignTokenValue>? tokenValues = null)
     {
         if (Application.Current is null) AppBuilder.Configure<Application>().UsePlatformDetect().SetupWithoutStarting();
-        if (!Application.Current!.Styles.OfType<Avalonia.Themes.Fluent.FluentTheme>().Any())
-        {
-            Application.Current.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
-            Application.Current.Styles.Add(new StyleInclude(new Uri(AppInfo.ResourceUri)) { Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml") });
-        }
+        App.ConfigureFluentStyles(Application.Current!);
         var dir = Path.Combine(Path.GetTempPath(), $"antinotepad-design-{Guid.NewGuid():N}");
         var lines = new List<string>();
         try
@@ -157,15 +235,15 @@ internal static partial class SelfTest
                 var notes = new NotesSession(store, dir, dir, null, log.Write);
                 var pad = new PadWindow(store, settings, log, false, true, notes);
                 var window = new SettingsWindow(settings, pad, true, notes);
-                Capture(pad, palette.Id + "/pad", lines);
+                Capture(pad, palette.Id + "/pad", lines, tokenValues);
                 foreach (var section in new[] { "theme", "ui", "editor", "feel", "system", "storage", "about" })
                 {
                     window.ShowSection(section);
-                    Capture(window, palette.Id + "/settings/" + section, lines);
+                    Capture(window, palette.Id + "/settings/" + section, lines, tokenValues);
                 }
-                Capture(new HelpOverlay(pad, palette), palette.Id + "/help", lines);
-                Capture(new SearchOverlay(pad, palette, store, "", false), palette.Id + "/search", lines);
-                IReadOnlyList<MenuEntry> entries = [new("New note", "Ctrl+N", MenuGlyphs.NewNote), new("Search notes", "Ctrl+F", MenuGlyphs.Search), new("Split view", "Ctrl+OemBackslash", MenuGlyphs.Split), new("Keep on top", "Ctrl+T", MenuGlyphs.Pin), MenuEntry.Separator, new("Settings", "Ctrl+OemComma", MenuGlyphs.Settings), new($"Hide {AppInfo.Name}", "Escape")];
+                Capture(new HelpOverlay(pad, palette), palette.Id + "/help", lines, tokenValues);
+                Capture(new SearchOverlay(pad, palette, store, "", false), palette.Id + "/search", lines, tokenValues);
+                IReadOnlyList<MenuEntry> entries = [new("New note", "Ctrl+N", Icons.NewNote), new("Search notes", "Ctrl+F", Icons.Search), new("Split view", "Ctrl+OemBackslash", Icons.Split), new("Keep on top", "Ctrl+T", Icons.KeepOnTop), MenuEntry.Separator, new("Settings", "Ctrl+OemComma", Icons.Settings), new($"Hide {AppInfo.Name}", "Escape")];
                 var builder = typeof(PadMenu).GetMethod("BuildMenu", BindingFlags.NonPublic | BindingFlags.Static)!;
                 var menu = (Border)builder.Invoke(null, [entries, palette, settings.Current, (Action)(() => { })])!;
                 Capture(menu, palette.Id + "/menu", lines);
@@ -177,11 +255,12 @@ internal static partial class SelfTest
     }
 
     /// <summary>Records control values and their stable logical-tree paths.</summary>
-    private static void Capture(ILogical node, string parent, List<string> lines)
+    private static void Capture(ILogical node, string parent, List<string> lines, List<DesignTokenValue>? tokenValues = null)
     {
         var path = parent + "/" + node.GetType().Name;
         if (node is Control control)
         {
+            if (tokenValues is not null) CollectDesignTokenValues(control, path, tokenValues);
             var values = new List<string>();
             foreach (var name in DesignProperties)
             {
@@ -200,7 +279,45 @@ internal static partial class SelfTest
             lines.Add(path + " | " + string.Join("; ", values));
         }
         var index = 0;
-        foreach (var child in node.GetLogicalChildren()) Capture(child, path + "[" + index++ + "]", lines);
+        foreach (var child in node.GetLogicalChildren()) Capture(child, path + "[" + index++ + "]", lines, tokenValues);
+    }
+
+    /// <summary>Collects scalar typography, shape, spacing and shadow values while the snapshot walk visits each control.</summary>
+    private static void CollectDesignTokenValues(Control control, string path, List<DesignTokenValue> values)
+    {
+        void Add(string property, double value) => values.Add(new DesignTokenValue(path, property, value));
+        object? Property(string name) => control.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance)?.GetValue(control);
+        if (Property("FontSize") is double fontSize) Add("FontSize", fontSize);
+        if (Property("CornerRadius") is CornerRadius radius)
+        {
+            Add("CornerRadius.TopLeft", radius.TopLeft);
+            Add("CornerRadius.TopRight", radius.TopRight);
+            Add("CornerRadius.BottomRight", radius.BottomRight);
+            Add("CornerRadius.BottomLeft", radius.BottomLeft);
+        }
+        if (Property("Margin") is Thickness margin) AddThickness("Margin", margin, Add);
+        if (Property("Padding") is Thickness padding) AddThickness("Padding", padding, Add);
+        if (Property("BorderThickness") is Thickness borderThickness) AddThickness("BorderThickness", borderThickness, Add);
+        if (Property("BoxShadow") is BoxShadows shadows)
+        {
+            for (var i = 0; i < shadows.Count; i++)
+            {
+                var shadow = shadows[i];
+                Add($"BoxShadow[{i}].OffsetX", shadow.OffsetX);
+                Add($"BoxShadow[{i}].OffsetY", shadow.OffsetY);
+                Add($"BoxShadow[{i}].Blur", shadow.Blur);
+                Add($"BoxShadow[{i}].Spread", shadow.Spread);
+                Add($"BoxShadow[{i}].ColorAlpha", shadow.Color.A);
+            }
+        }
+    }
+
+    private static void AddThickness(string property, Thickness thickness, Action<string, double> add)
+    {
+        add(property + ".Left", thickness.Left);
+        add(property + ".Top", thickness.Top);
+        add(property + ".Right", thickness.Right);
+        add(property + ".Bottom", thickness.Bottom);
     }
 
     /// <summary>Exercises the production layout helpers across bar modes and overlay lifetimes.</summary>

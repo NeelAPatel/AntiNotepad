@@ -20,8 +20,18 @@ internal static partial class SelfTest
         var saveDelayUi = Memoize(() => RunExistingCheck(SaveDelayChecks, "save delay UI: "));
         var savedLabelClock = Memoize(() => RunExistingCheck(SavedLabelChecks, "saved label clock: "));
         var barInteraction = Memoize(() => RunExistingCheck(PinRingChecks, "bar interaction: "));
+        var searchDeleteSafety = Memoize(() => RunExistingCheck(SearchDeleteSafetyChecks, "search delete safety: "));
+        var slotClearUndoSafety = Memoize(() => RunExistingCheck(SlotClearUndoSafetyChecks, "slot clear undo safety: "));
+        var saveFailureEnter = Memoize(() => RunExistingCheck(SaveFailureEnterChecks, "save failure Enter: "));
+        var searchDeleteToast = Memoize(() => RunExistingCheck(SearchDeleteToastChecks, "search delete toast: "));
         ContractRow[] rows =
         [
+            new(
+                "contrast-approved-roles",
+                "Primary text, field borders, toast text, failure details and state marks meet their contrast minimums across palettes and accents.",
+                "A35f-contrast",
+                () => RunExistingCheck(ContrastChecks, "contrast: "),
+                "Dev copy: check toast action, fields, toggle and pager states in light and dark palettes."),
             new(
                 "recovered-folder-ensure",
                 "Recovery storage is created idempotently only under an existing notes folder.",
@@ -252,13 +262,60 @@ internal static partial class SelfTest
                 "One key resolves to one action per scope; defaults avoid text editing, Windows and development-slot keys, Help toggles through its active shortcut, and the checkbox/timer action stays bindable without a default.",
                 "A29-shortcut-map",
                 () => RunExistingCheck(ShortcutMapChecks, "shortcut map: "),
-                "Dev copy: record, clear, reset one row, reset all, restart, take a conflicting key, and confirm F1 opens, closes and reopens Help with current bindings. Confirm Ctrl+Enter is unassigned by default and Checkbox or timer can be bound in Settings.")
+                "Dev copy: record, clear, reset one row, reset all, restart, take a conflicting key, and confirm F1 opens, closes and reopens Help with current bindings. Confirm Ctrl+Enter is unassigned by default and Checkbox or timer can be bound in Settings."),
+            new("settings-labels-reset-search", "Dropdown names track their choices; shortcut resets can be undone; matched expanders show their rows; swap labels follow split view.",
+                "A35g-labels-tooltips", () => RunExistingCheck(LabelsAndSettingsChecks, "labels and Settings: "),
+                "Dev copy: check swap, dropdown names, Reset all Undo, and search for vertical."),
+            new("targets-keyboard", "Settings targets, stable slot pitch, keyboard choices and the shared focus adorner are present.",
+                "A35e-targets-keyboard", () => RunExistingCheck(TargetKeyboardChecks, "targets and keyboard: "),
+                "Dev copy: Tab and pointer through controls, check focus rings and 320 px pager fit."),
+            new("recorder-backspace", "Backspace clears optional shortcuts and preserves required ones.",
+                "A35e-targets-keyboard", () => RunExistingCheck(HotkeyRecorderEscapeChecks, "recorder commands: "), null),
+            new("menu-order", "Menu actions follow Delete, Cut, Copy, Paste.",
+                "A35e-targets-keyboard", () => RunExistingCheck(ShortcutMapChecks, "shortcuts and menu: "), "Dev copy: verify menu action order."),
+            new("settings-focus-restore", "Settings rebuilds restore rail focus and page focus by name or position, using the first control only when nothing was focused.",
+                "A35e-targets-keyboard", () => RunExistingCheck(ShortcutMapChecks, "focus selection: "), "Dev copy: switch pages, clear search from the rail, change palette and reset shortcuts with the keyboard."),
+            new("bar-reveal-cancel", "Bar mode changes cancel outstanding reveal and floating pager fades before resetting handles.",
+                "A35e-targets-keyboard", () => RunExistingCheck(LabelsAndSettingsChecks, "reveal cancellation: "), "Dev copy: change bar modes during reveal and check the edge handles."),
+            new("float-bar-groups-shadow", "Floating bar separators follow visible groups and popup padding leaves room for the pill shadow.",
+                "A35e-targets-keyboard", () => RunExistingCheck(BarChecks, "bar: "), "Dev copy: check spacing, shadow and pointer pass-through in both views."),
+            IconRegistryContractRow(),
+            new(
+                "search-delete-undo",
+                "Delete edits the search query; Ctrl+Delete removes forever only at query end, Undo restores original trash positions, and saved text survives both saves and reload.",
+                "A35a-data-safety",
+                searchDeleteSafety,
+                "Dev copy: in Trash, type abc, place the caret mid-query and press Delete and Ctrl+Delete; confirm Trash is unchanged. Move to the end, press Ctrl+Delete, then Undo; confirm the note returns in its original order."),
+            new(
+                "slot-clear-undo-withdrawal",
+                "A cleared slot can be restored until it is edited; its withdrawn toast button cannot run during normal motion or overwrite later text.",
+                "A35a-data-safety",
+                slotClearUndoSafety,
+                "Dev copy: clear a slot and Undo before editing; repeat, type new text, then confirm the toast is gone and the new text remains."),
+            new(
+                "save-failure-enter-focus",
+                "Enter runs the focused save-failure button, and a repeated prompt refreshes the Quit action.",
+                "A35a-data-safety",
+                saveFailureEnter,
+                null),
+            new(
+                "search-delete-toast-count",
+                "Search deletion counts only notes moved to trash and says when slot results were skipped.",
+                "A35a-data-safety",
+                searchDeleteToast,
+                "Dev copy: select only a slot and press Ctrl+Delete; confirm the editor hint. Select two notes and one slot; confirm the note count and skipped-slot count.")
         ];
 
         var passed = 0;
         var manual = 0;
+        var deferred = 0;
         foreach (var row in rows)
         {
+            if (row.Id == "icon-font-glyph-names")
+            {
+                deferred++;
+                continue;
+            }
             if (row.Check is null)
             {
                 manual++;
@@ -285,8 +342,24 @@ internal static partial class SelfTest
             failures.Add($"contract {row.Id}: {detail}");
         }
 
-        Console.WriteLine($"CONTRACTS: {rows.Length} rows, {passed} pass, {manual} manual");
+        Console.WriteLine($"CONTRACTS: {rows.Length} rows, {passed} pass, {manual} manual, {deferred} deferred");
     }
+
+    /// <summary>Runs the icon contract after Avalonia's asset services are initialized by the design check.</summary>
+    private static bool IconRegistryContractCheck(out string report)
+    {
+        var result = IconRegistryContractRow().Check!();
+        report = result.Detail;
+        return result.Passed;
+    }
+
+    /// <summary>Defines the A29 promise that icon codes and bundled glyph names remain tied to their fonts.</summary>
+    private static ContractRow IconRegistryContractRow() => new(
+        "icon-font-glyph-names",
+        "Every icon code exists in its declared font, and each bundled Fluent code matches its post glyph name.",
+        "A29-icon-codes",
+        () => RunExistingCheck(IconRegistrySelfTest, "icon registry: "),
+        null);
 
     /// <summary>Checks the vendored source markers and documented upstream pin.</summary>
     private static bool AvaloniaEditForkChecks(out string report)

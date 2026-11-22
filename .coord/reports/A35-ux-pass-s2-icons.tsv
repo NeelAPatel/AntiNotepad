@@ -1,0 +1,57 @@
+code	font	name	meaning	size	screens
+E74D	S	Glyph.Delete	Delete note; delete selection; open trash	16	Pad bar, editor menu, search
+E710	S	Glyph.Add	New note	16	Pad bar, pad menu
+E76B	S	Glyph.Back	Previous note; leave trash	16	Pager, search
+E76C	S	Glyph.Forward	Next note	16	Pager
+E721	S	Glyph.Search	Search notes	16	Pad bar, pad menu
+E89F	S	Glyph.Split	Split view	16	Pad bar, pad menu
+E718	S	Glyph.Pin	Keep on top (outline)	16	Pad bar, pad menu
+E842	S	Glyph.PinFilled	Keep on top (fill layer when pinned)	16	Pad bar
+E713	S	Glyph.Settings	Settings	16	Pad bar, pad menu
+E921	S	Glyph.Hide	Hide the app	16	Pad bar
+EA37	S	Glyph.List	Show stack / list view	16	Pad bar, search
+F0E2	S	Glyph.Grid	Show slots / grid view	16	Pad bar, search
+E711	S	Glyph.Close	Close overlay or window	16	Search, Settings
+E777	S	Glyph.Restore	Defined, unused	16	none
+E7A7	S	MenuGlyphs.Undo	Undo	16	Editor menu
+E7A6	S	MenuGlyphs.Redo	Redo	16	Editor menu
+E8B3	S	MenuGlyphs.SelectAll	Select all	16	Editor menu
+E8C6	S	MenuGlyphs.Cut	Cut	16	Editor menu
+E8C8	S	MenuGlyphs.Copy	Copy	16	Editor menu
+E77F	S	MenuGlyphs.Paste	Paste	16	Editor menu
+F2F5	F	raw 0xF2F5	Theme tab; Accent row	20	Settings sidebar, row
+F592	F	raw 0xF592	UI tab; Background row	20	Settings sidebar, row
+F386	F	raw 0xF386	Editor tab	20	Settings sidebar
+EC8D	F	raw 0xEC8D	Feel tab	20	Settings sidebar
+F359	F	raw 0xF359	System tab; Taskbar icon; App data	20	Settings sidebar, rows
+F4B8	F	KeyboardGlyph	Shortcuts tab; shortcut rows; hotkey; help row	20	Settings sidebar, rows
+F418	F	raw 0xF418	Storage tab; Notes folder; Recovered notes	20	Settings sidebar, cards
+F4A3	F	raw 0xF4A3	About tab; version row	20	Settings sidebar, row
+F68F	F	raw 0xF68F	Settings search box	16	Settings search
+F8A1	F	raw 0xF8A1	Light mode palette	20	Settings row
+F87D	F	raw 0xF87D	Dark mode palette	20	Settings row
+E0CD	F	raw 0xE0CD	Glide between positions	20	Settings row
+E8B0	F	raw 0xE8B0	Side pane palette	20	Settings row
+F595	F	raw 0xF595	Tint	20	Settings row
+F7E4	F	raw 0xF7E4	Font	20	Settings row
+F7E6	F	raw 0xF7E6	Font size	20	Settings row
+F7F6	F	raw 0xF7F6	Line spacing	20	Settings row
+F2F9	F	raw 0xF2F9	Paper tone	20	Settings row
+F462	F	raw 0xF462	Backing	20	Settings row
+F20A	F	raw 0xF20A	Answers	20	Settings row
+E7DB	F	raw 0xE7DB	Clean markdown	20	Settings row
+ECF4	F	raw 0xECF4	Folding	20	Settings row
+F4E4	F	raw 0xF4E4	Short links	20	Settings row
+F2EF	F	raw 0xF2EF	Code languages	20	Settings row
+E077	F	raw 0xE077	Vertical scroll style	20	Settings row
+F18D	F	raw 0xF18D	Horizontal scroll style	20	Settings row
+F103	F	raw 0xF103	Reduce motion	20	Settings row
+F8BD	F	raw 0xF8BD	Open on a new note hotkey	20	Settings row
+EE77	F	raw 0xEE77	Open at	20	Settings row
+F2DD	F	raw 0xF2DD	Fresh note after	20	Settings row
+F601	F	raw 0xF601	Keep on top	20	Settings row
+F165	F	raw 0xF165	Hide when I click away	20	Settings row
+F60E	F	raw 0xF60E	Start with Windows	20	Settings row
+F19F	F	raw 0xF19F	Restore default settings	20	Settings row
+F2A3	F	raw 0xF2A3	Expand / collapse chevron	16	Settings expanders and dropdowns
+F6ED	F	A29 incident (removed)	The guessed Shortcuts code: drew this	20	Settings sidebar before A29 r4

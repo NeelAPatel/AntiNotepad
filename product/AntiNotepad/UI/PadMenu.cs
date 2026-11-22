@@ -1,3 +1,4 @@
+// Builds the pad’s popup menus, including action rows and submenus for editor commands.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -15,7 +16,7 @@ namespace AntiNotepad.UI;
 internal static class PadMenu
 {
     private static readonly FontFamily MenuFont = new(Typography.UiFamily);
-    private static readonly string[] ActionLabels = ["Cut", "Copy", "Paste", "Delete"];
+    internal static readonly string[] ActionLabels = ["Delete", "Cut", "Copy", "Paste"];
 
     public static void Show(Control anchor, IReadOnlyList<MenuEntry> entries, Palette p, Settings settings)
     {
@@ -98,11 +99,11 @@ internal static class PadMenu
     private static Border MenuBorder(Control content, Palette p) => new()
     {
         HorizontalAlignment = HorizontalAlignment.Left,
-        Padding = new Thickness(4),
+        Padding = new Thickness(Space.Xs),
         CornerRadius = new CornerRadius(Shape.Popup),
         Background = new SolidColorBrush(p.Surface),
         BorderBrush = new SolidColorBrush(p.Faint, Paint.PopupBorder),
-        BorderThickness = new Thickness(1),
+        BorderThickness = new Thickness(Shape.Thin),
         BoxShadow = new BoxShadows(new BoxShadow
         {
             Blur = Shape.MenuShadowBlur,
@@ -116,13 +117,13 @@ internal static class PadMenu
     private static Control BuildActionRow(IReadOnlyList<MenuEntry> entries, Palette p, bool colored, Action close)
     {
         var actions = ActionLabels.Select(label => entries.FirstOrDefault(e => e.Header == label)).Where(e => e is not null).Cast<MenuEntry>().ToArray();
-        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*,*"), MinWidth = 224 };
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*,*"), MinWidth = ChromeTokens.Size.MenuPopupMinWidth };
         for (var i = 0; i < actions.Length; i++)
         {
             var entry = actions[i];
             var face = new StackPanel
             {
-                Spacing = 2,
+                Spacing = Space.Nudge,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
             };
@@ -136,18 +137,19 @@ internal static class PadMenu
                 HorizontalAlignment = HorizontalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis,
             });
-            var hit = MenuButton(face, p, entry.Enabled, 52, 4,
-                new Thickness(i == 0 ? 0 : 2, 0, i == actions.Length - 1 ? 0 : 2, 0));
+            var hit = MenuButton(face, p, entry.Enabled, ChromeTokens.Size.MenuActionRowHeight, Shape.Control,
+                new Thickness(i == 0 ? 0 : Space.Nudge, 0, i == actions.Length - 1 ? 0 : Space.Nudge, 0));
+            ToolTip.SetTip(hit, entry.Header + (string.IsNullOrEmpty(entry.Keys) ? "" : " (" + Display(entry.Keys) + ")"));
             if (entry.Enabled) hit.Click += (_, _) => { entry.Click?.Invoke(); close(); };
             Grid.SetColumn(hit, i);
             row.Children.Add(hit);
         }
-        return new Border { Height = 52, Child = row };
+        return new Border { Height = ChromeTokens.Size.MenuActionRowHeight, Child = row };
     }
 
     private static Control BuildMenuRow(MenuEntry entry, Palette p, bool colored, Action close, Action<Popup?> activate, out Popup? rowSubmenu)
     {
-        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("28,*,Auto"), Height = 32 };
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions($"{ChromeTokens.Size.MenuIconColumnWidth:0},*,Auto"), Height = ChromeTokens.Size.MenuRowHeight };
         row.ColumnDefinitions[2].SharedSizeGroup = "MenuShortcuts";
         row.Children.Add(Icon(entry.Icon, p, colored));
 
@@ -170,12 +172,12 @@ internal static class PadMenu
             Foreground = new SolidColorBrush(p.Muted, Paint.MenuCaption),
             TextAlignment = TextAlignment.Right,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(24, 0, 8, 0),
+            Margin = new Thickness(Space.Xl, 0, Space.S, 0),
         };
         Grid.SetColumn(keys, 2);
         row.Children.Add(keys);
 
-        var hit = MenuButton(row, p, entry.Enabled, 32, 4);
+        var hit = MenuButton(row, p, entry.Enabled, ChromeTokens.Size.MenuRowHeight, Shape.Control);
         rowSubmenu = null;
         if (entry.Enabled && entry.Children is { Count: > 0 } children)
         {
@@ -246,7 +248,7 @@ internal static class PadMenu
         {
             Height = height,
             Margin = margin ?? default,
-            Padding = height == 32 ? new Thickness(8, 0) : new Thickness(0),
+            Padding = height == ChromeTokens.Size.MenuRowHeight ? new Thickness(Space.S, 0) : new Thickness(0),
             CornerRadius = new CornerRadius(radius),
             Background = Brushes.Transparent,
             Child = content,
@@ -268,18 +270,18 @@ internal static class PadMenu
         return button;
     }
 
-    private static Control Icon(string? glyph, Palette p, bool colored)
+    private static Control Icon(global::AntiNotepad.Icon? icon, Palette p, bool colored)
     {
-        if (glyph is null) return new Border { Width = 18, Height = 18, VerticalAlignment = VerticalAlignment.Center };
-        var color = colored ? glyph switch
+        if (icon is null) return new Border { Width = ChromeTokens.IconGlyphSize + ChromeTokens.GlyphIconBoxExtra, Height = ChromeTokens.IconGlyphSize + ChromeTokens.GlyphIconBoxExtra, VerticalAlignment = VerticalAlignment.Center };
+        var color = colored ? icon switch
         {
-            MenuGlyphs.NewNote or MenuGlyphs.Pin => p.Accent,
-            MenuGlyphs.Delete => p.Error,
+            { } value when ReferenceEquals(value, Icons.NewNote) || ReferenceEquals(value, Icons.KeepOnTop) => p.Accent,
+            { } value when ReferenceEquals(value, Icons.Delete) => p.Error,
             _ => p.Ink,
         } : p.Ink;
-        return new GlyphIcon(glyph, color, Typography.IconMedium, 0)
+        return new GlyphIcon(icon, color, Typography.IconMedium)
         {
-            Width = 28,
+            Width = ChromeTokens.Size.MenuIconColumnWidth,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
         };
@@ -299,8 +301,8 @@ internal static class PadMenu
 
     private static Border Separator(Palette p) => new()
     {
-        Height = 1,
-        Margin = new Thickness(0, 4),
+        Height = Shape.Thin,
+        Margin = new Thickness(0, Space.Xs),
         Background = new SolidColorBrush(p.Faint, Paint.MenuSeparator),
     };
 
