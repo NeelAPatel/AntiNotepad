@@ -5,7 +5,7 @@ param([switch]$Update, [string]$Inventory, [switch]$SelfCheck)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
-$baselinePath = Join-Path $PSScriptRoot 'design-tokens-baseline.tsv'
+$baselinePath = Join-Path $PSScriptRoot 'design-exceptions.tsv'
 $number = '(?<![\w.])(?:0x[\da-fA-F]+|(?:\d+(?:\.\d+)?|\.\d+)[dfm]?)(?![\w.])'
 $nonzero = '(?!(?:0x0+|0+(?:\.0+)?|\.0+)[dfm]?(?![\w.]))' + $number
 $byteAlpha = '(?<![\w.])(?:[2-9]|[1-9]\d|1\d\d|2[0-4]\d|25[0-4])(?![\w.])'
@@ -431,19 +431,27 @@ if ($Inventory) {
     $rows = @("category`tfile`tline`tmatched text`tcode") + @($hits | Sort-Object file, line, category | ForEach-Object { "$($_.category)`t$($_.file)`t$($_.line)`t$($_.match)`t$($_.code)" })
     [IO.File]::WriteAllLines([IO.Path]::GetFullPath($Inventory), [string[]]$rows)
 }
-if ($Update) {
-    $rows = @("file`tcategory`tcount") + @($counts.Keys | Sort-Object | ForEach-Object { "$_`t$($counts[$_])" })
-    [IO.File]::WriteAllLines($baselinePath, [string[]]$rows)
-    Write-Output 'TOKENS baseline updated'; exit 0
-}
-if (-not (Test-Path $baselinePath)) { throw 'Tokens baseline is missing; run -Update.' }
+if ($Update) { throw 'Edit design-exceptions.tsv explicitly and supply a reason for each exception.' }
+if (-not (Test-Path $baselinePath)) { throw 'Design exceptions file is missing.' }
 $old = @{}
-foreach ($row in Import-Csv -Delimiter "`t" $baselinePath) { $old["$($row.file)`t$($row.category)"] = [int]$row.count }
-$comparison = Compare-Counts $old $counts
-if ($comparison.Errors.Count) {
-    $comparison.Errors | ForEach-Object { Write-Output "TOKENS FAIL: $_" }
-    Write-Output 'Use a token from Theme/ or Motion/, or raise the baseline with -Update and give the reason on the item card.'
-    exit 1
+foreach ($row in Import-Csv -Delimiter "`t" $baselinePath) {
+    if (-not $row.file -or -not $row.category -or -not $row.reason -or $row.reason.Trim().Length -eq 0) { throw 'Every exception requires a file, category, count, and reason.' }
+    $key = "$($row.file)`t$($row.category)"
+    if ($old.ContainsKey($key)) { throw "Duplicate exception: $key" }
+    if ($row.category -notin $patterns.Keys -or [int]$row.count -lt 0 -or ([int]$row.count -eq 0 -and $row.file -ne '*')) { throw "Invalid exception: $key" }
+    $old[$key] = [int]$row.count
 }
-if ($comparison.Lower) { Write-Output 'TOKENS baseline can be lowered: run -Update' }
+$errors = [Collections.Generic.List[string]]::new()
+foreach ($key in $counts.Keys) {
+    $category = $key.Split("`t")[1]
+    $allowedKey = if ($category -in @('timer', 'tween')) { "*`t$category" } else { $key }
+    if (-not $old.ContainsKey($allowedKey)) { $errors.Add("$key : no named exception") }
+    elseif ($allowedKey -eq $key -and $counts[$key] -gt $old[$key]) { $errors.Add("$key : $($counts[$key]) exceeds $($old[$key])") }
+}
+foreach ($category in @('timer', 'tween')) {
+    $total = @($hits | Where-Object category -eq $category).Count
+    $key = "*`t$category"
+    if ($total -gt 0 -and (-not $old.ContainsKey($key) -or $total -gt $old[$key])) { $errors.Add("$category : $total exceeds blanket exception") }
+}
+if ($errors.Count) { $errors | ForEach-Object { Write-Output "TOKENS FAIL: $_" }; exit 1 }
 Write-Output 'TOKENS PASS'

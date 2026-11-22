@@ -273,7 +273,7 @@ internal sealed class MotionPreview : StackPanel
                 _notePen = new Pen(new SolidColorBrush(_palette.Number), Shape.Thick, lineCap: PenLineCap.Round);
             }
             var w = Bounds.Width; var h = Bounds.Height;
-            dc.DrawRectangle(_well, null, new Rect(0, 0, w, h), 8, 8);
+            dc.DrawRectangle(_well, null, new Rect(0, 0, w, h), Shape.Card, Shape.Card);
             if (_count == 0 || w <= 0) return;
             var now = Now;
             // At rest each line keeps its own lane (scroll high, note low) so one never hides the other.

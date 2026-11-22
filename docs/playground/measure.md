@@ -208,7 +208,7 @@ Reference: `search-results-solid-dark-default-2x.png` (client coordinates), `sea
 - **Washes are one family:** hover is the same +15 per channel step on the bar icon, the pager parts and the menu rows,
   so `Wash.Hover` can drive all three.
 - **Corners are four values in view:** 8 (hover boxes, popups), 10 (cards, toast, field), 12 (pill), 6 (badges).
-  This matches the `Corner.Md` / `Lg` / `Sm` merge in `design-scale.md`.
+  This matches the `Corner.Md` / `Lg` / `Sm` merge in `../design-contract.md`.
 - **Spacing rhythm already runs on 3 and 4** in the pager (pitch 19 = 16 + 3) and 2 around menu rows; `Space.XS` 4
   absorbs the 3.
 

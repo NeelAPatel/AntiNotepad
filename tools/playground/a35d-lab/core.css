@@ -72,5 +72,5 @@ button:focus-visible,input:focus-visible,select:focus-visible { outline:2px soli
 .lab-switch button { font-size:12px;padding:4px 6px; } .lab-switch button[aria-pressed="true"] { outline:1px solid var(--accent); }
 .kit-palette-chips { display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%; } .kit-palette-chip { min-height:52px;border:1px solid color-mix(in srgb,var(--faint) 30%,transparent);border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:12px; } .kit-palette-chip[aria-pressed="true"] { border:2px solid var(--accent); } .kit-palette-dots { display:flex;gap:4px; } .kit-palette-dots i { width:8px;height:8px;border-radius:50%; } .kit-caret-sample { display:inline-flex;align-items:center;font-family:'Cascadia Mono',Consolas,monospace; } .kit-caret-sample i { height:16px;margin-left:1px;border-radius:2px;background:var(--caret); }
 
-@font-face{font-family:'Fluent System Icons';src:url(FluentSystemIcons-Regular.ttf) format('truetype')}
+@font-face{font-family:'Fluent System Icons';src:url(../../../product/AntiNotepad/Assets/Fonts/FluentSystemIcons-Regular.ttf) format('truetype')}
 .glyph-fluent{font-family:'Fluent System Icons'!important;font-weight:normal}
