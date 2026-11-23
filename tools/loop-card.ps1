@@ -1,6 +1,8 @@
 # Claude UserPromptSubmit hook: lists the items in flight from the live STATUS plan and warns when the approved-item cap
 # is exceeded. Its output is added to Claude's context. Reads STATUS from the main checkout even when run from a worktree.
 param([string]$Root = (Split-Path $PSScriptRoot -Parent))
+# Opt-in: part of my dev loop. Set ANTINOTEPAD_LOOP=1 to enable (see docs/claude-hooks.md).
+if ($env:ANTINOTEPAD_LOOP -cne '1') { exit 0 }
 $ErrorActionPreference = 'Stop'
 try {
     $common = (& git -C $Root rev-parse --path-format=absolute --git-common-dir 2>$null)

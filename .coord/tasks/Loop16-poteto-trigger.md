@@ -52,7 +52,7 @@ After: director brief = template from the evidence note; bad brief refused; item
   4. With your OK: add both hooks to your user settings in log-only mode, then start one throwaway read-only chat from the template; check the log shows the Brief hook saw the prompt and the Stop hook saw "Launching skill". Then switch to block and re-run the two failure cases (bad brief refused; chat without launch blocked once).
 - Tests/gates: script self-tests; the three Done checks above; fail-open check by feeding garbage stdin.
 - Tier Medium; Hand test none (as card).
-- Needs from you at Approve: (a) OK to edit `C:\Users\Neel\.claude\settings.json` hooks (log-only first); (b) OK to start one throwaway read-only chat for the live check.
+- Needs from you at Approve: (a) OK to edit `%USERPROFILE%\.claude\settings.json` hooks (log-only first); (b) OK to start one throwaway read-only chat for the live check.
 
 ## Approve
 User, 2026-11-19, in this chat: "Approve" (plan as written, including the user-settings hook edit in log-only mode first and one throwaway read-only chat for the live check).

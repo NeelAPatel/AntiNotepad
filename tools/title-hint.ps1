@@ -1,4 +1,6 @@
 param([string]$Root = (Split-Path $PSScriptRoot -Parent), [switch]$SelfTest)
+# Opt-in: part of my dev loop. Set ANTINOTEPAD_LOOP=1 to enable (see docs/claude-hooks.md).
+if ($env:ANTINOTEPAD_LOOP -cne '1' -and -not $SelfTest) { exit 0 }
 $ErrorActionPreference = 'Stop'
 
 function Get-CardPhase([string]$Base, [string]$Cwd, [string]$Id) {
@@ -143,7 +145,11 @@ function Invoke-SelfTest {
         [IO.File]::WriteAllText($pending, "| $id | scope | Medium | Small | parked |`n")
         Check 'worktree parked' 'me=none codex=none dev=parked phase=build'
         $shell = (Get-Process -Id $PID).Path
-        $garbage = '{' | & $shell -NoProfile -File $PSCommandPath -Root $base
+        $oldLoop = $env:ANTINOTEPAD_LOOP
+        try {
+            $env:ANTINOTEPAD_LOOP = '1'
+            $garbage = '{' | & $shell -NoProfile -File $PSCommandPath -Root $base
+        } finally { $env:ANTINOTEPAD_LOOP = $oldLoop }
         if ($LASTEXITCODE -ne 0 -or $garbage) { throw 'garbage did not fail open' }
         'TITLE HINT SELFTEST PASS (hand test, running, stalled, failed, rework, check, paused resume, review running, review failed, merged, status paused, done, pending paused, missing card, worktree parked, garbage)'
     } finally { Remove-Item -LiteralPath $base -Recurse -Force -ErrorAction SilentlyContinue }

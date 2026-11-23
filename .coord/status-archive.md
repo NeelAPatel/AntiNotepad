@@ -37,7 +37,7 @@ Finished history moved out of STATUS "Now" by Loop9-loop-slim (2026-11-12). Newe
   completion"). dev runs **loop v3.1**: `tools/approve.ps1`, `tools/catch-up.ps1`, `tools/merge-preflight.ps1`,
   `tools/files-overlap.ps1`, `tools/scan-delta.ps1` + `/scan-backlog`, strict gate scope, `tools/loop-lint.ps1`,
   read-only Codex audits; dormant v2.2 absorbed (`tools/v2.2/` removed). Rehearsal 8/8 PASS. Left: the wiki pages, after
-  the user's OK on the flow diagram (https://claude.ai/artifact/4CfTQAuvL4ZXwBXwYsqWi7). Next: Master 2 starts the backlog.
+  the user's OK on the flow diagram ((artifact link removed)). Next: Master 2 starts the backlog.
 - **Era 0 ended (2026-10-29); era 1 started (user, 2026-10-30: "Old era is Era 0, we are now in Era 1").** Process redesign settled (`.coord/process-redesign.md`) and rolled out as **loop v3**
   by Loop1-process-v3 (squash-merged; gate on dev PASS). History rewritten (see "Where things are"). Next: era 1 with
   fresh counters and a new master, `Master 2 · Loop v3 · <slug>`; first candidates are the three file splits from
@@ -109,7 +109,7 @@ Finished history moved out of STATUS "Now" by Loop9-loop-slim (2026-11-12). Newe
   kept the divider ending above the pager strip; merged as a guard, no visible change: CONTRACTS `split-divider-above-pager`.
   Gate on dev PASS (0 warnings, SELFTEST PASS, CONTRACTS 8 rows: 7 pass, 1 manual). Next: A54-link-hover-click.
 - C24-roadmap-artifact (user, 2026-10-29): `/roadmap` widget replaced by a roadmap Artifact
-  (https://claude.ai/artifact/VU8guxUCfxJTSZ1MxNaqyy) that a Claude Stop hook republishes when the Plan changes (main
+  ((artifact link removed)) that a Claude Stop hook republishes when the Plan changes (main
   checkout only). Merged into dev (783e9ab, 2026-10-29, user asked); gate on dev PASS.
 - C23-idea-numbering (user, 2026-10-29): numbers only on user confirmation; A53+ dissolved; Plan redrawn as unnumbered
   ideas with steps (design-tokens, design-unify, code-ownership, notes-folder-move-flow, ...). Next: user confirms ideas.

@@ -5,6 +5,8 @@ One page. Rules and reasons are in `docs/loop.md`; this is only what you do. Wor
 for an item (it does everything but merge); the **card** is the item's file `.coord/tasks/<ID-slug>.md`; a **hook** is a small script Claude Code runs on
 its own before or after an action.
 
+My hooks are optional: set `ANTINOTEPAD_LOOP=1` to enable them; see [Claude hooks](claude-hooks.md).
+
 ## The same five steps for every item
 | Step | You do | Then |
 |---|---|---|

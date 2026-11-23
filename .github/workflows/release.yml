@@ -1,0 +1,38 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v4.3.0
+        with:
+          dotnet-version: 10.0.x
+      - name: Package and self-test
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME.Substring(1)
+          pwsh -NoProfile -File tools/package-release.ps1 -Version $version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $stages = @(Get-ChildItem build/release -Directory -Filter 'stage-*')
+          if ($stages.Count -ne 1) { throw 'Expected exactly one staged build.' }
+          $stage = $stages[0]
+          $env:ANTINOTEPAD_DATA = Join-Path $env:RUNNER_TEMP ('antinotepad-selftest-' + [guid]::NewGuid().ToString('N'))
+          & (Join-Path $stage.FullName 'AntiNotepad.exe') --selftest
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $zip = "build/release/AntiNotepad-$($env:GITHUB_REF_NAME.Substring(1))-win-x64.zip"
+          gh release create $env:GITHUB_REF_NAME $zip build/release/SHA256SUMS.txt --title "AntiNotepad $env:GITHUB_REF_NAME" --notes-file .github/release-notes-template.md
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

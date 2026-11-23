@@ -1,4 +1,6 @@
 # Adds this checkout's loop context to the user's global Claude status line.
+# Opt-in: part of my dev loop. Set ANTINOTEPAD_LOOP=1 to enable (see docs/claude-hooks.md).
+if ($env:ANTINOTEPAD_LOOP -cne '1') { exit 0 }
 $ErrorActionPreference = 'Stop'
 $raw = [Console]::In.ReadToEnd()
 $globalPath = $env:STATUSLINE_GLOBAL

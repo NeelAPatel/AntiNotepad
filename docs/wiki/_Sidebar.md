@@ -1,23 +1,27 @@
-**In short**
+# Guide
 
-Start with the guide, then use the flow and role reference as needed. The worked examples show what the checks actually caught (`docs/loop.md`; `.coord/reports/Loop2-loop-v3-1-rehearsal.md`).
+A quick route through the app and my development process.
 
-- [Home](Home)
-- [Getting Started](Getting-Started)
-- [Dev Loop Overview](Dev-Loop-Overview)
-- [Who Does What](Who-Does-What)
-- [Parallel and Branches](Parallel-and-Branches)
-- [Backlog Scans](Backlog-Scans)
-- [Tiers and Gates](Tiers-and-Gates)
-- [Triage and Lessons](Triage-and-Lessons)
-- [Where Files Live](Where-Files-Live)
-- [Roadmap Portal](Roadmap-Portal)
-- [Worked Example: Loop2](Worked-Example-Loop2)
-- [Worked Example: A55](Worked-Example-A55)
-- [Glossary](Glossary)
-- [Loop History](Loop-History)
+- [[Home]]
+- [[Getting Started]]
+- [[Writing and Organizing]]
+- [[Settings and Shortcuts]]
+- [[Dev Loop Overview]]
+- [[Roles and a Worked Example]]
+- [[Building with AI and Lessons]]
+- [[Architecture and Data]]
+- [[Decisions and Trade-Offs]]
 
-**Sources**
+## Dev loop reference
 
-- `docs/loop.md` — live rules.
-- `.coord/reports/Loop2-loop-v3-1-rehearsal.md` — rehearsal evidence.
+- [[Glossary]]
+- [[Who Does What]]
+- [[Tiers and Gates]]
+- [[Parallel and Branches]]
+- [[Where Files Live]]
+- [[Triage and Lessons]]
+- [[Backlog Scans]]
+- [[Roadmap Portal]]
+- [[Loop History]]
+- [[Worked Example A55]]
+- [[Worked Example Loop2]]

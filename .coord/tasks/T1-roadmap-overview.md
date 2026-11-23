@@ -37,14 +37,14 @@ server", the user chose: "Local server". Then: "Yes, start roadmap".
     `.coord/tasks/*.md`, STATUS "Now" and "Where things are" (installed copy version).
   - Probe: `[System.Net.HttpListener]` with prefix `http://localhost:47811/` starts without admin rights in pwsh 7.6.9
     on this machine (first-party, no new library).
-  - `/roadmap` (`.claude/skills/roadmap/SKILL.md`) runs `tools/roadmap.ps1 -Open`; `tools/roadmap.url` holds an
+  - `/roadmap` (`.claude/skills/roadmap/SKILL.md`) runs `tools/roadmap.ps1 -Open`;
     Artifact copy published on request.
 - **Risk:** low for the product (no `product/` change). The hook and `/roadmap` are used by every chat, so the switch
   must not leave a stale or broken roadmap; the old page stays until the server works.
 - **Source:** master scout (this card).
 
 ## Design (lab-first, approved)
-Mockup rounds 1-3 in the Artifact https://claude.ai/artifact/61incWqKacnMkRBjvn9uYs; the user's comments are on it. Round 3
+Mockup rounds 1-3 in the Artifact (artifact link removed) the user's comments are on it. Round 3
 approved by the user, 2026-10-30: "Yes, write the plan". The approved page is
 `.coord/tasks/T1-roadmap-overview.mockup.html` (data injected at `/*DATA*/`) and its data shape is
 `.coord/tasks/T1-roadmap-overview.sample.json` (a real snapshot). Both are references, not shipped files.
@@ -76,14 +76,14 @@ Mockup-only parts that do not ship: the yellow mockup bar and the "busy day" exa
   |---|---|
   | T1a-roadmap-server | `tools/roadmap-data.ps1` builds the `/data` JSON in the shape of the sample file from the **main checkout's working copy** (`.coord/STATUS.md`, `.coord/tasks/*.md`, `.coord/logs/usage.tsv`) and read-only git (log of dev and every local branch back to the Era 1 start, worktree list, branches with ahead/behind/fork point vs dev, tags, lane membership), eras from `tools/roadmap/eras.json`. `tools/roadmap-serve.ps1`: .NET `HttpListener` on `http://localhost:47811/`, read-only, routes `/` (the page), `/data`, `/health`; JSON rebuilt at most every 2 s and only when an input changed; one instance per port; `-Open` opens the browser, `-Stop` stops it; exits after 12 h without a request. `roadmap-data.ps1 -Check` prints `ROADMAP DATA OK` with counts, or what is missing |
   | T1b-roadmap-page | `tools/roadmap/index.html`: the approved mockup minus the mockup-only parts, fetching `/data` every 3 s; redraws only when the data changed and keeps tab, era, filter, search, expanded rows, open drawer and scroll; shows "offline" in the live pill when the server is gone and recovers when it is back |
-  | T1c-roadmap-switch | `/roadmap` starts the server when it is not running (hidden, detached) and opens the page; the two roadmap hooks leave `.claude/settings.json`; `tools/roadmap.ps1` is deleted; `tools/roadmap.url` stays, and `roadmap-data.ps1 -Snapshot <file>` writes a static page with the data injected for an Artifact copy on request; `tools/loop-card.ps1` (the status-card hook, every prompt) pings `/health` and starts the server hidden when it is down, so the first message after a restart brings it up (zero tokens); a new `README.md` gets a short Roadmap section with the CLI commands (`pwsh -NoProfile -File tools/roadmap-serve.ps1 -Open`, `-Stop`, and `http://localhost:47811`); `AGENTS.md`, `docs/loop.md` (plan table, Roadmap line, Files table, settings row) and the skill describe the server |
+  | T1c-roadmap-switch | `/roadmap` starts the server when it is not running (hidden, detached) and opens the page; the two roadmap hooks leave `.claude/settings.json`; `tools/roadmap.ps1` is deleted; `roadmap-data.ps1 -Snapshot <file>` writes a static page with the data injected for an Artifact copy on request; `tools/loop-card.ps1` (the status-card hook, every prompt) pings `/health` and starts the server hidden when it is down, so the first message after a restart brings it up (zero tokens); a new `README.md` gets a short Roadmap section with the CLI commands (`pwsh -NoProfile -File tools/roadmap-serve.ps1 -Open`, `-Stop`, and `http://localhost:47811`); `AGENTS.md`, `docs/loop.md` (plan table, Roadmap line, Files table, settings row) and the skill describe the server |
 - **Must not change:** STATUS format or content (the page only reads it); `product/`; the status card text and its
   in-flight list (`tools/loop-card.ps1` only gains the server ping, which never delays or fails the prompt); the main checkout's files (the server writes nothing anywhere except the `-Snapshot` file).
 - **Scope questions** (my recommendation in bold; say if you want another):
   1. Port: **fixed 47811** (probed free, no admin rights needed), with `-Port` to override.
   2. Server lifetime: **hidden background process started by `/roadmap`, stops after 12 h without a page request**, or
      a visible console window you close yourself.
-  3. Phone copy: **keep a static snapshot Artifact on request** (`-Snapshot`), or drop `tools/roadmap.url`.
+  3. Phone copy: **keep a static snapshot Artifact on request** (`-Snapshot`).
   4. Era list: **`tools/roadmap/eras.json`** (Era 0 = up to `8d18f72`, Era 1 = after), instead of a new STATUS section.
 - **Test plan, code:** `roadmap-data.ps1 -Check` against the real repo (every sample key present; rows = Plan rows in
   STATUS; lanes = local branches; worktrees = `git worktree list`); a script probe that starts the server on a spare port,
@@ -116,7 +116,7 @@ Mockup-only parts that do not ship: the yellow mockup bar and the "busy day" exa
 - `tools/roadmap/index.html`
 - `tools/roadmap/eras.json`
 - `tools/roadmap.ps1`
-- `tools/roadmap.url`
+
 - `.claude/skills/roadmap/SKILL.md`
 - `.claude/settings.json`
 - `tools/loop-card.ps1`

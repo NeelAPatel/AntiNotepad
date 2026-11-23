@@ -1,4 +1,6 @@
 # Claude SessionStart hook: shows the current item's phase and next action.
+# Opt-in: part of my dev loop. Set ANTINOTEPAD_LOOP=1 to enable (see docs/claude-hooks.md).
+if ($env:ANTINOTEPAD_LOOP -cne '1') { exit 0 }
 $ErrorActionPreference = 'Stop'
 try {
     $root = [string]$env:CLAUDE_PROJECT_DIR

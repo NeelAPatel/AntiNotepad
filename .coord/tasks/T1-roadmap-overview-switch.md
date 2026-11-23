@@ -28,7 +28,7 @@ every Edit/Write and turn end, `/roadmap` opens `.coord/roadmap.html`, and the d
 5. `.claude/skills/roadmap/SKILL.md`: `/roadmap` runs `pwsh -NoProfile -File tools/roadmap-serve.ps1 -Background -Open`
    from the main checkout (it starts the server or reuses the running one, then opens `http://localhost:47811`). Keep
    rules 2 and 3 (STATUS is the source of truth; at most three lines in chat). The phone copy: on the user's request,
-   `tools/roadmap-data.ps1 -Snapshot <scratch file>` and publish that file to the Artifact URL in `tools/roadmap.url`.
+   `tools/roadmap-data.ps1 -Snapshot <scratch file>` and publish that file.
 6. `README.md` (new; the repo has none): a short top section naming the app in one sentence (from `AGENTS.md`), then
    "Roadmap (project overview)": what it is in one line, the commands as code blocks
    (`pwsh -NoProfile -File tools/roadmap-serve.ps1 -Open`, `pwsh -NoProfile -File tools/roadmap-serve.ps1 -Stop`), the
@@ -38,7 +38,7 @@ every Edit/Write and turn end, `/roadmap` opens `.coord/roadmap.html`, and the d
    `http://localhost:47811`, live from STATUS and git); `docs/loop.md` lines on the plan table (around line 162), the
    "Roadmap:" session bullet (around 215), the Files table row for the roadmap scripts and the `.claude/settings.json`
    row (hooks: status card plus roadmap auto-start; no roadmap rebuild); `docs/glossary.md` only if it defines the
-   roadmap. `tools/loop-lint.allow` only if loop-lint flags a new line. `tools/roadmap.url` unchanged.
+   roadmap. `tools/loop-lint.allow` only if loop-lint flags a new line.
 
 ## Files
 - `tools/loop-card.ps1`
