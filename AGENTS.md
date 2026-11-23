@@ -3,7 +3,7 @@
 Windows 11 hotkey-summoned translucent scratchpad; Avalonia 12 + AvaloniaEdit 12 on .NET 10, in product/AntiNotepad. Speed of show/hide is the priority; US spelling in UI. AntiQuickPad spikes are retired and only in git history.
 
 ## Rules
-- Private GitHub NeelAPatel/AntiNotepad (origin); manager pushes after commits. main is releases only, fast-forwarded on user go and tagged semver; dev integrates each item as tidy commits plus one --no-ff merge commit per item; item branches are prefix/ID-slug, created at Approve in .claude/worktrees/prefix/ID-slug. Details: docs/loop.md and /merge-task.
+- GitHub NeelAPatel/AntiNotepad (origin); manager pushes after commits. main is releases only, fast-forwarded on user go and tagged semver; dev integrates each item as tidy commits plus one --no-ff merge commit per item; item branches are prefix/ID-slug, created at Approve in .claude/worktrees/prefix/ID-slug. Details: docs/loop.md and /merge-task.
 - Name items ID-short-slug everywhere, never bare IDs. Prefixes: A app, Loop loop/agents, D docs, T non-AI tooling, L Level 4/5 loop automation. Steps A1a; rework -r2. See docs/loop.md.
 - Product code follows .claude/rules/coding.md; Codex reads docs/coding.md, which points there.
 - Visible design changes are lab-first; user approves the lab before implementation.

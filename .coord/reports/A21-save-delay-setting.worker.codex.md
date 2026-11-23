@@ -4,5 +4,5 @@ The item build passes with 0 warnings and 0 errors; `git diff --check` passes. T
 
 The report is at [A21-save-delay-setting.md](F:/LocalVSProj/Visual%20Studio%20Apps/AntiQuickPad/.claude/worktrees/feat/A21-save-delay-setting/.coord/reports/A21-save-delay-setting.md).
 
-The item card prohibits killing AntiNotepad. May I stop only the temporary selftest process, PID 58176 at `build/A21-save-delay-setting-gate/AntiNotepad.exe`, so I can rerun the selftest and gate? The installed copy remains untouched.
+The item card prohibits killing AntiNotepad. May I stop only the temporary selftest process, PID <PID> at `build/A21-save-delay-setting-gate/AntiNotepad.exe`, so I can rerun the selftest and gate? The installed copy remains untouched.
 

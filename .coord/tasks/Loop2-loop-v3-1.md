@@ -136,7 +136,7 @@ card, never touch `product/`. Report `.coord/reports/Loop2-loop-v3-1-<step>.md` 
 - **Env miss:** Codex "Selected model is at capacity" did not fail over to the backup; fixed in 3.1f.
 - **Bounds:** requested (wake v2.2, best loop yet, one branch, small commits, no worktree) vs approved Plan with the round
   2 scope change vs done: within plan. Not done here: the wiki update (waits for the user's OK on the flow diagram,
-  https://claude.ai/artifact/4CfTQAuvL4ZXwBXwYsqWi7) and the publish; Master 2 not messaged (user: no need).
+  (artifact link removed)) and the publish; Master 2 not messaged (user: no need).
 
 ## Hand test
 None (not visible).
