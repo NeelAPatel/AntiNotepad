@@ -1,5 +1,7 @@
 # Reports linked worktrees that do not follow the item naming and base conventions.
 # SessionStart must remain silent and must never prevent a session from starting.
+# Opt-in: part of my dev loop. Set ANTINOTEPAD_LOOP=1 to enable (see docs/claude-hooks.md).
+if ($env:ANTINOTEPAD_LOOP -cne '1') { exit 0 }
 $ErrorActionPreference = 'Stop'
 
 try {

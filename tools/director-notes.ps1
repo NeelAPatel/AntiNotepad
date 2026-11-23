@@ -2,6 +2,8 @@
 # Director chats run in the main checkout; item sub-chats run in a worktree under .claude/worktrees and print nothing.
 # The notes live untracked in the main checkout (.coord/directors/<slug>.md). Own file = $env:ANTINOTEPAD_DIRECTOR (slug)
 # when set, else the most recently written notes file (a director keeps its notes current). Files in archive/ are never read.
+# Opt-in: part of my dev loop. Set ANTINOTEPAD_LOOP=1 to enable (see docs/claude-hooks.md).
+if ($env:ANTINOTEPAD_LOOP -cne '1') { exit 0 }
 $ErrorActionPreference = 'SilentlyContinue'
 [void][Console]::In.ReadToEnd()
 

@@ -2,6 +2,8 @@
 # The hook starts in log mode so its decisions can be reviewed before enforcement.
 [CmdletBinding()]
 param([switch]$SelfTest)
+# Opt-in: part of my dev loop. Set ANTINOTEPAD_LOOP=1 to enable (see docs/claude-hooks.md).
+if ($env:ANTINOTEPAD_LOOP -cne '1' -and -not $SelfTest) { exit 0 }
 
 $ErrorActionPreference = 'Stop'
 
@@ -176,8 +178,8 @@ function Invoke-GuardSelfTest {
     $root = Join-Path ([IO.Path]::GetTempPath()) ('guard-' + [guid]::NewGuid().ToString('N'))
     try {
         [void](New-Item -ItemType Directory -Path (Join-Path $root 'tools') -Force)
-        $oldRoot = $env:CLAUDE_PROJECT_DIR; $oldData = $env:ANTINOTEPAD_DATA
-        $env:CLAUDE_PROJECT_DIR = $root; $env:ANTINOTEPAD_DATA = ''
+        $oldRoot = $env:CLAUDE_PROJECT_DIR; $oldData = $env:ANTINOTEPAD_DATA; $oldLoop = $env:ANTINOTEPAD_LOOP
+        $env:CLAUDE_PROJECT_DIR = $root; $env:ANTINOTEPAD_DATA = ''; $env:ANTINOTEPAD_LOOP = '1'
         $json = @{ cwd = $PSScriptRoot; tool_name = 'Bash'; tool_input = @{ command = 'echo --quit' } } | ConvertTo-Json -Compress
         $shell = (Get-Process -Id $PID).Path
         [IO.File]::WriteAllText((Join-Path $root 'tools/guard.mode'), 'log')
@@ -191,7 +193,7 @@ function Invoke-GuardSelfTest {
         if ($LASTEXITCODE -ne 2 -or -not $output) { throw 'Selftest failed: block mode' }
     }
     finally {
-        $env:CLAUDE_PROJECT_DIR = $oldRoot; $env:ANTINOTEPAD_DATA = $oldData
+        $env:CLAUDE_PROJECT_DIR = $oldRoot; $env:ANTINOTEPAD_DATA = $oldData; $env:ANTINOTEPAD_LOOP = $oldLoop
         Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
     }
     Write-Output 'GUARD SELFTEST PASS'
