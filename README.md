@@ -1,39 +1,53 @@
 # AntiNotepad
 
-Press a hotkey, jot it down, get back to work. A fast, translucent scratchpad for Windows 11.
+Your scratchnotes. Always ready. There when you need it, gone when you don't.
 
-AntiNotepad keeps quick notes close at hand and gets out of your way when you are done. It is also a personal learning project about building software with AI: the app and the evolving development process are both part of the story.
+AntiNotepad keeps your quick notes close at hand and gets out of your way when you are done. It is also a personal learning project about building software with AI: the app and the evolving development process are both part of the story.
 
 <!-- screenshot: the pad in use -->
+<img width="552" height="907" alt="image" src="https://github.com/user-attachments/assets/2e641535-739d-4501-a858-45187afb4ce7" />
 
 ## Features
 
-**Everything here works today.**
+**Everything here works today, and is barely a fraction of the customizability you have** _with room for improvement!_
 
-**Summon it fast**
-- Show or hide the pad from anywhere with a global hotkey (default Ctrl+Alt+Shift+S, configurable); it lives in the tray.
-- Keep it on top, and let a pinned pad dim while you work elsewhere.
-- Optionally start with Windows.
+### Write
+- [x] Notes are stored in Markdown! 
+- [x] Lists: bullets, numbers, checklists
+- [x] Indenting: Tab / Shift+Tab; wrapped lines align under text
+- [x] Fold / unfold sections via gutter chevron
+- [x] Mode word on line 1: checklist, timer, math, bullet, numberlist
+- [x] `/` commands anywhere, with completion popup
+- [x] Fenced code blocks, language picker
+- [x] Clean markdown: hides `**` and `#` off the active line
+- [x] Paste rich text and HTML tables as tidy note text
+- [x] Ctrl+click opens links
+- [x] Undo / redo, text size, copy whole note
 
-**Write**
-- Bullet lists, numbered lists and checklists that continue as you press Enter.
-- Countdown timers inside a note.
-- An inline calculator with variables, units and dates.
-- Optional clean markdown: hides `**` and `#` except on the line you are editing.
-- Fold sections, change text size, and copy a whole note in one key.
-- Read text from a screen snip.
+### Calculate
+- [x] Inline calculator: variables, units, dates
+- [x] Countdown timers in a note
+- [x] Text from a screen snip
 
-**Organize**
-- Notes in a stack, plus nine permanent slots, with split view to show a slot beside a note.
-- Search in list or grid view; deleted notes wait in Trash.
-- Move between notes with the keyboard or swipe-style paging.
+### Organize
+- [x] Note stack + 9 permanent slots
+- [x] Split view: slot beside note
+- [x] Search: list or grid; Trash for deleted
+- [x] Keyboard or swipe paging between notes
 
-**Make it yours**
-- Rebind in-window shortcuts in Settings; press F1 for the live shortcut list.
-- Choose paper, palette, text size, scroll feel and save delay.
-- Notes are Markdown files stored locally; you pick the folder.
+### Summon
+- [x] Global hotkey (Ctrl+Alt+Shift+S default), tray icon
+- [x] Keep on top; pinned pad dims when idle
+- [x] Optional start with Windows
 
-Notes are stored locally, by default in `Documents\AntiNotepad`; Settings can change the location.
+### Customize
+- [x] Rebind in-window shortcuts; F1 lists them
+- [x] Paper, palette, text size, scroll feel, save delay
+- [x] Notes are Markdown files, folder of your choice
+
+## Data storage concerns
+
+Many of the features, while working, have their own quirks that will take time to fix. As a result, I suggest you take backups. I'll do my best to ensure when you upgrade, your notes stay intact and migrate completely. 
 
 ## Install
 
