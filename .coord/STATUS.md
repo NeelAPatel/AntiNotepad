@@ -1,6 +1,6 @@
 # STATUS
 
-Updated: 2026-11-16 · Product: AntiNotepad (`product/AntiNotepad`) · installed `v0.7.0-rc1`
+Updated: 2026-11-16 · Product: AntiNotepad (`product/AntiNotepad`) · installed `v0.7.1`
 - Only active work lives here. Pending: `.coord/pending.md`. Finished: `.coord/status-archive.md`. Detail: item card in `.coord/tasks/`.
 
 ## Working rules right now
@@ -13,9 +13,9 @@ Updated: 2026-11-16 · Product: AntiNotepad (`product/AntiNotepad`) · installed
 - Move rules: Approve = pending -> STATUS. Merge = STATUS -> archive.
 
 ## Where things are
-- `main` = releases only (tagged); `dev` = integration. Tags: `v0.7.0-rc1` to `rc3`, `v0.6.0-rc1` to `rc9`, `v0.5.0`, `v0.1.0`.
+- `main` = releases only (tagged); `dev` = integration. Tags: `v0.7.1` (main = dev 3267e00, 2026-11-22), `v0.7.0` and `v0.7.0-rc1` to `rc4`, `v0.6.0-rc1` to `rc9`, `v0.5.0`, `v0.1.0`.
 - History rewritten 2026-10-29 (623 commits to 156). Old hashes: tags `archive/full-history-2026-10-29`, `archive/main-2026-10-29`, bundle `AntiNotepad-history-backup-2026-10-29.bundle`.
-- Installed copy: `v0.7.0-rc1` (upgrade only on request, `tools/install.ps1`).
+- Installed copy: `v0.7.1` (upgrade only on request, `tools/install.ps1`).
 - Locked choices: `docs/decisions.md`. Phases and states: `docs/loop.md`. Files: `docs/loop-sessions.md`.
 - Loop version: `docs/loop.md`.
 - Roadmap page: http://localhost:47811 (`/roadmap`); reads STATUS + pending + archive.
@@ -35,7 +35,6 @@ Active rows only (the roadmap script parses this table; same 5 columns as `.coor
 ## Open (needs the user)
 - Live check: A30 restart/sign-out saves an edit typed just before.
 - N3-release-and-update-plan: proposal tag `proposal/N3-release-plan`; separate chat.
-- D1-ui-region-names: paused (user, 2026-11-01); branch d96a11f; name review left.
 - Hold: A44b-interop-guards leftover hand checks (Explorer restart, tray right-click menu).
 
 ## Next up (user, 2026-11-16: these outrank the rest; rows in `.coord/pending.md`)
