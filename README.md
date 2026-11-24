@@ -1,6 +1,6 @@
 # AntiNotepad
 
-A translucent scratchpad for Windows 11, ready with a hotkey.
+Press a hotkey, jot it down, get back to work. A fast, translucent scratchpad for Windows 11.
 
 AntiNotepad keeps quick notes close at hand and gets out of your way when you are done. It is also a personal learning project about building software with AI: the app and the evolving development process are both part of the story.
 
@@ -8,11 +8,30 @@ AntiNotepad keeps quick notes close at hand and gets out of your way when you ar
 
 ## Features
 
-- Show or hide the pad with a configurable global hotkey; keep it on top when useful.
-- Organize notes in a stack and slots, or show a slot beside a note in split view.
-- Search notes in list or grid view and find deleted notes in Trash.
-- Write bullet lists, numbered lists and checklists; use timers and inline calculations, including units and dates.
-- Read text from a screen snip, customize shortcuts, and choose appearance settings.
+**Everything here works today.**
+
+**Summon it fast**
+- Show or hide the pad from anywhere with a global hotkey (default Ctrl+Alt+Shift+S, configurable); it lives in the tray.
+- Keep it on top, and let a pinned pad dim while you work elsewhere.
+- Optionally start with Windows.
+
+**Write**
+- Bullet lists, numbered lists and checklists that continue as you press Enter.
+- Countdown timers inside a note.
+- An inline calculator with variables, units and dates.
+- Optional clean markdown: hides `**` and `#` except on the line you are editing.
+- Fold sections, change text size, and copy a whole note in one key.
+- Read text from a screen snip.
+
+**Organize**
+- Notes in a stack, plus nine permanent slots, with split view to show a slot beside a note.
+- Search in list or grid view; deleted notes wait in Trash.
+- Move between notes with the keyboard or swipe-style paging.
+
+**Make it yours**
+- Rebind in-window shortcuts in Settings; press F1 for the live shortcut list.
+- Choose paper, palette, text size, scroll feel and save delay.
+- Notes are Markdown files stored locally; you pick the folder.
 
 Notes are stored locally, by default in `Documents\AntiNotepad`; Settings can change the location.
 
