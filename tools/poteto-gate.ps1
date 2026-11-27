@@ -39,7 +39,8 @@ function Get-Verdict($Hook) {
                 $path = Join-Path $root $file
                 if (Test-Path -LiteralPath $path -PathType Leaf) {
                     foreach ($line in [IO.File]::ReadLines($path)) {
-                        if ($line -match ('^\|\s*' + [regex]::Escape($id) + '\s*\|')) { $found = $true; break }
+                        $itemCell = '(?:&nbsp;)*\s*'
+                        if ($line -match ('^\|\s*' + $itemCell + [regex]::Escape($id) + '\s*\|')) { $found = $true; break }
                     }
                 }
             }
@@ -112,6 +113,8 @@ function Invoke-SelfTest {
         [void](New-Item -ItemType Directory -Path (Join-Path $root '.coord') -Force)
         [IO.File]::WriteAllText((Join-Path $root '.coord/pending.md'), "| Loop21-test-item | scope | Low | S | request |`n")
         Check 'existing row' Brief (Json @{tool_input=@{prompt=$named}}) 0
+        [IO.File]::WriteAllText((Join-Path $root '.coord/pending.md'), "| &nbsp;&nbsp;Loop21-test-item | Child of Loop21: scope | Low | S | request |`n")
+        Check 'indented existing row' Brief (Json @{tool_input=@{prompt=$named}}) 0
         Check 'bad first line' Brief (Json @{tool_input=@{prompt="prefix`n$valid"}}) 2 'item chat template'
         Check 'lowercase marker with bad first line' Brief (Json @{tool_input=@{prompt="you are the item chat for Loop16-poteto-trigger; begin Findings"}}) 2 'item chat template'
         Check 'bad second line' Brief (Json @{tool_input=@{prompt="/pstack:poteto-mode`nwrong`nYou are the item chat"}}) 2 'item chat template'

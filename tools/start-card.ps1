@@ -16,7 +16,8 @@ function Get-StartCard([string]$Cwd, [string]$Root, [string]$Item = '') {
             $path = Join-Path $Root $file
             if (Test-Path -LiteralPath $path) {
                 foreach ($line in [IO.File]::ReadLines($path)) {
-                    if ($line -match ('^\|\s*' + [regex]::Escape($id) + '\s*\|\s*child of\s+([^:|]+):')) {
+                    $itemCell = '(?:&nbsp;)*\s*'
+                    if ($line -match ('^\|\s*' + $itemCell + [regex]::Escape($id) + '\s*\|\s*child of\s+([^:|]+):')) {
                         $role = 'umbrella child'; $merge = "Rebase when ready; parent merges into $($Matches[1])."; break
                     }
                 }
@@ -34,6 +35,13 @@ if ($SelfTest) {
     try {
         $x = @(Get-StartCard 'C:/repo' 'C:/repo')
         if ($x.Count -ge 25 -or $x[0] -ne 'START CARD: director' -or $x[1] -ne 'Title: use the director role/version naming rule in docs/loop-sessions.md.') { throw 'director card failed' }
+        $testRoot = Join-Path ([IO.Path]::GetTempPath()) ('start-card-' + [guid]::NewGuid().ToString('N'))
+        try {
+            [void](New-Item -ItemType Directory -Path (Join-Path $testRoot '.coord') -Force)
+            [IO.File]::WriteAllText((Join-Path $testRoot '.coord/STATUS.md'), "| &nbsp;&nbsp;A39d-padview-split | Child of A39: scope | Medium | Small | approved |`n")
+            $child = @(Get-StartCard 'C:/repo/.claude/worktrees/fix/A39d-padview-split' $testRoot)
+            if ($child[0] -ne 'START CARD: umbrella child (A39d-padview-split)') { throw 'indented child role failed' }
+        } finally { Remove-Item -LiteralPath $testRoot -Recurse -Force -ErrorAction SilentlyContinue }
         'START CARD SELFTEST PASS'; exit 0
     } catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 }
 }

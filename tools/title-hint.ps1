@@ -52,6 +52,7 @@ function Get-Hints([string]$Base, [string]$Cwd) {
             if ($file -eq '.coord/STATUS.md' -and $inPlan -and $line -match '^## ') { break }
             if (-not $inPlan -or $line -notmatch '^\|') { continue }
             $cells = @($line.Trim().Trim('|').Split('|') | ForEach-Object { $_.Trim() })
+            $cells[0] = $cells[0] -replace '^(?:&nbsp;)*\s*', ''
             if ($cells.Count -lt 5 -or $cells[0] -cnotmatch '^[A-Z][A-Za-z0-9]*(-[a-z0-9]+)+$') { continue }
             $state = $cells[4].ToLowerInvariant()
             if ($file -eq '.coord/pending.md' -and $state -notmatch '^(request|findings|plan ready|needs you|paused|parked)') { continue }
@@ -138,6 +139,11 @@ function Invoke-SelfTest {
             $actual = @(Get-Hints $base $base) -join "`n"
             if ($actual -cne "title-hint ${id}: $expected") { throw "$name : $actual" }
         }
+        Row 'hand test'; Check 'hand test' 'me=needs-you codex=none dev=none phase=hand-test'
+        $childId = 'A28a-child-test'
+        [IO.File]::WriteAllText($status, "## Plan`n| &nbsp;&nbsp;$childId | Child of A28: child scope | Medium | Small | building |`n## Open`n")
+        $childHints = @(Get-Hints $base $base)
+        if ($childHints -notcontains "title-hint ${childId}: me=none codex=none dev=none phase=build") { throw 'indented child row hint failed' }
         Row 'hand test'; Check 'hand test' 'me=needs-you codex=none dev=none phase=hand-test'
         Row 'building'; [IO.File]::WriteAllText($log, 'run'); Check 'running' 'me=none codex=codexing dev=none phase=build'
         (Get-Item $log).LastWriteTime = (Get-Date).AddMinutes(-21); Check 'stalled' 'me=needs-you codex=stalled dev=none phase=build'
