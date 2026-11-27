@@ -42,7 +42,7 @@ User, 2026-11-21: "crosstalk should be on a need to know basis. Major task compl
 Role: terra (rework r2-r3 quick). Read `AGENTS.md`, then the Files. Never switch, merge or commit; never edit STATUS or this card. Offline checks only.
 
 ## Check
-Gate PASS offline; self-tests pass; Codex review r1 found 3 (fixed r2); chain test (user go 2026-11-21: umbrella to a to b to c, real chats) passed and found the no-nested-starts rule (added) plus smaller frictions (`.coord/research/Loop21t-friction.md`); r3 fixed `&nbsp;` rows found against live A39 rows; r4 adds the mock run (12/12). Live three-level chain is not repeated in r4; the first real use proves it again. Within plan.
+Gate PASS offline; self-tests pass; Codex review r1 found 3 (fixed r2); chain test (user go 2026-11-21: umbrella to a to b to c, real chats) passed and found the no-nested-starts rule (added) plus smaller frictions (`.coord/research/Loop21t-friction.md`); r3 fixed `&nbsp;` rows found against live A39 rows; r4 adds the mock run (12/12). Live three-level chain is not repeated in r4; the first real use proves it again. Codex review round 2 (2026-11-27): 2 findings (survival with diff.noprefix, autosquash flattening umbrella merges), both fixed in r5 and reproduced; no other proven issue. Within plan.
 
 ## Hand test
 Not visually testable. Director's choice (2026-11-27): the mock run replaces it, `pwsh -NoProfile -File tools/umbrella-mock.ps1`.
