@@ -63,6 +63,7 @@ def selftest():
         if unicode_result.returncode != 1 or "LOST" not in unicode_result.stdout:
             raise RuntimeError("non-ASCII path was not checked")
         (root / "product" / "a.txt").write_text("initial\n", encoding="utf-8")
+        run("git", "config", "diff.noprefix", "true")
         run("git", "commit", "-qam", "remove")
         result = subprocess.run([sys.executable, "-I", script, "HEAD", "HEAD", "T1"], cwd=folder, capture_output=True, text=True)
         if result.returncode != 1 or "LOST" not in result.stdout:
@@ -88,7 +89,7 @@ missing = 0
 for sha, subject in reversed(merges):
     added = {}
     current = None
-    for line in git("diff", "-U0", f"{sha}^1", sha, "--", "product").splitlines():
+    for line in git("diff", "--src-prefix=a/", "--dst-prefix=b/", "-U0", f"{sha}^1", sha, "--", "product").splitlines():
         if line.startswith("+++ "):
             current = line[6:] if line.startswith("+++ b/") else None
         elif current and line.startswith("+") and line[1:].strip() not in ("", "{", "}", "};", ");", "]", "],"):

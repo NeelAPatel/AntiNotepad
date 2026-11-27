@@ -32,7 +32,8 @@ The director sets the item chat title to `[Merged] <ID-slug>` when merging.
 
 0. **Commit review (the item's session, before it asks for this merge).** Ask the item's session whether it has done it;
    if not, it does it now: `git log --oneline dev..<branch>`, fold tiny and back-and-forth commits into the commit they
-   belong to (`git commit --fixup <sha>`, then `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash dev`), reword vague
+   belong to (`git commit --fixup <sha>`, then `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash dev`). For an
+   umbrella branch, use `git rebase -i --autosquash --rebase-merges <base>` (and `catch-up.ps1 -RebaseMerges`). Reword vague
    messages to `<ID-slug>: <what changed>`, drop lab variants and debug code, then `tools/catch-up.ps1 -Task <ID-slug>` (rebase only; merge runs from the local branch, no force-push; umbrella branches add `-RebaseMerges`) and re-run the gate at the new tip. No fixed
    count: one commit per meaningful change. Never rebase or force-push from the master checkout.
 1. From the master checkout, run `pwsh -NoProfile -File tools/merge-preflight.ps1 -Task <ID-slug>`. It also builds
