@@ -291,13 +291,17 @@ const FUNNEL = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12L9.5
 function enteredText(value){ if (!value) return ''; const d = new Date(value); if (isNaN(d)) return ''; const h = d.getHours(); return `${d.toLocaleString('en-US',{month:'short'})} ${d.getDate()} ${h%12||12}:${String(d.getMinutes()).padStart(2,'0')}${h<12?'a':'p'}`; }
 function planRows(allEras = false){
   const parents = new Map();
-  return DATA.rows.filter(r => r.item !== 'Release marker').map((r, index) => {
+  const rows = DATA.rows.filter(r => r.item !== 'Release marker').map((r, index) => {
     const x = {r, index, era:rowEra(r), k:stKind(r.state)};
     if (!allEras && !eraOk(x.era)) return null;
     if (/^idea:/.test(r.item)) parents.set(r.group, x);
     else if (/^step:/.test(r.item)) x.parent = parents.get(r.group);
     return x;
   }).filter(Boolean);
+  const byItem = new Map(rows.map(x => [x.r.item, x]));
+  rows.forEach(x => { if (x.r.parent && byItem.has(x.r.parent) && x.r.parent !== x.r.item) x.parent = byItem.get(x.r.parent); });
+  rows.forEach(x => { const seen = new Set([x]); let p = x.parent; while (p) { if (seen.has(p)) { delete x.parent; break; } seen.add(p); p = p.parent; } });
+  return rows;
 }
 function planValues(r, era, parent){
   const full = itemOf(r.item), {id, name} = splitId(full || r.item), br = full ? branchOf(full) : '';
@@ -400,7 +404,8 @@ function isUpcomingRow(r){
   return !['done','def'].includes(stKind(r.state)) && !isActiveRow(r) && /^next\b/i.test(String(r.group || '').replace(/\*/g,'').trim());
 }
 function bucketOf(x){
-  const r = (x.parent || x).r, kind = stKind(r.state);
+  while (x.parent) x = x.parent;
+  const r = x.r, kind = stKind(r.state);
   if (kind === 'done') return 'Done';
   if (kind === 'def') return 'Paused/Deferred';
   if (isActiveRow(r)) return 'Active';
@@ -489,7 +494,7 @@ function planView(){
   for (const x of all) {
     const kind = (x.r.item.match(/^(idea|step|Decision):/)||[])[1] || '';
     if (kind === 'idea') eligible.set(x.r.item, true);
-    if (kind === 'step') {
+    if (kind === 'step' || x.r.parent) {
       const parent = x.parent;
       if (parent) { const key = parent.r.item; const children = childrenOf.get(key) || []; children.push(x); childrenOf.set(key, children); }
       eligible.set(x.r.item, true);
@@ -504,7 +509,14 @@ function planView(){
   else rows = rows.filter(x => !hiddenRows.has(x.r.item));
   const present = new Set(rows);
   const BUCKETS = ['Active', 'Upcoming', 'Paused/Deferred', 'Backlog', 'Done'];
-  rows = [...rows].sort((a, b) => BUCKETS.indexOf(bucketOf(a)) - BUCKETS.indexOf(bucketOf(b)) || (a.parent || a).index - (b.parent || b).index || a.index - b.index);
+  const ancestry = x => { const path = []; while (x) { path.unshift(x.index); x = x.parent; } return path; };
+  rows = [...rows].sort((a, b) => {
+    const ap = ancestry(a), bp = ancestry(b);
+    const bucket = BUCKETS.indexOf(bucketOf(a)) - BUCKETS.indexOf(bucketOf(b));
+    if (bucket) return bucket;
+    for (let i = 0; i < Math.min(ap.length, bp.length); i++) if (ap[i] !== bp[i]) return ap[i] - bp[i];
+    return ap.length - bp.length;
+  });
   const out = []; let grp = null, n = 0;
   rows.forEach(x => {
     const {r, era, k, parent} = x;
@@ -523,7 +535,7 @@ function planView(){
       out.push({html:`<td colspan="${1+PLAN_COLS.filter(([key]) => !planHidden.includes(key) || key==='id' || key==='name').length}"><button data-group="${esc(grp)}" aria-expanded="${expanded}">${expanded?'▾':'▸'} ${BUCKETS.indexOf(grp)+1}. ${grp} <span>${gn} rows</span></button></td>`, cls:'grp'}); }
     n++;
     if (!searching && planCollapsed.includes(bk)) return;
-    if (!searching && parent && present.has(parent) && planParentCollapsed.includes(parent.r.item)) return;
+    if (!searching) { let ancestor = parent; while (ancestor) { if (present.has(ancestor) && planParentCollapsed.includes(ancestor.r.item)) return; ancestor = ancestor.parent; } }
     const canHide = eligible.get(r.item) === true;
     const hideLabel = state.filter === 'all' ? 'Hide from All' : 'Show in All';
     const action = canHide && (state.filter === 'all' || hiddenRows.has(r.item)) ? `<button class="hide-row" data-hide="${esc(r.item)}" title="${hideLabel}" aria-label="${hideLabel}: ${esc(r.item)}">${state.filter==='all' ? EYE_OFF : EYE_ON}</button>` : '';
@@ -531,7 +543,7 @@ function planView(){
     const parentName = parent ? parent.r.item.replace(/^idea: ?/,'') : '';
     const children = childrenOf.get(r.item) || [];
     const expanded = searching || !planParentCollapsed.includes(r.item);
-    const toggle = kind === 'idea' && children.length ? `<button class="parent-toggle" data-parent="${esc(r.item)}" aria-expanded="${expanded}" aria-label="${expanded?'Collapse':'Expand'} ${esc(nm)}">${expanded?'▾':'▸'}</button>` : '';
+    const toggle = children.length ? `<button class="parent-toggle" data-parent="${esc(r.item)}" aria-expanded="${expanded}" aria-label="${expanded?'Collapse':'Expand'} ${esc(nm)}">${expanded?'▾':'▸'}</button>` : '';
     const nmCell = toggle + (parent ? `<span class="step">↳</span><span class="step-parent">${esc(parentName)} › </span>` : '') + esc(nm) + (kind==='idea' ? ` <span class="b">idea</span>${children.length ? ` <span class="empty">${children.length} ${children.length===1?'step':'steps'}</span>` : ''}` : '');
     const cells = {id:`<td>${idCell}</td>`, name:`<td class="nm">${nmCell}</td>`, entered:`<td class="num">${esc(entered)}</td>`, type:`<td>${type?`<span class="b type">${esc(type)}</span>`:''}</td>`, scope:`<td class="scope"><div>${md(r.scope)}</div></td>`, tier:`<td class="num">${badgeTier(r.tier)} <span class="empty">${esc(r.effort)}</span></td>`, state:`<td>${badgeSt(r.state)}</td>`, branch:`<td><div class="plan-branch">${badgePlanBr(br)}<span class="b era">${esc(eraName(era))}</span></div></td>`};
     out.push({cls:(k==='done'?'done ':'') + 'st-'+k, open: full || r.item, text,

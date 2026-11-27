@@ -46,6 +46,16 @@
     ],
     "SessionStart": [
       {
+        "matcher": "startup|resume|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File \"$CLAUDE_PROJECT_DIR/tools/start-card.ps1\"",
+            "timeout": 15
+          }
+        ]
+      },
+      {
         "matcher": "startup",
         "hooks": [
           {

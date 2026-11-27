@@ -2,7 +2,9 @@
 # Run from the main checkout before merging an item onto dev with --no-ff.
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)][string]$Task,
+    [string]$Task,
+    [string]$Base = 'dev',
+    [switch]$SelfTest,
     [switch]$Offline,
     [switch]$SkipBuilds
 )
@@ -16,6 +18,13 @@ function Invoke-Git([string]$Path, [string[]]$Arguments) {
     $result = @(& git --no-optional-locks -C $Path @Arguments)
     if ($LASTEXITCODE -ne 0) { throw "git $($Arguments -join ' ') failed" }
     $result
+}
+
+function Test-BaseAncestry([string]$Root, [string]$BaseRef, [string]$BranchRef) {
+    & git -C $Root merge-base --is-ancestor $BaseRef $BranchRef
+    if ($LASTEXITCODE -eq 0) { return $true }
+    if ($LASTEXITCODE -eq 1) { return $false }
+    throw "cannot compare $BaseRef with item branch"
 }
 
 # Reject empty sections and template values after an optional bullet and bold field label.
@@ -38,7 +47,7 @@ function Test-GateHead([string]$Root, [string]$Task, [string]$Tip, [string]$Repo
 
 # Build each product-changing commit in an isolated detached worktree and remove it afterwards.
 function Test-CommitBuilds([string]$Root, [string]$Branch, [string]$Task) {
-    $commits = @(Invoke-Git $Root @('rev-list', '--reverse', '--no-merges', "dev..$Branch"))
+    $commits = @(Invoke-Git $Root @('rev-list', '--reverse', '--no-merges', "$Base..$Branch"))
     $scratch = Join-Path $Root "build/$Task-preflight"
     $created = $false
     $built = 0
@@ -125,11 +134,27 @@ function Test-CommitBuilds([string]$Root, [string]$Branch, [string]$Task) {
     }
 }
 
+if ($SelfTest) {
+    $temp = Join-Path ([IO.Path]::GetTempPath()) ('preflight-' + [guid]::NewGuid().ToString('N'))
+    try {
+        if ((Test-UnfilledSection '<missing>') -ne $true -or (Test-UnfilledSection 'filled') -ne $false) { throw 'section test failed' }
+        [void](New-Item -ItemType Directory -Path $temp)
+        Invoke-Git $temp @('init', '-q') | Out-Null
+        Invoke-Git $temp @('config', 'user.name', 'Test') | Out-Null
+        Invoke-Git $temp @('config', 'user.email', 'test@example.invalid') | Out-Null
+        Invoke-Git $temp @('commit', '--allow-empty', '-qm', 'base') | Out-Null
+        $baseTip = (Invoke-Git $temp @('rev-parse', 'HEAD')) -join ''
+        Invoke-Git $temp @('commit', '--allow-empty', '-qm', 'child') | Out-Null
+        if (-not (Test-BaseAncestry $temp $baseTip 'HEAD') -or (Test-BaseAncestry $temp 'HEAD' $baseTip)) { throw 'base ancestry test failed' }
+        'MERGE PREFLIGHT SELFTEST PASS'; exit 0
+    } catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 } finally { Remove-Item -LiteralPath $temp -Recurse -Force -ErrorAction SilentlyContinue }
+}
 try {
     if ($Task -cnotmatch '^[A-Z][A-Za-z0-9]*(-[a-z0-9]+)+$') { throw 'invalid task name' }
+    if ($Base -cnotmatch '^[A-Za-z0-9][A-Za-z0-9._/-]*$') { throw 'invalid base name' }
     $root = (Invoke-Git $PSScriptRoot @('rev-parse', '--show-toplevel')) -join ''
     $trees = @(Invoke-Git $root @('worktree', 'list', '--porcelain'))
-    if ($trees[0].Substring(9) -ne $root.Replace('\', '/')) { throw 'run from the main checkout' }
+    if ($Base -ceq 'dev' -and $trees[0].Substring(9) -ne $root.Replace('\', '/')) { throw 'run from the main checkout' }
     $branches = @(Invoke-Git $root @('for-each-ref', '--format=%(refname:short)', 'refs/heads') |
         Where-Object { $_ -cmatch $branchPattern -and $Matches.slug -ceq $Task })
     if ($branches.Count -ne 1) { throw 'expected exactly one local item branch' }
@@ -156,13 +181,12 @@ try {
     Write-Host 'CHECK: branch card phases filled; no open ask the user line'
     $changes = @(Invoke-Git $checkout @('status', '--porcelain', '--untracked-files=no'))
     if (@($changes | Where-Object { $_ -cnotmatch '^.. (\.coord/(STATUS|pending|lessons|status-archive)\.md|\.claude/settings\.json)$' }).Count) { throw 'dirty item checkout' }
-    & git -C $root merge-base --is-ancestor dev $branch
-    if ($LASTEXITCODE -eq 1) { throw "behind dev: run tools/catch-up.ps1 -Task $Task" }
-    if ($LASTEXITCODE -ne 0) { throw 'cannot compare dev with item branch' }
-    if (@(Invoke-Git $root @('rev-list', '--merges', "dev..$branch")).Count) {
-        throw 'branch has merge commits: rebase onto dev (tools/catch-up.ps1)'
+    if (-not (Test-BaseAncestry $root $Base $branch)) { throw "behind ${Base}: rebase the item onto $Base" }
+    $isUmbrella = $text -match '(?im)^## Children\s*\r?\n\s*[-*]\s+`?[A-Z][A-Za-z0-9]*-'
+    if (-not $isUmbrella -and @(Invoke-Git $root @('rev-list', '--merges', "$Base..$branch")).Count) {
+        throw "branch has merge commits: rebase onto $Base"
     }
-    Write-Host 'CHECK: item checkout clean except STATUS and settings.json drift; caught up with dev'
+    Write-Host "CHECK: item checkout clean except STATUS and settings.json drift; caught up with $Base"
 
     $reports = Join-Path $checkout '.coord/reports'
     $gate = @(Get-ChildItem -LiteralPath $reports -File | Where-Object {
@@ -187,10 +211,10 @@ try {
     $path = (Invoke-Git $root @('rev-parse', '--path-format=absolute', '--git-path', 'MERGE_HEAD')) -join ''
     if (Test-Path -LiteralPath $path) { throw 'merge in progress: MERGE_HEAD' }
     $mainBranch = (Invoke-Git $root @('branch', '--show-current')) -join ''
-    if ($mainBranch -ceq 'dev') { Write-Host 'Main checkout on dev: merge can run' }
-    elseif ($mainBranch -ceq $branch) { Write-Host 'Main checkout on item branch (-NoWorktree): switch to dev first' }
-    else { throw 'main checkout must be on dev or the item branch' }
-    Write-Host "NEXT: in the merge, move the $Task row from STATUS Pending work to the Finished rows table in .coord/status-archive.md (state done)"
+    if ($mainBranch -ceq $Base) { Write-Host "Base checkout on ${Base}: merge can run" }
+    elseif ($Base -ceq 'dev' -and $mainBranch -ceq $branch) { Write-Host 'Main checkout on item branch (-NoWorktree): switch to dev first' }
+    else { throw "run from the $Base checkout" }
+    if ($Base -ceq 'dev') { Write-Host "NEXT: in the merge, move the $Task row from STATUS Pending work to the Finished rows table in .coord/status-archive.md (state done)" }
     Write-Host 'MERGE-PREFLIGHT: PASS (ready)'
     exit 0
 } catch {

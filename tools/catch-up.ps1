@@ -7,6 +7,7 @@ Exit 0 = UP TO DATE/CLEAN; 1 = REFUSED; 2 = CONFLICT (hot files marked, rebase l
 param(
     [Parameter(Mandatory)][string]$Task,
     [string]$Base = 'dev',
+    [switch]$RebaseMerges,
     [switch]$Push,
     [string[]]$HotFiles = @(
         'product/AntiNotepad/SelfTest/Contracts.cs',
@@ -83,7 +84,10 @@ if ($LASTEXITCODE -ne 1) { Write-Host 'REFUSED: cannot compare base with HEAD.';
 $incoming = @(& git -C $repoRoot diff --name-only -z "HEAD...refs/heads/$baseRef")
 if ($LASTEXITCODE -ne 0) { Write-Host 'REFUSED: cannot list incoming files.'; exit 1 }
 $incoming = @(($incoming -join "`n").Split([char]0, [StringSplitOptions]::RemoveEmptyEntries))
-$rebaseOutput = @(& git -C $repoRoot rebase "refs/heads/$baseRef" 2>&1)
+$rebaseArgs = @('rebase')
+if ($RebaseMerges) { $rebaseArgs += '--rebase-merges' }
+$rebaseArgs += "refs/heads/$baseRef"
+$rebaseOutput = @(& git -C $repoRoot @rebaseArgs 2>&1)
 if ($LASTEXITCODE -eq 0) {
     Write-Host "CLEAN: rebased onto $baseRef ($($incoming.Count) incoming file(s)); re-run tools/gate.ps1 -Task $Task; merge from the local branch (no push needed)"
     $incoming | ForEach-Object { Write-Host "  incoming $_" }

@@ -235,6 +235,7 @@ Done and dropped Plan rows moved out of STATUS by Loop10b-pending-list (2026-11-
 
 | Item | Scope | Tier | Effort | State |
 |---|---|---|---|---|
+| Loop21-umbrella-items | Umbrella items: parent row plus child rows (roadmap folds children), start card at chat start, title hint reads the card, need-to-know and no-nested-starts rules, merge-into-umbrella variant (`merge-preflight -Base`, survival check), mock run `tools/umbrella-mock.ps1`; Loop v5.5.0. Card `.coord/tasks/Loop21-umbrella-items.md` (user via Loop Hub 4, 2026-11-21) | Medium | Medium | done |
 | A38-version-0-7-1 | Stamp the app as 0.7.1 (`AppVersion` 0.7.0 to 0.7.1); release prep for `v0.7.1`, which carries the A35 data-loss fixes. Card `.coord/tasks/A38-version-0-7-1.md` | Low | Low | done |
 | A35-ux-pass | Whole-app UX pass: data-loss fixes (A35a), one icon registry with glyph checks (A35b), labels and tooltips (A35g), spacing tokens and snaps (A35d), 32 px targets and keyboard paths (A35e), WCAG contrast (A35f), design contract with enforcing checks (A35c); motion out of scope. Card `.coord/tasks/A35-ux-pass.md`, reports `.coord/reports/A35*` | High | Large | done |
 | T20-install-selftest-root | `tools/install.ps1` runs the installed copy selftest from the repo root, so repo-reading contracts pass (v0.7.0 install had rolled back). Card `.coord/tasks/T20-install-selftest-root.md` | Low | Low | done |

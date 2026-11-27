@@ -5,6 +5,10 @@ Item card (`docs/loop.md`). Claude fills Request to Approve before any build; Co
 Tier: <Low | Medium | High> · <reason slug>
 State: <pending | approved | building | checking | hand test | done> (one source of truth for the roadmap; STATUS row mirrors it)
 Branch: `<feat|fix|refactor|docs|chore>/<ID-slug>` in `.claude/worktrees/<prefix>/<ID-slug>` (created at Approve)
+Overrides: <none, or user-approved rule and date>
+
+## Children
+<For an umbrella: list child ID-slugs and `.coord/tasks/<umbrella>-board.md` (queue, order, landed); otherwise none.>
 
 ## Request
 <The user's words, verbatim, with the date. Screenshot paths.>

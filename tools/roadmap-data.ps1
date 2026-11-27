@@ -157,6 +157,7 @@ function Get-RoadmapPlanRows {
         }
 
         $cells = @($line.Trim('|').Split('|') | ForEach-Object { $_.Trim() })
+        $cells[0] = $cells[0] -replace '^(?:&nbsp;)*\s*', ''
         if ($cells.Count -lt 5) {
             continue
         }
@@ -187,6 +188,7 @@ function Get-RoadmapPlanRows {
             section = $(if ([string]::IsNullOrWhiteSpace($Heading)) { 'Pending' } else { $Heading })
             source = $Source
             group = $currentGroup
+            parent = $(if ($cells[1] -match '(?i)^child of\s+([^:]+):') { $Matches[1].Trim() } else { '' })
         })
     }
 
@@ -237,6 +239,11 @@ function Get-RoadmapAllRows {
         $groups += $result.Groups
     }
 
+    foreach ($row in $all) {
+        if (-not $row.parent) { continue }
+        $parentRow = @($all | Where-Object { $_.item -ieq $row.parent -or $_.item -imatch ('^' + [regex]::Escape($row.parent) + '-') } | Select-Object -First 1)
+        if ($parentRow.Count -eq 1) { $row.parent = $parentRow[0].item }
+    }
     return [pscustomobject]@{ Rows = $all.ToArray(); Groups = $groups; TableRows = $tableRows }
 }
 

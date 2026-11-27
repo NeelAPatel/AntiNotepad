@@ -12,6 +12,8 @@ Cause: `plan` (findings or plan wrong), `code`, `test` (test or contract wrong),
 `contract`, `hand-test`, `user-later`.
 
 | Date | Item | Found at | Cause | Caught by | Should have caught | Lesson (one line) | Rule change |
+| 2026-11-27 | Loop21-umbrella-items | Review round 2 | code | codex-review | test | the survival check passed falsely when git `diff.noprefix` was on, and umbrella autosquash flattened merge commits; run script tests with non-default git config | - |
+| 2026-11-21 | Loop21-umbrella-items | Chain test | plan | user | brief | row parsers took only plain Child-of rows, not the `&nbsp;` indent real A39 rows use; test parsers against live STATUS rows, not made-up ones | - |
 | 2026-11-19 | Loop16-poteto-trigger | Live check, review | test, code | codex-review | test | Stop self-tests were built from a hand-made transcript, so the real `isMeta` skill message, CRLF and a lowercase marker slipped; build hook self-tests from real transcript shapes | - |
 | 2026-11-19 | Loop16-poteto-trigger (merge) | Merge | plan | merge-preflight | brief | the card heading was `## Check (item chat, date)`; preflight needs a bare `## Check` | - |
 | 2026-11-19 | Loop17-chat-title-selfheal | Check | code | codex-review | test | paused/parked rows were skipped, a bare `paused` row lost its phase, and `done` gave no `[Merged]`; build title-hint self-tests from real STATUS row shapes | - |
@@ -41,6 +43,7 @@ One row per merged item: what each check found. Empty rows on items that later h
 
 | Date | Item | Tier | Rework rounds | Gate fails | Codex review (proven) | Design review (findings) | Hand-test fails | Misses after merge |
 |---|---|---|---|---|---|---|---|---|
+| 2026-11-27 | Loop21-umbrella-items | Medium | 4 (r2-r5; r4 added the mock run at the user's ask) | 1 (r3: locked DLL, env) | 5 (3 in round 1, 2 in round 2, all fixed) | - | 0 (mock run 12/12 accepted in place of a live test) | - |
 | 2026-11-19 | Loop16-poteto-trigger | Medium | 1 | 0 | 2 | - | 0 | - |
 | 2026-11-19 | A29-shortcut-map | Medium | 4 | 0 | 5 | - | 2 | - |
 | 2026-11-20 | A31-list-default-type | Medium | 1 | 1 | 0 | - | 0 | - |
