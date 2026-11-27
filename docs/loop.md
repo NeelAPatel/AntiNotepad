@@ -33,26 +33,12 @@ Set by the item chat in Findings (one line to the director: tier, reason); when 
 | High | `Store`/`NotesSession`/notes folder, startup and quit, `Platform/` window styles and taskbar, timers, save paths, memory | Codex audit | gate + Codex review + design review; hand test always |
 
 ## Status card (every reply about an item)
-One line by default: `**>> <ID-slug>** · ● <phase> · <what changed>`. The **full card** only when the phase changes, at a session's first reply, or with a decision block:
-```
-**>> <ID-slug>** · <Tier> tier · ● <phase>
-✓ Request | ✓ Findings | ● Plan | ○ Approve | ○ Build | ○ Check | ○ Hand test | ○ Merge
-**Tier:** <Tier> · <reason slug>
-**Goal:** <one line>
-**Now:** <one or two lines>
-
----
-
-**Waiting on you:** <the decision block, or "nothing">
-```
-- Reply body, decision block and glosses: `.claude/output-styles/antinotepad.md`. `✓` done, `●` current, `○` not reached, `–` skipped by tier; rework is `● Build (r2)`.
-- Tier reason: the "Touches" column as a slug (`docs-tools`, `editor-feature`).
-- One line per field, a blank line before `---`; one card per item in flight. A note that changes nothing gets one plain line.
+One line by default: `**>> <ID-slug>** · ● <phase> · <what changed>`. Use the full card on a phase change, first reply or decision block; format and details: `docs/loop-sessions.md` § Status card.
 
 ## Rules
 - Every bug fixed adds a `CONTRACTS` row.
 - **One chat per item, one level.** An item chat never starts a chat (no `start_session`, no helper or Codex-run chat) unless the user says so there. A second chat only if the first sat idle over an hour with a large context, or on the user's word.
-- **Umbrellas:** with the user's go an umbrella chat may start children (the app lets only a chat the user talks to start chats, and caps starts per user message: a session-started child cannot start its own children, so the umbrella chat or the user starts every level and the dispatching parent prints `DISPATCHED: <ID-slug> ready`; a parent merges a child, then re-runs its own gate before its own merge); dispatch requires a parent row and each child row (Scope starts `Child of <ID>:`; an `&nbsp;&nbsp;` indent on the item cell is allowed), plus `.coord/tasks/<umbrella>-board.md` for queue, order and landed. Children rebase when ready and merge into their parent; only a director merges the umbrella to dev. Crosstalk is need-to-know: no acks or progress FYIs; message for coordination, a major result requested by the parent, or at the user's request. At review/merge ready print `READY: <ID-slug>. Go to <chat> and run /merge-task <ID-slug>` (or `/review-task` here).
+- **Umbrellas:** with the user's go, follow the dispatch, row, board, merge and crosstalk rules in `docs/loop-sessions.md` § Umbrellas.
 - Codex runs are background runs in the item chat; the director never launches Codex.
 
 Item chats set or clear their own title in the same step as their STATUS row (pending row before Approve): `<me emoji> [Codex word] [dev word] <ID-slug> ◆ <phase>`, empty fields left out. The `title-hint` hook gives ASCII words at each user turn; the chat writes ⁉️, brackets and ◆ and sets the title first. Codex words: Codexing, Codex failed, Codex stalled. Dev words: Merged, Dropped, Paused, Parked (Paused and Parked keep the phase; cleared on resume). Rework clears the me marker.
@@ -89,4 +75,4 @@ One `<prefix>/<ID-slug>` per item, made at Approve, in a worktree. Tidy buildabl
 - Any time: `pwsh -NoProfile -File tools/gate.ps1 -Task <ID-slug>`. CI (manual): Actions `gate`.
 
 ## Where the detail lives
-Phases: `.claude/skills/{next-task/phases.md,review-task/phases.md,merge-task/branches.md}`; chats, names: docs/loop-sessions.md; coding: .claude/rules/coding.md; routing: docs/agents.md; build/install: docs/dev-loop.md; terms: docs/glossary.md; decisions: docs/decisions.md.
+See `docs/loop-sessions.md` for the file map.

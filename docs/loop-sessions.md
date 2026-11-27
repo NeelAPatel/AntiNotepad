@@ -1,3 +1,25 @@
+## Umbrellas
+
+With the user's go an umbrella chat may start children. The app lets only a chat the user talks to start chats and caps starts per user message; a session-started child cannot start its own children, so the umbrella chat or the user starts every level. The dispatching parent prints `DISPATCHED: <ID-slug> ready`. A parent merges a child, then re-runs its own gate before its own merge.
+
+Dispatch requires a parent row and each child row (Scope starts `Child of <ID>:`; an `&nbsp;&nbsp;` indent on the item cell is allowed), plus `.coord/tasks/<umbrella>-board.md` for queue, order and landed. Children rebase when ready and merge into their parent; only a director merges the umbrella to dev. Crosstalk is need-to-know: no acks or progress FYIs; message for coordination, a major result requested by the parent, or at the user's request. At review/merge ready print `READY: <ID-slug>. Go to <chat> and run /merge-task <ID-slug>` (or `/review-task` here).
+
+## Status card
+
+One line by default; use the full card when the phase changes, at a session's first reply, or with a decision block:
+```
+**>> <ID-slug>** · <Tier> tier · ● <phase>
+✓ Request | ✓ Findings | ● Plan | ○ Approve | ○ Build | ○ Check | ○ Hand test | ○ Merge
+**Tier:** <Tier> · <reason slug>
+**Goal:** <one line>
+**Now:** <one or two lines>
+
+---
+
+**Waiting on you:** <the decision block, or "nothing">
+```
+Reply body, decision block and glosses: `.claude/output-styles/antinotepad.md`. `✓` done, `●` current, `○` not reached, `–` skipped by tier; rework is `● Build (r2)`. Tier reason is the "Touches" column as a slug (`docs-tools`, `editor-feature`). One line per field, a blank line before `---`; one card per item in flight. A note that changes nothing gets one plain line.
+
 ## Sessions: master, sub-sessions, names (user, 2026-10-29)
 
 - **The picture** (user, 2026-10-30): the user is the CEO; masters are directors, one per area (today three live
@@ -52,6 +74,7 @@
   > and wait for my approval. Computer Use only when I say so.
 
 ## File inventory
+Phases: `.claude/skills/{next-task/phases.md,review-task/phases.md,merge-task/branches.md}`; chats and names: this file; coding: `.claude/rules/coding.md`; routing: `docs/agents.md`; build/install: `docs/dev-loop.md`; terms: `docs/glossary.md`; decisions: `docs/decisions.md`.
 | File | For |
 |---|---|
 | `AGENTS.md` (loaded by `CLAUDE.md` and by Codex) | project rules; points here |

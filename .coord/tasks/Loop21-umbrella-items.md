@@ -1,29 +1,20 @@
 # Loop21-umbrella-items: umbrella items (sub-items merge into a parent branch) in the loop rules and tools
 
-Item card (`docs/loop.md`). Claude fills Request to Approve before any build; Codex reads the whole card, follows "For Codex", never edits it. Budget: 4 KB (logs go in reports).
+Item card (`docs/loop.md`). Detail: audit `.coord/research/A35-chat-family-audit.md`; rework briefs r2-r4 `.coord/reports/Loop21-umbrella-items-rework-briefs.md`; findings and mock run in the reports.
 
 Tier: Medium · hooks and gate scripts, new loop concept (loop v5.5.0, minor)
-State: approved
-Branch: `chore/Loop21-umbrella-items` in `.claude/worktrees/chore/Loop21-umbrella-items` (created at Approve)
-Overrides: none yet. The chain test (Plan, step 7) starts chats; AGENTS.md forbids that, so it needs the user's go there.
+State: hand test
+Branch: `chore/Loop21-umbrella-items` in `.claude/worktrees/chore/Loop21-umbrella-items`
+Overrides: none.
 
 ## Request
-User via Loop Hub 4, 2026-11-21, after the audit `.coord/research/A35-chat-family-audit.md`: A35 was meant as an UMBRELLA (sub-items A35a... merge into A35, A35 merges to dev once). The loop has no such concept, so A35 and its children had no STATUS row, the title hook was blind, and the roadmap could not show them. Build audit fixes 1-5 in a worktree, prove them with a three-level chat chain, merge to dev, then the A35 chat pulls.
+User via Loop Hub 4, 2026-11-21: A35 was meant as an UMBRELLA (sub-items merge into it, it merges to dev once) but the loop had no such concept, so A35 and its children had no STATUS row, the title hook was blind and the roadmap could not show them. Build audit fixes 1-5, prove them, merge to dev.
 
 ## Findings
-- **Kind and why:** process; A35 ran 15 hours with 5 children, no row, titles frozen, about 30 messages (16 avoidable).
-- **Now:** `tools/title-hint.ps1` builds hints only from STATUS/pending rows (`Get-Hints`); `loop-card.ps1` prints "In flight: none". `tools/poteto-gate.ps1` Brief mode checks only line 1 and 2 of an item brief. `director-notes.ps1` prints only for directors, only on compact; item chats get nothing at start. `merge-task` and `merge-preflight.ps1` assume the base is `dev` (`dev..$branch`, "behind dev") and edit STATUS. `a35-survival.py` exists only on `docs/A35-ux-pass` (46 lines, not in `tools/`, not in the gate).
-- **Where / Risk:** `tools/*.ps1`, `.claude/settings.json` hooks, `.claude/skills/merge-task/`, `docs/loop.md` (ask-permission file), `AGENTS.md`, `.coord/templates/item.md`, `tools/roadmap-data.ps1` (T18 folds by nearest `idea:` row). Riskiest: a hook that crashes or prints wrongly in every chat (all hooks must fail open) and a gate that blocks legitimate briefs (ship it log-only first, per `guard.mode`).
-- **Source:** own scout (audit report plus the files above). Does not touch `A35-ux-pass` branches or chats.
+Process item. Hooks, brief gate and merge skill assumed one item, one row, dev as the only base. Evidence: the audit above.
 
 ## Plan
-- **After:** (1) Umbrella rule: parent row plus a child row per sub-item at dispatch (child Scope starts `child of <ID>:`; `roadmap-data.ps1` folds those under the parent); umbrella card gets a `## Children` list and an `Overrides:` line (template); the item brief template and `poteto-gate.ps1 -Mode Brief` refuse a brief naming an item with no row. (2) New `tools/start-card.ps1` on SessionStart startup, resume, compact: role (item, child, umbrella, director), title rule, merge rule, Codex split, files to read. (3) `title-hint.ps1`: with no row but a card, prints `title-hint <ID>: NO ROW (card phase=...)`; every turn, warns when the real title (read from the session file, fail open) differs from the computed one. (4) Crosstalk is need-to-know only (user, 2026-11-21): no acks, no progress FYIs. A child messages its parent only for coordination, for a major result the parent asked to hear about, or on the user's request. At review/merge ready the chat prints one unmistakable block: `READY: <ID-slug>. Go to <chat> and run /merge-task <ID-slug>` (or `/review-task` here). Rule lines in `docs/loop.md` and `AGENTS.md`; children rebase when ready; shared board `.coord/tasks/<umbrella>-board.md` (queue, order, landed) replaces messages; one-level-chat rule gets an umbrella exception with the user's go. (5) `merge-task`: "into an umbrella" variant (`merge-preflight.ps1 -Base <branch>`, commit review, no STATUS edits) and the umbrella-to-dev merge; `tools/survival.py` promoted from `a35-survival.py`, optional gate step (`-Umbrella <branch>`).
-- **Expected time:** about 3 h build, plus the chain test.
-- **Must not change:** non-umbrella items behave as today; no product code; A35 branches and chats.
-- **Scope questions:** none; child row convention (Scope prefix) is my choice, the alternative is a new State word.
-- **Test plan:** each script has `-SelfTest` (title-hint, poteto-gate, start-card, preflight base case, survival on a temp repo); `roadmap-data.ps1 -Check`; gate. Step 7 chain test: throwaway umbrella `Loop21t-chain` starts child, grandchild, great-grandchild; check rows, titles at each level, start card, merges up the chain.
-- **Gates:** `tools/gate.ps1 -Offline`, each `-SelfTest`, Codex review (Medium).
-- **Needs from you:** Approve; the go for the chain test (starts 3 chats).
+After: parent and child rows (`Child of <ID>:` Scope, `&nbsp;` indent allowed) folded by the roadmap; the brief gate refuses an item with no row; start card on SessionStart; title hint reads the card and warns on a differing title; need-to-know crosstalk with a `READY:` block; `merge-preflight -Base`, `catch-up -RebaseMerges`, `tools/survival.py`, gate `-Umbrella`; `tools/umbrella-mock.ps1` mock run. Must not change: non-umbrella items, product code, A35 branches. Test plan: every script's `-SelfTest`, `roadmap-data.ps1 -Check`, the mock run, the gate. Gates: gate, Codex review. Needs from you: the merge.
 
 ## Files
 - `tools/title-hint.ps1`
@@ -44,36 +35,14 @@ User via Loop Hub 4, 2026-11-21, after the audit `.coord/research/A35-chat-famil
 - `docs/loop.md`
 - `AGENTS.md`
 
-## Contracts
-None (tooling, no product code).
-
 ## Approve
 User, 2026-11-21: "crosstalk should be on a need to know basis. Major task completed that Parent chat has requested to know about / I the user has requested to send to parent; review/merge ready states: a very crystal clear message that task is ready, go to <chat> and run `/merge-task <slug>` or something for /review in the current chat. All updates dont need to be sent back and forth unless its for a coordination purpose. Other than that, i approve"
 
 ## For Codex
-Role: terra, because it spans several scripts with selftests. The branch is checked out: never switch, merge or commit. Read `AGENTS.md`, `docs/loop.md`, `.coord/research/A35-chat-family-audit.md` (sections 2, 3, 5, 8), then the Files. Offline checks only; never edit STATUS or this card. Report `.coord/reports/Loop21-umbrella-items.md`.
-Build the Plan's After, small and fail-open (every hook exits 0 on any error):
-1. Row convention: child Scope starts `child of <ID>:`; `roadmap-data.ps1` folds such rows under the parent row (keep `-Check` passing). Template gets `## Children` and an `Overrides:` line. `poteto-gate.ps1` Brief mode: a brief naming `You are the item chat for \`<ID-slug>\`` (or "for <ID-slug>") is refused (exit 2, message names the missing row) when the ID has no row in the main checkout's `.coord/STATUS.md` or `.coord/pending.md`; honor `-LogOnly`; add selftests.
-2. `tools/start-card.ps1` (+ `-SelfTest`) wired in `.claude/settings.json` for SessionStart `startup|resume|compact`: prints under 25 ASCII lines: role guessed from cwd/branch/card (item, umbrella child, umbrella, director), title rule, merge rule (director merges; umbrella children merge into the umbrella branch), Codex split, files to read (`docs/loop.md`, `docs/playbook.md`, `docs/agents.md`). Keep `director-notes.ps1` behavior.
-3. `title-hint.ps1`: card but no row prints `title-hint <ID>: NO ROW (card phase=<p>); ask the director to add the row`; when the session title (find the transcript/session file from the hook input; fail open if unreadable) differs from the computed title, print `title-hint WARN: real title differs`. Extend selftest.
-4. Rule lines (need-to-know crosstalk, see Approve; READY block text `READY: <ID-slug>. Go to <chat> and run /merge-task <ID-slug>`; the one-level-chat exception for umbrellas with the user's go) in `docs/loop.md` and `AGENTS.md` (one line each, stay near the 8 KB budget), plus a board file section in the template.
-5. `merge-preflight.ps1 -Base <branch>` (default dev): ancestry and `rev-list` use the base, STATUS hints dropped when Base is not dev. `merge-task/SKILL.md` and `branches.md` get "into an umbrella" and "umbrella to dev" variants (no STATUS edits for child merges). `tools/survival.py` (already copied from `a35-survival.py`; generalize: args target, base, subject prefix) and an optional gate step `-Umbrella <branch>` in `gate.ps1`.
-Done means: build 0 warnings is not needed (no product code); every touched script's `-SelfTest` passes; `tools/roadmap-data.ps1 -Check` passes; `pwsh -NoProfile -File tools/gate.ps1 -Task Loop21-umbrella-items -Offline` passes; `docs/loop.md` loop version line bumped to v5.5.0.
-Report sections: 1 Summary; 2 Change list; 3 Behavior changes; 4 Out-of-scope files; 5 Plan deviations; 8 Checks run; 9 Hand checks.
+Role: terra (rework r2-r3 quick). Read `AGENTS.md`, then the Files. Never switch, merge or commit; never edit STATUS or this card. Offline checks only.
 
-## Rework r2
-Role: quick. Fix the three review findings (`.coord/logs/Loop21-umbrella-items-review.reviewer.last.md` in the main checkout; summary here), minimal, with selftest cases:
-1. `tools/survival.py`: Git quotes non-ASCII paths in diff headers (`+++ "b/product/caf\303\251.cs"`), so the file is skipped and the check falsely passes. Run git with `-c core.quotepath=false` (and handle a quoted header if one still appears); selftest with a non-ASCII filename.
-2. `merge-task/SKILL.md` umbrella variant: `tools/catch-up.ps1` flattens `--no-ff` child merges. For an umbrella, the catch-up step must rebase with `--rebase-merges` (add a `-RebaseMerges` switch to `tools/catch-up.ps1`, default off), or say the umbrella merges dev in; pick the smaller; document it in the skill.
-3. `tools/start-card.ps1`: a director chat (cwd is the main checkout, not a worktree) must not get the item title rule; print the director naming rule from `docs/loop-sessions.md` in one line instead. Selftest.
-Add no other changes. Run each touched script's `-SelfTest` and the gate. Report `.coord/reports/Loop21-umbrella-items-r2.md`. Never edit this card.
+## Check
+Gate PASS offline; self-tests pass; Codex review r1 found 3 (fixed r2); chain test (user go 2026-11-21: umbrella to a to b to c, real chats) passed and found the no-nested-starts rule (added) plus smaller frictions (`.coord/research/Loop21t-friction.md`); r3 fixed `&nbsp;` rows found against live A39 rows; r4 adds the mock run (12/12). Live three-level chain is not repeated in r4; the first real use proves it again. Within plan.
 
-## Rework r3
-Role: quick. Real rows in the main checkout's STATUS (A39 umbrella) look like `| &nbsp;&nbsp;A39d-padview-split | Child of A39: ... |`: the item cell is prefixed with `&nbsp;&nbsp;` and the Scope says `Child of A39:` (capital C, short parent ID). Our code expects `| A39d-... |` and `child of <full-ID>:`, so `poteto-gate.ps1` refuses a valid A39d brief ("Missing STATUS or pending row") and `title-hint.ps1`/`start-card.ps1` (and `roadmap-data.ps1` parent detection, check it) skip those rows.
-Fix: strip leading `&nbsp;` and whitespace from the item cell everywhere STATUS/pending rows are matched (one shared regex fragment per script; do not refactor), match `child of` case-insensitively, and accept the parent as the full ID or its short ID prefix (`A39` for `A39-modularity-audit`). Update the rule line wording in `docs/loop.md` and `AGENTS.md` to say: Scope starts `Child of <ID>:`; an `&nbsp;&nbsp;` indent on the item cell is allowed. Add selftest cases for an `&nbsp;&nbsp;` row in poteto-gate (existing row passes), title-hint (child hint printed) and start-card (role umbrella child). Run each touched script's `-SelfTest`, `roadmap-data.ps1 -Check` and the gate. Report `.coord/reports/Loop21-umbrella-items-r3.md`. Never edit this card.
-
-## Rework r4
-Role: terra (new script, several parts). User go via Loop Hub 5 (2026-11-27): "fix gaps first, this isn't something i can hand test unless its going to do a mock run".
-1. New `tools/umbrella-mock.ps1` (`-SelfTest` not needed; it IS the test): builds a throwaway fixture in a temp dir (never the real checkout): a git repo with `.coord/STATUS.md` (one umbrella row `| A90-mock-umbrella | ... |` and two child rows, one plain `| A90a-mock-child | child of A90-mock-umbrella: ... |`, one A39-style `| &nbsp;&nbsp;A90b-mock-child | Child of A90: ... |`), a temp card with `## Children`, and prints one `PASS`/`FAIL <step>: <why>` line per step, exit 1 on any FAIL, final `UMBRELLA MOCK: PASS|FAIL (n/m)`. Steps, calling the real scripts with their `-Root`/`CLAUDE_PROJECT_DIR`/stdin-JSON interfaces: (a) `start-card.ps1` for an item cwd, an umbrella-child cwd, and the director cwd (assert role lines); (b) `title-hint.ps1`: NO ROW for a card without a row, the child row hint for the `&nbsp;` row, and the title-differs warning (fake transcript with a custom-title); (c) `poteto-gate.ps1 -Mode Brief`: refuses a brief for an item with no row (exit 2), passes one for the plain row and for the `&nbsp;&nbsp;` row (exit 0); (d) `roadmap-data.ps1 -Root <fixture> -Snapshot <file>`: the snapshot shows both children with the umbrella as parent; (e) `merge-preflight.ps1 -Base` in a scratch worktree of the fixture: umbrella branch + child branch with a filled card and gate report; assert it refuses a child that is behind the umbrella branch and passes after the child is rebased; dry run only: nothing merged or pushed, `-SkipBuilds`. Add `-Serve [-Port 47890]` which, after the PASS lines, leaves the fixture in place and prints the exact `roadmap-serve.ps1 -Root <fixture> -Port <n>` command (do not start it; Codex cannot bind ports); without `-Serve` the fixture is deleted. No start_session, no chats.
-2. `docs/loop.md` is 9.7 KB, budget 8 KB: move detail (the Umbrellas paragraph's long clauses, the Where-detail, any rule text longer than two lines) into `docs/loop-sessions.md` under a new `## Umbrellas` section and leave a one-line pointer; drop no rule.
-Run `pwsh -NoProfile -File tools/umbrella-mock.ps1`, every touched script's `-SelfTest`, `roadmap-data.ps1 -Check`, the gate. Report `.coord/reports/Loop21-umbrella-items-r4.md` including the mock output verbatim. Never edit this card.
+## Hand test
+Not visually testable. Director's choice (2026-11-27): the mock run replaces it, `pwsh -NoProfile -File tools/umbrella-mock.ps1`.
